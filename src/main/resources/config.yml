@@ -1,0 +1,60 @@
+language: es
+database:
+  enabled: false
+  host: "localhost"
+  port: 3306
+  name: "torneodb"
+  user: "root" 
+  password: "password" 
+  tables:
+  - All
+  - TorneoT1
+  sendToTable: All
+stats:
+  maps:
+    TowersMini:
+      sendToTable: TorneoT1 # Tabla a la que se enviarán las estadísticas, si está vacío se utilizará sendToTable
+      privateMatch: false # Al cargar la partida, los jugadores no podrán entrar en un equipo.
+preparationTime:
+  enabled: true
+  maps:
+    TowersMini: # Nombre de la región
+      P1: -9, 0, -16 # Punto mínimo
+      P2: 37, 45, 20 # Punto máximo
+      database: TorneoT1 # Nombre de la base de datos, si está vacío se utilizará sendToTable
+      Timer: 4 # Tiempo de preparación (en minutos)
+      Haste: 3 # Tiempo de haste (en minutos)
+refill:
+  TowersMini:
+    c1: 18, 12, 38
+    c2: 19, 12, 38
+    c3: 21, 12, 38
+    c4: 22, 12, 38
+    c5: 18, 12, 42
+    c6: 19, 12, 42
+    c7: 21, 12, 42
+    c8: 22, 12, 42
+    c9: 10, 12, 38
+    c10: 9, 12, 38
+    c11: 7, 12, 38
+    c12: 6, 12, 38
+    c13: 10, 12, 42
+    c14: 9, 12, 42
+    c15: 7, 12, 42
+    c16: 6, 12, 42
+    c17: 10, 12, -34
+    c18: 9, 12, -34
+    c19: 7, 12, -34
+    c20: 6, 12, -34
+    c21: 10, 12, -38
+    c22: 9, 12, -38
+    c23: 7, 12, -38
+    c24: 6, 12, -38
+    c25: 18, 12, -34
+    c26: 19, 12, -34
+    c27: 21, 12, -34
+    c28: 22, 12, -34
+    c29: 18, 12, -38
+    c30: 19, 12, -38
+    c31: 21, 12, -38
+    c32: 22, 12, -38

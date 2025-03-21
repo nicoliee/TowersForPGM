@@ -1,0 +1,61 @@
+name: TowersForPGM
+version: '${project.version}'
+main: org.nicolie.towersforpgm.TowersForPGM
+Depend: [PGM]
+commands:
+  add:
+    description: Agregar un jugador al Draft.
+    usage: /add <nick>
+    permission: towers.admin
+  captains:
+    description: Comienza el Draft con 2 capitanes.
+    usage: /captains <nick1> <nick2>
+    aliases: [capitanes]
+    permission: towers.admin
+  pick:
+    description: Elegir un jugador para el draft.
+    usage: /pick <jugador>
+  preparationTime:
+    description: Habilita o desactiva el tiempo de preparación.
+    usage: /preparationTime <on|off|enable|disable>
+    permission: towers.admin
+  privateMatch:
+    description: Crea una partida privada.
+    usage: /privateMatch <true|false>
+    permission: towers.admin
+  region:
+    description: Administra las regiones.
+    usage: /region <add|delete|list|timer|haste> [valor]
+    permission: towers.admin
+  remove:
+    description: Eliminar un jugador del Draft.
+    usage: /remove <nick>
+    permission: towers.admin
+  setTable:
+    description: Cambia la tabla donde se envían estadísticas.
+    usage: /setTable <nombre>
+    permission: towers.admin
+  stat:
+    description: Muestra las estadísticas de un jugador.
+    usage: /stat <tabla> [jugador]
+  table:
+    description: Administra las tablas del torneo.
+    usage: /table <add|delete|list> [nombre]
+    permission: towers.admin
+  top:
+    description: Muestra las mejores estadísticas de un jugador.
+    usage: /top <categoria> [cantidad] [tabla]
+  towersForPGM:
+    description: Comando principal de TowersForPGM.
+    usage: /towersForPGM
+    permission: towers.admin
+permissions:
+  towers.admin:
+    description: Permite administrar y cambiar configuraciones.
+    default: op
+  towers.developer:
+    description: Permite ver mensajes de depuración.
+    default: op
+  towersstats.use:
+    description: Permite ver estadísticas de jugadores.
+    default: true
