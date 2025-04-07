@@ -1,6 +1,8 @@
 captains:
   turn: "&8[&6Bigotes Bot&8] {teamcolor}Es el turno de {captain}."
   choose: "&8[&6Bigotes Bot&8] {teamcolor}{captain} ha elegido a {player}."
+  titleChoose: "§l{teamcolor}{captain} §6ha elegido a:"
+  subtitleChoose: "§l{teamcolor}{player}"
 picks:
   notTurn: "&8[&6Bigotes Bot&8] &cNo es tu turno."
   playerPicked: "&8[&6Bigotes Bot&8] &c{player} ya ha sido elegido."
@@ -15,3 +17,12 @@ preparation:
   secondsRemaining: "&8[&6Bigotes Bot&8] &aQuedan &e{seconds} segundos &ade preparación."
   secondRemaining: "&8[&6Bigotes Bot&8] &aQueda &e{seconds} segundo &ade preparación."
   end: "&8[&6Bigotes Bot&8] &aLa preparación ha terminado."
+ready:
+  notAvailable: "&8[&6Bigotes Bot&8] &cTodavía no puedes marcar como listo."
+  alreadyReady: "&8[&6Bigotes Bot&8] &cYa has marcado como listo."
+  ready: "&8[&6Bigotes Bot&8] {teamcolor}Equipo {team} listo."
+team:
+  red: "&cRojo"
+  blue: "&9Azul"
+  redColor: "&c"
+  blueColor: "&9"

@@ -12,6 +12,10 @@ commands:
     usage: /captains <nick1> <nick2>
     aliases: [capitanes]
     permission: towers.admin
+  config:
+    description: Administra las regiones.
+    usage: /config <add|delete|list|timer|haste> [valor]
+    permission: towers.admin
   pick:
     description: Elegir un jugador para el draft.
     usage: /pick <jugador>
@@ -23,9 +27,12 @@ commands:
     description: Crea una partida privada.
     usage: /privateMatch <true|false>
     permission: towers.admin
-  region:
-    description: Administra las regiones.
-    usage: /region <add|delete|list|timer|haste> [valor]
+  ready:
+    description: Marca como listo a un jugador.
+    usage: /ready
+  refill:
+    description: Configurar la cantidad de torres a rellenar.
+    usage: /refill
     permission: towers.admin
   remove:
     description: Eliminar un jugador del Draft.

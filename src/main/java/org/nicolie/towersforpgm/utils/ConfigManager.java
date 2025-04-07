@@ -13,6 +13,9 @@ public class ConfigManager {
     private static String cachedSendToTable;
     private static Map<String, String> cachedMapTables = new HashMap<>();
     private static Map<String, Boolean> cachedMapPrivateMatch = new HashMap<>();
+    private static boolean isVaultEnabled = false;
+    private static int killReward = 0;
+    private static int winReward = 0;
 
     public static void loadConfig() {
         TowersForPGM plugin = TowersForPGM.getInstance();
@@ -29,7 +32,13 @@ public class ConfigManager {
                 cachedMapTables.put(map, plugin.getConfig().getString("stats.maps." + map + ".sendToTable"));
                 cachedMapPrivateMatch.put(map, plugin.getConfig().getBoolean("stats.maps." + map + ".privateMatch", false));
             }
-        }        
+        }
+        // Verificar si Vault está habilitado
+        isVaultEnabled = plugin.getConfig().getBoolean("vault.enabled", false);
+        killReward = plugin.getConfig().getInt("vault.killReward", 0);
+        winReward = plugin.getConfig().getInt("vault.winReward", 0);
+
+
     }
 
     public static List<String> getTables() {
@@ -111,6 +120,39 @@ public class ConfigManager {
         TowersForPGM plugin = TowersForPGM.getInstance();
         cachedMapPrivateMatch.put(mapName, privateMatch);
         plugin.getConfig().set("stats.maps." + mapName + ".privateMatch", privateMatch);
+        plugin.saveConfig();
+    }
+
+    public static boolean isVaultEnabled() {
+        return isVaultEnabled;
+    }
+
+    public static void setVaultEnabled(boolean enabled) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        isVaultEnabled = enabled;
+        plugin.getConfig().set("vault.enabled", enabled);
+        plugin.saveConfig();
+    }
+
+    public static int getKillReward() {
+        return killReward;
+    }
+
+    public static void setKillReward(int reward) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        killReward = reward;
+        plugin.getConfig().set("vault.killReward", reward);
+        plugin.saveConfig();
+    }
+
+    public static int getWinReward() {
+        return winReward;
+    }
+
+    public static void setWinReward(int reward) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        winReward = reward;
+        plugin.getConfig().set("vault.winReward", reward);
         plugin.saveConfig();
     }
 }

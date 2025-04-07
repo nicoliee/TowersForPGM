@@ -33,8 +33,8 @@ public class RefillManager {
     }
 
     public void loadChests(String mapName, String worldName) {
-        FileConfiguration config = plugin.getConfig();
-        ConfigurationSection refillSection = config.getConfigurationSection("refill." + mapName);
+        FileConfiguration refillConfig = towersForPGM.getRefillConfig();
+        ConfigurationSection refillSection = refillConfig.getConfigurationSection("refill." + mapName);
         if (refillSection == null) {
             return; // No se encontró sección de recarga para este mapa, no hacer nada
         } else {
@@ -78,7 +78,8 @@ public class RefillManager {
                     String message = "&c¡Advertencia! No hay cofre en la ubicación: "
                             + "x=" + loc.getBlockX()
                             + ", y=" + loc.getBlockY()
-                            + ", z=" + loc.getBlockZ();
+                            + ", z=" + loc.getBlockZ()
+                            + " bloque: " + blockType;
                     SendMessage.sendToAdmins(message);  // Llamada para enviar mensaje a los administradores
                 }
             } catch (NumberFormatException e) {

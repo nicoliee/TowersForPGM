@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.commands;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.command.Command;
@@ -7,14 +8,17 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class PrivateMatchCommand implements CommandExecutor, TabCompleter{
     private final TowersForPGM plugin;
-    public PrivateMatchCommand(TowersForPGM plugin) {
+    private final MatchManager matchManager;
+    public PrivateMatchCommand(TowersForPGM plugin, MatchManager matchManager) {
         this.plugin = plugin;
+        this.matchManager = matchManager;
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -28,7 +32,7 @@ public class PrivateMatchCommand implements CommandExecutor, TabCompleter{
             return true;
         }
         String action = args[0];
-        String mapName = plugin.getCurrentMap(); // Obtener el mapa actual
+        String mapName = matchManager.getMatch().getMap().getName(); // Obtener el mapa actual
         switch (action.toLowerCase()) {
             case "true":
                 ConfigManager.setPrivateMatch(mapName, true);
@@ -50,7 +54,7 @@ public class PrivateMatchCommand implements CommandExecutor, TabCompleter{
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return List.of("true", "false");
+            return Arrays.asList("true", "false");
         }
         return null;
     }

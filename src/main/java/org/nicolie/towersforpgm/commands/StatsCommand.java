@@ -1,6 +1,7 @@
 package org.nicolie.towersforpgm.commands;
 
 import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 
@@ -16,9 +17,11 @@ import org.bukkit.entity.Player;
 
 public class StatsCommand implements CommandExecutor, TabCompleter {
     private final TowersForPGM plugin;
+    private final MatchManager matchManager;
 
-    public StatsCommand(TowersForPGM plugin) {
+    public StatsCommand(TowersForPGM plugin, MatchManager matchManager) {
         this.plugin = plugin;
+        this.matchManager = matchManager;
     }
 
     @Override
@@ -38,7 +41,7 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             targetPlayer = sender.getName();  // Usa al jugador que ejecuta el comando
-            tableName = ConfigManager.getTableForMap(plugin.getCurrentMap()); // Usa la tabla por defecto
+            tableName = ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName()); // Usa la tabla por defecto
         } else if (args.length == 1) {
             // Si solo hay un argumento, se usa como tabla y el jugador será el que ejecuta el comando
             tableName = args[0].trim();  // Este es el nombre de la tabla
@@ -51,7 +54,8 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
 
         // Verifica si la tabla especificada existe en la configuración
         if (!ConfigManager.getTables().contains(tableName)) {
-            sender.sendMessage(plugin.getPluginMessage("stats.tableNotFound"));
+            sender.sendMessage(plugin.getPluginMessage("stats.tableNotFound")
+                    .replace("{table}", tableName));
             return true;
         }
 

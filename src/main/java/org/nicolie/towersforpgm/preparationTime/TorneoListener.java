@@ -3,6 +3,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.nicolie.towersforpgm.utils.SendMessage;
+
 import tc.oc.pgm.spawns.events.ParticipantKitApplyEvent;
 
 import org.bukkit.Bukkit;
@@ -97,7 +98,6 @@ public class TorneoListener implements Listener {
     }
 
     private void startProtectionTimer(Player player, int timer, int haste, Region region, String worldName) {
-        String sound = "random.click"; // Sonido a reproducir
         // Iniciar el temporizador para detener la protección después de 'timer' segundos
         BukkitTask task = new BukkitRunnable() {
             @Override
@@ -113,22 +113,23 @@ public class TorneoListener implements Listener {
                         int minutesRemaining = timeRemaining / 60;
                         SendMessage.sendToWorld(worldName, plugin.getConfigurableMessage("preparation.minutesRemaining")
                             .replace("{minutes}", String.valueOf(minutesRemaining)));
-                        SendMessage.soundToWorld(worldName, sound);
+                        SendMessage.soundToWorld(worldName, "random.click", 1f, 2f);
                     } else if (timeRemaining == 60 || timeRemaining == 30 || timeRemaining == 10 || (timeRemaining <= 5 && timeRemaining >= 2)) {
                         // Si el tiempo restante son 30, 10, 5, 4, 3, 2, 1 segundos
                         SendMessage.sendToWorld(worldName, plugin.getConfigurableMessage("preparation.secondsRemaining")
                             .replace("{seconds}", String.valueOf(timeRemaining)));
-                    } else if (timeRemaining == 1){
+                    }else if (timeRemaining == 1){
                         SendMessage.sendToWorld(worldName, plugin.getConfigurableMessage("preparation.secondRemaining")
                             .replace("{seconds}", String.valueOf(timeRemaining)));
                     }
     
                     if (timeRemaining == 60 || timeRemaining <= 30) {
                         // Reproducir un sonido de alerta si el tiempo restante es menor o igual a 30 segundos
-                        SendMessage.soundToWorld(worldName, sound);
+                        SendMessage.soundToWorld(worldName, "random.click", 1f, 2f);
                     }
                 } else {
                     // Al finalizar el temporizador, detener la protección
+                    SendMessage.soundToWorld(worldName, "random.levelup", 0.8f, 1.2f);
                     stopProtection(player, worldName);
                     this.cancel();  // Cancelar el temporizador
                 }
@@ -147,29 +148,29 @@ public class TorneoListener implements Listener {
     @EventHandler
     public void onParticipantKitApply(ParticipantKitApplyEvent event) {
         Player player = event.getPlayer().getBukkit();
-        String worldName = player.getWorld().getName();
-        MatchConfig matchConfig = plugin.getMatchConfig(worldName);
 
-        if (matchConfig != null) {
-            // Obtener el tiempo restante de la protección para la regeneración y el haste
-            int totalProtectionTime = matchConfig.getTime(); // Tiempo total de protección en segundos
-            int hasteTime = matchConfig.getHaste(); // Tiempo de Haste en segundos
+        // Ejecutar un tick después
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            String worldName = player.getWorld().getName();
+            MatchConfig matchConfig = plugin.getMatchConfig(worldName);
 
-            // Supongamos que el jugador muere y se reinicia el tiempo con el evento PlayerDeathEvent
-            int timeElapsed = (int) ((System.currentTimeMillis() - matchConfig.getTimeStart()) / 1000);
+            if (matchConfig != null) {
+                // Obtener tiempos de protección y Haste
+                int totalProtectionTime = matchConfig.getTime();
+                int hasteTime = matchConfig.getHaste();
+                int timeElapsed = (int) ((System.currentTimeMillis() - matchConfig.getTimeStart()) / 1000);
 
-            // Duración restante de los efectos
-            int remainingRegenerationTime = totalProtectionTime - timeElapsed; // La regeneración dura todo el tiempo de la protección
-            int remainingHasteTime = hasteTime - timeElapsed; // El Haste dura hasta el tiempo de Haste
+                int remainingRegenerationTime = totalProtectionTime - timeElapsed;
+                int remainingHasteTime = hasteTime - timeElapsed;
 
-            // Remover todos los efectos que pueda tener el jugador
-            player.removePotionEffect(PotionEffectType.REGENERATION);
-            player.removePotionEffect(PotionEffectType.FAST_DIGGING);
+                // Remover efectos y aplicar los nuevos
+                player.removePotionEffect(PotionEffectType.REGENERATION);
+                player.removePotionEffect(PotionEffectType.FAST_DIGGING);
 
-            // Aplicar los efectos con las duraciones calculadas
-            applyEffect(player, PotionEffectType.REGENERATION, remainingRegenerationTime + 1, 0); // Regeneración
-            applyEffect(player, PotionEffectType.FAST_DIGGING, remainingHasteTime + 1, 1); // Haste
-        }
+                applyEffect(player, PotionEffectType.REGENERATION, remainingRegenerationTime + 1, 0);
+                applyEffect(player, PotionEffectType.FAST_DIGGING, remainingHasteTime + 1, 1);
+            }
+        }, 5L); // 1 tick después
     }
 
     // Manejar el evento de colocar bloques
@@ -188,9 +189,11 @@ public class TorneoListener implements Listener {
                 // Cancela el evento si la ubicación está dentro de la región
                 event.setCancelled(true);
                 SendMessage.sendToPlayer(event.getPlayer(), this.plugin.getConfigurableMessage("preparation.blockPlace"));
+                event.getPlayer().playSound(event.getPlayer().getLocation(), "note.bass", 1f, 0.75f);
             }
         }
     }
+
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event){
         // Obtén la ubicación donde el jugador intenta romper el bloque
@@ -207,6 +210,7 @@ public class TorneoListener implements Listener {
                 // Cancela el evento si la ubicación está dentro de la región
                 event.setCancelled(true);
                 SendMessage.sendToPlayer(player, this.plugin.getConfigurableMessage("preparation.blockBreak"));
+                event.getPlayer().playSound(event.getPlayer().getLocation(), "note.bass", 1f, 0.75f);
             }
         }
     }

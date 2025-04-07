@@ -1,4 +1,5 @@
 package org.nicolie.towersforpgm.commands;
+import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import java.util.Arrays;
@@ -13,8 +14,10 @@ import org.bukkit.command.TabCompleter;
 
 public class SetTableCommand implements CommandExecutor, TabCompleter {
     private final TowersForPGM plugin;
-    public SetTableCommand(TowersForPGM plugin) {
+    private final MatchManager matchManager;
+    public SetTableCommand(TowersForPGM plugin, MatchManager matchManager) {
         this.plugin = plugin;
+        this.matchManager = matchManager;
     }
     
 
@@ -25,7 +28,7 @@ public class SetTableCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         String action = args[0];
-        String mapName = plugin.getCurrentMap(); // Obtener el mapa actual
+        String mapName = matchManager.getMatch().getMap().getName(); // Obtener el mapa actual
 
         switch (action.toLowerCase()) {
             case "sendtotable":

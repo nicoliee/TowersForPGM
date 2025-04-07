@@ -15,14 +15,18 @@ import java.util.logging.Level;
 
 public class StatsManager {
     public static void updateStats(String table, List<Stats> playerStatsList) {
+        if ("none".equalsIgnoreCase(table)) {
+            return;
+        }
         if (playerStatsList.isEmpty()) {
             return;
         }
     
-        String sql = "INSERT INTO " + table + " (username, kills, deaths, points, wins, games) VALUES (?, ?, ?, ?, ?, ?) " +
+        String sql = "INSERT INTO " + table + " (username, kills, deaths, assists, points, wins, games) VALUES (?, ?, ?, ?, ?, ?, ?) " +
                      "ON DUPLICATE KEY UPDATE " +
                      "kills = kills + VALUES(kills), " +
                      "deaths = deaths + VALUES(deaths), " +
+                     "assists = assists + VALUES(assists), " +
                      "points = points + VALUES(points), " +
                      "wins = wins + VALUES(wins), " +
                      "games = games + VALUES(games)";
@@ -38,9 +42,10 @@ public class StatsManager {
                     stmt.setString(1, playerStat.getUsername());
                     stmt.setInt(2, playerStat.getKills());
                     stmt.setInt(3, playerStat.getDeaths());
-                    stmt.setInt(4, playerStat.getPoints());
-                    stmt.setInt(5, playerStat.getWins());
-                    stmt.setInt(6, playerStat.getGames());
+                    stmt.setInt(4, playerStat.getAssists());  // Asistencias
+                    stmt.setInt(5, playerStat.getPoints());
+                    stmt.setInt(6, playerStat.getWins());
+                    stmt.setInt(7, playerStat.getGames());
     
                     stmt.addBatch();
                     batchSize++;
@@ -62,7 +67,10 @@ public class StatsManager {
     }    
 
     public static void showStats(CommandSender sender, String table, String player, TowersForPGM plugin) {
-        String sql = "SELECT kills, deaths, points, wins, games FROM " + table + " WHERE username = ?";
+        if ("none".equalsIgnoreCase(table)) {
+            return;
+        }
+        String sql = "SELECT kills, deaths, assists, points, wins, games FROM " + table + " WHERE username = ?";
         
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
@@ -77,6 +85,7 @@ public class StatsManager {
                                 .replace("{table}", table));
                         sender.sendMessage("  §7" + plugin.getPluginMessage("stats.kills") + ": §a" + rs.getInt("kills")
                                 + " §7| " + plugin.getPluginMessage("stats.deaths") + ": §a" + rs.getInt("deaths")
+                                + " §7| " + plugin.getPluginMessage("stats.assists") + ": §a" + rs.getInt("assists")
                                 + " §7| " + plugin.getPluginMessage("stats.points") + ": §a" + rs.getInt("points")
                                 + " §7| " + plugin.getPluginMessage("stats.wins") + ": §a" + rs.getInt("wins")
                                 + " §7| " + plugin.getPluginMessage("stats.games") + ": §a" + rs.getInt("games"));
@@ -94,6 +103,9 @@ public class StatsManager {
     }    
 
     public static void showTop(String category, int page, String table, CommandSender sender) {
+        if ("none".equalsIgnoreCase(table)) {
+            return;
+        }
         int offset = (page - 1) * 10;
         String sql = "SELECT username, " + category + " FROM " + table + " ORDER BY " + category + " DESC LIMIT 10 OFFSET ?";
 

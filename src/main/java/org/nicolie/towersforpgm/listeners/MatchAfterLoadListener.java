@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 
 import tc.oc.pgm.api.match.Match;
@@ -16,13 +15,13 @@ import tc.oc.pgm.teams.TeamMatchModule;
 public class MatchAfterLoadListener implements Listener {
     @EventHandler
     public void onMatchAfterLoad(MatchAfterLoadEvent event) {
+        Match match = event.getMatch();
         if (ConfigManager.isPrivateMatch(event.getMatch().getMap().getName())) {
-            setPrivateMatch();
+            setPrivateMatch(match);
         }
     }
 
-    private void setPrivateMatch() {
-        Match match = TowersForPGM.getInstance().getCurrentMatch();
+    private void setPrivateMatch(Match match) {
         if (match == null) {
             return;
         }

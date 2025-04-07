@@ -4,15 +4,17 @@ public class Stats {
     private String username;
     private int kills;
     private int deaths;
+    private int assists;
     private int points;
     private int wins;
     private int games;
 
     // Constructor
-    public Stats(String username, int kills, int deaths, int points, int wins, int games) {
+    public Stats(String username, int kills, int deaths, int assists, int points, int wins, int games) {
         this.username = username;
         this.kills = kills;
         this.deaths = deaths;
+        this.assists = assists;
         this.points = points;
         this.wins = wins;
         this.games = games;
@@ -24,6 +26,7 @@ public class Stats {
                 "username='" + username + '\'' +
                 ", kills=" + kills +
                 ", deaths=" + deaths +
+                ", assists=" + assists +
                 ", points=" + points +
                 ", wins=" + wins +
                 ", games=" + games +
@@ -43,6 +46,10 @@ public class Stats {
         return deaths;
     }
 
+    public int getAssists() {
+        return assists;
+    }
+
     public int getPoints() {
         return points;
     }
@@ -55,4 +62,3 @@ public class Stats {
         return games;
     }
 }
-

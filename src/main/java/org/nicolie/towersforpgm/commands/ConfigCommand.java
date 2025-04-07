@@ -10,9 +10,12 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.preparationTime.Region;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,11 +23,13 @@ import java.util.List;
 // Comando para configurar las regiones de protección y timers por mapa
 // PGM actualmente solo soporta una partida a la vez pero este plugin está pensado para soportar múltiples partidas simultáneas
 // Aún así PGM solo tiene un mundo, por lo que se asume que solo hay un mundo a la hora de llamar a los métodos de configuración
-public class RegionCommand implements CommandExecutor, TabCompleter{
+public class ConfigCommand implements CommandExecutor, TabCompleter{
     private final TowersForPGM plugin;
+    private final MatchManager matchManager;
     
-    public RegionCommand(JavaPlugin plugin) {
+    public ConfigCommand(JavaPlugin plugin, MatchManager matchManager) {
         this.plugin = (TowersForPGM) plugin;
+        this.matchManager = matchManager;
     }
 
     @Override
@@ -35,10 +40,10 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
         }
 
         Player player = (Player) sender;
-        String mapName = plugin.getCurrentMap(); // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM (10/03/2025)
+        String mapName = matchManager.getMatch().getMap().getName();
         FileConfiguration config = plugin.getConfig();
         if (args.length == 0) {
-                    player.sendMessage(ChatColor.RED + " /region <add|delete|haste|help|list|max|min|timer>");
+                    player.sendMessage(ChatColor.RED + " /config <add|delete|haste|help|list|max|min|timer>");
             return true;
         }
 
@@ -76,7 +81,7 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
                     SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.usage"));
                 }
             } else {
-                player.sendMessage(ChatColor.RED + "/region min <x> <y> <z>");
+                player.sendMessage(ChatColor.RED + "/config min <x> <y> <z>");
             }
             break;
         
@@ -109,7 +114,7 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
                     SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.usage"));
                 }
             } else {
-                player.sendMessage(ChatColor.RED + "/region max <x> <y> <z>");
+                player.sendMessage(ChatColor.RED + "/config max <x> <y> <z>");
             }
             break;        
 
@@ -130,7 +135,7 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
             break;
 
         default:
-                    player.sendMessage(ChatColor.RED + "/region <add|delete|haste|list|max|min|timer>");
+                    player.sendMessage(ChatColor.RED + "/config <add|delete|haste|list|max|min|timer>");
     }
     return true;
     }
@@ -156,7 +161,8 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
 
     private void handleAddCommand(Player player, FileConfiguration config, String mapName) {
         if (config.contains("preparationTime.maps." + mapName)) {
-            SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapAlreadyAdded"));
+            SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapAlreadyAdded")
+                    .replace("{map}", mapName));
             return;
         }
 
@@ -174,8 +180,8 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
         region.setHaste(1);  // Haste por defecto (1 minuto)
 
         // Guardar estos valores en el archivo de configuración
-        config.set(basePath + ".P1", "(" + p1.getBlockX() + "," + p1.getBlockY() + "," + p1.getBlockZ() + ")");
-        config.set(basePath + ".P2", "(" + p2.getBlockX() + "," + p2.getBlockY() + "," + p2.getBlockZ() + ")");
+        config.set(basePath + ".P1", + p1.getBlockX() + ", " + p1.getBlockY() + ", " + p1.getBlockZ());
+        config.set(basePath + ".P2",  + p2.getBlockX() + ", " + p2.getBlockY() + ", " + p2.getBlockZ());
         config.set(basePath + ".Timer", region.getTimer());
         config.set(basePath + ".Haste", region.getHaste());
 
@@ -185,7 +191,8 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
         // Almacenar la región en el mapa de regiones
         plugin.getRegions().put(mapName, region);
 
-        SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapSuccess"));
+        SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapSuccess")
+                .replace("{map}", mapName));
     }
 
     private void handleDeleteCommand(Player player, FileConfiguration config, String mapName) {
@@ -201,13 +208,14 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
         // Eliminar la región del mapa de regiones
         plugin.getRegions().remove(mapName);
     
-        SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapDeleted"));
+        SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapDeleted")
+                .replace("{map}", mapName));
     }
     
 
     private void setCoordinates(FileConfiguration config, String mapName, String key, int x, int y, int z) {
         String basePath = "preparationTime.maps." + mapName + "." + key;
-        config.set(basePath, "(" + x + "," + y + "," + z + ")");
+        config.set(basePath, x + ", " + y + ", " + z);
         plugin.saveConfig();
     }    
 
@@ -218,7 +226,7 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
         }
     
         if (args.length < 2) {
-            player.sendMessage(ChatColor.RED + "/region timer {mins}");
+            player.sendMessage(ChatColor.RED + "/config timer {mins}");
             return;
         }
     
@@ -254,7 +262,7 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
         }
     
         if (args.length < 2) {
-            player.sendMessage(ChatColor.RED + "/region haste {mins}");
+            player.sendMessage(ChatColor.RED + "/config haste {mins}");
             return;
         }
     
@@ -274,7 +282,7 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
             if (region != null) {
                 region.setHaste(haste);
                 SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.hasteSet")
-                        .replace("{haste}", String.valueOf(haste)));
+                        .replace("{timer}", String.valueOf(haste)));
             } else {
                 SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.regionNotFound"));
             }
@@ -292,12 +300,14 @@ public class RegionCommand implements CommandExecutor, TabCompleter{
         SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.header"));
         for (String mapName : config.getConfigurationSection("preparationTime.maps.").getKeys(false)) {
             String basePath = "preparationTime.maps." + mapName;
+            String database = ConfigManager.getTableForMap(mapName);
             String p1 = config.getString(basePath + ".P1", "No definido");
             String p2 = config.getString(basePath + ".P2", "No definido");
             int timer = config.getInt(basePath + ".Timer", -1);
             int haste = config.getInt(basePath + ".Haste", -1);
     
             player.sendMessage(ChatColor.GREEN + mapName);
+            player.sendMessage(ChatColor.AQUA + "  Base de datos: " + ChatColor.WHITE + database);
             player.sendMessage(ChatColor.AQUA + "  Coordenadas mínimas: " + ChatColor.WHITE + p1);
             player.sendMessage(ChatColor.AQUA + "  Coordenadas máximas: " + ChatColor.WHITE + p2);
             player.sendMessage(ChatColor.AQUA + "  Temporizador: " + ChatColor.WHITE + (timer > 0 ? timer + " minutos" : "No definido"));

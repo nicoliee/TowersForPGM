@@ -1,4 +1,5 @@
 package org.nicolie.towersforpgm.commands;
+import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import org.nicolie.towersforpgm.preparationTime.TorneoListener;
@@ -18,9 +19,11 @@ import tc.oc.pgm.api.match.Match;
 public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
     private final TowersForPGM plugin;
     private final TorneoListener torneoListener;
-    public PreparationTimeCommand(TowersForPGM plugin, TorneoListener torneoListener) {
+    private final MatchManager matchManager;
+    public PreparationTimeCommand(TowersForPGM plugin, TorneoListener torneoListener, MatchManager matchManager) {
         this.plugin = plugin;
         this.torneoListener = torneoListener;
+        this.matchManager = matchManager;
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -36,7 +39,7 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
             SendMessage.sendToPlayer(player, plugin.getPluginMessage("preparation.usage"));
             return true;
         }
-        Match match = plugin.getCurrentMatch();
+        Match match = matchManager.getMatch();
         String mapName = match.getMap().getName();
         String worldName = player.getWorld().getName();
         // Procesar el comando dependiendo del primer argumento

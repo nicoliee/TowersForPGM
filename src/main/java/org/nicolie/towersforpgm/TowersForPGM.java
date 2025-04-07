@@ -1,40 +1,26 @@
 package org.nicolie.towersforpgm;
 
-import org.nicolie.towersforpgm.commands.AddCommand;
-import org.nicolie.towersforpgm.commands.CaptainsCommand;
-import org.nicolie.towersforpgm.commands.PickCommand;
-import org.nicolie.towersforpgm.commands.PreparationTimeCommand;
-import org.nicolie.towersforpgm.commands.PrivateMatchCommand;
-import org.nicolie.towersforpgm.commands.SetTableCommand;
-import org.nicolie.towersforpgm.commands.StatsCommand;
-import org.nicolie.towersforpgm.commands.TableCommand;
-import org.nicolie.towersforpgm.commands.TopCommand;
-import org.nicolie.towersforpgm.commands.TowersForPGMCommand;
+// import org.nicolie.towersforpgm.Vault.SetupVault;
 import org.nicolie.towersforpgm.database.DatabaseManager;
 import org.nicolie.towersforpgm.database.TableManager;
+import org.nicolie.towersforpgm.draft.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.listeners.MatchAfterLoadListener;
-import org.nicolie.towersforpgm.listeners.MatchFinishListener;
-import org.nicolie.towersforpgm.listeners.MatchLoadListener;
-import org.nicolie.towersforpgm.listeners.MatchStartListener;
-import org.nicolie.towersforpgm.listeners.PlayerJoinListener;
-import org.nicolie.towersforpgm.listeners.PlayerQuitListener;
+import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
 import org.nicolie.towersforpgm.preparationTime.Region;
-import org.nicolie.towersforpgm.commands.RegionCommand;
-import org.nicolie.towersforpgm.commands.RemoveCommand;
 import org.nicolie.towersforpgm.preparationTime.TorneoListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
 
-import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -44,12 +30,12 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Location;
 
 public final class TowersForPGM extends JavaPlugin {
     private static TowersForPGM instance; // Instancia de la clase principal
+    
 // Messages.yml y Language.yml
     private YamlConfiguration messagesConfig; // Configuración de mensajes
     public YamlConfiguration languageConfig; // Configuración de idioma
@@ -63,19 +49,18 @@ public final class TowersForPGM extends JavaPlugin {
 // Base de datos
     private DatabaseManager databaseManager; // Administrador de la base de datos
     private boolean isDatabaseActivated = false; // Base de datos activada
-
-// PGM (Asumiendo que solo hay un mundo y una partida en el plugin como lo hace actualmente PGM)
-    private Match currentMatch; // Partido actual
-    private String currentMap; // Mapa actual
+    private final Map<String, MatchPlayer> disconnectedPlayers = new HashMap<>(); // Mapa para almacenar los jugadores
 
 // Captains
-    private final Map<String, MatchPlayer> disconnectedPlayers = new HashMap<>(); // Mapa para almacenar los jugadores
+    private AvailablePlayers availablePlayers;
+    private Captains captains;
     private Draft draft; 
+    private Teams teams;
 
 // Refill
     private RefillManager refillManager; // Administrador de refill
-    
-    
+    private File refillFile;
+    private FileConfiguration refillConfig;
 
     @Override
     public void onEnable() {
@@ -88,17 +73,13 @@ public final class TowersForPGM extends JavaPlugin {
         loadLanguage();
         saveDefaultMessages();
         loadRegions();
+        loadRefillConfig();
         ConfigManager.loadConfig();
         preparationEnabled = getConfig().getBoolean("preparationTime.enabled", false);
         
         // Inicializar el RefillManager
         refillManager = new RefillManager(this);
 
-        // Inicializar el PluginManager
-        PluginManager pluginManager = getServer().getPluginManager();
-
-        // Inicializar el Draft
-        draft = new Draft(this);
 
         // Base de datos
         ConfigManager.loadConfig();
@@ -114,32 +95,32 @@ public final class TowersForPGM extends JavaPlugin {
             getLogger().info(getPluginMessage("errors.databaseDisabled"));
         }
 
-        // Registrar comandos
-        getCommand("add").setExecutor(new AddCommand(this, draft));
-        getCommand("captains").setExecutor(new CaptainsCommand(this, draft));
-        getCommand("pick").setExecutor(new PickCommand(draft, this));
-        getCommand("preparationTime").setExecutor(new PreparationTimeCommand(this, torneoListener));
-        getCommand("privateMatch").setExecutor(new PrivateMatchCommand(this));
-        getCommand("region").setExecutor(new RegionCommand(this));
-        getCommand("remove").setExecutor(new RemoveCommand(this, draft));
-        getCommand("setTable").setExecutor(new SetTableCommand(this));
-        getCommand("stat").setExecutor(new StatsCommand(this));
-        getCommand("table").setExecutor(new TableCommand(this));
-        getCommand("top").setExecutor(new TopCommand(this));
-        getCommand("towersForPGM").setExecutor(new TowersForPGMCommand(this));
+        // // Vault
+        // SetupVault.setupVault();
         
+        // if (SetupVault.getVaultEconomy() != null) {
+        //     getLogger().info("Vault economy initialized successfully!");
+        // } else {
+        //     getLogger().warning("Vault economy could not be initialized. Make sure Vault plugin is installed.");
+        // }
+
+        // Inicializar el Match
+        MatchManager matchManager = new MatchManager();
+
+        // Inicializar el Draft
+        availablePlayers = new AvailablePlayers();
+        captains = new Captains();
+        teams = new Teams(matchManager);
+        draft = new Draft(this, matchManager, captains, availablePlayers, teams);
+        // Registrar comandos
+        Commands commandManager = new Commands(this);
+        commandManager.registerCommands(availablePlayers, captains, draft, matchManager, refillManager, teams, torneoListener);
 
         // Registrar eventos
-        getServer().getPluginManager().registerEvents(new TorneoListener(this), this);
-        pluginManager.registerEvents(new MatchLoadListener(refillManager, torneoListener), this);
-        pluginManager.registerEvents(new MatchAfterLoadListener(), this);
-        pluginManager.registerEvents(new MatchStartListener(torneoListener, refillManager), this);
-        pluginManager.registerEvents(new MatchFinishListener(this, torneoListener, refillManager, draft), this);
-        pluginManager.registerEvents(new PlayerJoinListener(this, draft), this);
-        pluginManager.registerEvents(new PlayerQuitListener(this, draft), this);
+        Events eventManager = new Events(this);
+        eventManager.registerEvents(availablePlayers, captains, draft, matchManager, refillManager, teams, torneoListener);
     }
         
-
     @Override
     public void onDisable() {
         // Desconectar de MySQL
@@ -150,62 +131,6 @@ public final class TowersForPGM extends JavaPlugin {
 
     public static TowersForPGM getInstance() {
         return instance;
-    }
-
-// Base de datos
-    // Método para obtener el administrador de la base de datos
-    public DatabaseManager getDatabaseManager() {
-        return databaseManager;
-    }
-
-    // Método para crear tablas al inicio
-    private void createTablesOnStartup() {
-        List<String> tables = ConfigManager.getTables();
-        for (String table : tables) {
-            TableManager.createTable(table);
-        }
-    }
-
-    // Método para obtener el booleano de activación de la base de datos
-    public boolean getIsDatabaseActivated() {
-        return isDatabaseActivated;
-    }
-
-    // Método para establecer el booleano de activación de la base de datos
-    public void setIsDatabaseActivated(boolean activated) {
-        this.isDatabaseActivated = activated;
-    }
-
-// Captains
-    // Método para obtener los jugadores desconectados
-    public Map<String, MatchPlayer> getDisconnectedPlayers() {
-        return disconnectedPlayers;
-    }
-
-    // Métodos para añadir y eliminar jugadores desconectados
-    public void addDisconnectedPlayer(String username, MatchPlayer player) {
-        disconnectedPlayers.put(username, player);
-    }
-
-    public void removeDisconnectedPlayer(String username) {
-        disconnectedPlayers.remove(username);
-    }
-    
-// Partido actual
-    public Match getCurrentMatch() { // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM (10/03/2025)
-        return currentMatch;
-    }
-
-    public void setCurrentMatch(Match match) { // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM (10/03/2025)
-        this.currentMatch = match;
-    }
-
-    public String getCurrentMap() { // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM (10/03/2025)
-        return currentMap;
-    }
-
-    public void setCurrentMap(String map) { // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM (10/03/2025)
-        this.currentMap = map; 
     }
 
 // Mensajes de language.yml y messages.yml
@@ -268,18 +193,7 @@ public final class TowersForPGM extends JavaPlugin {
         return messagesConfig;
     }
 
-// Refill
-    // Método para obtener el booleano de protección de partida
-    public boolean isPreparationEnabled() {
-        return preparationEnabled;
-    }
-
-    // Método para establecer el booleano de protección de partida
-    public void setPreparationEnabled(boolean enabled) {
-        this.preparationEnabled = enabled;
-    }
-
-// Region
+// Preparation Time
     // Método para cargar las regiones desde el archivo de configuración
     private void loadRegions() {
         ConfigurationSection section = getConfig().getConfigurationSection("preparationTime.maps");
@@ -335,7 +249,6 @@ public final class TowersForPGM extends JavaPlugin {
         return regions;
     }
 
-// Configuraciones por mundo.
     // Método para almacenar la configuración del partido
     public void storeMatchConfig(String worldName, MatchConfig matchConfig) {
         matchConfigs.put(worldName, matchConfig);
@@ -349,5 +262,82 @@ public final class TowersForPGM extends JavaPlugin {
     // Método para obtener la configuración del partido
     public MatchConfig getMatchConfig(String worldName) {
         return matchConfigs.get(worldName);
+    }
+
+    // Método para obtener el booleano de protección de partida
+    public boolean isPreparationEnabled() {
+        return preparationEnabled;
+    }
+
+    // Método para establecer el booleano de protección de partida
+    public void setPreparationEnabled(boolean enabled) {
+        this.preparationEnabled = enabled;
+    }
+
+// Base de datos
+    // Método para obtener el administrador de la base de datos
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
+    // Método para crear tablas al inicio
+    private void createTablesOnStartup() {
+        List<String> tables = ConfigManager.getTables();
+        for (String table : tables) {
+            TableManager.createTable(table);
+        }
+    }
+
+    // Método para obtener el booleano de activación de la base de datos
+    public boolean getIsDatabaseActivated() {
+        return isDatabaseActivated;
+    }
+
+    // Método para establecer el booleano de activación de la base de datos
+    public void setIsDatabaseActivated(boolean activated) {
+        this.isDatabaseActivated = activated;
+    }
+
+    // Método para obtener los jugadores desconectados
+    public Map<String, MatchPlayer> getDisconnectedPlayers() {
+        return disconnectedPlayers;
+    }
+
+// Captains
+    // Métodos para añadir y eliminar jugadores desconectados
+    public void addDisconnectedPlayer(String username, MatchPlayer player) {
+        disconnectedPlayers.put(username, player);
+    }
+
+    public void removeDisconnectedPlayer(String username) {
+        disconnectedPlayers.remove(username);
+    }
+    
+// Refill
+    public void loadRefillConfig() {
+        refillFile = new File(getDataFolder(), "refill.yml");
+        
+        // Si el archivo no existe, crearlo desde recursos
+        if (!refillFile.exists()) {
+            saveResource("refill.yml", false);
+        }
+
+        refillConfig = YamlConfiguration.loadConfiguration(refillFile);
+    }
+
+    public FileConfiguration getRefillConfig() {
+        return refillConfig;
+    }
+
+    public void saveRefillConfig() {
+        try {
+            refillConfig.save(refillFile);
+        } catch (IOException e) {
+            getLogger().severe("Error al guardar refill.yml: " + e.getMessage());
+        }
+    }
+
+    public void reloadRefillConfig() {
+        refillConfig = YamlConfiguration.loadConfiguration(refillFile);
     }
 }

@@ -1,7 +1,6 @@
 package org.nicolie.towersforpgm.database;
 
 import org.nicolie.towersforpgm.TowersForPGM;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
@@ -41,8 +40,11 @@ public class DatabaseManager {
             config.setIdleTimeout(30000);
             config.setMaxLifetime(1800000);
             config.setConnectionTimeout(10000);
-            dataSource = new HikariDataSource(config);
+            config.addDataSourceProperty("cachePrepStmts", "true");
+            config.addDataSourceProperty("prepStmtCacheSize", "250");
+            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
+            dataSource = new HikariDataSource(config);
             plugin.getLogger().info("Conectado a MySQL con HikariCP.");
         } catch (Exception e) {
             plugin.getLogger().severe("Error al conectar con la base de datos: " + e.getMessage());
@@ -51,7 +53,32 @@ public class DatabaseManager {
     }
 
     public Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
+        int retries = 3;
+        while (retries > 0) {
+            try {
+                if (dataSource == null || dataSource.isClosed()) {
+                    plugin.getLogger().warning("El pool de conexiones está cerrado. Reintentando conexión...");
+                    connect(); // Reintenta conectar si el pool está cerrado
+                }
+
+                Connection connection = dataSource.getConnection();
+                
+                if (connection == null || !connection.isValid(2)) {
+                    throw new SQLException("La conexión obtenida no es válida.");
+                }
+                
+                return connection;
+            } catch (SQLException e) {
+                retries--;
+                plugin.getLogger().warning("Error al obtener la conexión a la base de datos. Reintentando... (" + retries + " intentos restantes)");
+                try {
+                    Thread.sleep(2000); // Espera antes de reintentar
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+        throw new SQLException("No se pudo obtener conexión a la base de datos después de varios intentos.");
     }
 
     public void disconnect() {

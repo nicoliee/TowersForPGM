@@ -6,14 +6,17 @@ import org.bukkit.event.EventHandler;
 import tc.oc.pgm.api.match.event.MatchStartEvent;
 
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.preparationTime.TorneoListener;
 
 public class MatchStartListener implements Listener{
     private final TorneoListener torneoListener;
     private final RefillManager refillManager;
     private final TowersForPGM plugin;
+    private final Captains captains;
 
-    public MatchStartListener(TorneoListener torneoListener, RefillManager refillManager) {
+    public MatchStartListener(TorneoListener torneoListener, RefillManager refillManager, Captains captains) {
+        this.captains = captains;
         this.torneoListener = torneoListener;
         this.refillManager = refillManager;
         this.plugin = TowersForPGM.getInstance();
@@ -24,6 +27,9 @@ public class MatchStartListener implements Listener{
     public void onMatchStart(MatchStartEvent event) {
         String matchName = event.getMatch().getMap().getName();
         String worldName = event.getMatch().getWorld().getName();
+        captains.setReadyActive(false);
+        captains.setReady1(false);
+        captains.setReady2(false);
         refillManager.startRefillTask(worldName);
         if (plugin.isPreparationEnabled()) {
             torneoListener.startProtection(null, matchName, worldName);

@@ -31,7 +31,6 @@ public class MatchFinishListener implements Listener {
         this.refillManager = refillManager;
         this.draft = draft;
     }
-
     @EventHandler
     public void onMatchFinish(MatchFinishEvent event) {
         Match match = event.getMatch();
@@ -43,54 +42,42 @@ public class MatchFinishListener implements Listener {
         ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);
         StatsMatchModule statsModule = match.getModule(StatsMatchModule.class);
 
-        if (plugin.getIsDatabaseActivated()){
+        if (plugin.getIsDatabaseActivated() && ConfigManager.getTableForMap(mapName) != "none") {
             if (scoreMatchModule != null && statsModule != null) {
                 List<Stats> playerStatsList = new ArrayList<>();
-                // Recorrer todos los jugadores que participaron en la partida
-                for (MatchPlayer player : event.getMatch().getParticipants()) {
-
+        
+                // Crear una lista única con todos los jugadores (conectados y desconectados)
+                List<MatchPlayer> allPlayers = new ArrayList<>();
+                allPlayers.addAll(event.getMatch().getParticipants());
+                allPlayers.addAll(plugin.getDisconnectedPlayers().values());
+        
+                // Recorrer todos los jugadores
+                for (MatchPlayer player : allPlayers) {
                     // Obtenemos estadísticas del jugador
                     PlayerStats playerStats = statsModule.getPlayerStat(player);
                     int totalPoints = (int) scoreMatchModule.getContribution(player.getId());
                     boolean isWinner = event.getMatch().getWinners().contains(player.getCompetitor());
-
+        
                     playerStatsList.add(new Stats(
                             player.getNameLegacy(),
                             playerStats != null ? playerStats.getKills() : 0,
                             playerStats != null ? playerStats.getDeaths() : 0,
+                            playerStats != null ? playerStats.getAssists() : 0,
                             totalPoints,
                             isWinner ? 1 : 0,
                             1
                     ));
-                }
-
-                // Procesar jugadores desconectados
-                int disconnectedSize = plugin.getDisconnectedPlayers().size();
-                if (disconnectedSize > 0) {
-                    for (MatchPlayer player : plugin.getDisconnectedPlayers().values()) {
-                        PlayerStats playerStats = statsModule.getPlayerStat(player);
-                        int totalPoints = (int) scoreMatchModule.getContribution(player.getId());
-                        boolean isWinner = event.getMatch().getWinners().contains(player.getCompetitor());
-
-                        playerStatsList.add(new Stats(
-                                player.getNameLegacy(),
-                                playerStats != null ? playerStats.getKills() : 0,
-                                playerStats != null ? playerStats.getDeaths() : 0,
-                                totalPoints,
-                                isWinner ? 1 : 0,
-                                1
-                        ));
-                    }
-                }
-
+                };
                 // Si hay estadísticas que enviar, realizar la actualización
                 if (!playerStatsList.isEmpty()) {
                     // Aquí envías las estadísticas a la base de datos o lo que sea necesario
                     StatsManager.updateStats(ConfigManager.getTableForMap(mapName), playerStatsList);
+                    System.out.println("[+] " + mapName + " en la tabla: " + ConfigManager.getTableForMap(mapName) + " con " + playerStatsList.size() + " jugadores.");
+                    System.out.println("Stats: " + playerStatsList.toString());
                     //TODO: Enviar mensaje a los desarrolladores configurado con language.yml
                     SendMessage.sendToDevelopers("&a[+] " + mapName + " en la tabla: " + ConfigManager.getTableForMap(mapName) + " con " + playerStatsList.size() + " jugadores.");
                 }
             }
-        }
+        }        
     }
 }

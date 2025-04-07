@@ -59,6 +59,10 @@
           <id>sonatype</id>
           <url>https://oss.sonatype.org/content/groups/public/</url>
       </repository>
+      <repository>
+          <id>jitpack.io</id>
+          <url>https://jitpack.io</url>
+      </repository>
   </repositories>
 
   <dependencies>
@@ -72,18 +76,22 @@
             <groupId>tc.oc.pgm</groupId>
             <artifactId>core</artifactId>
             <version>0.16-SNAPSHOT</version>
-            <scope>provided</scope>
       </dependency>
       <dependency>
             <groupId>tc.oc.pgm</groupId>
             <artifactId>util</artifactId>
             <version>0.16-SNAPSHOT</version>
-            <scope>provided</scope>
       </dependency>
       <dependency>
           <groupId>com.zaxxer</groupId>
           <artifactId>HikariCP</artifactId>
           <version>5.0.1</version>
+      </dependency>
+      <dependency>
+          <groupId>com.github.MilkBowl</groupId>
+          <artifactId>VaultAPI</artifactId>
+          <version>1.7</version>
+          <scope>provided</scope>
       </dependency>
   </dependencies>
 </project>
