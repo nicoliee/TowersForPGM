@@ -22,6 +22,7 @@ public class Draft {
     private final AvailablePlayers availablePlayers;
     private final Teams teams;
     private boolean isDraftActive = false;
+    private boolean isMatchWithCaptains = false;
     private boolean isCaptain1Turn = true;
     public Draft(TowersForPGM plugin, MatchManager matchManager, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
         this.teams = teams;
@@ -32,6 +33,7 @@ public class Draft {
     }
 
     public void startDraft(UUID captain1, UUID captain2) {
+        isMatchWithCaptains = false;
         cleanLists();
         captains.setCaptain1(captain1);
         captains.setCaptain2(captain2);
@@ -137,6 +139,8 @@ public class Draft {
         // Marcar a los capitanes como listos
         captains.setReadyActive(true);
 
+        isMatchWithCaptains = true;
+
         // Iniciar el juego con un retraso de 60 segundos
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "start 60");
     }
@@ -147,6 +151,7 @@ public class Draft {
         teams.clear();
         teams.removeFromTeams();
         isDraftActive = false;
+        isMatchWithCaptains = false;
     }
 
     public void toggleTurn() {
@@ -160,5 +165,9 @@ public class Draft {
 
     public boolean isCaptain1Turn() {
         return isCaptain1Turn;
+    }
+
+    public boolean isMatchWithCaptains() {
+        return isMatchWithCaptains;
     }
 }

@@ -12,7 +12,7 @@ import org.nicolie.towersforpgm.listeners.MatchLoadListener;
 import org.nicolie.towersforpgm.listeners.MatchStartListener;
 import org.nicolie.towersforpgm.listeners.MatchStatsListener;
 import org.nicolie.towersforpgm.listeners.PlayerJoinListener;
-import org.nicolie.towersforpgm.listeners.PlayerParticipationStartListener;
+import org.nicolie.towersforpgm.listeners.PlayerParticipationListener;
 import org.nicolie.towersforpgm.listeners.PlayerQuitListener;
 import org.nicolie.towersforpgm.preparationTime.TorneoListener;
 
@@ -30,12 +30,12 @@ public class Events {
         PluginManager pluginManager = plugin.getServer().getPluginManager();
 
         pluginManager.registerEvents(new TorneoListener(plugin), plugin);
-        pluginManager.registerEvents(new MatchLoadListener(refillManager, torneoListener, matchManager), plugin);
+        pluginManager.registerEvents(new MatchLoadListener(refillManager, torneoListener, matchManager, draft), plugin);
         pluginManager.registerEvents(new MatchAfterLoadListener(), plugin);
         pluginManager.registerEvents(new MatchStartListener(torneoListener, refillManager, captains), plugin);
-        pluginManager.registerEvents(new MatchFinishListener(plugin, torneoListener, refillManager, draft), plugin);
+        pluginManager.registerEvents(new MatchFinishListener(plugin, torneoListener, refillManager), plugin);
         pluginManager.registerEvents(new PlayerJoinListener(plugin, draft, availablePlayers, teams, captains), plugin);
-        pluginManager.registerEvents(new PlayerParticipationStartListener(teams, captains), plugin);
+        pluginManager.registerEvents(new PlayerParticipationListener(teams, captains), plugin);
         pluginManager.registerEvents(new PlayerQuitListener(availablePlayers, draft, matchManager, plugin, teams), plugin);
         pluginManager.registerEvents(new CompetitorScoreChangeListener(), plugin);
         pluginManager.registerEvents(new MatchStatsListener(), plugin);

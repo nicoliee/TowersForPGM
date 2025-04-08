@@ -144,12 +144,14 @@ public class Teams {
         }
     }
 
-    public void removeFromTeam(MatchPlayer player) {
-        Match match = matchManager.getMatch();
-        if (match == null) {
-            return;
+    public void removeFromAnyTeam(String playerName) {
+        if (isPlayerInAnyTeam(playerName)) {
+            if (isPlayerInTeam(playerName, 1)) {
+                removePlayerFromTeam(playerName, 1);
+            } else if (isPlayerInTeam(playerName, 2)) {
+                removePlayerFromTeam(playerName, 2);
+            }
         }
-        match.setParty(player, match.getDefaultParty());
     }
     
     public void removeFromTeams(){
