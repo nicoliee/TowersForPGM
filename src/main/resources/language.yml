@@ -1,4 +1,110 @@
 messages:
+  en:
+    TowersForPGM:
+      languageSet: "§8[§bTowersForPGM§8] §aLanguage changed to §2English§a."
+      noLanguage: "§8[§bTowersForPGM§8] §cYou must select a language."
+    add:
+      captain: "&cYou cannot add a captain."
+      usage: "§cUsage: /add <nickname>"
+    captains:
+      alreadyInDraft: "§cThe player is already in the draft."
+      alreadyInTeam: "§cThe player is already in a team."
+      captainsHeader: "§8§m-----------§r §b§lCaptains §8§m-----------"
+      matchStarted: "§cThe game has already started."
+      notEnoughPlayers: "§cThere are not enough players in the game."
+      notInDraft: "§cThe player is not in the draft."
+      notOnline: "§cThe player is not online."
+      offline: "§cOne of the captains is offline."
+      teamsHeader: "§8§m-----------§r §b§lTeams §8§m-----------"
+      usage: "§cUsage: /captains <nick1> <nick2>"
+    errors:
+      databaseDisabled: "§cThe database is disabled."
+      invalidCoords: "§cInvalid coordinates: §4{x}, {y}, {z}§c."
+      messageNotFound: "§cMessage not found for the key: §4{key}§c."
+      noPlayer: "§cThis command can only be executed by a player."
+      preparationTimeNotFound: "§cNo 'preparationTime' section found in config.yml."
+      regionError: "§cError getting region: §4{region}§c."
+      regionLoaded: "§aRegion loaded: §2{region}§a."
+    join:
+      notAllowed: "You cannot join the game."
+      redTeam: "You are in the red team."
+      blueTeam: "You are in the blue team."
+    messages:
+      reloadError: "§8[§bTowersForPGM§8] §cError reloading messages."
+      reloadStart: "§8[§bTowersForPGM§8] §aReloading messages..."
+      reloadSuccess: "§8[§bTowersForPGM§8] §aMessages reloaded successfully."
+    picks:
+      noDraft: "§cThere is no ongoing draft."
+      usage: "§cUsage: /pick <player>"
+    preparation:
+      alreadyStarted: "§cThe protection is already active."
+      disabled: "§cProtection disabled."
+      enabled: "§aProtection enabled."
+      isAvailable: "§ePreparation time available in §2{map}§e."
+      isAvailableButDisabled: "§ePreparation time available in §2{map}§e. Use §3/preparationTime enable §eto activate it."
+      noRegion: "§cNo region configured for this map."
+      notStarted: "§cNo preparation time is active."
+      usage: "§cUsage: /preparationTime <on|off|enable|disable>"
+    privateMatch:
+      false: "§aThe map: §2{map} §ahas been set to public."
+      true: "§aThe map: §2{map} §ahas been set to private."
+      usage: "§cUsage: /privateMatch <on|off>"
+    refill:
+      mapFound: "§eRefill available in §2{map}§e."
+      chestSet: "§aChest set. &8[&2{coords}&8]"
+      chestDeleted: "§aChest deleted. &8[&2{coords}&8]"
+      chestNotFound: "§cChest not found. &8[&2{coords}&8]"
+      usage: "§cUsage: /refill <add|delete|test>"
+    region:
+      header: "§eConfigured maps and their details:"
+      hasteSet: "§aHaste timer set to §2{timer} §aminutes."
+      mapAlreadyAdded: "§aThe map is already configured."
+      mapDeleted: "§aMap §2{map} §adeleted."
+      mapError: "§cThis map is not configured. Use §e/config add§c first."
+      mapSuccess: "§aMap §2{map} §aadded with default values."
+      mapsNotFound: "§cNo maps configured. Use §e/config add§c first."
+      maxSet: "§aMax coordinates set [X: §2{x}§a, Y: §2{y}§a, Z: §2{z}§a]."
+      minSet: "§aMin coordinates set. [X: §2{x}§a, Y: §2{y}§a, Z: §2{z}§a]"
+      timerSet: "§aTimer set to §2{timer}§a minutes."
+      usage: "§cPlease enter a valid number."
+    remove:
+      captain: "§cYou cannot remove a captain."
+      notInDraft: "§cThe player is not in the draft."
+      usage: "§cUsage: /remove <nickname>"
+    setTable:
+      mapAdded: "§aMap: §2{map} §awill send its stats to table: §6{table}§a."
+      mapDeleted: "§aMap §2{map} §adeleted."
+      notExists: "§cTable §4{table} §cnot found."
+      success: "§aTable §2{table} §aset."
+      usage: "§cUsage: /setTable <table>"
+      usageAddMap: "§cUsage: /addMap <table>"
+    stats:
+      disabled: "§cStats disabled."
+      error: "§cError fetching stats."
+      header: "§7Stats for §3{player}§7 in §2{table}:"
+      kills: "§7Kills"
+      deaths: "§7Deaths"
+      assists: "§7Assists"
+      games: "§7Games"
+      noStats: "§cPlayer not found."
+      points: "§7Points"
+      tableNotFound: "§cTable §4{table} §cnot found."
+      usage: "§eUsage: /stats [table] [player]"
+      wins: "§7Wins"
+    table:
+      created: "§aTable added."
+      deleted: "§cTable deleted."
+      exists: "§cTable already exists."
+      list: "§aTables:"
+      notFound: "§cTable §4{table} §cnot found."
+      specify: "§cYou must specify a table."
+      usage: "§eUsage: /table <add|delete|list> [name]"
+    top:
+      header: "§7Top §3{category} §7in §2{table} §8[§7Page: §f{page}§8]"
+      invalidCategory: "§cInvalid category. Valid categories are: kills, deaths, points, wins, games."
+      invalidPage: "§cInvalid page."
+      usage: "§cUsage: /top <kills|deaths|points|wins|games> [page] [table]"
+
   es:
     TowersForPGM:
       languageSet: "§8[§bTowersForPGM§8] §aIdioma cambiado a §2español§a."
