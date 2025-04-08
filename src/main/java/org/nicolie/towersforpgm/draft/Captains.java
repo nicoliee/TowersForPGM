@@ -35,11 +35,13 @@ public class Captains {
     public void setCaptain2(UUID captain2) {
         this.captain2 = captain2;
     }
-    public void clearCaptains() {
+    public void clear() {
         this.captain1 = null;
         this.captain2 = null;
         this.ready1 = false;
         this.ready2 = false;
+        this.isReadyActive = false;
+        this.isMatchWithCaptains = false;
     }
 
     public boolean isCaptain(UUID player) {

@@ -7,14 +7,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import tc.oc.pgm.api.match.Match;
-import tc.oc.pgm.api.player.MatchPlayer;
-import tc.oc.pgm.join.JoinRequest;
-import tc.oc.pgm.join.JoinResult;
-import tc.oc.pgm.teams.Team;
-import tc.oc.pgm.teams.TeamMatchModule;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -51,15 +44,15 @@ public class Draft {
         }
 
         // Agregar a los capitanes a sus respectivos equipos
-        assignPlayerToTeam(Bukkit.getPlayer(captain1), 1);
-        assignPlayerToTeam(Bukkit.getPlayer(captain2), 2);
+        teams.assignTeam(Bukkit.getPlayer(captain1), 1);
+        teams.assignTeam(Bukkit.getPlayer(captain2), 2);
 
         Match match = matchManager.getMatch();
         if (match.getCountdown() != null) {
             match.getCountdown().cancelAll();
         }
         
-        setTeamsSize(0);
+        teams.setTeamsSize(0);
         // Decidir aleatoriamente quien empieza el draft
         Random rand = new Random();
         isCaptain1Turn = rand.nextBoolean(); // Captain 1 empieza si es true
@@ -83,7 +76,7 @@ public class Draft {
         if (isCaptain1Turn) {
             teams.addPlayerToTeam(username, 1);
             availablePlayers.removePlayer(username);
-            assignPlayerToTeam(player, 1);
+            teams.assignTeam(player, 1);
             SendMessage.broadcast(plugin.getConfigurableMessage("captains.choose")
                 .replace("{teamcolor}", "&4")
                 .replace("{captain}", captains.getCaptain1Name())
@@ -92,7 +85,7 @@ public class Draft {
         } else {
             teams.addPlayerToTeam(username, 2);
             availablePlayers.removePlayer(username);
-            assignPlayerToTeam(player, 2);
+            teams.assignTeam(player, 2);
             SendMessage.broadcast(plugin.getConfigurableMessage("captains.choose")
                 .replace("{teamcolor}", "&9")
                 .replace("{captain}", captains.getCaptain2Name())
@@ -139,8 +132,7 @@ public class Draft {
 
 
         // Limpiar jugadores disponibles y resetear tamaño de los equipos
-        availablePlayers.clear();
-        setTeamsSize(teamsize);
+        teams.setTeamsSize(teamsize);
 
         // Marcar a los capitanes como listos
         captains.setReadyActive(true);
@@ -150,69 +142,11 @@ public class Draft {
     }
 // misc
     public void cleanLists() {
+        captains.clear();
         availablePlayers.clear();
-        teams.clearTeams();
-        captains.clearCaptains();
-        captains.setReadyActive(false);
+        teams.clear();
+        teams.removeFromTeams();
         isDraftActive = false;
-        captains.setMatchWithCaptains(false);
-    }
-
-    public void assignPlayerToTeam(Player player, int teamNumber) {
-        Match match = matchManager.getMatch();
-        if (match == null) {
-            return;
-        }
-
-        TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
-        if (teamModule == null) {
-            return;
-        }
-
-        List<Team> teams = new ArrayList<>(teamModule.getTeams());
-        Team targetTeam = null;
-        // Buscar el equipo por nombre en lugar de por índice
-        for (Team team : teams) {
-            if (teamNumber == 1 && team.getDefaultName().equalsIgnoreCase("red")) { // hardcoded para el team rojo
-                targetTeam = team; // Asignar al equipo "red"
-                break;
-            } else if (teamNumber == 2 && team.getDefaultName().equalsIgnoreCase("blue")) { // hardcoded para el team azul
-                targetTeam = team; // Asignar al equipo "azul"
-                break;
-            }
-        }
-
-        if (targetTeam == null) {
-            return; // Si no encontramos el equipo, no hacemos nada
-        }
-        
-        MatchPlayer matchPlayer = match.getPlayer(player);
-        if (matchPlayer != null) {
-            // Aquí forzamos la unión al equipo sin verificar los permisos
-            JoinRequest request = JoinRequest.fromPlayer(matchPlayer, targetTeam, JoinRequest.Flag.FORCE);
-            JoinResult result = teamModule.queryJoin(matchPlayer, request);
-
-            // Si no queremos verificar el resultado de la unión, directamente unimos al jugador
-            if (result.isSuccess() || !result.isSuccess()) {
-                teamModule.join(matchPlayer, request, result);
-            }
-        }
-    }
-
-    private void setTeamsSize(int teamSize) {
-        Match match = matchManager.getMatch();
-        if (match == null) {
-            return;
-        }
-        TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
-        if (teamModule == null) {
-            return;
-        }
-
-        List<Team> teams = new ArrayList<>(teamModule.getTeams());
-        for (Team team : teams) {
-            team.setMaxSize(teamSize, 25);
-        }
     }
 
     public void toggleTurn() {

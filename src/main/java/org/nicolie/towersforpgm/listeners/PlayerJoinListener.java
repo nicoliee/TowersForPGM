@@ -54,13 +54,13 @@ public class PlayerJoinListener implements Listener {
         // Verificamos si el jugador está en team1
         if (teams.isPlayerInTeam(player.getName(), 1) ||
             (captains.getCaptain1() != null && captains.getCaptain1().equals(player.getUniqueId()))) {
-                draft.assignPlayerToTeam(player, 1);
+                teams.assignTeam(player, 1);
         } 
         
         // Verificamos si el jugador está en team2
         else if (teams.isPlayerInTeam(player.getName(), 2) ||
                  (captains.getCaptain2() != null && captains.getCaptain2().equals(player.getUniqueId()))) {
-                    draft.assignPlayerToTeam(player, 2);
+                    teams.assignTeam(player, 2);
         }
 
         if (plugin.getDisconnectedPlayers().get(player.getName()) != null){

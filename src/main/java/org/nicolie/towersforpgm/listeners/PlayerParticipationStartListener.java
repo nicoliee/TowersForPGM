@@ -7,7 +7,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Captains;
-import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 
@@ -19,9 +18,7 @@ public class PlayerParticipationStartListener implements Listener {
     private final TowersForPGM plugin;
     private final Teams teams;
     private final Captains captains;
-    private final Draft draft;
-    public PlayerParticipationStartListener(Teams teams, Captains captains, Draft draft) {
-        this.draft = draft;
+    public PlayerParticipationStartListener(Teams teams, Captains captains) {
         this.plugin = TowersForPGM.getInstance();
         this.teams = teams;
         this.captains = captains;
@@ -67,7 +64,7 @@ public class PlayerParticipationStartListener implements Listener {
         if (teams.isPlayerInTeam(playerName, 1) || captains.isCaptain1(playerUUID)) {
             event.cancel(Component.text(plugin.getPluginMessage("join.redTeam")));
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                draft.assignPlayerToTeam(event.getPlayer().getBukkit(), 1);
+                teams.assignTeam(event.getPlayer().getBukkit(), 1);
             }, 5L); // Esperar 5 ticks antes de asignar el equipo
             return;
         }
@@ -75,7 +72,7 @@ public class PlayerParticipationStartListener implements Listener {
         if (teams.isPlayerInTeam(playerName, 2) || captains.isCaptain2(playerUUID)) {
             event.cancel(Component.text(plugin.getPluginMessage("join.blueTeam"))); // o el mensaje que corresponda
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                draft.assignPlayerToTeam(event.getPlayer().getBukkit(), 2);
+                teams.assignTeam(event.getPlayer().getBukkit(), 2);
             }, 5L); // Esperar 5 ticks antes de asignar el equipo
             return;
         }        

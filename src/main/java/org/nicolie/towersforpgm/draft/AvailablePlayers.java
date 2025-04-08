@@ -9,6 +9,8 @@ public class AvailablePlayers {
     private final List<Player> availablePlayers = new ArrayList<>();
     private final List<String> availableOfflinePlayers = new ArrayList<>();
 
+
+
     public void addPlayer(String playerName) {
         Player player = Bukkit.getPlayerExact(playerName); // nombre exacto para evitar ambigüedades
     
@@ -34,7 +36,6 @@ public class AvailablePlayers {
     public void removePlayer(String playerName) {
         availablePlayers.removeIf(p -> p.getName().equalsIgnoreCase(playerName));
         availableOfflinePlayers.removeIf(p -> p.equalsIgnoreCase(playerName));
-
     }
 
     public List<Player> getAvailablePlayers() {
@@ -57,6 +58,8 @@ public class AvailablePlayers {
     }
     
     public void clear() {
+        if(availablePlayers == null || availableOfflinePlayers == null) return;
+        if(availablePlayers.isEmpty() && availableOfflinePlayers.isEmpty()) return;
         availablePlayers.clear();
         availableOfflinePlayers.clear();
     }

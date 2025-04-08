@@ -3,9 +3,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.MatchManager;
 
+import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.join.JoinRequest;
+import tc.oc.pgm.join.JoinResult;
+import tc.oc.pgm.teams.Team;
+import tc.oc.pgm.teams.TeamMatchModule;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Teams {
@@ -49,7 +56,7 @@ public class Teams {
         return isPlayerInTeam(playerName, 1) || isPlayerInTeam(playerName, 2);
     }
 
-    public void clearTeams() {
+    public void clear() {
         team1.clear();
         team2.clear();
         team1Offline.clear();
@@ -79,5 +86,79 @@ public class Teams {
         
         return allPlayers;
     }
+
+    public void assignTeam(Player player, int teamNumber) {
+        Match match = matchManager.getMatch();
+        if (match == null) {
+            return;
+        }
+
+        TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
+        if (teamModule == null) {
+            return;
+        }
+
+        List<Team> teams = new ArrayList<>(teamModule.getTeams());
+        Team targetTeam = null;
+        // Buscar el equipo por nombre en lugar de por índice
+        for (Team team : teams) {
+            if (teamNumber == 1 && team.getDefaultName().equalsIgnoreCase("red")) { // hardcoded para el team rojo
+                targetTeam = team; // Asignar al equipo "red"
+                break;
+            } else if (teamNumber == 2 && team.getDefaultName().equalsIgnoreCase("blue")) { // hardcoded para el team azul
+                targetTeam = team; // Asignar al equipo "azul"
+                break;
+            }
+        }
+
+        if (targetTeam == null) {
+            return; // Si no encontramos el equipo, no hacemos nada
+        }
+        
+        MatchPlayer matchPlayer = match.getPlayer(player);
+        if (matchPlayer != null) {
+            // Aquí forzamos la unión al equipo sin verificar los permisos
+            JoinRequest request = JoinRequest.fromPlayer(matchPlayer, targetTeam, JoinRequest.Flag.FORCE);
+            JoinResult result = teamModule.queryJoin(matchPlayer, request);
+
+            // Si no queremos verificar el resultado de la unión, directamente unimos al jugador
+            if (result.isSuccess() || !result.isSuccess()) {
+                teamModule.join(matchPlayer, request, result);
+            }
+        }
+    }
+
+    public void setTeamsSize(int teamSize) {
+        Match match = matchManager.getMatch();
+        if (match == null) {
+            return;
+        }
+        TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
+        if (teamModule == null) {
+            return;
+        }
+
+        List<Team> teams = new ArrayList<>(teamModule.getTeams());
+        for (Team team : teams) {
+            team.setMaxSize(teamSize, 25);
+        }
+    }
+
+    public void removeFromTeam(MatchPlayer player) {
+        Match match = matchManager.getMatch();
+        if (match == null) {
+            return;
+        }
+        match.setParty(player, match.getDefaultParty());
+    }
     
+    public void removeFromTeams(){
+        Match match = matchManager.getMatch();
+        if (match == null) {
+            return;
+        }
+        match.getPlayers().forEach(player -> {
+            match.setParty(player, match.getDefaultParty());
+        });
+    }
 }
