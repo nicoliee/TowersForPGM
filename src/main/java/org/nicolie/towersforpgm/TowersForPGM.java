@@ -6,6 +6,7 @@ import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
@@ -108,17 +109,19 @@ public final class TowersForPGM extends JavaPlugin {
         MatchManager matchManager = new MatchManager();
 
         // Inicializar el Draft
-        availablePlayers = new AvailablePlayers();
+        availablePlayers = new AvailablePlayers(matchManager);
         captains = new Captains();
         teams = new Teams(matchManager);
         draft = new Draft(this, matchManager, captains, availablePlayers, teams);
+        PickInventory pickInventory = new PickInventory(this, draft, captains, availablePlayers);
+        getServer().getPluginManager().registerEvents(pickInventory, this);
         // Registrar comandos
         Commands commandManager = new Commands(this);
-        commandManager.registerCommands(availablePlayers, captains, draft, matchManager, refillManager, teams, torneoListener);
+        commandManager.registerCommands(availablePlayers, captains, draft, matchManager, pickInventory, refillManager, teams, torneoListener);
 
         // Registrar eventos
         Events eventManager = new Events(this);
-        eventManager.registerEvents(availablePlayers, captains, draft, matchManager, refillManager, teams, torneoListener);
+        eventManager.registerEvents(availablePlayers, captains, draft, matchManager, pickInventory, refillManager, teams, torneoListener);
     }
         
     @Override

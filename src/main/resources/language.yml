@@ -34,6 +34,7 @@ messages:
       reloadStart: "§8[§bTowersForPGM§8] §aReloading messages..."
       reloadSuccess: "§8[§bTowersForPGM§8] §aMessages reloaded successfully."
     picks:
+      clickToPick: "§eClick to pick."
       noDraft: "§cThere is no ongoing draft."
       usage: "§cUsage: /pick <player>"
     preparation:
@@ -140,6 +141,7 @@ messages:
       reloadStart: "§8[§bTowersForPGM§8] §aRecargando los mensajes..."
       reloadSuccess: "§8[§bTowersForPGM§8] §aLos mensajes se han recargado correctamente."
     picks:
+      clickToPick: "§eHaz clic para elegir."
       noDraft: "§cNo hay un draft en curso."
       usage: "§cUso: /pick <jugador>"
     preparation:

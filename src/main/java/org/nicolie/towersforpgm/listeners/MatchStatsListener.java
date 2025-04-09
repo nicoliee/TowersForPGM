@@ -43,6 +43,7 @@ public class MatchStatsListener implements Listener {
             }
         }
         
+        
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!killsMap.isEmpty()) {
                 SendMessage.sendToWorld(event.getWorld().getName(), "&6 ---------- Top Kills: ---------- ");

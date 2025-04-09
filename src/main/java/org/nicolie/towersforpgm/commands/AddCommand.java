@@ -8,6 +8,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
@@ -17,13 +18,15 @@ public class AddCommand implements CommandExecutor {
     private final Draft draft;
     private final Teams teams;
     private final TowersForPGM plugin;
+    private final PickInventory pickInventory;
 
-    public AddCommand(AvailablePlayers availablePlayers, Captains captains, Draft draft, Teams teams, TowersForPGM plugin) {
+    public AddCommand(AvailablePlayers availablePlayers, Captains captains, Draft draft, Teams teams, TowersForPGM plugin, PickInventory pickInventory) {
         this.availablePlayers = availablePlayers;
         this.captains = captains;
         this.draft = draft;
         this.teams = teams;
         this.plugin = plugin;
+        this.pickInventory = pickInventory;
     }
     
     @Override
@@ -50,6 +53,7 @@ public class AddCommand implements CommandExecutor {
         }
 
         availablePlayers.addPlayer(playerName);
+        pickInventory.updateAllInventories();
         SendMessage.broadcast(plugin.getConfigurableMessage("picks.add").replace("{player}", playerName));
         SendMessage.soundBroadcast("note.pling", 1f, 2f);
         return true;

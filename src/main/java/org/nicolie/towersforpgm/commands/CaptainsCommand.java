@@ -50,7 +50,7 @@ public class CaptainsCommand implements CommandExecutor {
         }
 
         // Verificar si hay suficientes jugadores en línea
-        if (Bukkit.getOnlinePlayers().size() < 3) {
+        if (Bukkit.getOnlinePlayers().size() < 4) {
             SendMessage.sendToPlayer(player, plugin.getPluginMessage("captains.notEnoughPlayers"));
             return true;
         }

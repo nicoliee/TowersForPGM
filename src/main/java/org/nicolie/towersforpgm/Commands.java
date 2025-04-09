@@ -16,6 +16,7 @@ import org.nicolie.towersforpgm.commands.TowersForPGMCommand;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.preparationTime.TorneoListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
@@ -29,16 +30,16 @@ public class Commands {
         this.plugin = plugin;
     }
 
-    public void registerCommands(AvailablePlayers availablePlayers, Captains captains, Draft draft, MatchManager matchManager, RefillManager refillManager, Teams teams, TorneoListener torneoListener) {
-        plugin.getCommand("add").setExecutor(new AddCommand(availablePlayers, captains, draft, teams, plugin));
+    public void registerCommands(AvailablePlayers availablePlayers, Captains captains, Draft draft, MatchManager matchManager, PickInventory pickInventory, RefillManager refillManager, Teams teams, TorneoListener torneoListener) {
+        plugin.getCommand("add").setExecutor(new AddCommand(availablePlayers, captains, draft, teams, plugin, pickInventory));
         plugin.getCommand("captains").setExecutor(new CaptainsCommand(plugin, draft, matchManager));
-        plugin.getCommand("pick").setExecutor(new PickCommand(draft, captains, availablePlayers, plugin));
+        plugin.getCommand("pick").setExecutor(new PickCommand(draft, captains, availablePlayers, plugin, pickInventory));
         plugin.getCommand("preparationTime").setExecutor(new PreparationTimeCommand(plugin, torneoListener, matchManager));
         plugin.getCommand("privateMatch").setExecutor(new PrivateMatchCommand(plugin, matchManager));
         plugin.getCommand("config").setExecutor(new ConfigCommand(plugin, matchManager));
         plugin.getCommand("ready").setExecutor(new ReadyCommand(plugin, captains));
         plugin.getCommand("refill").setExecutor(new RefillCommand(refillManager, matchManager));
-        plugin.getCommand("remove").setExecutor(new RemoveCommand(plugin, draft, teams, captains, availablePlayers));
+        plugin.getCommand("remove").setExecutor(new RemoveCommand(plugin, draft, teams, captains, availablePlayers, pickInventory));
         plugin.getCommand("setTable").setExecutor(new SetTableCommand(plugin, matchManager));
         plugin.getCommand("stat").setExecutor(new StatsCommand(plugin, matchManager));
         plugin.getCommand("table").setExecutor(new TableCommand(plugin));

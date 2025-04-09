@@ -13,6 +13,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
@@ -21,11 +22,14 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
     private final Draft draft;
     private final Teams teams;
     private final AvailablePlayers availablePlayers;
-    public RemoveCommand(TowersForPGM plugin, Draft draft, Teams teams, Captains captains, AvailablePlayers availablePlayers) {
+    private final PickInventory pickInventory;
+
+    public RemoveCommand(TowersForPGM plugin, Draft draft, Teams teams, Captains captains, AvailablePlayers availablePlayers, PickInventory pickInventory) {
         this.plugin = plugin;
         this.draft = draft;
         this.teams = teams;
         this.availablePlayers = availablePlayers;
+        this.pickInventory = pickInventory;
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -46,6 +50,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
             return true;
         }
         availablePlayers.removePlayer(playerName);
+        pickInventory.updateAllInventories();
         SendMessage.broadcast(plugin.getConfigurableMessage("picks.remove").replace("{player}", playerName));
         SendMessage.soundBroadcast("note.pling", 1f, 0.5f);
         return true;

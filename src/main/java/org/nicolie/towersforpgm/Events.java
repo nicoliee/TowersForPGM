@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.listeners.CompetitorScoreChangeListener;
@@ -26,7 +27,7 @@ public class Events {
         this.plugin = plugin;
     }
 
-    public void registerEvents(AvailablePlayers availablePlayers, Captains captains, Draft draft, MatchManager matchManager, RefillManager refillManager, Teams teams, TorneoListener torneoListener) {
+    public void registerEvents(AvailablePlayers availablePlayers, Captains captains, Draft draft, MatchManager matchManager, PickInventory pickInventory, RefillManager refillManager, Teams teams, TorneoListener torneoListener) {
         PluginManager pluginManager = plugin.getServer().getPluginManager();
 
         pluginManager.registerEvents(new TorneoListener(plugin), plugin);

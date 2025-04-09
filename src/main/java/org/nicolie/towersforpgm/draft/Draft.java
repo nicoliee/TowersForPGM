@@ -21,9 +21,11 @@ public class Draft {
     private final Captains captains;
     private final AvailablePlayers availablePlayers;
     private final Teams teams;
+
     private boolean isDraftActive = false;
     private boolean isMatchWithCaptains = false;
     private boolean isCaptain1Turn = true;
+
     public Draft(TowersForPGM plugin, MatchManager matchManager, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
         this.teams = teams;
         this.captains = captains;
@@ -39,6 +41,7 @@ public class Draft {
         captains.setCaptain2(captain2);
         // Agregar todos los jugadores disponibles (excluyendo a los capitanes)
         for (Player player : Bukkit.getOnlinePlayers()) {
+            
             if (player != Bukkit.getPlayer(captain1) && player !=Bukkit.getPlayer(captain2)) {
                 String playerName = player.getName();
                 availablePlayers.addPlayer(playerName);

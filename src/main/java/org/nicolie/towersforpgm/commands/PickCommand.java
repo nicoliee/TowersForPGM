@@ -13,6 +13,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 // Comando para seleccionar un jugador en el draft
@@ -21,14 +22,16 @@ public class PickCommand implements CommandExecutor, TabCompleter{
     private Draft draft;
     private final Captains captains;
     private final AvailablePlayers availablePlayers;
+    private final PickInventory pickInventory;
 
     private final TowersForPGM plugin;
 
-    public PickCommand(Draft draft, Captains captains, AvailablePlayers availablePlayers, TowersForPGM plugin) {
+    public PickCommand(Draft draft, Captains captains, AvailablePlayers availablePlayers, TowersForPGM plugin, PickInventory pickInventory) {
         this.draft = draft;
         this.captains = captains;
         this.availablePlayers = availablePlayers;
         this.plugin = plugin;
+        this.pickInventory = pickInventory;
     }
 
     @Override
@@ -48,9 +51,10 @@ public class PickCommand implements CommandExecutor, TabCompleter{
         }
 
         if (args.length == 0) {
-            SendMessage.sendToPlayer(player, plugin.getPluginMessage("picks.usage"));
+            pickInventory.openInventory(player);
             return true;
         }
+        
 
         // Comprobar si el jugador es un capitán
         if (captains.isCaptain(player.getUniqueId())) {
