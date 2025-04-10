@@ -10,7 +10,7 @@ public class Captains {
     private boolean ready1 = false;
     private boolean ready2 = false;
     private boolean isReadyActive = false;
-    private boolean isMatchWithCaptains = false; // Indica si la partida tiene draft o no
+    private boolean isMatchWithCaptains = false;
 
     public UUID getCaptain1() {
         return captain1;

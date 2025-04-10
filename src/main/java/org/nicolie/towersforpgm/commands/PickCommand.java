@@ -16,6 +16,8 @@ import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import tc.oc.pgm.api.player.MatchPlayer;
+
 // Comando para seleccionar un jugador en el draft
 // PGM actualmente solo soporta una partida a la vez, por lo que no se pueden realizar múltiples drafts simultáneamente
 public class PickCommand implements CommandExecutor, TabCompleter{
@@ -70,8 +72,8 @@ public class PickCommand implements CommandExecutor, TabCompleter{
                 String inputName = args[0].toLowerCase();
 
                 // Buscar en jugadores online
-                Player pickedPlayer = availablePlayers.getAvailablePlayers().stream()
-                    .filter(p -> p.getName().equalsIgnoreCase(inputName))
+                MatchPlayer pickedPlayer = availablePlayers.getAvailablePlayers().stream()
+                    .filter(p -> p.getNameLegacy().equalsIgnoreCase(inputName))
                     .findFirst()
                     .orElse(null);
 
@@ -79,7 +81,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
                 String pickedPlayerString = null;
 
                 if (pickedPlayer != null) {
-                    pickedPlayerString = pickedPlayer.getName();
+                    pickedPlayerString = pickedPlayer.getNameLegacy();
                 } else {
                     pickedPlayerString = availablePlayers.getAvailableOfflinePlayers().stream()
                         .filter(name -> name.equalsIgnoreCase(inputName))
@@ -106,7 +108,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             // Obtener la lista de tablas desde TowersForPGM.getTables()
-            List<String> tables = availablePlayers.getAvailablePlayers().stream().map(Player::getName).collect(Collectors.toList());
+            List<String> tables = availablePlayers.getAvailablePlayers().stream().map(MatchPlayer::getNameLegacy).collect(Collectors.toList());
             tables.addAll(availablePlayers.getAvailableOfflinePlayers());
             // Filtrar las opciones que comienzan con el texto ingresado por el usuario
             String input = args[0].toLowerCase();

@@ -166,8 +166,8 @@ public final class TowersForPGM extends JavaPlugin {
 
         // Verificar si el mensaje es null y retornar un mensaje por defecto o de error
         if (message == null) {
-            SendMessage.sendToAdmins(getPluginMessage("errors.messageNotFound") + language +"." + key);
-            return ChatColor.RED + "error";
+            SendMessage.sendToAdmins(getPluginMessage("errors.messageNotFound").replace("{key}", key));
+            return ChatColor.RED + getPluginMessage("messageNotFoundToPlayers");
         }
         return ChatColor.translateAlternateColorCodes('&', message);
     }
@@ -176,8 +176,8 @@ public final class TowersForPGM extends JavaPlugin {
     public String getConfigurableMessage(String key) {
         String message = getMessagesConfig().getString(key);
         if (message == null) {
-            SendMessage.sendToAdmins(getPluginMessage("errors.messageNotFound") + key);
-            return ChatColor.RED + "error";
+            SendMessage.sendToAdmins(getPluginMessage("errors.messageNotFound").replace("{key}", key));
+            return ChatColor.RED + "";
         }
         return ChatColor.translateAlternateColorCodes('&', message);
     }

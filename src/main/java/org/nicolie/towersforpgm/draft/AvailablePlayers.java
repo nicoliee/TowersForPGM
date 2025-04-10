@@ -15,8 +15,10 @@ import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 
+import tc.oc.pgm.api.player.MatchPlayer;
+
 public class AvailablePlayers {
-    private final List<Player> availablePlayers = new ArrayList<>();
+    private final List<MatchPlayer> availablePlayers = new ArrayList<>();
     private final List<String> availableOfflinePlayers = new ArrayList<>();
     private final Map<String, PlayerStats> playerStatsCache = new HashMap<>();
     private final MatchManager matchManager;
@@ -27,32 +29,30 @@ public class AvailablePlayers {
 
     public void addPlayer(String playerName) {
         Player player = Bukkit.getPlayerExact(playerName);
-    
+        MatchPlayer matchPlayer = matchManager.getMatch().getPlayer(player);
         if (player != null && player.isOnline()) {
-            if (availablePlayers.stream().noneMatch(p -> p.getName().equalsIgnoreCase(playerName))) {
-                availablePlayers.add(player);
+            if (availablePlayers.stream().noneMatch(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()))) {
+                availablePlayers.add(matchPlayer);
             }
             availableOfflinePlayers.removeIf(name -> name.equalsIgnoreCase(playerName));
-            // Cargar estadísticas cuando el jugador es online
             loadStatsForPlayer(playerName);
         } else {
             if (availableOfflinePlayers.stream().noneMatch(name -> name.equalsIgnoreCase(playerName))) {
                 availableOfflinePlayers.add(playerName);
             }
-            availablePlayers.removeIf(p -> p.getName().equalsIgnoreCase(playerName));
-            // Cargar estadísticas aunque esté offline
+            availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()));
             loadStatsForPlayer(playerName);
         }
     }
 
     // Método para eliminar jugador
     public void removePlayer(String playerName) {
-        availablePlayers.removeIf(p -> p.getName().equalsIgnoreCase(playerName));
+        availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(playerName));
         availableOfflinePlayers.removeIf(p -> p.equalsIgnoreCase(playerName));
-        playerStatsCache.remove(playerName); // Borrar las estadísticas del caché
+        playerStatsCache.remove(playerName);
     }
 
-    public List<Player> getAvailablePlayers() {
+    public List<MatchPlayer> getAvailablePlayers() {
         return new ArrayList<>(availablePlayers);
     }
 
@@ -62,7 +62,7 @@ public class AvailablePlayers {
 
     public List<String> getAllAvailablePlayers() {
         List<String> allAvailablePlayers = new ArrayList<>();
-        availablePlayers.forEach(player -> allAvailablePlayers.add(player.getName()));
+        availablePlayers.forEach(player -> allAvailablePlayers.add(player.getNameLegacy()));
         allAvailablePlayers.addAll(availableOfflinePlayers);
         return allAvailablePlayers;
     }
@@ -80,8 +80,9 @@ public class AvailablePlayers {
     }
 
     public void handleDisconnect(Player player) {
+        MatchPlayer matchPlayer = matchManager.getMatch().getPlayer(player);
         // Remover de online si está
-        if (availablePlayers.remove(player)) {
+        if (availablePlayers.remove(matchPlayer)) {
             // Agregar a offline por nombre
             String name = player.getName();
             availableOfflinePlayers.add(name);
@@ -89,11 +90,12 @@ public class AvailablePlayers {
     }
     
     public void handleReconnect(Player player) {
+        MatchPlayer matchPlayer = matchManager.getMatch().getPlayer(player);
         String name = player.getName();
         // Si estaba en la lista de offline, lo quitamos
         if (availableOfflinePlayers.removeIf(p -> p.equalsIgnoreCase(name))) {
             // Lo agregamos como Player online
-            availablePlayers.add(player);
+            availablePlayers.add(matchPlayer);
         }
     }
 

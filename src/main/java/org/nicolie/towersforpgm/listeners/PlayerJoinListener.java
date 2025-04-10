@@ -8,7 +8,6 @@ import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Teams;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class PlayerJoinListener implements Listener {
@@ -36,18 +35,7 @@ public class PlayerJoinListener implements Listener {
             availablePlayers.handleReconnect(player);
             // Si el jugador está en algún equipo, añadirlo a la lista de jugadores desconectados
             if (teams.isPlayerInAnyTeam(username)) {
-                if (teams.isPlayerInTeam(username, 1)){
-                    teams.removePlayerFromTeam(username, 1);
-                    
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        teams.addPlayerToTeam(username, 1);
-                    }, 5L); // Esperar 5 ticks antes de asignar el equipo
-                } else if (teams.isPlayerInTeam(username, 2)){
-                    teams.removePlayerFromTeam(username, 2);
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        teams.addPlayerToTeam(username, 2);
-                    }, 5L); // Esperar 5 ticks antes de asignar el equipo
-                }
+                teams.handleReconnect(player);
             }
         }
 

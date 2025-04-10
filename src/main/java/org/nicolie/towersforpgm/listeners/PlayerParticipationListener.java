@@ -3,8 +3,10 @@ package org.nicolie.towersforpgm.listeners;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Teams;
@@ -42,8 +44,6 @@ public class PlayerParticipationListener implements Listener {
         UUID playerUUID = event.getPlayer().getBukkit().getUniqueId();
         
         if (request.isForcedOr(JoinRequest.Flag.FORCE)) {
-            // Si la solicitud es forzada, permitir la participación y añadirlo a la lista del team
-            // si es red = 1 si es blue = 2
             if(captains.isMatchWithCaptains()){
                 if(request.getTeam().getDefaultName().equalsIgnoreCase("red")) {
                     teams.removeFromAnyTeam(playerName);
@@ -58,13 +58,6 @@ public class PlayerParticipationListener implements Listener {
 
         boolean isInAnyTeam = teams.isPlayerInAnyTeam(playerName);
         boolean isCaptain = captains.isCaptain(playerUUID);
-        System.out.println("--------------------");
-        System.out.println("PlayerParticipationStartListener: " + playerName);
-        System.out.println
-        (String.format("isInAnyTeam: %b, isCaptain: %b, isInTeam1: %b, isInTeam2: %b, isCaptain1: %b, isCaptain2: %b", 
-            isInAnyTeam, isCaptain, teams.isPlayerInTeam(playerName, 1), teams.isPlayerInTeam(playerName, 2), 
-            captains.isCaptain1(playerUUID), captains.isCaptain2(playerUUID)));
-
         if (!isInAnyTeam && !isCaptain) {
             event.cancel(Component.text(plugin.getPluginMessage("join.notAllowed")));
             event.setCancelled(true);
@@ -92,16 +85,27 @@ public class PlayerParticipationListener implements Listener {
     @EventHandler
     public void onLeave(PlayerParticipationStopEvent event) {
         JoinRequest request = null;
-        // Verifica si la solicitud es de tipo JoinRequest
+
         if (event.getRequest() instanceof JoinRequest) {
             request = (JoinRequest) event.getRequest();
         }
-        if (request.isForcedOr(JoinRequest.Flag.FORCE)) {
-            if(captains.isMatchWithCaptains()){
-                System.out.println("FORCE LEAVE REQUEST: " + event.getPlayer().getBukkit().getName());
-                teams.removeFromAnyTeam(event.getPlayer().getBukkit().getName());
+        if (request != null && request.isForcedOr(JoinRequest.Flag.FORCE)) {
+            if (captains.isMatchWithCaptains()) {
+                Player player = event.getPlayer().getBukkit();
+                String playerName = player.getName();
+                // Esperamos 5 ticks y verificamos si sigue online
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        Player onlinePlayer = Bukkit.getPlayerExact(playerName);
+                        if (onlinePlayer != null && onlinePlayer.isOnline()) {
+                            teams.removeFromAnyTeam(playerName);
+                        } else {
+                        }
+                    }
+                }.runTaskLater(plugin, 5L);
             }
-            return; // Permitir si el request es FORZADO
+            return;
         }
     }
 }

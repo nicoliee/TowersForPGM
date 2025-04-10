@@ -17,6 +17,8 @@ import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import tc.oc.pgm.api.player.MatchPlayer;
+
 public class RemoveCommand implements CommandExecutor, TabCompleter{
     private final TowersForPGM plugin;
     private final Draft draft;
@@ -59,7 +61,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             // Obtener la lista de tablas desde TowersForPGM.getTables()
-            List<String> tables = availablePlayers.getAvailablePlayers().stream().map(Player::getName).collect(Collectors.toList());
+            List<String> tables = availablePlayers.getAvailablePlayers().stream().map(MatchPlayer::getNameLegacy).collect(Collectors.toList());
             tables.addAll(availablePlayers.getAvailableOfflinePlayers());
             // Filtrar las opciones que comienzan con el texto ingresado por el usuario
             String input = args[0].toLowerCase();

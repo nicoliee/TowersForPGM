@@ -37,7 +37,7 @@ public class Events {
         pluginManager.registerEvents(new MatchFinishListener(plugin, torneoListener, refillManager), plugin);
         pluginManager.registerEvents(new PlayerJoinListener(plugin, draft, availablePlayers, teams, captains), plugin);
         pluginManager.registerEvents(new PlayerParticipationListener(teams, captains), plugin);
-        pluginManager.registerEvents(new PlayerQuitListener(availablePlayers, draft, matchManager, plugin, teams), plugin);
+        pluginManager.registerEvents(new PlayerQuitListener(matchManager, plugin), plugin);
         pluginManager.registerEvents(new CompetitorScoreChangeListener(), plugin);
         pluginManager.registerEvents(new MatchStatsListener(), plugin);
     }

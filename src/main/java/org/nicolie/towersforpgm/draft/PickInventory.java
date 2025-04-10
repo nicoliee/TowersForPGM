@@ -15,6 +15,8 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import tc.oc.pgm.api.player.MatchPlayer;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,8 +45,8 @@ public class PickInventory implements Listener {
     public void openInventory(Player player) {
         // Combinar y ordenar jugadores (online y offline) alfabéticamente
         Set<String> nameSet = new HashSet<>();
-        for (Player p : availablePlayers.getAvailablePlayers()) {
-            nameSet.add(p.getName());
+        for (MatchPlayer p : availablePlayers.getAvailablePlayers()) {
+            nameSet.add(p.getNameLegacy());
         }
         nameSet.addAll(availablePlayers.getAvailableOfflinePlayers());
     
@@ -204,15 +206,15 @@ public class PickInventory implements Listener {
         }
 
         // Buscar jugador online
-        Player pickedPlayer = availablePlayers.getAvailablePlayers().stream()
-            .filter(p -> p.getName().equalsIgnoreCase(inputName))
+        MatchPlayer pickedPlayer = availablePlayers.getAvailablePlayers().stream()
+            .filter(p -> p.getNameLegacy().equalsIgnoreCase(inputName))
             .findFirst()
             .orElse(null);
 
         // Si no está online, buscar en la lista offline
         String pickedPlayerString;
         if (pickedPlayer != null) {
-            pickedPlayerString = pickedPlayer.getName();
+            pickedPlayerString = pickedPlayer.getNameLegacy();
         } else {
             pickedPlayerString = availablePlayers.getAvailableOfflinePlayers().stream()
                 .filter(name -> name.equalsIgnoreCase(inputName))
