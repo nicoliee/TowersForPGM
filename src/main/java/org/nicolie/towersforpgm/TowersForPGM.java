@@ -57,6 +57,7 @@ public final class TowersForPGM extends JavaPlugin {
     private Captains captains;
     private Draft draft; 
     private Teams teams;
+    private PickInventory pickInventory;
 
 // Refill
     private RefillManager refillManager; // Administrador de refill
@@ -113,8 +114,9 @@ public final class TowersForPGM extends JavaPlugin {
         captains = new Captains();
         teams = new Teams(matchManager);
         draft = new Draft(this, matchManager, captains, availablePlayers, teams);
-        PickInventory pickInventory = new PickInventory(this, draft, captains, availablePlayers);
+        pickInventory = new PickInventory(this, draft, captains, availablePlayers, teams);
         getServer().getPluginManager().registerEvents(pickInventory, this);
+        
         // Registrar comandos
         Commands commandManager = new Commands(this);
         commandManager.registerCommands(availablePlayers, captains, draft, matchManager, pickInventory, refillManager, teams, torneoListener);

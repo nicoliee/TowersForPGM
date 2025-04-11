@@ -14,6 +14,7 @@ import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
+import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -24,16 +25,41 @@ public class PickCommand implements CommandExecutor, TabCompleter{
     private Draft draft;
     private final Captains captains;
     private final AvailablePlayers availablePlayers;
+    private final Teams teams;
     private final PickInventory pickInventory;
 
     private final TowersForPGM plugin;
 
-    public PickCommand(Draft draft, Captains captains, AvailablePlayers availablePlayers, TowersForPGM plugin, PickInventory pickInventory) {
+    public PickCommand(Draft draft, Captains captains, AvailablePlayers availablePlayers, TowersForPGM plugin, Teams teams, PickInventory pickInventory) {
         this.draft = draft;
         this.captains = captains;
         this.availablePlayers = availablePlayers;
         this.plugin = plugin;
+        this.teams = teams;
         this.pickInventory = pickInventory;
+    }
+
+    private String validatePlayerToPick(String inputName, Player player) {
+        // Validar si el jugador ya fue elegido
+        if (teams.isPlayerInAnyTeam(inputName)) {
+            return plugin.getConfigurableMessage("picks.alreadyPicked").replace("{player}", inputName);
+        }
+
+        // Validar si el jugador seleccionado está en la lista de disponibles
+        String pickedPlayerString = availablePlayers.getAvailablePlayers().stream()
+            .map(MatchPlayer::getNameLegacy)
+            .filter(name -> name.equalsIgnoreCase(inputName))
+            .findFirst()
+            .orElseGet(() -> availablePlayers.getAvailableOfflinePlayers().stream()
+                .filter(name -> name.equalsIgnoreCase(inputName))
+                .findFirst()
+                .orElse(null));
+
+        if (pickedPlayerString == null) {
+            return plugin.getConfigurableMessage("picks.notInList").replace("{player}", inputName);
+        }
+
+        return null; // No hay errores
     }
 
     @Override
@@ -54,6 +80,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
 
         if (args.length == 0) {
             pickInventory.openInventory(player);
+            pickInventory.giveItemToPlayer(player);
             return true;
         }
         
@@ -68,34 +95,19 @@ public class PickCommand implements CommandExecutor, TabCompleter{
                     return true;
                 }
 
-                // Comprobar si el jugador seleccionado está disponible
                 String inputName = args[0].toLowerCase();
 
-                // Buscar en jugadores online
-                MatchPlayer pickedPlayer = availablePlayers.getAvailablePlayers().stream()
-                    .filter(p -> p.getNameLegacy().equalsIgnoreCase(inputName))
-                    .findFirst()
-                    .orElse(null);
-
-                // Buscar en offline si no está en online
-                String pickedPlayerString = null;
-
-                if (pickedPlayer != null) {
-                    pickedPlayerString = pickedPlayer.getNameLegacy();
-                } else {
-                    pickedPlayerString = availablePlayers.getAvailableOfflinePlayers().stream()
-                        .filter(name -> name.equalsIgnoreCase(inputName))
-                        .findFirst()
-                        .orElse(null);
-                }
-
-                if (pickedPlayerString == null) {
-                    SendMessage.sendToPlayer(player, plugin.getConfigurableMessage("picks.playerPicked").replace("{player}", args[0]));
+                // Validar el jugador a seleccionar
+                String validationError = validatePlayerToPick(inputName, player);
+                if (validationError != null) {
+                    SendMessage.sendToPlayer(player, validationError);
                     return true;
                 }
 
-                draft.pickPlayer(pickedPlayerString);
+                // Ejecutar la selección del jugador
+                draft.pickPlayer(inputName);
                 draft.toggleTurn();
+                pickInventory.updateAllInventories();
             }
         } else {
             SendMessage.sendToPlayer(player, plugin.getConfigurableMessage("picks.notCaptain"));

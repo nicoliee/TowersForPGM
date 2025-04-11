@@ -124,4 +124,12 @@ public class Teams {
             onlineTeams.get(2).add(matchManager.getMatch().getPlayer(player));
         }
     }
+
+    public void forceTeam(MatchPlayer matchPlayer, int teamNumber) {
+        String playerName = matchPlayer.getNameLegacy();
+        onlineTeams.get(1).removeIf(player -> player.getNameLegacy().equalsIgnoreCase(playerName));
+        onlineTeams.get(2).removeIf(player -> player.getNameLegacy().equalsIgnoreCase(playerName));
+
+        onlineTeams.get(teamNumber).add(matchPlayer);
+    }
 }

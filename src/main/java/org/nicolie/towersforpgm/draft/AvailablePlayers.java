@@ -30,20 +30,30 @@ public class AvailablePlayers {
     public void addPlayer(String playerName) {
         Player player = Bukkit.getPlayerExact(playerName);
         MatchPlayer matchPlayer = matchManager.getMatch().getPlayer(player);
-        if (player != null && player.isOnline()) {
+        
+        // Verificar si el jugador y matchPlayer no son null antes de continuar
+        if (player != null && matchPlayer != null && player.isOnline()) {
+            // Si el jugador no está en availablePlayers, lo agregamos
             if (availablePlayers.stream().noneMatch(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()))) {
                 availablePlayers.add(matchPlayer);
             }
+            // Eliminar de availableOfflinePlayers si está presente
             availableOfflinePlayers.removeIf(name -> name.equalsIgnoreCase(playerName));
             loadStatsForPlayer(playerName);
         } else {
+            // Verificar si el jugador está offline y agregarlo a availableOfflinePlayers si no está allí
             if (availableOfflinePlayers.stream().noneMatch(name -> name.equalsIgnoreCase(playerName))) {
                 availableOfflinePlayers.add(playerName);
             }
-            availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()));
+            
+            // Solo eliminar de availablePlayers si matchPlayer no es null
+            if (matchPlayer != null) {
+                availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()));
+            }
+            
             loadStatsForPlayer(playerName);
         }
-    }
+    }    
 
     // Método para eliminar jugador
     public void removePlayer(String playerName) {

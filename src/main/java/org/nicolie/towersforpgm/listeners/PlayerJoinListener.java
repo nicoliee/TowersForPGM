@@ -3,10 +3,12 @@ package org.nicolie.towersforpgm.listeners;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.bukkit.entity.Player;
 
@@ -16,13 +18,18 @@ public class PlayerJoinListener implements Listener {
     private final Draft draft;
     private final Teams teams;
     private final TowersForPGM plugin;
+    private final PickInventory pickInventory;
+    private final MatchManager matchManager;
 
-    public PlayerJoinListener(TowersForPGM plugin, Draft draft, AvailablePlayers availablePlayers, Teams teams, Captains captains) {
+    public PlayerJoinListener(TowersForPGM plugin, Draft draft, AvailablePlayers availablePlayers, Teams teams, Captains captains, PickInventory pickInventory, MatchManager matchManager) {
         this.availablePlayers = availablePlayers;
         this.captains = captains;
         this.draft = draft;
         this.teams = teams;
         this.plugin = plugin;
+        this.pickInventory = pickInventory;
+        this.matchManager = matchManager;
+
     }
 
     @EventHandler
@@ -30,9 +37,10 @@ public class PlayerJoinListener implements Listener {
         Player player = event.getPlayer();
         String username = player.getName();
         // Si el draft está activo
-        if(draft.isDraftActive()){
+        if(draft.isDraftActive() && !matchManager.getMatch().isRunning()) {
             // Si el jugador está en getAvailableOfflinePlayers, pasarlo a getAvailablePlayers
             availablePlayers.handleReconnect(player);
+            pickInventory.giveItemToPlayer(player);
             // Si el jugador está en algún equipo, añadirlo a la lista de jugadores desconectados
             if (teams.isPlayerInAnyTeam(username)) {
                 teams.handleReconnect(player);

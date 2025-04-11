@@ -17,6 +17,10 @@ messages:
       offline: "§cOne of the captains is offline."
       teamsHeader: "§8§m-----------§r §b§lTeams §8§m-----------"
       usage: "§cUsage: /captains <nick1> <nick2>"
+    draft:
+      clickToPick: "§eClick to pick."
+      itemLore: "§7Right-click to open the draft menu."
+      inventoryName: "§4Available Players"
     errors:
       databaseDisabled: "§cThe database is disabled."
       invalidCoords: "§cInvalid coordinates: §4{x}, {y}, {z}§c."
@@ -35,7 +39,6 @@ messages:
       reloadStart: "§8[§bTowersForPGM§8] §aReloading messages..."
       reloadSuccess: "§8[§bTowersForPGM§8] §aMessages reloaded successfully."
     picks:
-      clickToPick: "§eClick to pick."
       noDraft: "§cThere is no ongoing draft."
       usage: "§cUsage: /pick <player>"
     preparation:
@@ -125,6 +128,10 @@ messages:
       offline: "§cUno de los capitanes está desconectado."
       teamsHeader: "§8§m-----------§r §b§lEquipos §8§m-----------"
       usage: "§cUso: /captains <nick1> <nick2>"
+    draft:
+      clickToPick: "§eHaz clic para elegir."
+      itemLore: "§7Clic derecho para abrir el menú de draft."
+      inventoryName: "§4Jugadores disponibles"
     errors:
       databaseDisabled: "§cLa base de datos está desactivada."
       invalidCoords: "§cCoordenadas inválidas: §4{x}, {y}, {z}§c."
@@ -143,7 +150,6 @@ messages:
       reloadStart: "§8[§bTowersForPGM§8] §aRecargando los mensajes..."
       reloadSuccess: "§8[§bTowersForPGM§8] §aLos mensajes se han recargado correctamente."
     picks:
-      clickToPick: "§eHaz clic para elegir."
       noDraft: "§cNo hay un draft en curso."
       usage: "§cUso: /pick <jugador>"
     preparation:

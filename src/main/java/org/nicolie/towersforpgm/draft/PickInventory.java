@@ -5,8 +5,10 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -18,6 +20,7 @@ import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,15 +34,17 @@ public class PickInventory implements Listener {
     private final Draft draft;
     private final Captains captains;
     private final AvailablePlayers availablePlayers;
+    private final Teams teams;
 
     // Para saber qué inventario pertenece a qué capitán
     private final Map<UUID, Inventory> openInventories = new HashMap<>();
 
-    public PickInventory(TowersForPGM plugin, Draft draft, Captains captains, AvailablePlayers availablePlayers) {
+    public PickInventory(TowersForPGM plugin, Draft draft, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
         this.plugin = plugin;
         this.draft = draft;
         this.captains = captains;
         this.availablePlayers = availablePlayers;
+        this.teams = teams;
     }
 
     public void openInventory(Player player) {
@@ -62,16 +67,30 @@ public class PickInventory implements Listener {
         // === CASO 1: <= 28 jugadores ===
         if (totalPlayers <= 28) {
             int inventorySize = getInventorySizeWithBorder(totalPlayers);
-            inv = Bukkit.createInventory(null, inventorySize, "Selecciona un jugador");
+            inv = Bukkit.createInventory(null, inventorySize, plugin.getPluginMessage("draft.inventoryName"));
     
-            // Decorar bordes
-            ItemStack glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 15); // Vidrio negro
-            ItemMeta glassMeta = glassPane.getItemMeta();
-            glassMeta.setDisplayName(" ");
-            glassPane.setItemMeta(glassMeta);
-    
+            // Cambiar el color de los cristales según las condiciones
             for (int i = 0; i < inventorySize; i++) {
                 if (i < 9 || i >= inventorySize - 9 || i % 9 == 0 || i % 9 == 8) {
+                    ItemStack glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 15); // Vidrio negro por defecto
+
+                    if (captains.isCaptain1(player.getUniqueId())) {
+                        if (draft.isCaptain1Turn()) {
+                            glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 5); // Verde si es su turno
+                        } else {
+                            glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 14); // Rojo si no es su turno
+                        }
+                    } else if (captains.isCaptain2(player.getUniqueId())) {
+                        if (draft.isCaptain1Turn()) {
+                            glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 11); // Azul si no es su turno
+                        } else {
+                            glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 5); // Verde si es su turno
+                        }
+                    }
+
+                    ItemMeta glassMeta = glassPane.getItemMeta();
+                    glassMeta.setDisplayName(" ");
+                    glassPane.setItemMeta(glassMeta);
                     inv.setItem(i, glassPane);
                 }
             }
@@ -102,7 +121,7 @@ public class PickInventory implements Listener {
         } else {
             // === CASO 2: >= 29 jugadores ===
             int inventorySize = getInventorySizeWithoutBorders(totalPlayers);
-            inv = Bukkit.createInventory(null, inventorySize, "Selecciona un jugador");
+            inv = Bukkit.createInventory(null, inventorySize, plugin.getPluginMessage("draft.inventoryName"));
             columnsPerRow = 9;
     
             for (String name : allPlayerNames) {
@@ -163,11 +182,39 @@ public class PickInventory implements Listener {
         lore.add("§7" + plugin.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
         lore.add("§7" + plugin.getPluginMessage("stats.games") + ": §a" + stats.getGames());
         lore.add(" ");
-        lore.add(plugin.getPluginMessage("picks.clickToPick"));
+        lore.add(plugin.getPluginMessage("draft.clickToPick"));
         meta.setLore(lore);
         skull.setItemMeta(meta);
     }
     
+    private String validatePlayerToPick(String inputName, UUID clickerId) {
+        // Validar si el jugador seleccionado está en la lista de disponibles
+        MatchPlayer pickedPlayer = availablePlayers.getAvailablePlayers().stream()
+            .filter(p -> p.getNameLegacy().equalsIgnoreCase(inputName))
+            .findFirst()
+            .orElse(null);
+
+        String pickedPlayerString = null;
+        if (pickedPlayer != null) {
+            pickedPlayerString = pickedPlayer.getNameLegacy();
+        } else {
+            pickedPlayerString = availablePlayers.getAvailableOfflinePlayers().stream()
+                .filter(name -> name.equalsIgnoreCase(inputName))
+                .findFirst()
+                .orElse(null);
+        }
+
+        if (pickedPlayerString == null) {
+            return plugin.getConfigurableMessage("picks.notInList").replace("{player}", inputName);
+        }
+
+        // Validar si el jugador ya fue elegido
+        if (teams.isPlayerInAnyTeam(pickedPlayerString)) {
+            return plugin.getConfigurableMessage("picks.alreadyPicked").replace("{player}", pickedPlayerString);
+        }
+
+        return null; // No hay errores
+    }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
@@ -187,8 +234,6 @@ public class PickInventory implements Listener {
         SkullMeta meta = (SkullMeta) clicked.getItemMeta();
         if (meta == null || meta.getOwner() == null) return;
 
-        String inputName = meta.getOwner().toLowerCase();
-
         // Validar si el clicker es capitán y si es su turno
         if (!captains.isCaptain(clickerId)) {
             openInventories.remove(clickerId);
@@ -205,33 +250,17 @@ public class PickInventory implements Listener {
             return;
         }
 
-        // Buscar jugador online
-        MatchPlayer pickedPlayer = availablePlayers.getAvailablePlayers().stream()
-            .filter(p -> p.getNameLegacy().equalsIgnoreCase(inputName))
-            .findFirst()
-            .orElse(null);
-
-        // Si no está online, buscar en la lista offline
-        String pickedPlayerString;
-        if (pickedPlayer != null) {
-            pickedPlayerString = pickedPlayer.getNameLegacy();
-        } else {
-            pickedPlayerString = availablePlayers.getAvailableOfflinePlayers().stream()
-                .filter(name -> name.equalsIgnoreCase(inputName))
-                .findFirst()
-                .orElse(null);
-        }
-
-        if (pickedPlayerString == null) {
+        String inputName = meta.getOwner().toLowerCase();
+        String validationError = validatePlayerToPick(inputName, clickerId);
+        if (validationError != null) {
             openInventories.remove(clickerId);
             clicker.closeInventory();
-            SendMessage.sendToPlayer(clicker, plugin.getConfigurableMessage("picks.playerPicked")
-                .replace("{player}", inputName));
+            SendMessage.sendToPlayer(clicker, validationError);
             return;
         }
 
         // Ejecutar pick
-        draft.pickPlayer(pickedPlayerString);
+        draft.pickPlayer(inputName);
         draft.toggleTurn();
         updateAllInventories();
         clicker.closeInventory();
@@ -266,6 +295,49 @@ public class PickInventory implements Listener {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
                 updateInventory(player);
+            }
+        }
+    }
+
+    public void giveItemToPlayers() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            giveItemToPlayer(player);
+        }
+    }
+
+    public void giveItemToPlayer(Player player) {
+        ItemStack specialItem = new ItemStack(Material.NETHER_STAR);
+        ItemMeta meta = specialItem.getItemMeta();
+        meta.setDisplayName("§6Draft Menu");
+        meta.setLore(Collections.singletonList(plugin.getPluginMessage("draft.itemLore")));
+        specialItem.setItemMeta(meta);
+
+        player.getInventory().setItem(2, null);
+        player.getInventory().setItem(2, specialItem);
+    }
+
+    @SuppressWarnings("deprecation")
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+
+        // Verificar si el jugador tiene el ítem especial y si hizo clic derecho
+        if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK ||event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            ItemStack item;
+
+            // Compatibilidad con versiones antiguas y nuevas
+            try {
+                item = player.getInventory().getItemInMainHand(); // Método para versiones nuevas
+            } catch (NoSuchMethodError e) {
+                item = player.getItemInHand(); // Método para versiones antiguas
+            }
+
+            if (item != null && item.getType() == Material.NETHER_STAR && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null && "§6Draft Menu".equals(meta.getDisplayName())) {
+                    openInventory(player); // Abrir el inventario
+                    event.setCancelled(true); // Cancelar cualquier otra acción
+                }
             }
         }
     }

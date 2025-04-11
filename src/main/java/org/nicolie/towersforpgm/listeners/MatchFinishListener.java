@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.database.StatsManager;
+import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import org.nicolie.towersforpgm.refill.RefillManager;
@@ -23,11 +24,15 @@ public class MatchFinishListener implements Listener {
     private final TowersForPGM plugin;
     private final TorneoListener torneoListener;
     private final RefillManager refillManager;
-    public MatchFinishListener(TowersForPGM plugin, TorneoListener torneoListener, RefillManager refillManager) {
+    private final Draft draft;
+
+    public MatchFinishListener(TowersForPGM plugin, TorneoListener torneoListener, RefillManager refillManager, Draft draft) {
         this.plugin = plugin;
         this.torneoListener = torneoListener;
         this.refillManager = refillManager;
+        this.draft = draft;
     }
+    
     @EventHandler
     public void onMatchFinish(MatchFinishEvent event) {
         Match match = event.getMatch();
@@ -35,6 +40,7 @@ public class MatchFinishListener implements Listener {
         String mapName = event.getMatch().getMap().getName();
         torneoListener.stopProtection(null, worldName);
         refillManager.clearWorldData(worldName);
+        draft.cleanLists();
         ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);
         StatsMatchModule statsModule = match.getModule(StatsMatchModule.class);
 

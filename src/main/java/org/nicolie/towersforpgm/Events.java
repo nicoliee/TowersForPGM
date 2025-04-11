@@ -34,8 +34,8 @@ public class Events {
         pluginManager.registerEvents(new MatchLoadListener(refillManager, torneoListener, matchManager, draft), plugin);
         pluginManager.registerEvents(new MatchAfterLoadListener(), plugin);
         pluginManager.registerEvents(new MatchStartListener(torneoListener, refillManager, captains), plugin);
-        pluginManager.registerEvents(new MatchFinishListener(plugin, torneoListener, refillManager), plugin);
-        pluginManager.registerEvents(new PlayerJoinListener(plugin, draft, availablePlayers, teams, captains), plugin);
+        pluginManager.registerEvents(new MatchFinishListener(plugin, torneoListener, refillManager, draft), plugin);
+        pluginManager.registerEvents(new PlayerJoinListener(plugin, draft, availablePlayers, teams, captains, pickInventory, matchManager), plugin);
         pluginManager.registerEvents(new PlayerParticipationListener(teams, captains), plugin);
         pluginManager.registerEvents(new PlayerQuitListener(matchManager, plugin), plugin);
         pluginManager.registerEvents(new CompetitorScoreChangeListener(), plugin);

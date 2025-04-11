@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm.commands;
 import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import tc.oc.pgm.api.match.Match;
@@ -21,11 +22,13 @@ public class CaptainsCommand implements CommandExecutor {
     private final TowersForPGM plugin;
     private final Draft draft;
     private final MatchManager matchManager;
+    private final PickInventory pickInventory;
 
-    public CaptainsCommand(TowersForPGM plugin, Draft draft, MatchManager matchManager) {
+    public CaptainsCommand(TowersForPGM plugin, Draft draft, MatchManager matchManager, PickInventory pickInventory) {
         this.plugin = plugin;
         this.draft = draft;
         this.matchManager = matchManager;
+        this.pickInventory = pickInventory;
     }
 
     @Override
@@ -75,6 +78,7 @@ public class CaptainsCommand implements CommandExecutor {
         SendMessage.broadcast("&4" + Bukkit.getPlayer(captain1).getName() + " &l&6vs. " + "&9" + Bukkit.getPlayer(captain2).getName());
         SendMessage.broadcast("§8§m---------------------------------");
         draft.startDraft(captain1, captain2);
+        pickInventory.giveItemToPlayers();
         return true;
     }
 }

@@ -32,8 +32,8 @@ public class Commands {
 
     public void registerCommands(AvailablePlayers availablePlayers, Captains captains, Draft draft, MatchManager matchManager, PickInventory pickInventory, RefillManager refillManager, Teams teams, TorneoListener torneoListener) {
         plugin.getCommand("add").setExecutor(new AddCommand(availablePlayers, captains, draft, teams, plugin, pickInventory));
-        plugin.getCommand("captains").setExecutor(new CaptainsCommand(plugin, draft, matchManager));
-        plugin.getCommand("pick").setExecutor(new PickCommand(draft, captains, availablePlayers, plugin, pickInventory));
+        plugin.getCommand("captains").setExecutor(new CaptainsCommand(plugin, draft, matchManager, pickInventory));
+        plugin.getCommand("pick").setExecutor(new PickCommand(draft, captains, availablePlayers, plugin, teams, pickInventory));
         plugin.getCommand("preparationTime").setExecutor(new PreparationTimeCommand(plugin, torneoListener, matchManager));
         plugin.getCommand("privateMatch").setExecutor(new PrivateMatchCommand(plugin, matchManager));
         plugin.getCommand("config").setExecutor(new ConfigCommand(plugin, matchManager));
