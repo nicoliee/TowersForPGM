@@ -100,7 +100,7 @@ public class PickInventory implements Listener {
     
             for (String name : allPlayerNames) {
                 boolean isOnline = Bukkit.getPlayerExact(name) != null;
-    
+                
                 ItemStack skull = createPlayerSkull(name, isOnline);
     
                 PlayerStats stats = availablePlayers.getStatsForPlayer(name);
@@ -250,7 +250,7 @@ public class PickInventory implements Listener {
             return;
         }
 
-        String inputName = meta.getOwner().toLowerCase();
+        String inputName = meta.getOwner();
         String validationError = validatePlayerToPick(inputName, clickerId);
         if (validationError != null) {
             openInventories.remove(clickerId);

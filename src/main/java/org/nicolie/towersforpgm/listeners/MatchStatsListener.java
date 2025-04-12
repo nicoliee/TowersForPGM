@@ -35,7 +35,7 @@ public class MatchStatsListener implements Listener {
             int kills = playerStats != null ? playerStats.getKills() : 0;
             int totalPoints = scoreMatchModule != null ? (int) scoreMatchModule.getContribution(player.getId()) : 0;
             
-            String playerName = player.getParty().getColor().toString() + player.getNameLegacy();
+            String playerName = (player.getParty() != null && player.getParty().getColor() != null ? player.getParty().getColor().toString() : "§3") + player.getNameLegacy();
             
             killsMap.computeIfAbsent(kills, k -> new ArrayList<>()).add(playerName);
             if (totalPoints > 0) {

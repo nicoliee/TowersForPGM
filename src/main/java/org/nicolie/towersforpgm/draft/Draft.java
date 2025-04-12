@@ -39,6 +39,7 @@ public class Draft {
         cleanLists();
         captains.setCaptain1(captain1);
         captains.setCaptain2(captain2);
+        teams.removeFromTeams();
         // Agregar todos los jugadores disponibles (excluyendo a los capitanes)
         for (Player player : Bukkit.getOnlinePlayers()) {
             
@@ -152,7 +153,6 @@ public class Draft {
         captains.clear();
         availablePlayers.clear();
         teams.clear();
-        teams.removeFromTeams();
         isDraftActive = false;
         isMatchWithCaptains = false;
     }
