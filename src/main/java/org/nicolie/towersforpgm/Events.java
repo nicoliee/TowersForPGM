@@ -6,6 +6,7 @@ import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.refill.RefillManager;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.listeners.CompetitorScoreChangeListener;
 import org.nicolie.towersforpgm.listeners.MatchAfterLoadListener;
 import org.nicolie.towersforpgm.listeners.MatchFinishListener;
@@ -27,17 +28,17 @@ public class Events {
         this.plugin = plugin;
     }
 
-    public void registerEvents(AvailablePlayers availablePlayers, Captains captains, Draft draft, MatchManager matchManager, PickInventory pickInventory, RefillManager refillManager, Teams teams, TorneoListener torneoListener) {
+    public void registerEvents(AvailablePlayers availablePlayers, Captains captains, Draft draft, MatchManager matchManager, LanguageManager languageManager, PickInventory pickInventory, RefillManager refillManager, Teams teams, TorneoListener torneoListener) {
         PluginManager pluginManager = plugin.getServer().getPluginManager();
 
-        pluginManager.registerEvents(new TorneoListener(plugin), plugin);
-        pluginManager.registerEvents(new MatchLoadListener(refillManager, torneoListener, matchManager, draft), plugin);
+        pluginManager.registerEvents(new TorneoListener(languageManager), plugin);
+        pluginManager.registerEvents(new MatchLoadListener(refillManager, torneoListener, matchManager, draft, languageManager), plugin);
         pluginManager.registerEvents(new MatchAfterLoadListener(), plugin);
         pluginManager.registerEvents(new MatchStartListener(torneoListener, refillManager, captains), plugin);
         pluginManager.registerEvents(new MatchFinishListener(plugin, torneoListener, refillManager, draft), plugin);
-        pluginManager.registerEvents(new PlayerJoinListener(plugin, draft, availablePlayers, teams, captains, pickInventory, matchManager), plugin);
-        pluginManager.registerEvents(new PlayerParticipationListener(teams, captains), plugin);
-        pluginManager.registerEvents(new PlayerQuitListener(matchManager, plugin), plugin);
+        pluginManager.registerEvents(new PlayerJoinListener(plugin, draft, availablePlayers, teams, captains, pickInventory), plugin);
+        pluginManager.registerEvents(new PlayerParticipationListener(teams, captains, languageManager), plugin);
+        pluginManager.registerEvents(new PlayerQuitListener(plugin), plugin);
         pluginManager.registerEvents(new CompetitorScoreChangeListener(), plugin);
         pluginManager.registerEvents(new MatchStatsListener(), plugin);
     }

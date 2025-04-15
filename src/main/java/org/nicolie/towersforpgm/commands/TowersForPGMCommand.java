@@ -19,19 +19,22 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.update.AutoUpdate;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
     private final TowersForPGM plugin;
+    private final LanguageManager languageManager;
 
-    public TowersForPGMCommand(TowersForPGM plugin) {
+    public TowersForPGMCommand(TowersForPGM plugin, LanguageManager languageManager) {
+        this.languageManager = languageManager;
         this.plugin = plugin;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(plugin.getPluginMessage("errors.noPlayer"));
+            sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
 
@@ -48,32 +51,32 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
                 updateChecker.forceUpdate();
             case "setlanguage":
                 if (args.length < 2) {
-                    SendMessage.sendToPlayer(player, plugin.getPluginMessage("TowersForPGM.noLanguage"));
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("TowersForPGM.noLanguage"));
                     return true;
                 }
                 String language = args[1].toLowerCase();
                 if (!language.equals("en") && !language.equals("es")) {
-                    SendMessage.sendToPlayer(player, plugin.getPluginMessage("TowersForPGM.invalidLanguage"));
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("TowersForPGM.invalidLanguage"));
                     return true;
                 }
-                plugin.setLanguage(language);
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("TowersForPGM.languageSet"));
+                languageManager.setLanguage(language);
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("TowersForPGM.languageSet"));
                 return true;
 
             case "reloadmessages":
                 File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("messages.reloadStart"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("messages.reloadStart"));
 
                 if (messagesFile.exists()) {
                     if (!messagesFile.delete()) {
-                        SendMessage.sendToPlayer(player, plugin.getPluginMessage("messages.reloadError"));
+                        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("messages.reloadError"));
                         return true;
                     }
                 }
 
                 plugin.saveResource("messages.yml", false);
-                plugin.saveDefaultMessages();
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("messages.reloadSuccess"));
+                languageManager.reloadMessages();
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("messages.reloadSuccess"));
                 return true;
 
             case "update":
@@ -83,7 +86,7 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
                 return true;
 
             case "configreplace":
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("configReplace.start"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("configReplace.start"));
                 String zipFileUrl = "https://github.com/nicoliee/configForTowers/archive/refs/heads/main.zip";
                 File pluginsFolder = new File("plugins");
 
@@ -93,10 +96,10 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
                     new File(pluginsFolder, "configForTowers.zip").delete();
                 } catch (IOException e) {
                     e.printStackTrace();
-                    SendMessage.sendToPlayer(player, plugin.getPluginMessage("configReplace.error"));
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("configReplace.error"));
                     return true;
                 }
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("configReplace.success"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("configReplace.success"));
                 return true;
 
             default:

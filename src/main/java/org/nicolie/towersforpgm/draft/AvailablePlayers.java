@@ -15,12 +15,13 @@ import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class AvailablePlayers {
     private final List<MatchPlayer> availablePlayers = new ArrayList<>();
     private final List<String> availableOfflinePlayers = new ArrayList<>();
-    private final Map<String, PlayerStats> playerStatsCache = new HashMap<>();
+    private final Map<String, PlayerStats> playerStats = new HashMap<>();
     private final MatchManager matchManager;
 
     public AvailablePlayers(MatchManager matchManager) {
@@ -59,7 +60,7 @@ public class AvailablePlayers {
     public void removePlayer(String playerName) {
         availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(playerName));
         availableOfflinePlayers.removeIf(p -> p.equalsIgnoreCase(playerName));
-        playerStatsCache.remove(playerName);
+        playerStats.remove(playerName);
     }
 
     public List<MatchPlayer> getAvailablePlayers() {
@@ -86,11 +87,11 @@ public class AvailablePlayers {
         if(availablePlayers.isEmpty() && availableOfflinePlayers.isEmpty()) return;
         availablePlayers.clear();
         availableOfflinePlayers.clear();
-        playerStatsCache.clear();
+        playerStats.clear();
     }
 
     public void handleDisconnect(Player player) {
-        MatchPlayer matchPlayer = matchManager.getMatch().getPlayer(player);
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getMatch(player).getPlayer(player);
         // Remover de online si está
         if (availablePlayers.remove(matchPlayer)) {
             // Agregar a offline por nombre
@@ -100,7 +101,7 @@ public class AvailablePlayers {
     }
     
     public void handleReconnect(Player player) {
-        MatchPlayer matchPlayer = matchManager.getMatch().getPlayer(player);
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getMatch(player).getPlayer(player);
         String name = player.getName();
         // Si estaba en la lista de offline, lo quitamos
         if (availableOfflinePlayers.removeIf(p -> p.equalsIgnoreCase(name))) {
@@ -111,7 +112,7 @@ public class AvailablePlayers {
 
     public void loadStatsForPlayer(String playerName) {
         // Verificar si ya tenemos las estadísticas del jugador en cache
-        if (playerStatsCache.containsKey(playerName)) {
+        if (playerStats.containsKey(playerName)) {
             return; // Ya están cargadas
         }
 
@@ -134,21 +135,21 @@ public class AvailablePlayers {
                             rs.getInt("wins"),
                             rs.getInt("games")
                         );
-                        playerStatsCache.put(playerName, stats);
+                        playerStats.put(playerName, stats);
                     } else {
                         // Si no hay estadísticas, poner valores predeterminados
-                        playerStatsCache.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+                        playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
                     }
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
                 // En caso de error, agregamos estadísticas predeterminadas
-                playerStatsCache.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+                playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
             }
         });
     }
 
     public PlayerStats getStatsForPlayer(String playerName) {
-        return playerStatsCache.getOrDefault(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+        return playerStats.getOrDefault(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
     }
 }

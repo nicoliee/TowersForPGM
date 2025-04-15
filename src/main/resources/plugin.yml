@@ -56,6 +56,11 @@ commands:
     description: Comando principal de TowersForPGM.
     usage: /towersForPGM
     permission: towers.admin
+  turn:
+    description: Cambia el turno de un jugador.
+    usage: /turn
+    aliases: [turno]
+    permission: towers.admin
 permissions:
   towers.admin:
     description: Permite administrar y cambiar configuraciones.

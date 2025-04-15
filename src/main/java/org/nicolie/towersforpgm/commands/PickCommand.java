@@ -9,12 +9,12 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -26,15 +26,14 @@ public class PickCommand implements CommandExecutor, TabCompleter{
     private final Captains captains;
     private final AvailablePlayers availablePlayers;
     private final Teams teams;
+    private final LanguageManager languageManager;
     private final PickInventory pickInventory;
 
-    private final TowersForPGM plugin;
-
-    public PickCommand(Draft draft, Captains captains, AvailablePlayers availablePlayers, TowersForPGM plugin, Teams teams, PickInventory pickInventory) {
+    public PickCommand(Draft draft, Captains captains, AvailablePlayers availablePlayers, Teams teams, LanguageManager languageManager, PickInventory pickInventory) {
         this.draft = draft;
         this.captains = captains;
         this.availablePlayers = availablePlayers;
-        this.plugin = plugin;
+        this.languageManager = languageManager;
         this.teams = teams;
         this.pickInventory = pickInventory;
     }
@@ -42,7 +41,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
     private String validatePlayerToPick(String inputName, Player player) {
         // Validar si el jugador ya fue elegido
         if (teams.isPlayerInAnyTeam(inputName)) {
-            return plugin.getConfigurableMessage("picks.alreadyPicked").replace("{player}", inputName);
+            return languageManager.getConfigurableMessage("picks.alreadyPicked").replace("{player}", inputName);
         }
 
         // Validar si el jugador seleccionado está en la lista de disponibles
@@ -56,7 +55,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
                 .orElse(null));
 
         if (pickedPlayerString == null) {
-            return plugin.getConfigurableMessage("picks.notInList").replace("{player}", inputName);
+            return languageManager.getConfigurableMessage("picks.notInList").replace("{player}", inputName);
         }
 
         return null; // No hay errores
@@ -66,7 +65,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         // Comprobar si el comando fue ejecutado por un jugador
         if (!(sender instanceof Player)) {
-            sender.sendMessage(plugin.getPluginMessage("errors.noPlayer"));
+            sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
 
@@ -74,7 +73,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
 
         // Comprobar si el draft está activo
         if (!draft.isDraftActive()) {
-            SendMessage.sendToPlayer(player, plugin.getPluginMessage("picks.noDraft"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("picks.noDraft"));
             return true;
         }
 
@@ -89,9 +88,9 @@ public class PickCommand implements CommandExecutor, TabCompleter{
         if (captains.isCaptain(player.getUniqueId())) {
             if (args.length == 1) {
                 // Verificar si es el turno del jugador
-                if ((draft.isCaptain1Turn() && captains.isCaptain2(player.getUniqueId())) ||
-                    (!draft.isCaptain1Turn() && captains.isCaptain1(player.getUniqueId()))) {
-                    SendMessage.sendToPlayer(player, plugin.getConfigurableMessage("picks.notTurn"));
+                if ((captains.isCaptain1Turn() && captains.isCaptain2(player.getUniqueId())) ||
+                    (!captains.isCaptain1Turn() && captains.isCaptain1(player.getUniqueId()))) {
+                    SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("picks.notTurn"));
                     return true;
                 }
 
@@ -106,11 +105,10 @@ public class PickCommand implements CommandExecutor, TabCompleter{
 
                 // Ejecutar la selección del jugador
                 draft.pickPlayer(inputName);
-                draft.toggleTurn();
                 pickInventory.updateAllInventories();
             }
         } else {
-            SendMessage.sendToPlayer(player, plugin.getConfigurableMessage("picks.notCaptain"));
+            SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("picks.notCaptain"));
             return true;
         }
         return true;

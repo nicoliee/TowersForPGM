@@ -8,9 +8,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import java.util.*;
@@ -19,26 +19,25 @@ import java.util.*;
 // para cargar cofres de recarga en varios mapas, por si en el futuro se implementa esta funcionalidad
 // Se implementa la funcionalidad de recarga de cofres en un intervalo de tiempo de 60 segundos
 public class RefillManager {
-    private final JavaPlugin plugin;
+    private final LanguageManager languageManager;
+    private final TowersForPGM plugin = TowersForPGM.getInstance();
     private final Map<String, Map<Location, ItemStack[]>> chestContents = new HashMap<>();
     private final Map<String, BukkitRunnable> refillTasks = new HashMap<>();
-    private final TowersForPGM towersForPGM;
 
     // Variable para almacenar el último tiempo de recarga
     private final Map<String, Long> lastRefillTimes = new HashMap<>();
 
-    public RefillManager(JavaPlugin plugin) {
-        this.plugin = plugin;
-        this.towersForPGM = (TowersForPGM) plugin;
+    public RefillManager(LanguageManager languageManager) {
+        this.languageManager = languageManager;
     }
 
     public void loadChests(String mapName, String worldName) {
-        FileConfiguration refillConfig = towersForPGM.getRefillConfig();
+        FileConfiguration refillConfig = plugin.getRefillConfig();
         ConfigurationSection refillSection = refillConfig.getConfigurationSection("refill." + mapName);
         if (refillSection == null) {
             return; // No se encontró sección de recarga para este mapa, no hacer nada
         } else {
-            SendMessage.sendToAdmins(towersForPGM.getPluginMessage("refill.mapFound")
+            SendMessage.sendToAdmins(languageManager.getPluginMessage("refill.mapFound")
             .replace("{map}", mapName));
         }
 

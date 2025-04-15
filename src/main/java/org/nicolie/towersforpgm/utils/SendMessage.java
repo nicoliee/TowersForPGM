@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm.utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class SendMessage {
@@ -31,9 +32,20 @@ public class SendMessage {
         }
         String coloredMessage = ChatColor.translateAlternateColorCodes('&', message);
         player.sendMessage(coloredMessage);
-        }
+    }
 
-        public static void sendToWorld(String worldName, String message) {
+    public static void sendToPlayer(CommandSender sender, String message) {
+        if (sender == null) {
+            return;
+        }
+        if (message == null) {
+            return;
+        }
+        String coloredMessage = ChatColor.translateAlternateColorCodes('&', message);
+        sender.sendMessage(coloredMessage);
+    }
+
+    public static void sendToWorld(String worldName, String message) {
         World world = Bukkit.getWorld(worldName);
 
         if (world == null) {
