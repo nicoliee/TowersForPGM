@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -30,21 +31,21 @@ import java.util.UUID;
 
 public class PickInventory implements Listener {
 
-    private final TowersForPGM plugin;
     private final Draft draft;
     private final Captains captains;
     private final AvailablePlayers availablePlayers;
     private final Teams teams;
+    private final LanguageManager languageManager;
 
     // Para saber qué inventario pertenece a qué capitán
     private final Map<UUID, Inventory> openInventories = new HashMap<>();
 
-    public PickInventory(TowersForPGM plugin, Draft draft, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
-        this.plugin = plugin;
+    public PickInventory(Draft draft, Captains captains, AvailablePlayers availablePlayers, Teams teams, LanguageManager languageManager) {
         this.draft = draft;
         this.captains = captains;
         this.availablePlayers = availablePlayers;
         this.teams = teams;
+        this.languageManager = languageManager;
     }
 
     public void openInventory(Player player) {
@@ -67,7 +68,7 @@ public class PickInventory implements Listener {
         // === CASO 1: <= 28 jugadores ===
         if (totalPlayers <= 28) {
             int inventorySize = getInventorySizeWithBorder(totalPlayers);
-            inv = Bukkit.createInventory(null, inventorySize, plugin.getPluginMessage("draft.inventoryName"));
+            inv = Bukkit.createInventory(null, inventorySize, languageManager.getPluginMessage("draft.inventoryName"));
     
             // Cambiar el color de los cristales según las condiciones
             for (int i = 0; i < inventorySize; i++) {
@@ -75,13 +76,13 @@ public class PickInventory implements Listener {
                     ItemStack glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 15); // Vidrio negro por defecto
 
                     if (captains.isCaptain1(player.getUniqueId())) {
-                        if (draft.isCaptain1Turn()) {
+                        if (captains.isCaptain1Turn()) {
                             glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 5); // Verde si es su turno
                         } else {
                             glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 14); // Rojo si no es su turno
                         }
                     } else if (captains.isCaptain2(player.getUniqueId())) {
-                        if (draft.isCaptain1Turn()) {
+                        if (captains.isCaptain1Turn()) {
                             glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 11); // Azul si no es su turno
                         } else {
                             glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 5); // Verde si es su turno
@@ -121,7 +122,7 @@ public class PickInventory implements Listener {
         } else {
             // === CASO 2: >= 29 jugadores ===
             int inventorySize = getInventorySizeWithoutBorders(totalPlayers);
-            inv = Bukkit.createInventory(null, inventorySize, plugin.getPluginMessage("draft.inventoryName"));
+            inv = Bukkit.createInventory(null, inventorySize, languageManager.getPluginMessage("draft.inventoryName"));
             columnsPerRow = 9;
     
             for (String name : allPlayerNames) {
@@ -175,14 +176,14 @@ public class PickInventory implements Listener {
     private void addSkullLore(ItemStack skull, PlayerStats stats) {
         SkullMeta meta = (SkullMeta) skull.getItemMeta();
         List<String> lore = new ArrayList<>();
-        lore.add("§7" + plugin.getPluginMessage("stats.kills") + ": §a" + stats.getKills());
-        lore.add("§7" + plugin.getPluginMessage("stats.deaths") + ": §a" + stats.getDeaths());
-        lore.add("§7" + plugin.getPluginMessage("stats.assists") + ": §a" + stats.getAssists());
-        lore.add("§7" + plugin.getPluginMessage("stats.points") + ": §a" + stats.getPoints());
-        lore.add("§7" + plugin.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
-        lore.add("§7" + plugin.getPluginMessage("stats.games") + ": §a" + stats.getGames());
+        lore.add("§7" + languageManager.getPluginMessage("stats.kills") + ": §a" + stats.getKills());
+        lore.add("§7" + languageManager.getPluginMessage("stats.deaths") + ": §a" + stats.getDeaths());
+        lore.add("§7" + languageManager.getPluginMessage("stats.assists") + ": §a" + stats.getAssists());
+        lore.add("§7" + languageManager.getPluginMessage("stats.points") + ": §a" + stats.getPoints());
+        lore.add("§7" + languageManager.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
+        lore.add("§7" + languageManager.getPluginMessage("stats.games") + ": §a" + stats.getGames());
         lore.add(" ");
-        lore.add(plugin.getPluginMessage("draft.clickToPick"));
+        lore.add(languageManager.getPluginMessage("draft.clickToPick"));
         meta.setLore(lore);
         skull.setItemMeta(meta);
     }
@@ -205,12 +206,12 @@ public class PickInventory implements Listener {
         }
 
         if (pickedPlayerString == null) {
-            return plugin.getConfigurableMessage("picks.notInList").replace("{player}", inputName);
+            return languageManager.getConfigurableMessage("picks.notInList").replace("{player}", inputName);
         }
 
         // Validar si el jugador ya fue elegido
         if (teams.isPlayerInAnyTeam(pickedPlayerString)) {
-            return plugin.getConfigurableMessage("picks.alreadyPicked").replace("{player}", pickedPlayerString);
+            return languageManager.getConfigurableMessage("picks.alreadyPicked").replace("{player}", pickedPlayerString);
         }
 
         return null; // No hay errores
@@ -238,15 +239,15 @@ public class PickInventory implements Listener {
         if (!captains.isCaptain(clickerId)) {
             openInventories.remove(clickerId);
             clicker.closeInventory();
-            SendMessage.sendToPlayer(clicker, plugin.getConfigurableMessage("picks.notCaptain"));
+            SendMessage.sendToPlayer(clicker, languageManager.getConfigurableMessage("picks.notCaptain"));
             return;
         }
 
-        if ((draft.isCaptain1Turn() && captains.isCaptain2(clickerId)) ||
-            (!draft.isCaptain1Turn() && captains.isCaptain1(clickerId))) {
+        if ((captains.isCaptain1Turn() && captains.isCaptain2(clickerId)) ||
+            (!captains.isCaptain1Turn() && captains.isCaptain1(clickerId))) {
             openInventories.remove(clickerId);
             clicker.closeInventory();
-            SendMessage.sendToPlayer(clicker, plugin.getConfigurableMessage("picks.notTurn"));
+            SendMessage.sendToPlayer(clicker, languageManager.getConfigurableMessage("picks.notTurn"));
             return;
         }
 
@@ -261,7 +262,6 @@ public class PickInventory implements Listener {
 
         // Ejecutar pick
         draft.pickPlayer(inputName);
-        draft.toggleTurn();
         updateAllInventories();
         clicker.closeInventory();
     }
@@ -309,7 +309,7 @@ public class PickInventory implements Listener {
         ItemStack specialItem = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = specialItem.getItemMeta();
         meta.setDisplayName("§6Draft Menu");
-        meta.setLore(Collections.singletonList(plugin.getPluginMessage("draft.itemLore")));
+        meta.setLore(Collections.singletonList(languageManager.getPluginMessage("draft.itemLore")));
         specialItem.setItemMeta(meta);
 
         player.getInventory().setItem(2, null);

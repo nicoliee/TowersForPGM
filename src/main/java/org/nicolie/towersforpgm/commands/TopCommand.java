@@ -10,36 +10,35 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.MatchManager;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
-public class TopCommand implements CommandExecutor, TabCompleter {
-    private final TowersForPGM plugin;
-    private final MatchManager matchManager;
+import tc.oc.pgm.api.PGM;
 
-    public TopCommand(TowersForPGM plugin, MatchManager matchManager) {
-        this.plugin = plugin;
-        this.matchManager = matchManager;
+public class TopCommand implements CommandExecutor, TabCompleter {
+    private final LanguageManager languageManager;
+
+    public TopCommand(LanguageManager languageManager) {
+        this.languageManager = languageManager;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(plugin.getPluginMessage("errors.noPlayer"));
+            sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
         Player player = (Player) sender;
         if (args.length < 1 || args.length > 3) {
-            sender.sendMessage(plugin.getPluginMessage("top.usage"));
+            sender.sendMessage(languageManager.getPluginMessage("top.usage"));
             return true;
         }
 
         String category = args[0].toLowerCase();
         if (!category.matches("kills|deaths|points|wins|games")) {
-            SendMessage.sendToPlayer(player, plugin.getPluginMessage("top.invalidCategory"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("top.invalidCategory"));
             return true;
         }
 
@@ -48,20 +47,20 @@ public class TopCommand implements CommandExecutor, TabCompleter {
             try {
                 page = Integer.parseInt(args[1]);
                 if (page < 1) {
-                    SendMessage.sendToPlayer(player, plugin.getPluginMessage("top.invalidPage"));
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("top.invalidPage"));
                     return true;
                 }
             } catch (NumberFormatException e) {
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("top.invalidPage"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("top.invalidPage"));
                 return true;
             }
         }
-        String table = (args.length == 3) ? args[2] : ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName());
+        String table = (args.length == 3) ? args[2] : ConfigManager.getTableForMap(PGM.get().getMatchManager().getMatch(sender).getMap().getName());
         if (!ConfigManager.getTables().contains(table)) {
-            SendMessage.sendToPlayer(player, plugin.getPluginMessage("stats.tableNotFound"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("stats.tableNotFound"));
             return true;
         }
-        StatsManager.showTop(category, page, table, sender);
+        StatsManager.showTop(category, page, table, sender, languageManager);
         return true;
     }
     

@@ -11,6 +11,7 @@ public class Captains {
     private boolean ready2 = false;
     private boolean isReadyActive = false;
     private boolean isMatchWithCaptains = false;
+    private boolean isCaptain1Turn = true;
 
     public UUID getCaptain1() {
         return captain1;
@@ -42,6 +43,7 @@ public class Captains {
         this.ready2 = false;
         this.isReadyActive = false;
         this.isMatchWithCaptains = false;
+        this.isCaptain1Turn = true;
     }
 
     public boolean isCaptain(UUID player) {
@@ -94,5 +96,17 @@ public class Captains {
 
     public void setMatchWithCaptains(boolean isMatchWithCaptains) {
         this.isMatchWithCaptains = isMatchWithCaptains;
+    }
+
+    public boolean isCaptain1Turn() {
+        return isCaptain1Turn;
+    }
+
+    public void setCaptain1Turn(boolean isCaptain1Turn) {
+        this.isCaptain1Turn = isCaptain1Turn;
+    }
+    
+    public void toggleTurn() {
+        this.isCaptain1Turn = !this.isCaptain1Turn;
     }
 }

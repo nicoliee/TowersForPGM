@@ -5,44 +5,48 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.refill.RefillManager;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
+
+import tc.oc.pgm.api.PGM;
+
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
 
 public class RefillCommand implements CommandExecutor {
+    private final LanguageManager languageManager;
     private final RefillManager refillManager;
-    private final MatchManager matchManager;
     private final TowersForPGM plugin = TowersForPGM.getInstance();
-    public RefillCommand(RefillManager refillManager, MatchManager matchManager) {
+
+    public RefillCommand(LanguageManager languageManager, RefillManager refillManager) {
+        this.languageManager = languageManager;
         this.refillManager = refillManager;
-        this.matchManager = matchManager;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            SendMessage.sendToConsole(plugin.getPluginMessage("error.noPlayer"));
+            SendMessage.sendToConsole(languageManager.getPluginMessage("error.noPlayer"));
             return true;
         }
 
         Player player = (Player) sender;
 
         if (args.length == 0) {
-            SendMessage.sendToPlayer(player, plugin.getPluginMessage("refill.usage"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("refill.usage"));
             return true;
         }
 
-        String mapName = matchManager.getMatch().getMap().getName();
+        String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
         Location loc = player.getLocation();
         String coords = loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ();
 
         switch (args[0].toLowerCase()) {
             case "add":
                 addRefillLocation(mapName, coords);
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("refill.chestSet")
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("refill.chestSet")
                     .replace("{coords}", coords));
                 plugin.saveRefillConfig();
                 plugin.reloadRefillConfig();
@@ -51,12 +55,12 @@ public class RefillCommand implements CommandExecutor {
             case "delete":
                 boolean removed = removeRefillLocation(mapName, coords);
                 if (removed) {
-                    SendMessage.sendToPlayer(player, plugin.getPluginMessage("refill.chestDeleted")
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("refill.chestDeleted")
                         .replace("{coords}", coords));
                     plugin.saveRefillConfig();
                     plugin.reloadRefillConfig();
                 } else {
-                    SendMessage.sendToPlayer(player, plugin.getPluginMessage("refill.chestNotFound")
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("refill.chestNotFound")
                         .replace("{coords}", coords));
                 }
                 return true;
@@ -67,7 +71,7 @@ public class RefillCommand implements CommandExecutor {
                 return true;
         }
 
-        SendMessage.sendToPlayer(player, plugin.getPluginMessage("refill.usage"));
+        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("refill.usage"));
         return true;
     }
 

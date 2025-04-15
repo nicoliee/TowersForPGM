@@ -13,6 +13,7 @@ import org.nicolie.towersforpgm.commands.StatsCommand;
 import org.nicolie.towersforpgm.commands.TableCommand;
 import org.nicolie.towersforpgm.commands.TopCommand;
 import org.nicolie.towersforpgm.commands.TowersForPGMCommand;
+import org.nicolie.towersforpgm.commands.TurnCommand;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
@@ -20,6 +21,7 @@ import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.preparationTime.TorneoListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 
 
 public class Commands {
@@ -30,20 +32,21 @@ public class Commands {
         this.plugin = plugin;
     }
 
-    public void registerCommands(AvailablePlayers availablePlayers, Captains captains, Draft draft, MatchManager matchManager, PickInventory pickInventory, RefillManager refillManager, Teams teams, TorneoListener torneoListener) {
-        plugin.getCommand("add").setExecutor(new AddCommand(availablePlayers, captains, draft, teams, plugin, pickInventory));
-        plugin.getCommand("captains").setExecutor(new CaptainsCommand(plugin, draft, matchManager, pickInventory));
-        plugin.getCommand("pick").setExecutor(new PickCommand(draft, captains, availablePlayers, plugin, teams, pickInventory));
-        plugin.getCommand("preparationTime").setExecutor(new PreparationTimeCommand(plugin, torneoListener, matchManager));
-        plugin.getCommand("privateMatch").setExecutor(new PrivateMatchCommand(plugin, matchManager));
-        plugin.getCommand("config").setExecutor(new ConfigCommand(plugin, matchManager));
-        plugin.getCommand("ready").setExecutor(new ReadyCommand(plugin, captains));
-        plugin.getCommand("refill").setExecutor(new RefillCommand(refillManager, matchManager));
-        plugin.getCommand("remove").setExecutor(new RemoveCommand(plugin, draft, teams, captains, availablePlayers, pickInventory));
-        plugin.getCommand("setTable").setExecutor(new SetTableCommand(plugin, matchManager));
-        plugin.getCommand("stat").setExecutor(new StatsCommand(plugin, matchManager));
-        plugin.getCommand("table").setExecutor(new TableCommand(plugin));
-        plugin.getCommand("top").setExecutor(new TopCommand(plugin, matchManager));
-        plugin.getCommand("towersForPGM").setExecutor(new TowersForPGMCommand(plugin));
+    public void registerCommands(AvailablePlayers availablePlayers, Captains captains, Draft draft, LanguageManager languageManager, PickInventory pickInventory, RefillManager refillManager, Teams teams, TorneoListener torneoListener) {
+        plugin.getCommand("add").setExecutor(new AddCommand(availablePlayers, captains, draft, teams, languageManager, pickInventory));
+        plugin.getCommand("captains").setExecutor(new CaptainsCommand(draft, languageManager, pickInventory));;
+        plugin.getCommand("pick").setExecutor(new PickCommand(draft, captains, availablePlayers, teams, languageManager, pickInventory));
+        plugin.getCommand("preparationTime").setExecutor(new PreparationTimeCommand(languageManager, torneoListener));
+        plugin.getCommand("privateMatch").setExecutor(new PrivateMatchCommand(languageManager));
+        plugin.getCommand("config").setExecutor(new ConfigCommand(languageManager));
+        plugin.getCommand("ready").setExecutor(new ReadyCommand(captains, languageManager));
+        plugin.getCommand("refill").setExecutor(new RefillCommand(languageManager, refillManager));
+        plugin.getCommand("remove").setExecutor(new RemoveCommand(draft, teams, captains, availablePlayers, languageManager, pickInventory));
+        plugin.getCommand("setTable").setExecutor(new SetTableCommand(languageManager));
+        plugin.getCommand("stat").setExecutor(new StatsCommand(languageManager));
+        plugin.getCommand("table").setExecutor(new TableCommand(languageManager));
+        plugin.getCommand("top").setExecutor(new TopCommand(languageManager));
+        plugin.getCommand("towersForPGM").setExecutor(new TowersForPGMCommand(plugin, languageManager));
+        plugin.getCommand("turn").setExecutor(new TurnCommand(draft, captains, languageManager));
     }
 }

@@ -1,7 +1,7 @@
 package org.nicolie.towersforpgm.commands;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import org.bukkit.command.Command;
@@ -15,9 +15,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TableCommand implements CommandExecutor, TabCompleter {
-    private final TowersForPGM plugin;
-    public TableCommand(TowersForPGM plugin) {
-        this.plugin = plugin;
+    private final LanguageManager languageManager;
+
+    public TableCommand(LanguageManager languageManager) {
+        this.languageManager = languageManager;
     }
 
     @Override
@@ -25,53 +26,53 @@ public class TableCommand implements CommandExecutor, TabCompleter {
         Player player = (Player) sender;
 
         if (!(sender instanceof Player)) {
-            sender.sendMessage(plugin.getPluginMessage("errors.notPlayer"));
+            sender.sendMessage(languageManager.getPluginMessage("errors.notPlayer"));
             return true;
         }
         
         if (args.length < 1) {
-            sender.sendMessage(plugin.getPluginMessage("table.usage"));
+            sender.sendMessage(languageManager.getPluginMessage("table.usage"));
             return true;
         }
 
         switch (args[0].toLowerCase()) {
             case "add":
                 if (args.length < 2) {
-                    sender.sendMessage(plugin.getPluginMessage("table.specify"));
+                    sender.sendMessage(languageManager.getPluginMessage("table.specify"));
                     return true;
                 }
                 if (ConfigManager.getTables().contains(args[1])) {
-                    SendMessage.sendToPlayer(player, plugin.getPluginMessage("table.exists"));
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("table.exists"));
                     return true;
                 }
                 String addTable = args[1];
                 ConfigManager.addTable(addTable);
                 TableManager.createTable(addTable);
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("table.created"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("table.created"));
                 break;
 
             case "delete":
                 if (args.length < 2) {
-                    sender.sendMessage(plugin.getPluginMessage("table.specify"));
+                    sender.sendMessage(languageManager.getPluginMessage("table.specify"));
                     return true;
                 }
                 String delTable = args[1];
                 if (!ConfigManager.getTables().contains(delTable)) {
-                    SendMessage.sendToPlayer(player, plugin.getPluginMessage("table.notFound"));
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("table.notFound"));
                     return true;
                 }
                 ConfigManager.removeTable(delTable);
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("table.deleted"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("table.deleted"));
                 break;
 
             case "list":
                 List<String> tables = ConfigManager.getTables();
-                SendMessage.sendToPlayer(player, plugin.getPluginMessage("table.list"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("table.list"));
                 SendMessage.sendToPlayer(player, " &e"+String.join(", ", tables));
                 break;
 
             default:
-                SendMessage.sendToPlayer(player,plugin.getPluginMessage("table.usage"));
+                SendMessage.sendToPlayer(player,languageManager.getPluginMessage("table.usage"));
         }
         return true;
     }

@@ -8,13 +8,14 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.preparationTime.Region;
 import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
+
+import tc.oc.pgm.api.PGM;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,26 +25,23 @@ import java.util.List;
 // PGM actualmente solo soporta una partida a la vez pero este plugin está pensado para soportar múltiples partidas simultáneas
 // Aún así PGM solo tiene un mundo, por lo que se asume que solo hay un mundo a la hora de llamar a los métodos de configuración
 public class ConfigCommand implements CommandExecutor, TabCompleter{
-    private final TowersForPGM plugin;
-    private final MatchManager matchManager;
-    
-    public ConfigCommand(JavaPlugin plugin, MatchManager matchManager) {
-        this.plugin = (TowersForPGM) plugin;
-        this.matchManager = matchManager;
+    private final LanguageManager languageManager;
+    private final TowersForPGM plugin = TowersForPGM.getInstance();
+    public ConfigCommand(LanguageManager languageManager) {
+        this.languageManager = languageManager;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(((TowersForPGM) plugin).getPluginMessage("noPlayer"));
+            sender.sendMessage(languageManager.getPluginMessage("noPlayer"));
             return true;
         }
-
         Player player = (Player) sender;
-        String mapName = matchManager.getMatch().getMap().getName();
+        String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
         FileConfiguration config = plugin.getConfig();
         if (args.length == 0) {
-                    player.sendMessage(ChatColor.RED + " /config <add|delete|haste|help|list|max|min|timer>");
+                    SendMessage.sendToPlayer(player, " &c/config <add|delete|haste|help|list|max|min|timer>");
             return true;
         }
 
@@ -54,7 +52,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
 
             case "min":
             if (!config.contains("preparationTime.maps." + mapName)) {
-                SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.worldError"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.worldError"));
                 return true;
             }
             if (args.length == 4) {
@@ -67,18 +65,18 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
                     setCoordinates(config, mapName, "P1", x, y, z);
         
                     // Actualizamos la región en memoria
-                    Region region = ((TowersForPGM) plugin).getRegions().get(mapName);
+                    Region region = plugin.getRegions().get(mapName);
                     if (region != null) {
                         region.setP1(new Location(player.getWorld(), x, y, z));
                     }
         
                     plugin.saveConfig(); // Guardamos la configuración en el archivo
-                    SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.minSet")
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.minSet")
                         .replace("{x}", String.valueOf(x))
                         .replace("{y}", String.valueOf(y))
                         .replace("{z}", String.valueOf(z)));
                 } catch (NumberFormatException e) {
-                    SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.usage"));
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
                 }
             } else {
                 player.sendMessage(ChatColor.RED + "/config min <x> <y> <z>");
@@ -87,7 +85,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
         
         case "max":
             if (!config.contains("preparationTime.maps." + mapName)) {
-                SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.worldError"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.worldError"));
                 return true;
             }
             if (args.length == 4) {
@@ -100,18 +98,18 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
                     setCoordinates(config, mapName, "P2", x, y, z);
         
                     // Actualizamos la región en memoria
-                    Region region = ((TowersForPGM) plugin).getRegions().get(mapName);
+                    Region region = plugin.getRegions().get(mapName);
                     if (region != null) {
                         region.setP2(new Location(player.getWorld(), x, y, z));
                     }
         
                     plugin.saveConfig(); // Guardamos la configuración en el archivo
-                    SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.maxSet")
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.maxSet")
                         .replace("{x}", String.valueOf(x))
                         .replace("{y}", String.valueOf(y))
                         .replace("{z}", String.valueOf(z)));
                 } catch (NumberFormatException e) {
-                    SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.usage"));
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
                 }
             } else {
                 player.sendMessage(ChatColor.RED + "/config max <x> <y> <z>");
@@ -161,7 +159,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
 
     private void handleAddCommand(Player player, FileConfiguration config, String mapName) {
         if (config.contains("preparationTime.maps." + mapName)) {
-            SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapAlreadyAdded")
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapAlreadyAdded")
                     .replace("{map}", mapName));
             return;
         }
@@ -191,13 +189,13 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
         // Almacenar la región en el mapa de regiones
         plugin.getRegions().put(mapName, region);
 
-        SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapSuccess")
+        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapSuccess")
                 .replace("{map}", mapName));
     }
 
     private void handleDeleteCommand(Player player, FileConfiguration config, String mapName) {
         if (!config.contains("preparationTime.maps." + mapName)) {
-            SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapError"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapError"));
             return;
         }
     
@@ -208,7 +206,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
         // Eliminar la región del mapa de regiones
         plugin.getRegions().remove(mapName);
     
-        SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapDeleted")
+        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapDeleted")
                 .replace("{map}", mapName));
     }
     
@@ -221,7 +219,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
 
     private void handleTimerCommand(Player player, FileConfiguration config, String mapName, String[] args) {
         if (!config.contains("preparationTime.maps." + mapName)) {
-            SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapError"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapError"));
             return;
         }
     
@@ -233,7 +231,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
         try {
             int timer = Integer.parseInt(args[1]);
             if (timer <= 0) {
-                SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.usage"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
                 return;
             }
     
@@ -245,19 +243,19 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
             Region region = plugin.getRegions().get(mapName);
             if (region != null) {
                 region.setTimer(timer);
-                SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.timerSet")
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.timerSet")
                         .replace("{timer}", String.valueOf(timer)));
             } else {
-                SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.regionNotFound"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.regionNotFound"));
             }
         } catch (NumberFormatException e) {
-            SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.usage"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
         }
     }
 
     private void handleHasteCommand(Player player, FileConfiguration config, String mapName, String[] args) {
         if (!config.contains("preparationTime.maps." + mapName)) {
-            SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapError"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapError"));
             return;
         }
     
@@ -269,7 +267,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
         try {
             int haste = Integer.parseInt(args[1]);
             if (haste <= 0) {
-                SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.usage"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
                 return;
             }
     
@@ -281,23 +279,23 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
             Region region = plugin.getRegions().get(mapName);
             if (region != null) {
                 region.setHaste(haste);
-                SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.hasteSet")
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.hasteSet")
                         .replace("{timer}", String.valueOf(haste)));
             } else {
-                SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.regionNotFound"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.regionNotFound"));
             }
         } catch (NumberFormatException e) {
-            SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.usage"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
         }
     }
 
     private void handleListCommand(Player player, FileConfiguration config) {
         if (!config.contains("preparationTime.maps") || config.getConfigurationSection("preparationTime.maps").getKeys(false).isEmpty()) {
-            SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.mapsNotFound"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapsNotFound"));
             return;
         }
     
-        SendMessage.sendToPlayer(player, ((TowersForPGM) plugin).getPluginMessage("region.header"));
+        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.header"));
         for (String mapName : config.getConfigurationSection("preparationTime.maps.").getKeys(false)) {
             String basePath = "preparationTime.maps." + mapName;
             String database = ConfigManager.getTableForMap(mapName);

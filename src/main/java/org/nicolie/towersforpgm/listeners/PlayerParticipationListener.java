@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 
 import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.match.MatchPhase;
@@ -19,13 +20,15 @@ import tc.oc.pgm.join.JoinRequest;
 // en el futuro se podría agregar un comando para cambiar los nombres de los teams, pero por ahora no es necesario.
 
 public class PlayerParticipationListener implements Listener {
-    private final TowersForPGM plugin;
     private final Teams teams;
     private final Captains captains;
-    public PlayerParticipationListener(Teams teams, Captains captains) {
-        this.plugin = TowersForPGM.getInstance();
+    private final LanguageManager languageManager;
+    private final TowersForPGM plugin = TowersForPGM.getInstance();
+
+    public PlayerParticipationListener(Teams teams, Captains captains, LanguageManager languageManager) {
         this.teams = teams;
         this.captains = captains;
+        this.languageManager = languageManager;
     }
 
     @EventHandler
@@ -73,7 +76,7 @@ public class PlayerParticipationListener implements Listener {
         boolean isCaptain = captains.isCaptain(playerUUID);
 
         if(teams.isPlayerInTeam(playerName, 1) || captains.isCaptain1(playerUUID)){
-            event.cancel(Component.text(plugin.getPluginMessage("join.redTeam")));
+            event.cancel(Component.text(languageManager.getPluginMessage("join.redTeam")));
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -82,7 +85,7 @@ public class PlayerParticipationListener implements Listener {
             }.runTaskLater(plugin, 1);
             return;
         } else if(teams.isPlayerInTeam(playerName, 2) || captains.isCaptain2(playerUUID)){
-            event.cancel(Component.text(plugin.getPluginMessage("join.blueTeam")));
+            event.cancel(Component.text(languageManager.getPluginMessage("join.blueTeam")));
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -93,7 +96,7 @@ public class PlayerParticipationListener implements Listener {
         }
 
         if (!isInAnyTeam && !isCaptain) {
-            event.cancel(Component.text(plugin.getPluginMessage("join.notAllowed")));
+            event.cancel(Component.text(languageManager.getPluginMessage("join.notAllowed")));
             return;
         }
     }

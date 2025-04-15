@@ -9,42 +9,42 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class RemoveCommand implements CommandExecutor, TabCompleter{
-    private final TowersForPGM plugin;
     private final Draft draft;
     private final Teams teams;
     private final AvailablePlayers availablePlayers;
+    private final LanguageManager languageManager;
     private final PickInventory pickInventory;
 
-    public RemoveCommand(TowersForPGM plugin, Draft draft, Teams teams, Captains captains, AvailablePlayers availablePlayers, PickInventory pickInventory) {
-        this.plugin = plugin;
+    public RemoveCommand(Draft draft, Teams teams, Captains captains, AvailablePlayers availablePlayers, LanguageManager languageManager, PickInventory pickInventory) {
         this.draft = draft;
         this.teams = teams;
         this.availablePlayers = availablePlayers;
+        this.languageManager = languageManager;
         this.pickInventory = pickInventory;
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(plugin.getPluginMessage("errors.noPlayer"));
+            sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
         if(!draft.isDraftActive()){
-            sender.sendMessage(plugin.getPluginMessage("picks.noDraft"));
+            sender.sendMessage(languageManager.getPluginMessage("picks.noDraft"));
             return true;
         }
         if (args.length < 1) {
-            sender.sendMessage(plugin.getPluginMessage("remove.usage"));
+            sender.sendMessage(languageManager.getPluginMessage("remove.usage"));
             return true;
         }
         String playerName = args[0];
@@ -53,7 +53,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
         }
         availablePlayers.removePlayer(playerName);
         pickInventory.updateAllInventories();
-        SendMessage.broadcast(plugin.getConfigurableMessage("picks.remove").replace("{player}", playerName));
+        SendMessage.broadcast(languageManager.getConfigurableMessage("picks.remove").replace("{player}", playerName));
         SendMessage.soundBroadcast("note.pling", 1f, 0.5f);
         return true;
     }
@@ -91,6 +91,6 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
     }
 
     private void sendErrorMessage(CommandSender sender, String messageKey) {
-        sender.sendMessage(plugin.getPluginMessage(messageKey));
+        sender.sendMessage(languageManager.getPluginMessage(messageKey));
     }
 }

@@ -4,21 +4,21 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Captains;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class ReadyCommand implements CommandExecutor{
-    private final TowersForPGM plugin;
     private final Captains captains;
-    public ReadyCommand(TowersForPGM plugin, Captains captains) {
-        this.plugin = plugin;
+    private final LanguageManager languageManager;
+    public ReadyCommand(Captains captains, LanguageManager languageManager) {
         this.captains = captains;
+        this.languageManager = languageManager;
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(plugin.getPluginMessage("errors.noPlayer"));
+            sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
 
@@ -26,33 +26,33 @@ public class ReadyCommand implements CommandExecutor{
 
         // Comprobar si el draft está activo
         if (!captains.isReadyActive()) {
-            SendMessage.sendToPlayer(player, plugin.getConfigurableMessage("ready.notAvailable"));
+            SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("ready.notAvailable"));
             return true;
         }
         if (captains.isCaptain(player.getUniqueId())){
             if (captains.isCaptain1(player.getUniqueId())) {
                 if (captains.isReady1()) {
-                    SendMessage.sendToPlayer(player, plugin.getConfigurableMessage("ready.alreadyReady"));
+                    SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("ready.alreadyReady"));
                     return true;
                 } else {
                     captains.setReady1(true);
-                    SendMessage.broadcast(plugin.getConfigurableMessage("ready.ready")
-                            .replace("{teamcolor}", plugin.getConfigurableMessage("team.redColor"))
-                            .replace("{team}", plugin.getConfigurableMessage("team.red")));
+                    SendMessage.broadcast(languageManager.getConfigurableMessage("ready.ready")
+                            .replace("{teamcolor}", languageManager.getConfigurableMessage("team.redColor"))
+                            .replace("{team}", languageManager.getConfigurableMessage("team.red")));
                 }
             } else if (captains.isCaptain2(player.getUniqueId())) {
                 if (captains.isReady2()) {
-                    SendMessage.sendToPlayer(player, plugin.getConfigurableMessage("ready.alreadyReady"));
+                    SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("ready.alreadyReady"));
                     return true;
                 } else {
                     captains.setReady2(true);
-                    SendMessage.broadcast(plugin.getConfigurableMessage("ready.ready")
-                            .replace("{teamcolor}", plugin.getConfigurableMessage("team.blueColor"))
-                            .replace("{team}", plugin.getConfigurableMessage("team.blue")));
+                    SendMessage.broadcast(languageManager.getConfigurableMessage("ready.ready")
+                            .replace("{teamcolor}", languageManager.getConfigurableMessage("team.blueColor"))
+                            .replace("{team}", languageManager.getConfigurableMessage("team.blue")));
                 }
             }
         }else{
-            SendMessage.sendToPlayer(player, plugin.getConfigurableMessage("picks.notCaptain"));
+            SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("picks.notCaptain"));
             return true;
         }
         return true;

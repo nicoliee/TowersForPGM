@@ -2,8 +2,7 @@ package org.nicolie.towersforpgm.draft;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.MatchManager;
-import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import tc.oc.pgm.api.match.Match;
@@ -16,26 +15,20 @@ import java.util.UUID;
 // PGM actualmente solo soporta una partida a la vez, por lo solo se realiza un Draft por servidor.
 
 public class Draft {
-    private final TowersForPGM plugin;
-    private final MatchManager matchManager;
     private final Captains captains;
     private final AvailablePlayers availablePlayers;
     private final Teams teams;
-
+    private final LanguageManager languageManager;
     private boolean isDraftActive = false;
-    private boolean isMatchWithCaptains = false;
-    private boolean isCaptain1Turn = true;
 
-    public Draft(TowersForPGM plugin, MatchManager matchManager, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
+    public Draft(Captains captains, AvailablePlayers availablePlayers, Teams teams, LanguageManager languageManager) {
         this.teams = teams;
         this.captains = captains;
         this.availablePlayers = availablePlayers;
-        this.plugin = plugin;
-        this.matchManager = matchManager;
+        this.languageManager = languageManager;
     }
 
-    public void startDraft(UUID captain1, UUID captain2) {
-        isMatchWithCaptains = false;
+    public void startDraft(UUID captain1, UUID captain2, Match match) {
         cleanLists();
         captains.setCaptain1(captain1);
         captains.setCaptain2(captain2);
@@ -53,7 +46,6 @@ public class Draft {
         teams.assignTeam(Bukkit.getPlayer(captain1), 1);
         teams.assignTeam(Bukkit.getPlayer(captain2), 2);
 
-        Match match = matchManager.getMatch();
         if (match.getCountdown() != null) {
             match.getCountdown().cancelAll();
         }
@@ -61,17 +53,17 @@ public class Draft {
         teams.setTeamsSize(0);
         // Decidir aleatoriamente quien empieza el draft
         Random rand = new Random();
-        isCaptain1Turn = rand.nextBoolean(); // Captain 1 empieza si es true
+        captains.setCaptain1Turn(rand.nextBoolean()); // true o false aleatorio
         isDraftActive = true;
         captains.setMatchWithCaptains(true);
 
         // Enviar mensaje al capitán que le toca
-        if (isCaptain1Turn) {
-            SendMessage.broadcast(plugin.getConfigurableMessage("captains.turn")
+        if (captains.isCaptain1Turn()) {
+            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
                 .replace("{teamcolor}", "&4")
                 .replace("{captain}", Bukkit.getPlayer(captains.getCaptain1()).getName()));
         } else {
-            SendMessage.broadcast(plugin.getConfigurableMessage("captains.turn")
+            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
                 .replace("{teamcolor}", "&9")
                 .replace("{captain}", Bukkit.getPlayer(captains.getCaptain2()).getName()));
         }
@@ -79,11 +71,12 @@ public class Draft {
 
     public void pickPlayer(String username) {
         Player player = Bukkit.getPlayerExact(username);
-        if (isCaptain1Turn) {
+        if (captains.isCaptain1Turn()) {
             teams.addPlayerToTeam(username, 1);
             availablePlayers.removePlayer(username);
             teams.assignTeam(player, 1);
-            SendMessage.broadcast(plugin.getConfigurableMessage("captains.choose")
+            captains.toggleTurn();
+            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.choose")
                 .replace("{teamcolor}", "&4")
                 .replace("{captain}", captains.getCaptain1Name())
                 .replace("{player}", username));
@@ -92,7 +85,8 @@ public class Draft {
             teams.addPlayerToTeam(username, 2);
             availablePlayers.removePlayer(username);
             teams.assignTeam(player, 2);
-            SendMessage.broadcast(plugin.getConfigurableMessage("captains.choose")
+            captains.toggleTurn();
+            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.choose")
                 .replace("{teamcolor}", "&9")
                 .replace("{captain}", captains.getCaptain2Name())
                 .replace("{player}", username));
@@ -113,7 +107,7 @@ public class Draft {
 
         // Finaliza el draft y muestra los equipos a los capitanes
         isDraftActive = false;
-        SendMessage.broadcast(plugin.getPluginMessage("captains.teamsHeader"));
+        SendMessage.broadcast(languageManager.getPluginMessage("captains.teamsHeader"));
 
         // Usar el método getAllTeam para obtener todos los jugadores de cada equipo
         Set<String> team1Names = teams.getAllTeam(1); // Obtener todos los jugadores del equipo 1
@@ -128,7 +122,7 @@ public class Draft {
 
         int team1Size = team1Names.size() + 1; // +1 por el capitán
         int team2Size = team2Names.size() + 1; // +1 por el capitán
-        int teamsize = Math.max(team1Names.size() + 1, team2Names.size() + 1);
+        int teamsize = Math.max(team1Size, team2Size); // Tamaño máximo de los equipos
 
         // Mostrar los equipos
         SendMessage.broadcast("&4" + captains.getCaptain1Name() + " " + team1NamesBuilder.toString().trim());
@@ -143,7 +137,7 @@ public class Draft {
         // Marcar a los capitanes como listos
         captains.setReadyActive(true);
 
-        isMatchWithCaptains = true;
+        captains.setMatchWithCaptains(true);
 
         // Iniciar el juego con un retraso de 60 segundos
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "start 60");
@@ -154,23 +148,10 @@ public class Draft {
         availablePlayers.clear();
         teams.clear();
         isDraftActive = false;
-        isMatchWithCaptains = false;
-    }
-
-    public void toggleTurn() {
-        isCaptain1Turn = !isCaptain1Turn;
     }
 
 // Getters y Setters
     public boolean isDraftActive() {
         return isDraftActive;
-    }
-
-    public boolean isCaptain1Turn() {
-        return isCaptain1Turn;
-    }
-
-    public boolean isMatchWithCaptains() {
-        return isMatchWithCaptains;
     }
 }

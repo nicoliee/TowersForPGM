@@ -1,6 +1,7 @@
 package org.nicolie.towersforpgm.database;
 
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -66,7 +67,7 @@ public class StatsManager {
         });
     }    
 
-    public static void showStats(CommandSender sender, String table, String player, TowersForPGM plugin) {
+    public static void showStats(CommandSender sender, String table, String player, LanguageManager languageManager) {
         if ("none".equalsIgnoreCase(table)) {
             return;
         }
@@ -80,29 +81,29 @@ public class StatsManager {
                 
                 try (ResultSet rs = stmt.executeQuery()) { // ResultSet dentro del try
                     if (rs.next()) {
-                        sender.sendMessage(plugin.getPluginMessage("stats.header")
+                        sender.sendMessage(languageManager.getPluginMessage("stats.header")
                                 .replace("{player}", player)
                                 .replace("{table}", table));
-                        sender.sendMessage("  §7" + plugin.getPluginMessage("stats.kills") + ": §a" + rs.getInt("kills")
-                                + " §7| " + plugin.getPluginMessage("stats.deaths") + ": §a" + rs.getInt("deaths")
-                                + " §7| " + plugin.getPluginMessage("stats.assists") + ": §a" + rs.getInt("assists")
-                                + " §7| " + plugin.getPluginMessage("stats.points") + ": §a" + rs.getInt("points")
-                                + " §7| " + plugin.getPluginMessage("stats.wins") + ": §a" + rs.getInt("wins")
-                                + " §7| " + plugin.getPluginMessage("stats.games") + ": §a" + rs.getInt("games"));
+                        sender.sendMessage("  §7" + languageManager.getPluginMessage("stats.kills") + ": §a" + rs.getInt("kills")
+                                + " §7| " + languageManager.getPluginMessage("stats.deaths") + ": §a" + rs.getInt("deaths")
+                                + " §7| " + languageManager.getPluginMessage("stats.assists") + ": §a" + rs.getInt("assists")
+                                + " §7| " + languageManager.getPluginMessage("stats.points") + ": §a" + rs.getInt("points")
+                                + " §7| " + languageManager.getPluginMessage("stats.wins") + ": §a" + rs.getInt("wins")
+                                + " §7| " + languageManager.getPluginMessage("stats.games") + ": §a" + rs.getInt("games"));
                     } else {
-                        sender.sendMessage(plugin.getPluginMessage("stats.noStats"));
+                        sender.sendMessage(languageManager.getPluginMessage("stats.noStats"));
                     }
                 }
                 
             } catch (SQLException e) {
-                sender.sendMessage(plugin.getPluginMessage("stats.error"));
+                sender.sendMessage(languageManager.getPluginMessage("stats.error"));
                 SendMessage.sendToDevelopers("§cError al obtener las estadísticas de " + player + " en la tabla " + table);
                 TowersForPGM.getInstance().getLogger().severe("Error SQL: " + e.getMessage());
             }
         });
     }    
 
-    public static void showTop(String category, int page, String table, CommandSender sender) {
+    public static void showTop(String category, int page, String table, CommandSender sender, LanguageManager languageManager) {
         if ("none".equalsIgnoreCase(table)) {
             return;
         }
@@ -116,7 +117,7 @@ public class StatsManager {
                 stmt.setInt(1, offset);
                 ResultSet rs = stmt.executeQuery();
                 Player player = (Player) sender;
-                SendMessage.sendToPlayer(player, TowersForPGM.getInstance().getPluginMessage("top.header")
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("top.header")
                         .replace("{category}", category.toLowerCase())
                         .replace("{table}", table)
                         .replace("{page}", String.valueOf(page)));

@@ -4,12 +4,12 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class AddCommand implements CommandExecutor {
@@ -17,32 +17,32 @@ public class AddCommand implements CommandExecutor {
     private final Captains captains;
     private final Draft draft;
     private final Teams teams;
-    private final TowersForPGM plugin;
     private final PickInventory pickInventory;
+    private final LanguageManager languageManager;
 
-    public AddCommand(AvailablePlayers availablePlayers, Captains captains, Draft draft, Teams teams, TowersForPGM plugin, PickInventory pickInventory) {
+    public AddCommand(AvailablePlayers availablePlayers, Captains captains, Draft draft, Teams teams, LanguageManager languageManager, PickInventory pickInventory) {
         this.availablePlayers = availablePlayers;
         this.captains = captains;
         this.draft = draft;
         this.teams = teams;
-        this.plugin = plugin;
         this.pickInventory = pickInventory;
+        this.languageManager = languageManager;
     }
     
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sendErrorMessage(sender, "errors.noPlayer");
+            SendMessage.sendToConsole(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
 
         if (!draft.isDraftActive()) {
-            sendErrorMessage(sender, "picks.noDraft");
+            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("picks.noDraft"));
             return true;
         }
 
         if (args.length < 1) {
-            sendErrorMessage(sender, "add.usage");
+            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("add.usage"));
             return true;
         }
 
@@ -54,7 +54,7 @@ public class AddCommand implements CommandExecutor {
 
         availablePlayers.addPlayer(playerName);
         pickInventory.updateAllInventories();
-        SendMessage.broadcast(plugin.getConfigurableMessage("picks.add").replace("{player}", playerName));
+        SendMessage.broadcast(languageManager.getConfigurableMessage("picks.add").replace("{player}", playerName));
         SendMessage.soundBroadcast("note.pling", 1f, 2f);
         return true;
     }
@@ -62,24 +62,20 @@ public class AddCommand implements CommandExecutor {
     private boolean isInvalidPlayer(String playerName, CommandSender sender) {
         if ((captains.getCaptain1Name() != null && captains.getCaptain1Name().equalsIgnoreCase(playerName)) ||
             (captains.getCaptain2Name() != null && captains.getCaptain2Name().equalsIgnoreCase(playerName))) {
-            sendErrorMessage(sender, "add.captain");
+                SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("add.captain"));
             return true;
         }
 
 
         if (teams.isPlayerInAnyTeam(playerName)) {
-            sendErrorMessage(sender, "captains.alreadyInTeam");
+            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("captains.alreadyInTeam"));
             return true;
         }
 
         if (availablePlayers.getAllAvailablePlayers().contains(playerName)) {
-            sendErrorMessage(sender, "captains.alreadyInDraft");
+            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("captains.alreadyInDraft"));
             return true;
         }
         return false;
-    }
-
-    private void sendErrorMessage(CommandSender sender, String messageKey) {
-        sender.sendMessage(plugin.getPluginMessage(messageKey));
     }
 }

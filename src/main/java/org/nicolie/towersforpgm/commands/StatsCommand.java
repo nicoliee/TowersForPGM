@@ -1,7 +1,10 @@
 package org.nicolie.towersforpgm.commands;
 
 import org.nicolie.towersforpgm.utils.ConfigManager;
-import org.nicolie.towersforpgm.MatchManager;
+import org.nicolie.towersforpgm.utils.LanguageManager;
+
+import tc.oc.pgm.api.PGM;
+
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 
@@ -16,12 +19,11 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 public class StatsCommand implements CommandExecutor, TabCompleter {
-    private final TowersForPGM plugin;
-    private final MatchManager matchManager;
+    private final LanguageManager languageManager;
+    private final TowersForPGM plugin = TowersForPGM.getInstance(); // Instancia del plugin
 
-    public StatsCommand(TowersForPGM plugin, MatchManager matchManager) {
-        this.plugin = plugin;
-        this.matchManager = matchManager;
+    public StatsCommand(LanguageManager languageManager) {
+        this.languageManager = languageManager;
     }
 
     @Override
@@ -30,18 +32,18 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
         String tableName;
         
         if (!plugin.getIsDatabaseActivated()){
-            sender.sendMessage(plugin.getPluginMessage("stats.disabled"));
+            sender.sendMessage(languageManager.getPluginMessage("stats.disabled"));
             return true;
         }
         // Verifica si no se proporciona ningún argumento
         if (args.length == 0) {
             // Si no hay argumentos, se usa el nombre del jugador que ejecutó el comando
             if (!(sender instanceof Player)) {
-                sender.sendMessage(plugin.getPluginMessage("stats.usage"));
+                sender.sendMessage(languageManager.getPluginMessage("stats.usage"));
                 return true;
             }
             targetPlayer = sender.getName();  // Usa al jugador que ejecuta el comando
-            tableName = ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName()); // Usa la tabla por defecto
+            tableName = ConfigManager.getTableForMap(PGM.get().getMatchManager().getMatch(sender).getMap().getName()); // Usa la tabla por defecto
         } else if (args.length == 1) {
             // Si solo hay un argumento, se usa como tabla y el jugador será el que ejecuta el comando
             tableName = args[0].trim();  // Este es el nombre de la tabla
@@ -54,13 +56,13 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
 
         // Verifica si la tabla especificada existe en la configuración
         if (!ConfigManager.getTables().contains(tableName)) {
-            sender.sendMessage(plugin.getPluginMessage("stats.tableNotFound")
+            sender.sendMessage(languageManager.getPluginMessage("stats.tableNotFound")
                     .replace("{table}", tableName));
             return true;
         }
 
         // Muestra las estadísticas del jugador especificado
-        StatsManager.showStats(sender, tableName, targetPlayer, this.plugin);
+        StatsManager.showStats(sender, tableName, targetPlayer, languageManager);
 
         return true;
     }

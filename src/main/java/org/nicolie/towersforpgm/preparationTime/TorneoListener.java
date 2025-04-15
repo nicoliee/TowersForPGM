@@ -2,6 +2,7 @@ package org.nicolie.towersforpgm.preparationTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 import tc.oc.pgm.spawns.events.ParticipantKitApplyEvent;
@@ -26,11 +27,12 @@ import org.nicolie.towersforpgm.TowersForPGM;
 // y esto hace que se asuma que solo hay una partida en ejecución en todo el servidor.
 
 public class TorneoListener implements Listener {
-    private final TowersForPGM plugin;
+    private final TowersForPGM plugin = TowersForPGM.getInstance(); // Instancia del plugin
+    private final LanguageManager languageManager; // Instancia del LanguageManager
     private Map<String, Long> protectionStartTimes = new HashMap<>(); // Mapa para almacenar el tiempo de inicio de la protección por nombre de mundo
     private Map<String, BukkitTask> activeTimers = new HashMap<>(); // Mapa para almacenar temporizadores activos por nombre de mundo
-    public TorneoListener(TowersForPGM plugin) {
-        this.plugin = plugin;
+    public TorneoListener(LanguageManager languageManager) {
+        this.languageManager = languageManager;
     }
 
     public boolean isMapInConfig(String mapName) {
@@ -53,7 +55,7 @@ public class TorneoListener implements Listener {
             // Comprobar si ya existe una configuración para el mundo
             if (plugin.getMatchConfig(worldName) != null) {
                 // Si la configuración ya existe, no sobrescribir y dar un aviso
-                SendMessage.sendToPlayer(player, this.plugin.getPluginMessage("preparation.alreadyStarted"));
+                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("preparation.alreadyStarted"));
                 return;  // Salir del método para evitar sobreescribir la configuración
             }
 
@@ -72,7 +74,7 @@ public class TorneoListener implements Listener {
             startProtectionTimer(player, timer, haste, region, worldName);  // Iniciar el temporizador de protección
             protectionStartTimes.put(worldName, System.currentTimeMillis());
         } else {
-            SendMessage.sendToPlayer(player, this.plugin.getPluginMessage("region.mapError"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapError"));
         }
     }
 
@@ -88,12 +90,12 @@ public class TorneoListener implements Listener {
                 protectionStartTimes.remove(worldName); // Eliminar el tiempo de inicio de la protección
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     // Enviar mensajes al mundo
-                    SendMessage.sendToWorld(worldName, this.plugin.getConfigurableMessage("preparation.end"));
+                    SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.end"));
                 });
             });
         } else {
             // Si la configuración no existe, enviamos un mensaje sincrónicamente
-            SendMessage.sendToPlayer(player, this.plugin.getPluginMessage("preparation.notStarted"));
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("preparation.notStarted"));
         }
     }
 
@@ -111,15 +113,15 @@ public class TorneoListener implements Listener {
                     if (timeRemaining % 60 == 0 && timeRemaining > 60) {
                         // Si el tiempo restante es divisible por 60 y mayor a 60
                         int minutesRemaining = timeRemaining / 60;
-                        SendMessage.sendToWorld(worldName, plugin.getConfigurableMessage("preparation.minutesRemaining")
+                        SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.minutesRemaining")
                             .replace("{minutes}", String.valueOf(minutesRemaining)));
                         SendMessage.soundToWorld(worldName, "random.click", 1f, 2f);
                     } else if (timeRemaining == 60 || timeRemaining == 30 || timeRemaining == 10 || (timeRemaining <= 5 && timeRemaining >= 2)) {
                         // Si el tiempo restante son 30, 10, 5, 4, 3, 2, 1 segundos
-                        SendMessage.sendToWorld(worldName, plugin.getConfigurableMessage("preparation.secondsRemaining")
+                        SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.secondsRemaining")
                             .replace("{seconds}", String.valueOf(timeRemaining)));
                     }else if (timeRemaining == 1){
-                        SendMessage.sendToWorld(worldName, plugin.getConfigurableMessage("preparation.secondRemaining")
+                        SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.secondRemaining")
                             .replace("{seconds}", String.valueOf(timeRemaining)));
                     }
     
@@ -188,7 +190,7 @@ public class TorneoListener implements Listener {
             if (matchConfig.isInside(location)) {
                 // Cancela el evento si la ubicación está dentro de la región
                 event.setCancelled(true);
-                SendMessage.sendToPlayer(event.getPlayer(), this.plugin.getConfigurableMessage("preparation.blockPlace"));
+                SendMessage.sendToPlayer(event.getPlayer(), languageManager.getConfigurableMessage("preparation.blockPlace"));
                 event.getPlayer().playSound(event.getPlayer().getLocation(), "note.bass", 1f, 0.75f);
             }
         }
@@ -209,7 +211,7 @@ public class TorneoListener implements Listener {
             if (matchConfig.isInside(location)) {
                 // Cancela el evento si la ubicación está dentro de la región
                 event.setCancelled(true);
-                SendMessage.sendToPlayer(player, this.plugin.getConfigurableMessage("preparation.blockBreak"));
+                SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("preparation.blockBreak"));
                 event.getPlayer().playSound(event.getPlayer().getLocation(), "note.bass", 1f, 0.75f);
             }
         }
