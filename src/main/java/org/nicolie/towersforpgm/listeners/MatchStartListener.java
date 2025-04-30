@@ -25,14 +25,13 @@ public class MatchStartListener implements Listener{
 
     @EventHandler
     public void onMatchStart(MatchStartEvent event) {
-        String matchName = event.getMatch().getMap().getName();
         String worldName = event.getMatch().getWorld().getName();
         captains.setReadyActive(false);
-        captains.setReady1(false);
-        captains.setReady2(false);
+        captains.setReady1(false, null);
+        captains.setReady2(false, null);
         refillManager.startRefillTask(worldName);
         if (plugin.isPreparationEnabled()) {
-            torneoListener.startProtection(null, matchName, worldName);
+            torneoListener.startProtection(null, event.getMatch());
         }
     }
 }

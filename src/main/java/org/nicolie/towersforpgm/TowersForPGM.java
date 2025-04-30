@@ -110,7 +110,7 @@ public final class TowersForPGM extends JavaPlugin {
         availablePlayers = new AvailablePlayers(matchManager);
         captains = new Captains();
         teams = new Teams(matchManager);
-        draft = new Draft(captains, availablePlayers, teams, languageManager);
+        draft = new Draft(captains, availablePlayers, teams, languageManager, matchManager);
         pickInventory = new PickInventory(draft, captains, availablePlayers, teams, languageManager);
         getServer().getPluginManager().registerEvents(pickInventory, this);
         
@@ -134,7 +134,6 @@ public final class TowersForPGM extends JavaPlugin {
     public static TowersForPGM getInstance() {
         return instance;
     }
-
 // Preparation Time
     // Método para cargar las regiones desde el archivo de configuración
     private void loadRegions() {

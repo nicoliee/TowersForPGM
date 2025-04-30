@@ -1,6 +1,8 @@
 messages:
   en:
     TowersForPGM:
+      and: "and"
+      or: "or"
       languageSet: "§8[§bTowersForPGM§8] §aLanguage changed to §2English§a."
       noLanguage: "§8[§bTowersForPGM§8] §cYou must select a language."
     add:
@@ -9,13 +11,13 @@ messages:
     captains:
       alreadyInDraft: "§cThe player is already in the draft."
       alreadyInTeam: "§cThe player is already in a team."
-      captainsHeader: "§8§m-----------§r §b§lCaptains §8§m-----------"
+      captainsHeader: "§m-----------§r §b§lCaptains §f§m-----------"
       matchStarted: "§cThe game has already started."
       notEnoughPlayers: "§cThere are not enough players in the game."
       notInDraft: "§cThe player is not in the draft."
       notOnline: "§cThe player is not online."
       offline: "§cOne of the captains is offline."
-      teamsHeader: "§8§m-----------§r §b§lTeams §8§m-----------"
+      teamsHeader: "§m-----------§r §b§lTeams §f§m-----------"
       usage: "§cUsage: /captains <nick1> <nick2>"
     draft:
       clickToPick: "§eClick to pick."
@@ -25,7 +27,6 @@ messages:
       databaseDisabled: "§cThe database is disabled."
       invalidCoords: "§cInvalid coordinates: §4{x}, {y}, {z}§c."
       messageNotFound: "§cMessage not found for the key: §4{key}§c."
-      messageNotFoundToPlayers: "Error, message not found, admins have been notified."
       noPlayer: "§cThis command can only be executed by a player."
       preparationTimeNotFound: "§cNo 'preparationTime' section found in config.yml."
       regionError: "§cError getting region: §4{region}§c."
@@ -112,6 +113,8 @@ messages:
 
   es:
     TowersForPGM:
+      and: "y"
+      or: "o"
       languageSet: "§8[§bTowersForPGM§8] §aIdioma cambiado a §2español§a."
       noLanguage: "§8[§bTowersForPGM§8] §cTienes que seleccionar un idioma."
     add:
@@ -120,13 +123,13 @@ messages:
     captains:
       alreadyInDraft: "§cEl jugador ya está en el draft."
       alreadyInTeam: "§cEl jugador ya está en un equipo."
-      captainsHeader: "§8§m-----------§r §b§lCapitanes §8§m-----------"
+      captainsHeader: "§m-----------§r §b§lCapitanes §f§m-----------"
       matchStarted: "§cLa partida ya ha comenzado."
       notEnoughPlayers: "§cNo hay suficientes jugadores en la partida."
       notInDraft: "§cEl jugador no está en el draft."
       notOnline: "§cEl jugador no está conectado."
       offline: "§cUno de los capitanes está desconectado."
-      teamsHeader: "§8§m-----------§r §b§lEquipos §8§m-----------"
+      teamsHeader: "§m-----------§r §b§lEquipos §f§m-----------"
       usage: "§cUso: /captains <nick1> <nick2>"
     draft:
       clickToPick: "§eHaz clic para elegir."
@@ -136,7 +139,6 @@ messages:
       databaseDisabled: "§cLa base de datos está desactivada."
       invalidCoords: "§cCoordenadas inválidas: §4{x}, {y}, {z}§c."
       messageNotFound: "§cMensaje no encontrado para la clave: §4{key}§c."
-      messageNotFoundToPlayers: "Error, mensaje no encontrado, los admins ya fueron notificados."
       noPlayer: "§cEste comando solo puede ser ejecutado por un jugador."
       preparationTimeNotFound: "§cNo se encontró la sección 'preparationTime' en config.yml."
       regionError: "§cError al obtener la región: §4{region}§c."
@@ -197,7 +199,7 @@ messages:
     stats:
       disabled: "§cEstadísticas desactivadas."
       error: "§cError al obtener las estadísticas."
-      header: "§7Estadísticas de §3{player}§7 en §2{table}:"
+      header: "&m-------------------§r §2{table} &r&m-------------------"
       kills: "§7Kills"
       deaths: "§7Muertes"
       assists: "§7Asistencias"

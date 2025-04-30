@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ public class AvailablePlayers {
     private final List<String> availableOfflinePlayers = new ArrayList<>();
     private final Map<String, PlayerStats> playerStats = new HashMap<>();
     private final MatchManager matchManager;
+    private final List<String> topPlayers = new ArrayList<>();
 
     public AvailablePlayers(MatchManager matchManager) {
         this.matchManager = matchManager;
@@ -54,6 +56,8 @@ public class AvailablePlayers {
             
             loadStatsForPlayer(playerName);
         }
+
+        updateTopPlayers();
     }    
 
     // Método para eliminar jugador
@@ -61,6 +65,25 @@ public class AvailablePlayers {
         availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(playerName));
         availableOfflinePlayers.removeIf(p -> p.equalsIgnoreCase(playerName));
         playerStats.remove(playerName);
+        
+        // Remover de la lista de mejores jugadores
+        topPlayers.removeIf(name -> name.equalsIgnoreCase(playerName));
+    }
+
+    public String getExactUser(String playerName) {
+        // Buscar en jugadores online
+        for (MatchPlayer matchPlayer : availablePlayers) {
+            if (matchPlayer.getNameLegacy().equalsIgnoreCase(playerName)) {
+                return matchPlayer.getNameLegacy();
+            }
+        }
+        // Buscar en jugadores offline
+        for (String offlinePlayer : availableOfflinePlayers) {
+            if (offlinePlayer.equalsIgnoreCase(playerName)) {
+                return offlinePlayer;
+            }
+        }
+        return null;
     }
 
     public List<MatchPlayer> getAvailablePlayers() {
@@ -88,6 +111,7 @@ public class AvailablePlayers {
         availablePlayers.clear();
         availableOfflinePlayers.clear();
         playerStats.clear();
+        topPlayers.clear();
     }
 
     public void handleDisconnect(Player player) {
@@ -151,5 +175,35 @@ public class AvailablePlayers {
 
     public PlayerStats getStatsForPlayer(String playerName) {
         return playerStats.getOrDefault(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+    }
+
+    private void updateTopPlayers() {
+        // Crear una lista temporal con todos los jugadores y sus estadísticas
+        List<Map.Entry<String, Double>> playersWithKD = new ArrayList<>();
+
+        for (String playerName : getAllAvailablePlayers()) {
+            PlayerStats stats = getStatsForPlayer(playerName);
+            int kills = stats.getKills();
+            int deaths = stats.getDeaths();
+            int assists = stats.getAssists();
+            int points = stats.getPoints();
+            int wins = stats.getWins();
+            int games = stats.getGames();
+            double kd = stats.getDeaths() == 0 ? stats.getKills() : (double) kills / deaths;
+            playersWithKD.add(new AbstractMap.SimpleEntry<>(playerName, kd));
+        }
+
+        // Ordenar por KD descendente
+        playersWithKD.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+
+        // Actualizar la lista de mejores jugadores 
+        topPlayers.clear();
+        for (Map.Entry<String, Double> entry : playersWithKD) {
+            topPlayers.add(entry.getKey());
+        }
+    }
+
+    public List<String> getTopPlayers() {
+        return new ArrayList<>(topPlayers);
     }
 }

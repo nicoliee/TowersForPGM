@@ -40,6 +40,6 @@ public class Events {
         pluginManager.registerEvents(new PlayerParticipationListener(teams, captains, languageManager), plugin);
         pluginManager.registerEvents(new PlayerQuitListener(plugin), plugin);
         pluginManager.registerEvents(new CompetitorScoreChangeListener(), plugin);
-        pluginManager.registerEvents(new MatchStatsListener(), plugin);
+        pluginManager.registerEvents(new MatchStatsListener(languageManager), plugin);
     }
 }

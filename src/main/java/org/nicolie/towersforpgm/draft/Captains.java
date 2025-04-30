@@ -1,8 +1,12 @@
 package org.nicolie.towersforpgm.draft;
 
+import java.time.Duration;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+
+import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.start.StartMatchModule;
 
 public class Captains {
     private UUID captain1 = null;
@@ -62,18 +66,23 @@ public class Captains {
         return ready1;
     }
 
-    public void setReady1(boolean ready1) {
+    public void setReady1(boolean ready1, Match match) {
         this.ready1 = ready1;
-        checkAndTriggerEvent();
+        if (match != null){
+            checkAndTriggerEvent(match);
+        }
     }
 
     public boolean isReady2() {
         return ready2;
     }
 
-    public void setReady2(boolean ready2) {
+    public void setReady2(boolean ready2, Match match) {
         this.ready2 = ready2;
-        checkAndTriggerEvent();
+        if (match != null){
+            checkAndTriggerEvent(match);
+        }
+        
     }
 
     public void setReadyActive(boolean isReadyActive) {
@@ -84,9 +93,9 @@ public class Captains {
         return isReadyActive;
     }
 
-    private void checkAndTriggerEvent() {
+    private void checkAndTriggerEvent(Match match) {
         if (ready1 && ready2) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "start 5");
+            match.needModule(StartMatchModule.class).forceStartCountdown(Duration.ofSeconds(5), Duration.ZERO);
         }
     }
 

@@ -43,8 +43,9 @@ commands:
     usage: /setTable <nombre>
     permission: towers.admin
   stat:
-    description: Muestra las estadísticas de un jugador.
-    usage: /stat <tabla> [jugador]
+    description: Muestra estadísticas de un jugador.
+    usage: /stat <jugador> [tabla]
+    aliases: [estadisticas]
   table:
     description: Administra las tablas del torneo.
     usage: /table <add|delete|list> [nombre]

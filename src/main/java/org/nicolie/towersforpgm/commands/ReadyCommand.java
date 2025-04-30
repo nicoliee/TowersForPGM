@@ -8,6 +8,8 @@ import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import tc.oc.pgm.api.PGM;
+
 public class ReadyCommand implements CommandExecutor{
     private final Captains captains;
     private final LanguageManager languageManager;
@@ -35,7 +37,8 @@ public class ReadyCommand implements CommandExecutor{
                     SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("ready.alreadyReady"));
                     return true;
                 } else {
-                    captains.setReady1(true);
+                    captains.setReady1(true, PGM.get().getMatchManager().getMatch(player));
+                    
                     SendMessage.broadcast(languageManager.getConfigurableMessage("ready.ready")
                             .replace("{teamcolor}", languageManager.getConfigurableMessage("team.redColor"))
                             .replace("{team}", languageManager.getConfigurableMessage("team.red")));
@@ -45,7 +48,8 @@ public class ReadyCommand implements CommandExecutor{
                     SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("ready.alreadyReady"));
                     return true;
                 } else {
-                    captains.setReady2(true);
+                    
+                    captains.setReady2(true, PGM.get().getMatchManager().getMatch(player));
                     SendMessage.broadcast(languageManager.getConfigurableMessage("ready.ready")
                             .replace("{teamcolor}", languageManager.getConfigurableMessage("team.blueColor"))
                             .replace("{team}", languageManager.getConfigurableMessage("team.blue")));

@@ -324,7 +324,6 @@ public class PickInventory implements Listener {
         // Verificar si el jugador tiene el ítem especial y si hizo clic derecho
         if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK ||event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ItemStack item;
-
             // Compatibilidad con versiones antiguas y nuevas
             try {
                 item = player.getInventory().getItemInMainHand(); // Método para versiones nuevas
@@ -335,6 +334,12 @@ public class PickInventory implements Listener {
             if (item != null && item.getType() == Material.NETHER_STAR && item.hasItemMeta()) {
                 ItemMeta meta = item.getItemMeta();
                 if (meta != null && "§6Draft Menu".equals(meta.getDisplayName())) {
+                    // Comprobar si el draft está activo
+                    if (!draft.isDraftActive()) {
+                        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("picks.noDraft"));
+                        player.getInventory().remove(Material.NETHER_STAR); // Quitar el ítem especial de Draft Menu
+                        return;
+                    }
                     openInventory(player); // Abrir el inventario
                     event.setCancelled(true); // Cancelar cualquier otra acción
                 }

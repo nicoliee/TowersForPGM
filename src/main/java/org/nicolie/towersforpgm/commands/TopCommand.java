@@ -37,7 +37,7 @@ public class TopCommand implements CommandExecutor, TabCompleter {
         }
 
         String category = args[0].toLowerCase();
-        if (!category.matches("kills|deaths|points|wins|games")) {
+        if (!category.matches("kills|deaths|assists|points|wins|games")) {
             SendMessage.sendToPlayer(player, languageManager.getPluginMessage("top.invalidCategory"));
             return true;
         }

@@ -12,6 +12,9 @@ import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.util.bukkit.Sounds;
+
 public class AddCommand implements CommandExecutor {
     private final AvailablePlayers availablePlayers;
     private final Captains captains;
@@ -55,7 +58,7 @@ public class AddCommand implements CommandExecutor {
         availablePlayers.addPlayer(playerName);
         pickInventory.updateAllInventories();
         SendMessage.broadcast(languageManager.getConfigurableMessage("picks.add").replace("{player}", playerName));
-        SendMessage.soundBroadcast("note.pling", 1f, 2f);
+        PGM.get().getMatchManager().getMatch(sender).getMatch().playSound(Sounds.ALERT);
         return true;
     }
 

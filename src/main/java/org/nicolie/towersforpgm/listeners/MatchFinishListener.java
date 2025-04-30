@@ -38,7 +38,7 @@ public class MatchFinishListener implements Listener {
         Match match = event.getMatch();
         String worldName = event.getMatch().getWorld().getName();
         String mapName = event.getMatch().getMap().getName();
-        torneoListener.stopProtection(null, worldName);
+        torneoListener.stopProtection(null, event.getMatch());
         refillManager.clearWorldData(worldName);
         draft.cleanLists();
         ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);

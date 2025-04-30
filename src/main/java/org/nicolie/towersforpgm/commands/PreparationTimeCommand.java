@@ -15,6 +15,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.match.Match;
 
 public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
     private final TorneoListener torneoListener;
@@ -40,8 +41,7 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
             SendMessage.sendToPlayer(player, languageManager.getPluginMessage("preparation.usage"));
             return true;
         }
-        String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
-        String worldName = player.getWorld().getName();
+        Match match = PGM.get().getMatchManager().getMatch(player);
         // Procesar el comando dependiendo del primer argumento
         String action = args[0].toLowerCase();
 
@@ -57,11 +57,11 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
                 break;
 
             case "on":
-                torneoListener.startProtection(player, mapName, worldName);
+                torneoListener.startProtection(player, match);
                 break;
             
             case "off":
-                torneoListener.stopProtection(player, worldName);
+                torneoListener.stopProtection(player, match);
                 break;
 
             default:
