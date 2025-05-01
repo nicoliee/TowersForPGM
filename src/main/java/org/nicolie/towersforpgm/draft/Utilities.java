@@ -1,7 +1,8 @@
 package org.nicolie.towersforpgm.draft;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
@@ -22,10 +23,13 @@ public class Utilities {
     }
 
     public void suggestPicksForCaptains() {
+        if (!ConfigManager.isDraftSuggestions()) {
+            return;
+        }
         MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
         int size = availablePlayers.getAllAvailablePlayers().size();
         List<String> topPlayers = availablePlayers.getTopPlayers();
-        if (topPlayers.isEmpty() || size == 0) {
+        if (topPlayers.isEmpty() || size <= 1) {
             return;
         }
         if (size > 6){
@@ -48,7 +52,7 @@ public class Utilities {
         String suggestions = languageManager.getConfigurableMessage("captains.suggestions")
             .replace("{suggestions}", suggestionsBuilder.toString());
         currentCaptain.playSound(Sounds.RAINDROPS);
-        SendMessage.sendToPlayer(currentCaptain.getBukkit(), suggestions);
+        currentCaptain.sendMessage(Component.text(suggestions));
     }
 
     public String randomPick(){

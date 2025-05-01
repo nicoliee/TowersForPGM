@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.update.AutoUpdate;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
@@ -30,7 +31,13 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (!sender.hasPermission("towers.admin")) {
+            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("errors.noPermission"));
+            return true;
+        }
+
         Player player = (Player) sender;
+        
         if (args.length == 0) {
             SendMessage.sendToPlayer(player, "§8[§bTowersForPGM§8] §7Version: " + plugin.getDescription().getVersion());
             return true;
@@ -66,7 +73,10 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
                 languageManager.reloadMessages();
                 SendMessage.sendToPlayer(player, languageManager.getPluginMessage("messages.reloadSuccess"));
                 return true;
-
+            case "update":
+                AutoUpdate update = new AutoUpdate(plugin);
+                update.checkForUpdates();
+                return true;
             default:
                 SendMessage.sendToPlayer(player, "§8[§bTowersForPGM§8] §7Version: " + plugin.getDescription().getVersion());
                 return true;

@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
@@ -98,7 +99,10 @@ public class Draft {
     }
 
     public void startDraftTimer() {
-        if (draftTimer != null) {
+        if (!ConfigManager.isDraftTimer()){
+            return;
+        }
+        if (draftTimer != null) { 
             draftTimer.cancel();
         }
         String bossbarMessage = languageManager.getPluginMessage("captains.bossbar");
@@ -106,7 +110,7 @@ public class Draft {
     
         MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
         int initialTime = utilities.timerDuration();
-        int[] timeLeft = {initialTime}; // Usamos array para poder modificarlo desde inner class
+        int[] timeLeft = {initialTime}; // Usar un array para poder modificar el valor dentro del Runnable
     
         // Crear BossBar personalizada
         pickTimerBar = BossBar.bossBar(
@@ -129,16 +133,18 @@ public class Draft {
                 if (timeLeft[0] == initialTime - 5) {
                     utilities.suggestPicksForCaptains();
                 }
-                if (timeLeft[0] <= 30 && timeLeft[0] > 0) {
+                if (timeLeft[0] <= 30 && timeLeft[0] > 3) {
                     currentCaptain.playSound(Sounds.INVENTORY_CLICK);
+                }else if (timeLeft[0] <= 3 && timeLeft[0] >= 1) {
+                    currentCaptain.playSound(Sounds.WARNING);
                 }
                 if ((timeLeft[0] <= 5 && timeLeft[0] > 1)) {
                     SendMessage.sendToPlayer(currentCaptain.getBukkit(), languageManager.getConfigurableMessage("captains.seconds").replace("{seconds}", String.valueOf(timeLeft[0])));
-                }
-                if (timeLeft[0] == 1) {
+                }else if (timeLeft[0] == 1) {
                     SendMessage.sendToPlayer(currentCaptain.getBukkit(), languageManager.getConfigurableMessage("captains.second"));
                 }
-    
+                
+                // Si el tiempo se acaba, el capitán elige un jugador aleatorio
                 if (timeLeft[0] == 0) {
                     if (utilities.randomPick() == null){
                         endDraft();
@@ -146,13 +152,10 @@ public class Draft {
                         pickPlayer(utilities.randomPick());
                         this.cancel();
                     }
-                    
                 }
-    
                 timeLeft[0]--;
             }
         };
-    
         draftTimer.runTaskTimer(TowersForPGM.getInstance(), 0, 20); // cada segundo
     }    
 
@@ -164,12 +167,7 @@ public class Draft {
         Sound sound = captains.isCaptain1Turn() ? Sounds.MATCH_COUNTDOWN : Sounds.MATCH_START;
         int teamNumber = captains.isCaptain1Turn() ? 1 : 2;
 
-        // Quitar bossbar
-        if (pickTimerBar != null) {
-            MatchPlayer captain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
-            captain.hideBossBar(pickTimerBar);
-            pickTimerBar = null;
-        }
+        removeBossbar();
         teams.addPlayerToTeam(exactUsername, teamNumber);
         availablePlayers.removePlayer(exactUsername);
         teams.assignTeam(player, teamNumber);
@@ -250,7 +248,15 @@ public class Draft {
         if (draftTimer != null) {
             draftTimer.cancel();
         }
+        removeBossbar();
+    }
+    public void removeBossbar() {
+        if (ConfigManager.isDraftTimer()){
+            return;
+        }
         if (pickTimerBar != null) {
+            MatchPlayer captain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
+            captain.hideBossBar(pickTimerBar);
             pickTimerBar = null;
         }
     }

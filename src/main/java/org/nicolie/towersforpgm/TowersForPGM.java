@@ -15,6 +15,7 @@ import org.nicolie.towersforpgm.preparationTime.MatchConfig;
 import org.nicolie.towersforpgm.preparationTime.Region;
 import org.nicolie.towersforpgm.preparationTime.TorneoListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
+import org.nicolie.towersforpgm.update.AutoUpdate;
 
 import tc.oc.pgm.api.player.MatchPlayer;
 
@@ -96,15 +97,6 @@ public final class TowersForPGM extends JavaPlugin {
             getLogger().info("Database is disabled.");
         }
 
-        // // Vault
-        // SetupVault.setupVault();
-        
-        // if (SetupVault.getVaultEconomy() != null) {
-        //     getLogger().info("Vault economy initialized successfully!");
-        // } else {
-        //     getLogger().warning("Vault economy could not be initialized. Make sure Vault plugin is installed.");
-        // }
-
         // Inicializar el Match
         MatchManager matchManager = new MatchManager();
 
@@ -124,6 +116,10 @@ public final class TowersForPGM extends JavaPlugin {
         // Registrar eventos
         Events eventManager = new Events(this);
         eventManager.registerEvents(availablePlayers, captains, draft, matchManager, languageManager, pickInventory, refillManager, teams, torneoListener);
+
+        // Verificar actualizaciones
+        AutoUpdate updateChecker = new AutoUpdate(this);
+        updateChecker.checkForUpdates();
     }
         
     @Override

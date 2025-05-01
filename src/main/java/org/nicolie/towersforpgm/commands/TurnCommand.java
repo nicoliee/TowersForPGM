@@ -32,6 +32,7 @@ public class TurnCommand implements CommandExecutor{
             SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("picks.noDraft"));
             return true;
         }
+        draft.removeBossbar();
         captains.toggleTurn();
         draft.startDraftTimer();
         if (captains.isCaptain1Turn()) {
