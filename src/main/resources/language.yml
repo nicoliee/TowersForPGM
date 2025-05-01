@@ -11,6 +11,7 @@ messages:
     captains:
       alreadyInDraft: "§cThe player is already in the draft."
       alreadyInTeam: "§cThe player is already in a team."
+      bossbar: "§aTime to choose: §4{time}s"
       captainsHeader: "§m-----------§r §b§lCaptains §f§m-----------"
       matchStarted: "§cThe game has already started."
       notEnoughPlayers: "§cThere are not enough players in the game."
@@ -123,6 +124,7 @@ messages:
     captains:
       alreadyInDraft: "§cEl jugador ya está en el draft."
       alreadyInTeam: "§cEl jugador ya está en un equipo."
+      bossbar: "§aTiempo para elegir: §4{time}s"
       captainsHeader: "§m-----------§r §b§lCapitanes §f§m-----------"
       matchStarted: "§cLa partida ya ha comenzado."
       notEnoughPlayers: "§cNo hay suficientes jugadores en la partida."

@@ -3,7 +3,9 @@ captains:
   subtitleChoose: "§l{teamcolor}{player}"
   titleChoose: "§l{teamcolor}{captain} §6ha elegido a:"
   turn: "&8[&6Bigotes Bot&8] {teamcolor}Es el turno de {captain}."
-  suggestions: "&8[&6Bigotes Bot&8]&r Te sugerimos que elijas a &b{suggestions}."
+  suggestions: "&8[&6Bigotes Bot&8]&r Te sugerimos que elijas a &b{suggestions}&f."
+  seconds: "&8[&6Bigotes Bot&8] &cTe quedan &3{seconds} segundos &cpara elegir."
+  second: "&8[&6Bigotes Bot&8] &cTe queda &31 segundo &cpara elegir."
 picks:
   add: "&8[&6Bigotes Bot&8] §7El jugador §3{player} §7ha sido añadido a la lista."
   alreadyPicked: "&8[&6Bigotes Bot&8] &cEl jugador {player} ya ha sido elegido."
@@ -18,7 +20,7 @@ preparation:
   blockPlace: "&8[&6Bigotes Bot&8] &eNo puedes salir de tu base en tiempo de preparación."
   end: "&8[&6Bigotes Bot&8] &aLa preparación ha terminado."
   minutesRemaining: "&8[&6Bigotes Bot&8] &aQuedan &e{minutes} minutos &ade preparación."
-  secondRemaining: "&8[&6Bigotes Bot&8] &aQueda &e{seconds} segundo &ade preparación."
+  secondRemaining: "&8[&6Bigotes Bot&8] &aQueda &e1 segundo &ade preparación."
   secondsRemaining: "&8[&6Bigotes Bot&8] &aQuedan &e{seconds} segundos &ade preparación."
 ready:
   alreadyReady: "&8[&6Bigotes Bot&8] &cYa has marcado como listo."

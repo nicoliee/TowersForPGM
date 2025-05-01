@@ -33,6 +33,7 @@ public class TurnCommand implements CommandExecutor{
             return true;
         }
         captains.toggleTurn();
+        draft.startDraftTimer();
         if (captains.isCaptain1Turn()) {
             SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
                 .replace("{teamcolor}", "&4")

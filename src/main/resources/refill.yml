@@ -1,5 +1,9 @@
 refill:
-  TowersMini:
+  Mini Towers:TE: # Nombre del mapa
+    # Coordenadas de los cofres
+    # Usa /refill add para añadir cofres
+    # Debes estar encima del cofre para que funcione
+    # Para cofres dobles debes usar /refill para cada lado
     c1: 18, 12, 38
     c2: 19, 12, 38
     c3: 21, 12, 38

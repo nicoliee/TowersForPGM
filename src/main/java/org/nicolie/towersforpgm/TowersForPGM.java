@@ -8,6 +8,7 @@ import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.draft.Utilities;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
@@ -50,6 +51,7 @@ public final class TowersForPGM extends JavaPlugin {
     private Draft draft; 
     private Teams teams;
     private PickInventory pickInventory;
+    private Utilities utilities; 
 
 // Refill
     private RefillManager refillManager; // Administrador de refill
@@ -110,7 +112,8 @@ public final class TowersForPGM extends JavaPlugin {
         availablePlayers = new AvailablePlayers(matchManager);
         captains = new Captains();
         teams = new Teams(matchManager);
-        draft = new Draft(captains, availablePlayers, teams, languageManager, matchManager);
+        utilities = new Utilities(availablePlayers, captains, languageManager);
+        draft = new Draft(captains, availablePlayers, teams, languageManager, matchManager, utilities);
         pickInventory = new PickInventory(draft, captains, availablePlayers, teams, languageManager);
         getServer().getPluginManager().registerEvents(pickInventory, this);
         

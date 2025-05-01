@@ -10,18 +10,20 @@ database:
   - Debug
   - TorneoT1
   sendToTable: Debug
-vault: false
+draft:
+  suggestions: true
+  timer: true
+  table: TorneoT1 # Tabla para las sugerencias y picks random. Si está vacío se utilizará sendToTable
 stats:
   maps:
-    TowersMini:
-      sendToTable: TorneoT1 # Tabla a la que se enviarán las estadísticas, si está vacío se utilizará sendToTable
-      privateMatch: false # Al cargar la partida, los jugadores no podrán entrar en un equipo.
+    Mini Towers:TE: # Nombre del mapa
+      privateMatch: true # Si es un mapa privado, no podrán entrar antes de que el torneo comience
+      sendToTable: TorneoT1 # Tabla donde se guardarán las estadísticas del mapa
 preparationTime:
   enabled: true
   maps:
-    TowersMini: # Nombre de la región
-      P1: -9, 0, -16 # Punto mínimo
-      P2: 37, 45, 20 # Punto máximo
-      database: TorneoT1 # Nombre de la base de datos, si está vacío se utilizará sendToTable
-      Timer: 4 # Tiempo de preparación (en minutos)
-      Haste: 3 # Tiempo de haste (en minutos)
+    Mini Towers:TE: # Nombre del mapa
+      P1: -9, 0, -16 # Coordenada mínima de la región protegida
+      P2: 37, 45, 20 # Coordenada máxima de la región protegida
+      Timer: 4 # Tiempo de preparación en minutos
+      Haste: 3 # Tiempo de haste en minutos

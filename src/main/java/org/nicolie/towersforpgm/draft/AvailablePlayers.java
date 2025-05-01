@@ -188,9 +188,12 @@ public class AvailablePlayers {
             int assists = stats.getAssists();
             int points = stats.getPoints();
             int wins = stats.getWins();
-            int games = stats.getGames();
-            double kd = stats.getDeaths() == 0 ? stats.getKills() : (double) kills / deaths;
-            playersWithKD.add(new AbstractMap.SimpleEntry<>(playerName, kd));
+
+            // Valoramos más los puntos y las victorias, pero también consideramos el KD y las asistencias
+            double kd = deaths == 0 ? kills : (double) kills / deaths;
+            double score = (points * 2) + (wins * 3) + (kd * 1.5) + (assists * 0.5);
+
+            playersWithKD.add(new AbstractMap.SimpleEntry<>(playerName, score));
         }
 
         // Ordenar por KD descendente

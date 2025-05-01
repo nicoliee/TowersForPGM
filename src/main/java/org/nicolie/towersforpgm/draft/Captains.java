@@ -118,4 +118,8 @@ public class Captains {
     public void toggleTurn() {
         this.isCaptain1Turn = !this.isCaptain1Turn;
     }
+
+    public UUID getCurrentCaptain() {
+        return isCaptain1Turn ? captain1 : captain2;
+    }
 }
