@@ -50,89 +50,97 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
                 handleAddCommand(player, config, mapName);
                 break;
 
+            case "delete":
+                handleDeleteCommand(player, config, mapName);
+                break;
+
+            case "draftSuggestions":
+                handleDraftSuggestionsCommand(player);
+                break;
+
+            case "draftTimer":
+                handleDraftTimerCommand(player);
+                break;
+
+            case "haste":
+                handleHasteCommand(player, config, mapName, args);
+                break;
+
+            case "list":
+                handleListCommand(player, config);
+                break;
+
+            case "max":
+                if (!config.contains("preparationTime.maps." + mapName)) {
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.worldError"));
+                    return true;
+                }
+                if (args.length == 4) {
+                    try {
+                        int x = Integer.parseInt(args[1]);
+                        int y = Integer.parseInt(args[2]);
+                        int z = Integer.parseInt(args[3]);
+                        
+                        // Actualizamos la coordenada en el archivo config.yml
+                        setCoordinates(config, mapName, "P2", x, y, z);
+            
+                        // Actualizamos la región en memoria
+                        Region region = plugin.getRegions().get(mapName);
+                        if (region != null) {
+                            region.setP2(new Location(player.getWorld(), x, y, z));
+                        }
+            
+                        plugin.saveConfig(); // Guardamos la configuración en el archivo
+                        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.maxSet")
+                            .replace("{x}", String.valueOf(x))
+                            .replace("{y}", String.valueOf(y))
+                            .replace("{z}", String.valueOf(z)));
+                    } catch (NumberFormatException e) {
+                        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
+                    }
+                } else {
+                    player.sendMessage(ChatColor.RED + "/config max <x> <y> <z>");
+                }
+                break;
+
             case "min":
-            if (!config.contains("preparationTime.maps." + mapName)) {
-                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.worldError"));
-                return true;
-            }
-            if (args.length == 4) {
-                try {
-                    int x = Integer.parseInt(args[1]);
-                    int y = Integer.parseInt(args[2]);
-                    int z = Integer.parseInt(args[3]);
-                    
-                    // Actualizamos la coordenada en el archivo config.yml
-                    setCoordinates(config, mapName, "P1", x, y, z);
-        
-                    // Actualizamos la región en memoria
-                    Region region = plugin.getRegions().get(mapName);
-                    if (region != null) {
-                        region.setP1(new Location(player.getWorld(), x, y, z));
-                    }
-        
-                    plugin.saveConfig(); // Guardamos la configuración en el archivo
-                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.minSet")
-                        .replace("{x}", String.valueOf(x))
-                        .replace("{y}", String.valueOf(y))
-                        .replace("{z}", String.valueOf(z)));
-                } catch (NumberFormatException e) {
-                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
+                if (!config.contains("preparationTime.maps." + mapName)) {
+                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.worldError"));
+                    return true;
                 }
-            } else {
-                player.sendMessage(ChatColor.RED + "/config min <x> <y> <z>");
-            }
-            break;
-        
-        case "max":
-            if (!config.contains("preparationTime.maps." + mapName)) {
-                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.worldError"));
-                return true;
-            }
-            if (args.length == 4) {
-                try {
-                    int x = Integer.parseInt(args[1]);
-                    int y = Integer.parseInt(args[2]);
-                    int z = Integer.parseInt(args[3]);
-                    
-                    // Actualizamos la coordenada en el archivo config.yml
-                    setCoordinates(config, mapName, "P2", x, y, z);
-        
-                    // Actualizamos la región en memoria
-                    Region region = plugin.getRegions().get(mapName);
-                    if (region != null) {
-                        region.setP2(new Location(player.getWorld(), x, y, z));
+                if (args.length == 4) {
+                    try {
+                        int x = Integer.parseInt(args[1]);
+                        int y = Integer.parseInt(args[2]);
+                        int z = Integer.parseInt(args[3]);
+                        
+                        // Actualizamos la coordenada en el archivo config.yml
+                        setCoordinates(config, mapName, "P1", x, y, z);
+            
+                        // Actualizamos la región en memoria
+                        Region region = plugin.getRegions().get(mapName);
+                        if (region != null) {
+                            region.setP1(new Location(player.getWorld(), x, y, z));
+                        }
+            
+                        plugin.saveConfig(); // Guardamos la configuración en el archivo
+                        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.minSet")
+                            .replace("{x}", String.valueOf(x))
+                            .replace("{y}", String.valueOf(y))
+                            .replace("{z}", String.valueOf(z)));
+                    } catch (NumberFormatException e) {
+                        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
                     }
-        
-                    plugin.saveConfig(); // Guardamos la configuración en el archivo
-                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.maxSet")
-                        .replace("{x}", String.valueOf(x))
-                        .replace("{y}", String.valueOf(y))
-                        .replace("{z}", String.valueOf(z)));
-                } catch (NumberFormatException e) {
-                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.usage"));
+                } else {
+                    player.sendMessage(ChatColor.RED + "/config min <x> <y> <z>");
                 }
-            } else {
-                player.sendMessage(ChatColor.RED + "/config max <x> <y> <z>");
-            }
-            break;        
+                break;
 
-        case "delete":
-            handleDeleteCommand(player, config, mapName);
-            break;
+            case "timer":
+                handleTimerCommand(player, config, mapName, args);
+                break;
 
-        case "timer":
-            handleTimerCommand(player, config, mapName, args);
-            break;
-
-        case "haste":
-            handleHasteCommand(player, config, mapName, args);
-            break;
-
-        case "list":
-            handleListCommand(player, config);
-            break;
-
-        default:
+            default:
                     player.sendMessage(ChatColor.RED + "/config <add|delete|haste|list|max|min|timer>");
     }
     return true;
@@ -311,5 +319,19 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
             player.sendMessage(ChatColor.AQUA + "  Temporizador: " + ChatColor.WHITE + (timer > 0 ? timer + " minutos" : "No definido"));
             player.sendMessage(ChatColor.AQUA + "  Temporizador de haste: " + ChatColor.WHITE + (haste > 0 ? haste + " minutos" : "No definido"));
         }
+    }
+
+    private void handleDraftSuggestionsCommand(Player player) {
+        boolean isDraftSuggestions = ConfigManager.isDraftSuggestions();
+        ConfigManager.setDraftSuggestions(!isDraftSuggestions);
+        String message = isDraftSuggestions ? "Draft suggestions disabled." : "Draft suggestions enabled.";
+        SendMessage.sendToPlayer(player, message);
+    }
+
+    private void handleDraftTimerCommand(Player player) {
+        boolean isDraftTimer = ConfigManager.isDraftTimer();
+        ConfigManager.setDraftTimer(!isDraftTimer);
+        String message = isDraftTimer ? "Draft timer disabled." : "Draft timer enabled.";
+        SendMessage.sendToPlayer(player, message);
     }
 }

@@ -119,7 +119,9 @@ public final class TowersForPGM extends JavaPlugin {
 
         // Verificar actualizaciones
         AutoUpdate updateChecker = new AutoUpdate(this);
-        updateChecker.checkForUpdates();
+        if (getConfig().getBoolean("autoupdate", false)) {
+            updateChecker.checkForUpdates();
+        }
     }
         
     @Override

@@ -1,3 +1,4 @@
+autoupdate: true
 language: es
 database:
   enabled: false
@@ -13,7 +14,6 @@ database:
 draft:
   suggestions: true
   timer: true
-  table: TorneoT1 # Tabla para las sugerencias y picks random. Si está vacío se utilizará sendToTable
 stats:
   maps:
     Mini Towers:TE: # Nombre del mapa
