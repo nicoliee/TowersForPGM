@@ -35,15 +35,10 @@ public class TurnCommand implements CommandExecutor{
         draft.removeBossbar();
         captains.toggleTurn();
         draft.startDraftTimer();
-        if (captains.isCaptain1Turn()) {
-            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
-                .replace("{teamcolor}", "&4")
-                .replace("{captain}", Bukkit.getPlayer(captains.getCaptain1()).getName()));
-        } else {
-            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
-                .replace("{teamcolor}", "&9")
-                .replace("{captain}", Bukkit.getPlayer(captains.getCaptain2()).getName()));
-        }
+        String message = languageManager.getConfigurableMessage("captains.turn")
+            .replace("{teamcolor}", captains.isCaptain1Turn() ? "&4" : "&9")
+            .replace("{captain}", Bukkit.getPlayer(captains.isCaptain1Turn() ? captains.getCaptain1() : captains.getCaptain2()).getName());
+        SendMessage.broadcast(message);
         return true;
     }
 }

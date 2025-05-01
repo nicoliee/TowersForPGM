@@ -65,6 +65,8 @@ public class MatchFinishListener implements Listener {
                             playerStats != null ? playerStats.getKills() : 0,
                             playerStats != null ? playerStats.getDeaths() : 0,
                             playerStats != null ? playerStats.getAssists() : 0,
+                            playerStats != null ? (playerStats.getDamageDone() + playerStats.getBowDamage()) : 0,
+                            playerStats != null ? playerStats.getDamageTaken() + playerStats.getBowDamageTaken() : 0,
                             totalPoints,
                             isWinner ? 1 : 0,
                             1

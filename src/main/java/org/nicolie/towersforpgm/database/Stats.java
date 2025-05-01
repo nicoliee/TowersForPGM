@@ -5,16 +5,20 @@ public class Stats {
     private int kills;
     private int deaths;
     private int assists;
+    private double damageDone;
+    private double damageTaken;
     private int points;
     private int wins;
     private int games;
 
     // Constructor
-    public Stats(String username, int kills, int deaths, int assists, int points, int wins, int games) {
+    public Stats(String username, int kills, int deaths, int assists, double damageDone, double damageTaken, int points, int wins, int games) {
         this.username = username;
         this.kills = kills;
         this.deaths = deaths;
         this.assists = assists;
+        this.damageDone = damageDone;
+        this.damageTaken = damageTaken;
         this.points = points;
         this.wins = wins;
         this.games = games;
@@ -27,6 +31,8 @@ public class Stats {
                 ", kills=" + kills +
                 ", deaths=" + deaths +
                 ", assists=" + assists +
+                ", damageDone=" + damageDone +
+                ", damageTaken=" + damageTaken +
                 ", points=" + points +
                 ", wins=" + wins +
                 ", games=" + games +
@@ -48,6 +54,14 @@ public class Stats {
 
     public int getAssists() {
         return assists;
+    }
+
+    public double getDamageDone() {
+        return damageDone;
+    }
+
+    public double getDamageTaken() {
+        return damageTaken;
     }
 
     public int getPoints() {
