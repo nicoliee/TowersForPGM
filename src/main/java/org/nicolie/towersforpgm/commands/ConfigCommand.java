@@ -24,6 +24,7 @@ import java.util.List;
 // Comando para configurar las regiones de protección y timers por mapa
 // PGM actualmente solo soporta una partida a la vez pero este plugin está pensado para soportar múltiples partidas simultáneas
 // Aún así PGM solo tiene un mundo, por lo que se asume que solo hay un mundo a la hora de llamar a los métodos de configuración
+
 public class ConfigCommand implements CommandExecutor, TabCompleter{
     private final LanguageManager languageManager;
     private final TowersForPGM plugin = TowersForPGM.getInstance();
@@ -54,11 +55,11 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
                 handleDeleteCommand(player, config, mapName);
                 break;
 
-            case "draftSuggestions":
+            case "draftsuggestions":
                 handleDraftSuggestionsCommand(player);
                 break;
 
-            case "draftTimer":
+            case "drafttimer":
                 handleDraftTimerCommand(player);
                 break;
 
@@ -150,7 +151,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter{
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             // Lista de opciones posibles
-            List<String> options = Arrays.asList("add", "delete", "haste", "list", "max", "min", "timer");
+            List<String> options = Arrays.asList("add", "delete", "draftSuggestions", "draftTimer","haste", "list", "max", "min", "timer");
 
             // Filtrar las opciones que comienzan con el texto ingresado por el usuario
             String input = args[0].toLowerCase();

@@ -215,8 +215,8 @@ public class Draft {
         List<String> team1Names = new ArrayList<>(teams.getAllTeam(1));
         List<String> team2Names = new ArrayList<>(teams.getAllTeam(2));
 
-        StringBuilder team1 = utilities.buildLists(team1Names, "&4", false);
-        StringBuilder team2 = utilities.buildLists(team2Names, "&9", false);
+        StringBuilder team1 = utilities.buildLists(team1Names, "§4", false);
+        StringBuilder team2 = utilities.buildLists(team2Names, "§9", false);
         int team1Size = team1Names.size();
         int team2Size = team2Names.size();
         int teamsize = Math.max(team1Size, team2Size); // Tamaño máximo de los equipos

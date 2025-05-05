@@ -48,7 +48,7 @@ public class Utilities {
             topPlayers = topPlayers.subList(0, Math.min(topPlayers.size(), 1)); // Limitar a los 1 mejores jugadores
 
         }
-        StringBuilder suggestionsBuilder = buildLists(topPlayers, "&b", true);
+        StringBuilder suggestionsBuilder = buildLists(topPlayers, "§b", true);
         String suggestions = languageManager.getConfigurableMessage("captains.suggestions")
             .replace("{suggestions}", suggestionsBuilder.toString());
         currentCaptain.playSound(Sounds.RAINDROPS);
@@ -77,15 +77,15 @@ public class Utilities {
         for (int i = 0; i < players.size(); i++) {
             suggestionsBuilder.append(color).append(players.get(i));
             if (i < players.size() - 2) {
-                suggestionsBuilder.append("&8, &b");
+                suggestionsBuilder.append("§8, ");
             } else if (i == players.size() - 2) {
-                suggestionsBuilder.append(" &8");
+                suggestionsBuilder.append(" §8");
                 if (useOr) {
                     suggestionsBuilder.append(languageManager.getPluginMessage("TowersForPGM.or"));
                 } else {
                     suggestionsBuilder.append(languageManager.getPluginMessage("TowersForPGM.and"));
                 }
-                suggestionsBuilder.append(" &b");
+                suggestionsBuilder.append(" §b");
             }
         }
         return suggestionsBuilder;

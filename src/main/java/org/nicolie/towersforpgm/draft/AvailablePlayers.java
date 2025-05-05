@@ -141,7 +141,7 @@ public class AvailablePlayers {
         }
 
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
-            String sql = "SELECT kills, deaths, assists, points, wins, games FROM " + ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName()) + " WHERE username = ?";
+            String sql = "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM " + ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName()) + " WHERE username = ?";
             
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -155,6 +155,8 @@ public class AvailablePlayers {
                             rs.getInt("kills"),
                             rs.getInt("deaths"),
                             rs.getInt("assists"),
+                            rs.getDouble("damageDone"),
+                            rs.getDouble("damageTaken"),
                             rs.getInt("points"),
                             rs.getInt("wins"),
                             rs.getInt("games")
@@ -162,19 +164,19 @@ public class AvailablePlayers {
                         playerStats.put(playerName, stats);
                     } else {
                         // Si no hay estadísticas, poner valores predeterminados
-                        playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+                        playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0,0, 0));
                     }
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
                 // En caso de error, agregamos estadísticas predeterminadas
-                playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+                playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0));
             }
         });
     }
 
     public PlayerStats getStatsForPlayer(String playerName) {
-        return playerStats.getOrDefault(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+        return playerStats.getOrDefault(playerName, new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     private void updateTopPlayers() {

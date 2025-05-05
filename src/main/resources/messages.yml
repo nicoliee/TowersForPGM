@@ -3,7 +3,7 @@ captains:
   subtitleChoose: "§l{teamcolor}{player}"
   titleChoose: "§l{teamcolor}{captain} §6ha elegido a:"
   turn: "&8[&6Bigotes Bot&8] {teamcolor}Es el turno de {captain}."
-  suggestions: "&8[&6Bigotes Bot&8]&r Te sugerimos que elijas a &b{suggestions}&f."
+  suggestions: "&8[&6Bigotes Bot&8]&r Te sugerimos que elijas a {suggestions}&f."
   seconds: "&8[&6Bigotes Bot&8] &cTe quedan &3{seconds} segundos &cpara elegir."
   second: "&8[&6Bigotes Bot&8] &cTe queda &31 segundo &cpara elegir."
 picks:

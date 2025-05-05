@@ -9,6 +9,7 @@ import tc.oc.pgm.stats.PlayerStats;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.draft.Draft;
@@ -22,15 +23,17 @@ import java.util.List;
 
 public class MatchFinishListener implements Listener {
     private final TowersForPGM plugin;
+    private final LanguageManager languageManager;
     private final TorneoListener torneoListener;
     private final RefillManager refillManager;
     private final Draft draft;
 
-    public MatchFinishListener(TowersForPGM plugin, TorneoListener torneoListener, RefillManager refillManager, Draft draft) {
+    public MatchFinishListener(TowersForPGM plugin, TorneoListener torneoListener, RefillManager refillManager, Draft draft, LanguageManager languageManager) {
         this.plugin = plugin;
         this.torneoListener = torneoListener;
         this.refillManager = refillManager;
         this.draft = draft;
+        this.languageManager = languageManager;
     }
     
     @EventHandler
@@ -65,8 +68,8 @@ public class MatchFinishListener implements Listener {
                             playerStats != null ? playerStats.getKills() : 0,
                             playerStats != null ? playerStats.getDeaths() : 0,
                             playerStats != null ? playerStats.getAssists() : 0,
-                            playerStats != null ? (playerStats.getDamageDone() + playerStats.getBowDamage()) : 0,
-                            playerStats != null ? playerStats.getDamageTaken() + playerStats.getBowDamageTaken() : 0,
+                            playerStats != null ? ((playerStats.getDamageDone() + playerStats.getBowDamage()) / 2) : 0,
+                            playerStats != null ? ((playerStats.getDamageTaken() + playerStats.getBowDamageTaken()) / 2) : 0,
                             totalPoints,
                             isWinner ? 1 : 0,
                             1
@@ -74,12 +77,14 @@ public class MatchFinishListener implements Listener {
                 };
                 // Si hay estadísticas que enviar, realizar la actualización
                 if (!playerStatsList.isEmpty()) {
+                    String table = ConfigManager.getTableForMap(mapName);
                     // Aquí envías las estadísticas a la base de datos o lo que sea necesario
-                    StatsManager.updateStats(ConfigManager.getTableForMap(mapName), playerStatsList);
-                    System.out.println("[+] " + mapName + " en la tabla: " + ConfigManager.getTableForMap(mapName) + " con " + playerStatsList.size() + " jugadores.");
-                    System.out.println("Stats: " + playerStatsList.toString());
-                    //TODO: Enviar mensaje a los desarrolladores configurado con language.yml
-                    SendMessage.sendToDevelopers("&a[+] " + mapName + " en la tabla: " + ConfigManager.getTableForMap(mapName) + " con " + playerStatsList.size() + " jugadores.");
+                    StatsManager.updateStats(table, playerStatsList);
+                    System.out.println(event.getMatch().getId() + " finished on map " + mapName + ", stats on table " + table + ": " + playerStatsList.toString());
+                    SendMessage.sendToDevelopers(languageManager.getPluginMessage("stats.console")
+                            .replace("{map}", mapName)
+                            .replace("{table}", table)
+                            .replace("{size}", String.valueOf(playerStatsList.size())));
                 }
             }
         }        
