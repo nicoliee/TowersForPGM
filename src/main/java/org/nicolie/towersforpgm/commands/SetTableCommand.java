@@ -32,7 +32,7 @@ public class SetTableCommand implements CommandExecutor, TabCompleter {
         String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName(); // Obtener el mapa actual
 
         switch (action.toLowerCase()) {
-            case "sendtotable":
+            case "default":
                 if (args.length < 2) {
                     sender.sendMessage(languageManager.getPluginMessage("setTable.usageSendToTable"));
                     return true;
@@ -43,12 +43,12 @@ public class SetTableCommand implements CommandExecutor, TabCompleter {
                             .replace("{table}", tableName));
                     return true;
                 }
-                ConfigManager.setSendToTable(tableName);
+                ConfigManager.setDefaultTable(tableName);
                 sender.sendMessage(languageManager.getPluginMessage("setTable.success")
                         .replace("{table}", tableName));
                 break;
 
-            case "addmap":
+            case "add":
                 if (args.length < 2) {
                     sender.sendMessage(languageManager.getPluginMessage("setTable.usageAddMap"));
                     return true;
@@ -65,7 +65,7 @@ public class SetTableCommand implements CommandExecutor, TabCompleter {
                         .replace("{table}", tableForMap));
                 break;
 
-            case "deletemap":
+            case "delete":
                 if (!ConfigManager.getMapTables().containsKey(mapName)) {
                     sender.sendMessage(languageManager.getPluginMessage("setTable.mapNotExists")
                             .replace("{map}", mapName));
@@ -86,7 +86,7 @@ public class SetTableCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("sendToTable", "addMap", "deleteMap")
+            return Arrays.asList("default", "add", "delete")
                     .stream()
                     .filter(sub -> sub.toLowerCase().startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());

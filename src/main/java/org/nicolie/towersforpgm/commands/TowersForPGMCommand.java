@@ -1,6 +1,7 @@
 package org.nicolie.towersforpgm.commands;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -85,16 +86,35 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!(sender instanceof Player) || !sender.hasPermission("towers.admin")) {
-            return Arrays.asList(); // No sugerir nada si no tiene permisos
-        }
-
         if (args.length == 1) {
-            return Arrays.asList("reloadMessages", "setLanguage", "update");
+            // Lista de opciones posibles
+            List<String> options = Arrays.asList("setlanguage", "reloadmessages", "update");
+
+            // Filtrar las opciones que comienzan con el texto ingresado por el usuario
+            String input = args[0].toLowerCase();
+            List<String> filteredOptions = new ArrayList<>();
+            for (String option : options) {
+                if (option.toLowerCase().startsWith(input)) {
+                    filteredOptions.add(option);
+                }
+            }
+            return filteredOptions;
         }
-        if (args[0].equalsIgnoreCase("setLanguage") && args.length == 2) {
-            return Arrays.asList("en", "es");
+        
+        if (args.length == 2 && args[0].equalsIgnoreCase("setlanguage")) {
+            // Lista de idiomas disponibles
+            List<String> languages = Arrays.asList("en", "es");
+
+            // Filtrar las opciones que comienzan con el texto ingresado por el usuario
+            String input = args[1].toLowerCase();
+            List<String> filteredLanguages = new ArrayList<>();
+            for (String language : languages) {
+                if (language.toLowerCase().startsWith(input)) {
+                    filteredLanguages.add(language);
+                }
+            }
+            return filteredLanguages;
         }
-        return Arrays.asList();
+        return null;
     }
 }

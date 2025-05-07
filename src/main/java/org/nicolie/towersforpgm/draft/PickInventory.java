@@ -266,7 +266,6 @@ public class PickInventory implements Listener {
 
         // Ejecutar pick
         draft.pickPlayer(inputName);
-        updateAllInventories();
         clicker.closeInventory();
     }
 
@@ -339,7 +338,7 @@ public class PickInventory implements Listener {
                 ItemMeta meta = item.getItemMeta();
                 if (meta != null && "§6Draft Menu".equals(meta.getDisplayName())) {
                     // Comprobar si el draft está activo
-                    if (!draft.isDraftActive()) {
+                    if (!Draft.isDraftActive()) {
                         SendMessage.sendToPlayer(player, languageManager.getPluginMessage("picks.noDraft"));
                         player.getInventory().remove(Material.NETHER_STAR); // Quitar el ítem especial de Draft Menu
                         return;

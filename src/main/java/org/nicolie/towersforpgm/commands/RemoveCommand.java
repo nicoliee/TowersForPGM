@@ -41,7 +41,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
             sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
-        if(!draft.isDraftActive()){
+        if(!Draft.isDraftActive()){
             sender.sendMessage(languageManager.getPluginMessage("picks.noDraft"));
             return true;
         }

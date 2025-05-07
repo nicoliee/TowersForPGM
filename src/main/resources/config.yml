@@ -8,9 +8,9 @@ database:
   user: "root" 
   password: "password" 
   tables:
-  - Debug
+  - Amistoso
   - TorneoT1
-  sendToTable: Debug
+  defaultTable: Amistoso
 draft:
   suggestions: true
   timer: true
@@ -18,7 +18,7 @@ stats:
   maps:
     Mini Towers:TE: # Nombre del mapa
       privateMatch: true # Si es un mapa privado, no podrán entrar antes de que el torneo comience
-      sendToTable: TorneoT1 # Tabla donde se guardarán las estadísticas del mapa
+      table: TorneoT1 # Tabla donde se guardarán las estadísticas del mapa
 preparationTime:
   enabled: true
   maps:

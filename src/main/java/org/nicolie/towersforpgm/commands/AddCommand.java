@@ -18,15 +18,13 @@ import tc.oc.pgm.util.bukkit.Sounds;
 public class AddCommand implements CommandExecutor {
     private final AvailablePlayers availablePlayers;
     private final Captains captains;
-    private final Draft draft;
     private final Teams teams;
     private final PickInventory pickInventory;
     private final LanguageManager languageManager;
 
-    public AddCommand(AvailablePlayers availablePlayers, Captains captains, Draft draft, Teams teams, LanguageManager languageManager, PickInventory pickInventory) {
+    public AddCommand(AvailablePlayers availablePlayers, Captains captains, Teams teams, LanguageManager languageManager, PickInventory pickInventory) {
         this.availablePlayers = availablePlayers;
         this.captains = captains;
-        this.draft = draft;
         this.teams = teams;
         this.pickInventory = pickInventory;
         this.languageManager = languageManager;
@@ -39,7 +37,7 @@ public class AddCommand implements CommandExecutor {
             return true;
         }
 
-        if (!draft.isDraftActive()) {
+        if (!Draft.isDraftActive()) {
             SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("picks.noDraft"));
             return true;
         }

@@ -11,7 +11,7 @@ messages:
     captains:
       alreadyInDraft: "§cThe player is already in the draft."
       alreadyInTeam: "§cThe player is already in a team."
-      bossbar: "§aTime to choose: §4{time}s"
+      bossbar: "{captain} §ftime left to pick: §c{time}s"
       captainsHeader: "§m-----------§r §b§lCaptains §f§m-----------"
       matchStarted: "§cThe game has already started."
       notEnoughPlayers: "§cThere are not enough players in the game."
@@ -83,10 +83,11 @@ messages:
       mapDeleted: "§aMap §2{map} §adeleted."
       notExists: "§cTable §4{table} §cnot found."
       success: "§aTable §2{table} §aset."
-      usage: "§cUsage: /setTable <table>"
-      usageAddMap: "§cUsage: /addMap <table>"
+      usage: "§cUsage: /setTable <add|delete|default> <table>"
+      usageAddMap: "§cUsage: /setTable add <table>"
     stats:
-      console: "§a[+] {map} on {table} with +{size} players."
+      console: "§a[+] match-{id} finished with {map} in {table} with {size} players."
+      consoleCancel: "§c[-] No stats sent for match-{id} with {map} in {table} with {size} players."
       disabled: "§cStats disabled."
       error: "§cError fetching stats."
       header: "§7Stats for §3{player}§7 in §2{table}:"
@@ -127,7 +128,7 @@ messages:
     captains:
       alreadyInDraft: "§cEl jugador ya está en el draft."
       alreadyInTeam: "§cEl jugador ya está en un equipo."
-      bossbar: "§aTiempo para elegir: §4{time}s"
+      bossbar: "{captain} §ftiene §c{time}s §fpara elegir."
       captainsHeader: "§m-----------§r §b§lCapitanes §f§m-----------"
       matchStarted: "§cLa partida ya ha comenzado."
       notEnoughPlayers: "§cNo hay suficientes jugadores en la partida."
@@ -202,7 +203,8 @@ messages:
       usage: "§cUso: /setTable <tabla>"
       usageAddMap: "§cUso: /addMap <tabla>"
     stats:
-      console: "§a[+] {map} en {table} con +{size} jugadores."
+      console: "§a[+] Se ha terminado match-{id}: {map} en {table} con {size} jugadores."
+      consoleCancel: "§c[-] No se enviaron estadísticas para match-{id}: {map} en {table} con {size} jugadores."
       disabled: "§cEstadísticas desactivadas."
       error: "§cError al obtener las estadísticas."
       header: "&m-------------------§r §2{table} &r&m-------------------"

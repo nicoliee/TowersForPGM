@@ -1,6 +1,5 @@
 package org.nicolie.towersforpgm;
 
-// import org.nicolie.towersforpgm.Vault.SetupVault;
 import org.nicolie.towersforpgm.database.DatabaseManager;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
@@ -45,6 +44,7 @@ public final class TowersForPGM extends JavaPlugin {
     private DatabaseManager databaseManager; // Administrador de la base de datos
     private boolean isDatabaseActivated = false; // Base de datos activada
     private final Map<String, MatchPlayer> disconnectedPlayers = new HashMap<>(); // Mapa para almacenar los jugadores
+    private boolean isStatsCancel = false; // Variable para cancelar el envío de estadísticas
 
 // Captains
     private AvailablePlayers availablePlayers;
@@ -135,6 +135,11 @@ public final class TowersForPGM extends JavaPlugin {
     public static TowersForPGM getInstance() {
         return instance;
     }
+// Capitanes
+    public void updateInventories(){
+        pickInventory.updateAllInventories();
+    }
+    
 // Preparation Time
     // Método para cargar las regiones desde el archivo de configuración
     private void loadRegions() {
@@ -244,7 +249,7 @@ public final class TowersForPGM extends JavaPlugin {
         return disconnectedPlayers;
     }
 
-// Captains
+// Stats
     // Métodos para añadir y eliminar jugadores desconectados
     public void addDisconnectedPlayer(String username, MatchPlayer player) {
         disconnectedPlayers.put(username, player);
@@ -252,6 +257,15 @@ public final class TowersForPGM extends JavaPlugin {
 
     public void removeDisconnectedPlayer(String username) {
         disconnectedPlayers.remove(username);
+    }
+
+    // Método para obtener el booleano de cancelación de estadísticas
+    public boolean isStatsCancel() {
+        return isStatsCancel;
+    }
+
+    public void setStatsCancel(boolean cancel) {
+        this.isStatsCancel = cancel;
     }
     
 // Refill

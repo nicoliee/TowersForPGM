@@ -36,26 +36,20 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
             return true;
         }
 
-        // Verificar que haya suficientes argumentos
-        if (args.length < 1) {
-            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("preparation.usage"));
+        // Verificar si no hay argumentos
+        if (args.length == 0) {
+            boolean newState = !plugin.isPreparationEnabled();
+            plugin.setPreparationEnabled(newState);
+            String messageKey = newState ? "preparation.enabled" : "preparation.disabled";
+            SendMessage.sendToPlayer(player, languageManager.getPluginMessage(messageKey));
             return true;
         }
+
         Match match = PGM.get().getMatchManager().getMatch(player);
         // Procesar el comando dependiendo del primer argumento
         String action = args[0].toLowerCase();
 
         switch (action) {
-            case "enabled":
-                plugin.setPreparationEnabled(true);
-                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("preparation.enabled"));
-                break;
-
-            case "disabled":
-                plugin.setPreparationEnabled(false);
-                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("preparation.disabled"));
-                break;
-
             case "on":
                 torneoListener.startProtection(player, match);
                 break;

@@ -17,15 +17,13 @@ import org.bukkit.entity.Player;
 public class PlayerJoinListener implements Listener {
     private final AvailablePlayers availablePlayers;
     private final Captains captains;
-    private final Draft draft;
     private final Teams teams;
     private final TowersForPGM plugin;
     private final PickInventory pickInventory;
 
-    public PlayerJoinListener(TowersForPGM plugin, Draft draft, AvailablePlayers availablePlayers, Teams teams, Captains captains, PickInventory pickInventory) {
+    public PlayerJoinListener(TowersForPGM plugin, AvailablePlayers availablePlayers, Teams teams, Captains captains, PickInventory pickInventory) {
         this.availablePlayers = availablePlayers;
         this.captains = captains;
-        this.draft = draft;
         this.teams = teams;
         this.plugin = plugin;
         this.pickInventory = pickInventory;
@@ -37,7 +35,7 @@ public class PlayerJoinListener implements Listener {
         Player player = event.getPlayer();
         String username = player.getName();
         // Si el draft está activo
-        if(draft.isDraftActive() && !PGM.get().getMatchManager().getMatch(player).isRunning()) {
+        if(Draft.isDraftActive() && !PGM.get().getMatchManager().getMatch(player).isRunning()) {
             // Si el jugador está en getAvailableOfflinePlayers, pasarlo a getAvailablePlayers
             availablePlayers.handleReconnect(player);
             pickInventory.giveItemToPlayer(player);
