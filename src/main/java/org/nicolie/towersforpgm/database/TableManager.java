@@ -19,6 +19,8 @@ public class TableManager {
                     "kills INT DEFAULT 0, " +
                     "deaths INT DEFAULT 0, " +
                     "assists INT DEFAULT 0, " +
+                    "damageDone DOUBLE DEFAULT 0, " +
+                    "damageTaken DOUBLE DEFAULT 0, " +
                     "points INT DEFAULT 0, " +
                     "wins INT DEFAULT 0, " +
                     "games INT DEFAULT 0" +
@@ -32,14 +34,16 @@ public class TableManager {
             }
     
             // Lista de columnas requeridas
-            String[] requiredColumns = {"username", "kills", "deaths", "assists", "points", "games", "wins"};
+            String[] requiredColumns = {"username", "kills", "deaths", "assists", "damageDone", "damageTaken", "points", "games", "wins"};
             
             // Verificar y agregar columnas si no existen
             for (String column : requiredColumns) {
                 if (!columnExists(tableName, column)) {
-                    String alterTable = "ALTER TABLE " + tableName + " ADD COLUMN " + column + " INT DEFAULT 0;";
+                    String alterTable = "ALTER TABLE " + tableName + " ADD COLUMN " + column + " DOUBLE DEFAULT 0;";
                     if ("username".equals(column)) {
                         alterTable = "ALTER TABLE " + tableName + " ADD COLUMN " + column + " VARCHAR(16) PRIMARY KEY;";
+                    } else if ("kills".equals(column) || "deaths".equals(column) || "assists".equals(column) || "points".equals(column) || "games".equals(column) || "wins".equals(column)) {
+                        alterTable = "ALTER TABLE " + tableName + " ADD COLUMN " + column + " INT DEFAULT 0;";
                     }
                     try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
                         PreparedStatement stmt = conn.prepareStatement(alterTable)) {

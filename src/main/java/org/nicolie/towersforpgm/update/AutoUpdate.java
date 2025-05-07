@@ -1,28 +1,28 @@
 package org.nicolie.towersforpgm.update;
 
+import org.nicolie.towersforpgm.utils.SendMessage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class AutoUpdate {
 
     private final JavaPlugin plugin;
-
+    private static final String url = "https://api.github.com/repos/nicoliee/TowersForPGM/releases/latest";
     public AutoUpdate(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
     public void checkForUpdates() {
         String currentVersion = plugin.getDescription().getVersion();
-        String apiUrl = "https://api.github.com/repos/nicoliee/TowersForPGM/releases/latest";
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 // Abrir conexión a la API de GitHub
-                HttpURLConnection connection = (HttpURLConnection) new URL(apiUrl).openConnection();
+                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0");
 
                 // Leer la respuesta de la API
@@ -38,7 +38,7 @@ public class AutoUpdate {
                 // Obtener la última versión y la URL de descarga del JSON
                 String latestVersion = parseVersionFromJson(response);
                 if (latestVersion == null) {
-                    plugin.getLogger().severe("No se pudo obtener la última versión del JSON.");
+                    plugin.getLogger().severe("JSON error: Could not obtain the latest version.");
                     SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §cError.");
                     return;
                 }
@@ -49,11 +49,11 @@ public class AutoUpdate {
                     SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §aUp to date.");
                 } else {
                     plugin.getLogger().info("New version available: " + latestVersion);
-                    SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §eNew version available: " + latestVersion);
+                    SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §eNew version available: §7v" + latestVersion);
 
                     String downloadUrl = parseDownloadUrlFromJson(response);
                     if (downloadUrl == null) {
-                        plugin.getLogger().severe("URL error.");
+                        plugin.getLogger().severe("URL error: Could not obtain the download URL.");
                         SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §cError.");
                         return;
                     }
@@ -61,25 +61,23 @@ public class AutoUpdate {
                     // Descargar la nueva versión
                     SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §eDownloading...");
                     downloadNewVersion(downloadUrl);
-                    plugin.getLogger().info("Nueva versión descargada.");
-                    SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §aDownloaded. Restart the server.");
+                    plugin.getLogger().info("New version downloaded.");
+                    SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §aDownloaded. Reload the server.");
                 }
             } catch (Exception e) {
-                plugin.getLogger().severe("Error verificando actualizaciones: " + e.getMessage());
+                plugin.getLogger().severe("Error: " + e.getMessage());
                 SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §cError.");
             }
         });
     }
 
-    public void forceUpdate(){
-        String apiUrl = "https://api.github.com/repos/nicoliee/TowersForPGM/releases/latest";
-
+    public void forceUpdate() {    
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 // Abrir conexión a la API de GitHub
-                HttpURLConnection connection = (HttpURLConnection) new URL(apiUrl).openConnection();
+                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-
+    
                 // Leer la respuesta de la API
                 StringBuilder responseBuilder = new StringBuilder();
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
@@ -89,29 +87,22 @@ public class AutoUpdate {
                     }
                 }
                 String response = responseBuilder.toString();
-
-                // Obtener la última versión y la URL de descarga del JSON
-                String latestVersion = parseVersionFromJson(response);
-                if (latestVersion == null) {
-                    plugin.getLogger().severe("No se pudo obtener la última versión del JSON.");
-                    SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §cError.");
-                    return;
-                }
-
+    
+                // Obtener la URL de descarga del JSON
                 String downloadUrl = parseDownloadUrlFromJson(response);
                 if (downloadUrl == null) {
-                    plugin.getLogger().severe("URL error.");
+                    plugin.getLogger().severe("URL error: Could not obtain the download URL.");
                     SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §cError.");
                     return;
                 }
-
+    
                 // Descargar la nueva versión
-                SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §eDownloading...");
                 downloadNewVersion(downloadUrl);
-                plugin.getLogger().info("Nueva versión descargada.");
-                SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §aDownloaded. Restart the server.");
+                plugin.getLogger().info("New version downloaded.");
+                SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §aDownloaded. Reload the server.");
+    
             } catch (Exception e) {
-                plugin.getLogger().severe("Error verificando actualizaciones: " + e.getMessage());
+                plugin.getLogger().severe("Error: " + e.getMessage());
                 SendMessage.sendToAdmins("§8[§bTowersForPGM§8] §cError.");
             }
         });
@@ -131,7 +122,7 @@ public class AutoUpdate {
             // Extraer y retornar el valor
             return json.substring(valueStart, valueEnd);
         } catch (Exception e) {
-            plugin.getLogger().severe("Error al analizar la versión del JSON: " + e.getMessage());
+            plugin.getLogger().severe("Error: JSON " + e.getMessage());
             return null;
         }
     }
@@ -157,10 +148,11 @@ public class AutoUpdate {
             // Extraer y retornar la URL
             return assetsSubstring.substring(urlValueStart, urlEndIndex);
         } catch (Exception e) {
-            plugin.getLogger().severe("Error al analizar la URL de descarga del JSON: " + e.getMessage());
+            plugin.getLogger().severe("Error: JSON " + e.getMessage());
             return null;
         }
     }
+
 
     private void downloadNewVersion(String downloadUrl) {
         try {
@@ -210,3 +202,4 @@ public class AutoUpdate {
         return 0; // Las versiones son iguales
     }
 }
+

@@ -1,6 +1,5 @@
 package org.nicolie.towersforpgm;
 
-// import org.nicolie.towersforpgm.Vault.SetupVault;
 import org.nicolie.towersforpgm.database.DatabaseManager;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
@@ -8,12 +7,14 @@ import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.draft.Utilities;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
 import org.nicolie.towersforpgm.preparationTime.Region;
 import org.nicolie.towersforpgm.preparationTime.TorneoListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
+import org.nicolie.towersforpgm.update.AutoUpdate;
 
 import tc.oc.pgm.api.player.MatchPlayer;
 
@@ -43,6 +44,7 @@ public final class TowersForPGM extends JavaPlugin {
     private DatabaseManager databaseManager; // Administrador de la base de datos
     private boolean isDatabaseActivated = false; // Base de datos activada
     private final Map<String, MatchPlayer> disconnectedPlayers = new HashMap<>(); // Mapa para almacenar los jugadores
+    private boolean isStatsCancel = false; // Variable para cancelar el envío de estadísticas
 
 // Captains
     private AvailablePlayers availablePlayers;
@@ -50,6 +52,7 @@ public final class TowersForPGM extends JavaPlugin {
     private Draft draft; 
     private Teams teams;
     private PickInventory pickInventory;
+    private Utilities utilities; 
 
 // Refill
     private RefillManager refillManager; // Administrador de refill
@@ -94,15 +97,6 @@ public final class TowersForPGM extends JavaPlugin {
             getLogger().info("Database is disabled.");
         }
 
-        // // Vault
-        // SetupVault.setupVault();
-        
-        // if (SetupVault.getVaultEconomy() != null) {
-        //     getLogger().info("Vault economy initialized successfully!");
-        // } else {
-        //     getLogger().warning("Vault economy could not be initialized. Make sure Vault plugin is installed.");
-        // }
-
         // Inicializar el Match
         MatchManager matchManager = new MatchManager();
 
@@ -110,7 +104,8 @@ public final class TowersForPGM extends JavaPlugin {
         availablePlayers = new AvailablePlayers(matchManager);
         captains = new Captains();
         teams = new Teams(matchManager);
-        draft = new Draft(captains, availablePlayers, teams, languageManager);
+        utilities = new Utilities(availablePlayers, captains, languageManager);
+        draft = new Draft(captains, availablePlayers, teams, languageManager, matchManager, utilities);
         pickInventory = new PickInventory(draft, captains, availablePlayers, teams, languageManager);
         getServer().getPluginManager().registerEvents(pickInventory, this);
         
@@ -121,6 +116,12 @@ public final class TowersForPGM extends JavaPlugin {
         // Registrar eventos
         Events eventManager = new Events(this);
         eventManager.registerEvents(availablePlayers, captains, draft, matchManager, languageManager, pickInventory, refillManager, teams, torneoListener);
+
+        // Verificar actualizaciones
+        AutoUpdate updateChecker = new AutoUpdate(this);
+        if (getConfig().getBoolean("autoupdate", false)) {
+            updateChecker.checkForUpdates();
+        }
     }
         
     @Override
@@ -134,7 +135,11 @@ public final class TowersForPGM extends JavaPlugin {
     public static TowersForPGM getInstance() {
         return instance;
     }
-
+// Capitanes
+    public void updateInventories(){
+        pickInventory.updateAllInventories();
+    }
+    
 // Preparation Time
     // Método para cargar las regiones desde el archivo de configuración
     private void loadRegions() {
@@ -244,7 +249,7 @@ public final class TowersForPGM extends JavaPlugin {
         return disconnectedPlayers;
     }
 
-// Captains
+// Stats
     // Métodos para añadir y eliminar jugadores desconectados
     public void addDisconnectedPlayer(String username, MatchPlayer player) {
         disconnectedPlayers.put(username, player);
@@ -252,6 +257,15 @@ public final class TowersForPGM extends JavaPlugin {
 
     public void removeDisconnectedPlayer(String username) {
         disconnectedPlayers.remove(username);
+    }
+
+    // Método para obtener el booleano de cancelación de estadísticas
+    public boolean isStatsCancel() {
+        return isStatsCancel;
+    }
+
+    public void setStatsCancel(boolean cancel) {
+        this.isStatsCancel = cancel;
     }
     
 // Refill

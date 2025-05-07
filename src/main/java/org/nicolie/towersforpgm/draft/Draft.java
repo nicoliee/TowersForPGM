@@ -2,41 +2,70 @@ package org.nicolie.towersforpgm.draft;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.nicolie.towersforpgm.MatchManager;
+import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.start.StartCountdown;
+import tc.oc.pgm.start.StartMatchModule;
+import tc.oc.pgm.util.bukkit.Sounds;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.UUID;
 
 // Draft asume que solo hay dos equipos: "red" y "blue" si no están estos colores tratará de renombrarlos.
 // PGM actualmente solo soporta una partida a la vez, por lo solo se realiza un Draft por servidor.
 
 public class Draft {
+    private final TowersForPGM plugin = TowersForPGM.getInstance(); // Instancia del plugin
     private final Captains captains;
     private final AvailablePlayers availablePlayers;
     private final Teams teams;
     private final LanguageManager languageManager;
-    private boolean isDraftActive = false;
+    private final MatchManager matchManager;
+    private final Utilities utilities;
+    private static boolean isDraftActive = false;
+    private BukkitRunnable draftTimer;
+    private BossBar pickTimerBar;
 
-    public Draft(Captains captains, AvailablePlayers availablePlayers, Teams teams, LanguageManager languageManager) {
+    public Draft(Captains captains, AvailablePlayers availablePlayers, Teams teams, LanguageManager languageManager,
+            MatchManager matchManager, Utilities utilities) {
+        this.matchManager = matchManager;
         this.teams = teams;
         this.captains = captains;
         this.availablePlayers = availablePlayers;
         this.languageManager = languageManager;
+        this.utilities = utilities;
     }
 
     public void startDraft(UUID captain1, UUID captain2, Match match) {
+        if (matchManager.getMatch() == null) {
+            matchManager.setCurrentMatch(match);
+        }
         cleanLists();
         captains.setCaptain1(captain1);
         captains.setCaptain2(captain2);
-        teams.removeFromTeams();
+        teams.removeFromTeams(match);
+
+        teams.addPlayerToTeam(Bukkit.getPlayer(captain1).getName(), 1);
+        teams.addPlayerToTeam(Bukkit.getPlayer(captain2).getName(), 2);
+
         // Agregar todos los jugadores disponibles (excluyendo a los capitanes)
         for (Player player : Bukkit.getOnlinePlayers()) {
-            
-            if (player != Bukkit.getPlayer(captain1) && player !=Bukkit.getPlayer(captain2)) {
+
+            if (player != Bukkit.getPlayer(captain1) && player != Bukkit.getPlayer(captain2)) {
                 String playerName = player.getName();
                 availablePlayers.addPlayer(playerName);
             }
@@ -46,10 +75,8 @@ public class Draft {
         teams.assignTeam(Bukkit.getPlayer(captain1), 1);
         teams.assignTeam(Bukkit.getPlayer(captain2), 2);
 
-        if (match.getCountdown() != null) {
-            match.getCountdown().cancelAll();
-        }
-        
+        match.getCountdown().cancelAll(StartCountdown.class);
+
         teams.setTeamsSize(0);
         // Decidir aleatoriamente quien empieza el draft
         Random rand = new Random();
@@ -57,101 +84,192 @@ public class Draft {
         isDraftActive = true;
         captains.setMatchWithCaptains(true);
 
+        // Enviar mensaje a todos los jugadores para anunciar los capitanes
+        matchManager.getMatch().playSound(Sounds.RAINDROPS);
+        SendMessage.broadcast(languageManager.getPluginMessage("captains.captainsHeader"));
+        SendMessage.broadcast("&4" + Bukkit.getPlayer(captain1).getName() + " &l&bvs. " + "&9"
+                + Bukkit.getPlayer(captain2).getName());
+        SendMessage.broadcast("§m---------------------------------");
+
         // Enviar mensaje al capitán que le toca
-        if (captains.isCaptain1Turn()) {
-            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
-                .replace("{teamcolor}", "&4")
-                .replace("{captain}", Bukkit.getPlayer(captains.getCaptain1()).getName()));
-        } else {
-            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
-                .replace("{teamcolor}", "&9")
-                .replace("{captain}", Bukkit.getPlayer(captains.getCaptain2()).getName()));
+        String teamColor = captains.isCaptain1Turn() ? "&4" : "&9";
+        UUID captainUUID = captains.isCaptain1Turn() ? captains.getCaptain1() : captains.getCaptain2();
+        String captainName = Bukkit.getPlayer(captainUUID).getName();
+        SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
+                .replace("{teamcolor}", teamColor)
+                .replace("{captain}", captainName));
+        startDraftTimer();
+    }
+
+    public void startDraftTimer() {
+        if (!ConfigManager.isDraftTimer()) {
+            return;
         }
+        if (draftTimer != null) {
+            draftTimer.cancel();
+        }
+        String currentCaptainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
+        String currentCaptainColor = captains.isCaptain1Turn() ? "§4" : "§9";
+        String bossbarMessage = languageManager.getPluginMessage("captains.bossbar")
+                .replace("{captain}", currentCaptainColor + currentCaptainName);
+        if (!isDraftActive)
+            return;
+
+        MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
+        int initialTime = utilities.timerDuration();
+        int[] timeLeft = { initialTime }; // Usar un array para poder modificar el valor dentro del Runnable
+
+        // Crear BossBar personalizada
+        pickTimerBar = BossBar.bossBar(
+                Component.text(bossbarMessage.replace("{time}", String.valueOf(timeLeft[0]))),
+                1f,
+                BossBar.Color.YELLOW,
+                BossBar.Overlay.PROGRESS);
+        matchManager.getMatch().showBossBar(pickTimerBar);
+
+        draftTimer = new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Actualizar BossBar
+                float progress = Math.max(0f, (float) timeLeft[0] / initialTime);
+                pickTimerBar.name(Component.text(bossbarMessage.replace("{time}", String.valueOf(timeLeft[0]))));
+                pickTimerBar.progress(progress);
+
+                // Sugerencias, sonidos y mensajes
+                if (timeLeft[0] == initialTime - 5) {
+                    utilities.suggestPicksForCaptains();
+                }
+                if (timeLeft[0] <= 30 && timeLeft[0] > 3) {
+                    currentCaptain.playSound(Sounds.INVENTORY_CLICK);
+                } else if (timeLeft[0] <= 3 && timeLeft[0] >= 1) {
+                    currentCaptain.playSound(Sounds.WARNING);
+                }
+                if ((timeLeft[0] <= 5 && timeLeft[0] > 1)) {
+                    SendMessage.sendToPlayer(currentCaptain.getBukkit(),
+                            languageManager.getConfigurableMessage("captains.seconds").replace("{seconds}",
+                                    String.valueOf(timeLeft[0])));
+                } else if (timeLeft[0] == 1) {
+                    SendMessage.sendToPlayer(currentCaptain.getBukkit(),
+                            languageManager.getConfigurableMessage("captains.second"));
+                }
+
+                // Si el tiempo se acaba, el capitán elige un jugador aleatorio
+                if (timeLeft[0] == 0) {
+                    if (utilities.randomPick() == null) {
+                        endDraft();
+                    } else {
+                        pickPlayer(utilities.randomPick());
+                        this.cancel();
+                    }
+                }
+                timeLeft[0]--;
+            }
+        };
+        draftTimer.runTaskTimer(TowersForPGM.getInstance(), 0, 20); // cada segundo
     }
 
     public void pickPlayer(String username) {
         Player player = Bukkit.getPlayerExact(username);
-        if (captains.isCaptain1Turn()) {
-            teams.addPlayerToTeam(username, 1);
-            availablePlayers.removePlayer(username);
-            teams.assignTeam(player, 1);
-            captains.toggleTurn();
-            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.choose")
-                .replace("{teamcolor}", "&4")
-                .replace("{captain}", captains.getCaptain1Name())
-                .replace("{player}", username));
-            SendMessage.soundBroadcast("note.hat", 1f, 1f);
-        } else {
-            teams.addPlayerToTeam(username, 2);
-            availablePlayers.removePlayer(username);
-            teams.assignTeam(player, 2);
-            captains.toggleTurn();
-            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.choose")
-                .replace("{teamcolor}", "&9")
-                .replace("{captain}", captains.getCaptain2Name())
-                .replace("{player}", username));
-                SendMessage.soundBroadcast("note.hat", 1f, 1.5f);
-        }
+        String exactUsername = availablePlayers.getExactUser(username);
+        String teamColor = captains.isCaptain1Turn() ? "§4" : "§9";
+        String captainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
+        Sound sound = captains.isCaptain1Turn() ? Sounds.MATCH_COUNTDOWN : Sounds.MATCH_START;
+        int teamNumber = captains.isCaptain1Turn() ? 1 : 2;
+
+        teams.addPlayerToTeam(exactUsername, teamNumber);
+        availablePlayers.removePlayer(exactUsername);
+        teams.assignTeam(player, teamNumber);
+        captains.toggleTurn();
+
+        SendMessage.broadcast(languageManager.getConfigurableMessage("captains.choose")
+                .replace("{teamcolor}", teamColor)
+                .replace("{captain}", captainName)
+                .replace("{player}", exactUsername));
+        matchManager.getMatch().playSound(sound);
 
         // Verificar si el draft ha terminado
         if (availablePlayers.isEmpty()) {
-            endDraft();  // Terminar el draft si no hay más jugadores disponibles
+            endDraft(); // Terminar el draft si no hay más jugadores disponibles
+            return;
         }
+        // Reiniciar el temporizador al pickear un jugador
+        plugin.updateInventories();
+        startDraftTimer();
     }
 
     // Método para finalizar el draft
     public void endDraft() {
+        if (draftTimer != null) {
+            draftTimer.cancel();
+        }
+
+        if (pickTimerBar != null) {
+            pickTimerBar = null;
+        }
+
         if (!isDraftActive) {
             return;
         }
 
         // Finaliza el draft y muestra los equipos a los capitanes
         isDraftActive = false;
-        SendMessage.broadcast(languageManager.getPluginMessage("captains.teamsHeader"));
+
+        // cancelar timer
+        if (draftTimer != null) {
+            draftTimer.cancel();
+        }
 
         // Usar el método getAllTeam para obtener todos los jugadores de cada equipo
-        Set<String> team1Names = teams.getAllTeam(1); // Obtener todos los jugadores del equipo 1
-        Set<String> team2Names = teams.getAllTeam(2); // Obtener todos los jugadores del equipo 2
+        List<String> team1Names = new ArrayList<>(teams.getAllTeam(1));
+        List<String> team2Names = new ArrayList<>(teams.getAllTeam(2));
 
-        // Convertir el conjunto de jugadores a un StringBuilder (como antes) para construir el mensaje
-        StringBuilder team1NamesBuilder = new StringBuilder();
-        team1Names.forEach(player -> team1NamesBuilder.append(player).append(" "));
-
-        StringBuilder team2NamesBuilder = new StringBuilder();
-        team2Names.forEach(player -> team2NamesBuilder.append(player).append(" "));
-
-        int team1Size = team1Names.size() + 1; // +1 por el capitán
-        int team2Size = team2Names.size() + 1; // +1 por el capitán
+        StringBuilder team1 = utilities.buildLists(team1Names, "§4", false);
+        StringBuilder team2 = utilities.buildLists(team2Names, "§9", false);
+        int team1Size = team1Names.size();
+        int team2Size = team2Names.size();
         int teamsize = Math.max(team1Size, team2Size); // Tamaño máximo de los equipos
 
         // Mostrar los equipos
-        SendMessage.broadcast("&4" + captains.getCaptain1Name() + " " + team1NamesBuilder.toString().trim());
-        SendMessage.broadcast("&8[&4" + team1Size + "&8] &l&6vs. " + "&8[&9" + team2Size + "&8]");
-        SendMessage.broadcast("&9" + captains.getCaptain2Name() + " " + team2NamesBuilder.toString().trim());
-        SendMessage.broadcast("§8§m------------------------------");
-
+        SendMessage.broadcast(languageManager.getPluginMessage("captains.teamsHeader"));
+        SendMessage.broadcast(team1.toString());
+        SendMessage.broadcast("&8[&4" + team1Size + "&8] &l&bvs. " + "&8[&9" + team2Size + "&8]");
+        SendMessage.broadcast(team2.toString());
+        SendMessage.broadcast("§m------------------------------");
 
         // Limpiar jugadores disponibles y resetear tamaño de los equipos
         teams.setTeamsSize(teamsize);
 
         // Marcar a los capitanes como listos
         captains.setReadyActive(true);
-
         captains.setMatchWithCaptains(true);
 
-        // Iniciar el juego con un retraso de 60 segundos
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "start 60");
+        // Quitar bossbar
+        removeBossbar();
+        // Iniciar el juego
+        matchManager.getMatch().needModule(StartMatchModule.class).forceStartCountdown(Duration.ofSeconds(90),
+                Duration.ZERO);
     }
-// misc
+
+    // misc
     public void cleanLists() {
         captains.clear();
         availablePlayers.clear();
         teams.clear();
         isDraftActive = false;
+        if (draftTimer != null) {
+            draftTimer.cancel();
+        }
     }
 
-// Getters y Setters
-    public boolean isDraftActive() {
+    private void removeBossbar() {
+        if (pickTimerBar != null) {
+            matchManager.getMatch().hideBossBar(pickTimerBar);
+            pickTimerBar = null;
+        }
+    }
+
+    // Getters y Setters
+    public static boolean isDraftActive() {
         return isDraftActive;
     }
 }

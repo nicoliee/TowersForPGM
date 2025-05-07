@@ -3,6 +3,8 @@ package org.nicolie.towersforpgm.draft;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.MatchManager;
+
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.join.JoinRequest;
@@ -14,9 +16,9 @@ import java.util.*;
 
 public class Teams {
 
+    private final MatchManager matchManager;
     private final Map<Integer, Set<MatchPlayer>> onlineTeams = new HashMap<>();
     private final Map<Integer, Set<String>> offlineTeams = new HashMap<>();
-    private final MatchManager matchManager;
 
     public Teams(MatchManager matchManager) {
         this.matchManager = matchManager;
@@ -28,7 +30,7 @@ public class Teams {
 
     public void addPlayerToTeam(String playerName, int teamNumber) {
         Player player = Bukkit.getPlayer(playerName);
-        MatchPlayer matchPlayer = player != null ? matchManager.getMatch().getPlayer(player) : null;
+        MatchPlayer matchPlayer = player != null ? PGM.get().getMatchManager().getMatch(player).getPlayer(player) : null;
         if (matchPlayer != null && playerName.equals(matchPlayer.getNameLegacy())) {
             onlineTeams.get(teamNumber).add(matchPlayer);
         } else {
@@ -38,7 +40,7 @@ public class Teams {
 
     public void removePlayerFromTeam(String playerName, int teamNumber) {
         Player player = Bukkit.getPlayer(playerName);
-        MatchPlayer matchPlayer = player != null ? matchManager.getMatch().getPlayer(player) : null;
+        MatchPlayer matchPlayer = player != null ? PGM.get().getMatchManager().getMatch(player).getPlayer(player) : null;
         if (matchPlayer != null && onlineTeams.get(teamNumber).remove(matchPlayer)) {
         } else if (offlineTeams.get(teamNumber).remove(playerName)) {
         }
@@ -46,7 +48,7 @@ public class Teams {
 
     public boolean isPlayerInTeam(String playerName, int teamNumber) {
         Player player = Bukkit.getPlayer(playerName);
-        MatchPlayer matchPlayer = player != null ? matchManager.getMatch().getPlayer(player) : null;
+        MatchPlayer matchPlayer = player != null ? PGM.get().getMatchManager().getMatch(player).getPlayer(player) : null;
 
         return onlineTeams.get(teamNumber).contains(matchPlayer)
                 || offlineTeams.get(teamNumber).contains(playerName);
@@ -70,7 +72,7 @@ public class Teams {
     }
 
     public void assignTeam(Player player, int teamNumber) {
-        Match match = matchManager.getMatch();
+        Match match = PGM.get().getMatchManager().getMatch(player);
         if (match == null) return;
 
         TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
@@ -109,19 +111,17 @@ public class Teams {
         }
     }
 
-    public void removeFromTeams() {
-        Match match = matchManager.getMatch();
+    public void removeFromTeams(Match match) {
         if (match == null) return;
-
         match.getPlayers().forEach(player -> match.setParty(player, match.getDefaultParty()));
     }
 
     public void handleReconnect(Player player) {
         String name = player.getName();
         if (offlineTeams.get(1).remove(name)) {
-            onlineTeams.get(1).add(matchManager.getMatch().getPlayer(player));
+            onlineTeams.get(1).add(PGM.get().getMatchManager().getPlayer(player));
         } else if (offlineTeams.get(2).remove(name)) {
-            onlineTeams.get(2).add(matchManager.getMatch().getPlayer(player));
+            onlineTeams.get(2).add(PGM.get().getMatchManager().getPlayer(player));
         }
     }
 

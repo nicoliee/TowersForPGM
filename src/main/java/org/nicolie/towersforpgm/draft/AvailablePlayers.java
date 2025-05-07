@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ public class AvailablePlayers {
     private final List<String> availableOfflinePlayers = new ArrayList<>();
     private final Map<String, PlayerStats> playerStats = new HashMap<>();
     private final MatchManager matchManager;
+    private final List<String> topPlayers = new ArrayList<>();
 
     public AvailablePlayers(MatchManager matchManager) {
         this.matchManager = matchManager;
@@ -31,36 +33,59 @@ public class AvailablePlayers {
     public void addPlayer(String playerName) {
         Player player = Bukkit.getPlayerExact(playerName);
         MatchPlayer matchPlayer = matchManager.getMatch().getPlayer(player);
-        
+
         // Verificar si el jugador y matchPlayer no son null antes de continuar
         if (player != null && matchPlayer != null && player.isOnline()) {
             // Si el jugador no está en availablePlayers, lo agregamos
-            if (availablePlayers.stream().noneMatch(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()))) {
+            if (availablePlayers.stream()
+                    .noneMatch(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()))) {
                 availablePlayers.add(matchPlayer);
             }
             // Eliminar de availableOfflinePlayers si está presente
             availableOfflinePlayers.removeIf(name -> name.equalsIgnoreCase(playerName));
             loadStatsForPlayer(playerName);
         } else {
-            // Verificar si el jugador está offline y agregarlo a availableOfflinePlayers si no está allí
+            // Verificar si el jugador está offline y agregarlo a availableOfflinePlayers si
+            // no está allí
             if (availableOfflinePlayers.stream().noneMatch(name -> name.equalsIgnoreCase(playerName))) {
                 availableOfflinePlayers.add(playerName);
             }
-            
+
             // Solo eliminar de availablePlayers si matchPlayer no es null
             if (matchPlayer != null) {
                 availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()));
             }
-            
+
             loadStatsForPlayer(playerName);
         }
-    }    
+
+        updateTopPlayers();
+    }
 
     // Método para eliminar jugador
     public void removePlayer(String playerName) {
         availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(playerName));
         availableOfflinePlayers.removeIf(p -> p.equalsIgnoreCase(playerName));
         playerStats.remove(playerName);
+
+        // Remover de la lista de mejores jugadores
+        topPlayers.removeIf(name -> name.equalsIgnoreCase(playerName));
+    }
+
+    public String getExactUser(String playerName) {
+        // Buscar en jugadores online
+        for (MatchPlayer matchPlayer : availablePlayers) {
+            if (matchPlayer.getNameLegacy().equalsIgnoreCase(playerName)) {
+                return matchPlayer.getNameLegacy();
+            }
+        }
+        // Buscar en jugadores offline
+        for (String offlinePlayer : availableOfflinePlayers) {
+            if (offlinePlayer.equalsIgnoreCase(playerName)) {
+                return offlinePlayer;
+            }
+        }
+        return null;
     }
 
     public List<MatchPlayer> getAvailablePlayers() {
@@ -81,13 +106,16 @@ public class AvailablePlayers {
     public boolean isEmpty() {
         return availablePlayers.isEmpty() && availableOfflinePlayers.isEmpty();
     }
-    
+
     public void clear() {
-        if(availablePlayers == null || availableOfflinePlayers == null) return;
-        if(availablePlayers.isEmpty() && availableOfflinePlayers.isEmpty()) return;
+        if (availablePlayers == null || availableOfflinePlayers == null)
+            return;
+        if (availablePlayers.isEmpty() && availableOfflinePlayers.isEmpty())
+            return;
         availablePlayers.clear();
         availableOfflinePlayers.clear();
         playerStats.clear();
+        topPlayers.clear();
     }
 
     public void handleDisconnect(Player player) {
@@ -99,7 +127,7 @@ public class AvailablePlayers {
             availableOfflinePlayers.add(name);
         }
     }
-    
+
     public void handleReconnect(Player player) {
         MatchPlayer matchPlayer = PGM.get().getMatchManager().getMatch(player).getPlayer(player);
         String name = player.getName();
@@ -117,39 +145,124 @@ public class AvailablePlayers {
         }
 
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
-            String sql = "SELECT kills, deaths, assists, points, wins, games FROM " + ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName()) + " WHERE username = ?";
-            
+            String sql = "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM "
+                    + ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName()) + " WHERE username = ?";
+
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-                
+                    PreparedStatement stmt = conn.prepareStatement(sql)) {
+
                 stmt.setString(1, playerName);
-                
+
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         // Guardar las estadísticas del jugador
                         PlayerStats stats = new PlayerStats(
-                            rs.getInt("kills"),
-                            rs.getInt("deaths"),
-                            rs.getInt("assists"),
-                            rs.getInt("points"),
-                            rs.getInt("wins"),
-                            rs.getInt("games")
-                        );
+                                rs.getInt("kills"),
+                                rs.getInt("deaths"),
+                                rs.getInt("assists"),
+                                rs.getDouble("damageDone"),
+                                rs.getDouble("damageTaken"),
+                                rs.getInt("points"),
+                                rs.getInt("wins"),
+                                rs.getInt("games"));
                         playerStats.put(playerName, stats);
                     } else {
                         // Si no hay estadísticas, poner valores predeterminados
-                        playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+                        playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0));
                     }
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
                 // En caso de error, agregamos estadísticas predeterminadas
-                playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+                playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0));
             }
         });
     }
 
     public PlayerStats getStatsForPlayer(String playerName) {
-        return playerStats.getOrDefault(playerName, new PlayerStats(0, 0, 0, 0, 0, 0));
+        return playerStats.getOrDefault(playerName, new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0));
+    }
+
+    private void updateTopPlayers() {
+        List<Map.Entry<String, Double>> playersWithRating = new ArrayList<>();
+
+        for (String playerName : getAllAvailablePlayers()) {
+            PlayerStats stats = getStatsForPlayer(playerName);
+
+            int kills = stats.getKills();
+            int deaths = stats.getDeaths();
+            int assists = stats.getAssists();
+            double damageDone = stats.getDamageDone();
+            double damageTaken = stats.getDamageTaken();
+            int points = stats.getPoints();
+            int wins = stats.getWins();
+            int games = stats.getGames();
+
+            // Promedios de estadísticas generales
+            double maxKills = 350.0;
+            double maxDeaths = 250.0;
+            double maxAssists = 100.0;
+            double maxPointsPerGame = 5.0;
+
+            // Calcular métricas por partida
+            double killsPerGame = games == 0 ? 0.0 : kills / (double) games;
+            double deathsPerGame = games == 0 ? 0.0 : deaths / (double) games;
+            double assistsPerGame = games == 0 ? 0.0 : assists / (double) games;
+            double damageDonePerGame = games == 0 ? 0.0 : damageDone / (double) games;
+            double damageTakenPerGame = games == 0 ? 0.0 : damageTaken / (double) games;
+            double pointsPerGame = games == 0 ? 0.0 : points / (double) games;
+            double winRate = games == 0 ? 0.0 : wins / (double) games;
+
+            // Inicializar el rating
+            double rating = 0;
+
+            // Ajuste para kills por juego
+            rating += (killsPerGame / maxKills) * 3;
+
+            // Penalización para muertes por juego
+            rating -= (deathsPerGame / maxDeaths) * 2;
+
+            // Ajuste para asistencias por juego
+            rating += (assistsPerGame / maxAssists) * 1.5;
+
+            // Ajuste por daño hecho vs recibido
+            if (damageTakenPerGame > 0) {
+                double damageRatio = (damageDonePerGame - damageTakenPerGame) / damageTakenPerGame;
+                rating += damageRatio * 1.5;
+            }
+
+            // Ajuste para puntos por juego
+            rating += (pointsPerGame / maxPointsPerGame) * 4;
+
+            // Ajuste para win rate (escalado si menos de 10 partidas)
+            if (games >= 10) {
+                rating += winRate * 5;
+            } else {
+                rating += winRate * 5 * (games / 10.0);
+            }
+
+            // Bonus por consistencia si ha jugado más de 15 partidas
+            if (games >= 12) {
+                double kdaStability = 1.0
+                        - (Math.abs(killsPerGame - deathsPerGame) + Math.abs(assistsPerGame - killsPerGame)) / maxKills;
+                rating += kdaStability * 1.5;
+            }
+
+            // Añadir a la lista
+            playersWithRating.add(new AbstractMap.SimpleEntry<>(playerName, rating));
+        }
+
+        // Ordenar la lista por puntuación (de mayor a menor)
+        playersWithRating.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+
+        // Actualizar la lista de mejores jugadores
+        topPlayers.clear();
+        for (Map.Entry<String, Double> entry : playersWithRating) {
+            topPlayers.add(entry.getKey());
+        }
+    }
+
+    public List<String> getTopPlayers() {
+        return new ArrayList<>(topPlayers);
     }
 }

@@ -72,8 +72,8 @@ public class LanguageManager {
 
         // Verificar si el mensaje es null y retornar un mensaje por defecto o de error
         if (message == null) {
-            SendMessage.sendToAdmins(getPluginMessage("errors.messageNotFound").replace("{key}", key));
-            return ChatColor.RED + getPluginMessage("messageNotFoundToPlayers");
+            SendMessage.sendToAdmins("[Language] "+getPluginMessage("errors.messageNotFound").replace("{key}", key));
+            return ChatColor.RED + "error";
         }
         return ChatColor.translateAlternateColorCodes('&', message);
     }
@@ -82,8 +82,8 @@ public class LanguageManager {
     public String getConfigurableMessage(String key) {
         String message = getMessagesConfig().getString(key);
         if (message == null) {
-            SendMessage.sendToAdmins(getPluginMessage("errors.messageNotFound").replace("{key}", key));
-            return ChatColor.RED + "";
+            SendMessage.sendToAdmins("[Messages] " + getPluginMessage("errors.messageNotFound").replace("{key}", key));
+            return ChatColor.RED + "error";
         }
         return ChatColor.translateAlternateColorCodes('&', message);
     }

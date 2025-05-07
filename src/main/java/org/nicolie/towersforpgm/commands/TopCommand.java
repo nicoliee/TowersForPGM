@@ -37,7 +37,7 @@ public class TopCommand implements CommandExecutor, TabCompleter {
         }
 
         String category = args[0].toLowerCase();
-        if (!category.matches("kills|deaths|points|wins|games")) {
+        if (!category.matches("kills|deaths|assists|damageDone|damageTaken|points|wins|games")) {
             SendMessage.sendToPlayer(player, languageManager.getPluginMessage("top.invalidCategory"));
             return true;
         }
@@ -67,10 +67,10 @@ public class TopCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return filterSuggestions(args[0], Arrays.asList("kills", "deaths", "assists", "points", "wins", "games"));
+            return filterSuggestions(args[0], Arrays.asList("kills", "deaths", "assists", "damageDone", "damageTaken", "points", "wins", "games"));
         }
         if (args.length == 2) {
-            return Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"); // Sin filtro
+            return Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
         }
         if (args.length == 3) {
             return filterSuggestions(args[2], ConfigManager.getTables());

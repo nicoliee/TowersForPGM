@@ -5,7 +5,10 @@ import java.util.Map;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.spawns.events.ParticipantKitApplyEvent;
+import tc.oc.pgm.util.bukkit.Sounds;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -44,8 +47,10 @@ public class TorneoListener implements Listener {
 
 
     // Método para iniciar la protección de una partida (con matchName y worldName)
-    public void startProtection(Player player, String matchName, String worldName) {
+    public void startProtection(Player player, Match match) {
         // Acceder a las regiones cargadas a través del plugin
+        String matchName = match.getMap().getName(); // Obtener el nombre del partido
+        String worldName = match.getWorld().getName(); // Obtener el nombre del mundo
         Map<String, Region> regions = plugin.getRegions();
 
         // Buscar la región por el nombre del partido
@@ -71,7 +76,7 @@ public class TorneoListener implements Listener {
             MatchConfig matchConfig = new MatchConfig(p1, p2, timer, haste, timeStart);
             // Almacenar la configuración usando el método de la clase principal
             plugin.storeMatchConfig(worldName, matchConfig);  // Guarda la configuración asociada al worldName
-            startProtectionTimer(player, timer, haste, region, worldName);  // Iniciar el temporizador de protección
+            startProtectionTimer(player, timer, haste, region, match);  // Iniciar el temporizador de protección
             protectionStartTimes.put(worldName, System.currentTimeMillis());
         } else {
             SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapError"));
@@ -79,7 +84,8 @@ public class TorneoListener implements Listener {
     }
 
     // Método para detener la protección de una partida (con worldName)
-    public void stopProtection(Player player, String worldName) {
+    public void stopProtection(Player player, Match match) {
+        String worldName = match.getWorld().getName(); // Obtener el nombre del mundo
         // Verificar si la configuración existe para el mundo
         MatchConfig matchConfig = plugin.getMatchConfig(worldName);
         if (matchConfig != null) {
@@ -99,7 +105,8 @@ public class TorneoListener implements Listener {
         }
     }
 
-    private void startProtectionTimer(Player player, int timer, int haste, Region region, String worldName) {
+    private void startProtectionTimer(Player player, int timer, int haste, Region region, Match match) {
+        String worldName = match.getWorld().getName(); // Obtener el nombre del mundo
         // Iniciar el temporizador para detener la protección después de 'timer' segundos
         BukkitTask task = new BukkitRunnable() {
             @Override
@@ -108,14 +115,14 @@ public class TorneoListener implements Listener {
                 long currentTime = System.currentTimeMillis();
                 long timeElapsed = (currentTime - plugin.getMatchConfig(worldName).getTimeStart()) / 1000; // Tiempo transcurrido en segundos
                 int timeRemaining = (int) (timer - timeElapsed); // Tiempo restante de protección en segundos
-                if (timeRemaining > 0) {
+                if (timeRemaining > 0 && timeRemaining <= timer) {
                     // Enviar mensajes a intervalos específicos
                     if (timeRemaining % 60 == 0 && timeRemaining > 60) {
                         // Si el tiempo restante es divisible por 60 y mayor a 60
                         int minutesRemaining = timeRemaining / 60;
                         SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.minutesRemaining")
                             .replace("{minutes}", String.valueOf(minutesRemaining)));
-                        SendMessage.soundToWorld(worldName, "random.click", 1f, 2f);
+                        match.playSound(Sounds.MATCH_COUNTDOWN);
                     } else if (timeRemaining == 60 || timeRemaining == 30 || timeRemaining == 10 || (timeRemaining <= 5 && timeRemaining >= 2)) {
                         // Si el tiempo restante son 30, 10, 5, 4, 3, 2, 1 segundos
                         SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.secondsRemaining")
@@ -125,14 +132,17 @@ public class TorneoListener implements Listener {
                             .replace("{seconds}", String.valueOf(timeRemaining)));
                     }
     
-                    if (timeRemaining == 60 || timeRemaining <= 30) {
+                    if (timeRemaining == 60 || timeRemaining <= 30 && timeRemaining > 3) {
                         // Reproducir un sonido de alerta si el tiempo restante es menor o igual a 30 segundos
-                        SendMessage.soundToWorld(worldName, "random.click", 1f, 2f);
+                        match.playSound(Sounds.INVENTORY_CLICK);
+                    }
+                    if (timeRemaining <= 3 && timeRemaining > 0) {
+                        match.playSound(Sounds.MATCH_COUNTDOWN);
                     }
                 } else {
                     // Al finalizar el temporizador, detener la protección
-                    SendMessage.soundToWorld(worldName, "random.levelup", 0.8f, 1.2f);
-                    stopProtection(player, worldName);
+                    match.playSound(Sounds.MATCH_START);
+                    stopProtection(player, match); // Detener la protección
                     this.cancel();  // Cancelar el temporizador
                 }
             }
@@ -191,7 +201,7 @@ public class TorneoListener implements Listener {
                 // Cancela el evento si la ubicación está dentro de la región
                 event.setCancelled(true);
                 SendMessage.sendToPlayer(event.getPlayer(), languageManager.getConfigurableMessage("preparation.blockPlace"));
-                event.getPlayer().playSound(event.getPlayer().getLocation(), "note.bass", 1f, 0.75f);
+                PGM.get().getMatchManager().getPlayer(event.getPlayer()).playSound(Sounds.WARNING);
             }
         }
     }
@@ -212,7 +222,7 @@ public class TorneoListener implements Listener {
                 // Cancela el evento si la ubicación está dentro de la región
                 event.setCancelled(true);
                 SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("preparation.blockBreak"));
-                event.getPlayer().playSound(event.getPlayer().getLocation(), "note.bass", 1f, 0.75f);
+                PGM.get().getMatchManager().getPlayer(player).playSound(Sounds.WARNING);
             }
         }
     }

@@ -4,14 +4,18 @@ public class PlayerStats {
     private int kills;
     private int deaths;
     private int assists;
+    private double damageDone;
+    private double damageTaken;
     private int points;
     private int wins;
     private int games;
 
-    public PlayerStats(int kills, int deaths, int assists, int points, int wins, int games) {
+    public PlayerStats(int kills, int deaths, int assists, double damageDone, double damageTaken, int points, int wins, int games) {
         this.kills = kills;
         this.deaths = deaths;
         this.assists = assists;
+        this.damageDone = damageDone;
+        this.damageTaken = damageTaken;
         this.points = points;
         this.wins = wins;
         this.games = games;
@@ -27,6 +31,14 @@ public class PlayerStats {
 
     public int getAssists() {
         return assists;
+    }
+
+    public double getDamageDone() {
+        return damageDone;
+    }
+
+    public double getDamageTaken() {
+        return damageTaken;
     }
 
     public int getPoints() {

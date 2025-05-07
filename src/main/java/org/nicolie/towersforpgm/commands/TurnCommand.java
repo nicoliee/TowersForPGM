@@ -28,20 +28,16 @@ public class TurnCommand implements CommandExecutor{
             return true;
         }
 
-        if (!draft.isDraftActive()) {
+        if (!Draft.isDraftActive()) {
             SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("picks.noDraft"));
             return true;
         }
         captains.toggleTurn();
-        if (captains.isCaptain1Turn()) {
-            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
-                .replace("{teamcolor}", "&4")
-                .replace("{captain}", Bukkit.getPlayer(captains.getCaptain1()).getName()));
-        } else {
-            SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
-                .replace("{teamcolor}", "&9")
-                .replace("{captain}", Bukkit.getPlayer(captains.getCaptain2()).getName()));
-        }
+        draft.startDraftTimer();
+        String message = languageManager.getConfigurableMessage("captains.turn")
+            .replace("{teamcolor}", captains.isCaptain1Turn() ? "&4" : "&9")
+            .replace("{captain}", Bukkit.getPlayer(captains.isCaptain1Turn() ? captains.getCaptain1() : captains.getCaptain2()).getName());
+        SendMessage.broadcast(message);
         return true;
     }
 }

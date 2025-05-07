@@ -14,7 +14,7 @@ commands:
     permission: towers.admin
   config:
     description: Administra las regiones.
-    usage: /config <add|delete|list|timer|haste> [valor]
+    usage: /config <add|cancelStats|delete|draftSuggestions|draftTimer|haste|help|list|max|min|timer> [valor]
     permission: towers.admin
   pick:
     description: Elegir un jugador para el draft.
@@ -40,11 +40,12 @@ commands:
     permission: towers.admin
   setTable:
     description: Cambia la tabla donde se envían estadísticas.
-    usage: /setTable <nombre>
+    usage: /setTable <add|delete|default> <table>
     permission: towers.admin
   stat:
-    description: Muestra las estadísticas de un jugador.
-    usage: /stat <tabla> [jugador]
+    description: Muestra estadísticas de un jugador.
+    usage: /stat <jugador> [tabla]
+    aliases: [estadisticas]
   table:
     description: Administra las tablas del torneo.
     usage: /table <add|delete|list> [nombre]

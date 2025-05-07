@@ -45,13 +45,13 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
             targetPlayer = sender.getName();  // Usa al jugador que ejecuta el comando
             tableName = ConfigManager.getTableForMap(PGM.get().getMatchManager().getMatch(sender).getMap().getName()); // Usa la tabla por defecto
         } else if (args.length == 1) {
-            // Si solo hay un argumento, se usa como tabla y el jugador será el que ejecuta el comando
-            tableName = args[0].trim();  // Este es el nombre de la tabla
-            targetPlayer = sender.getName();  // Usa al jugador que ejecuta el comando
+            // Si solo hay un argumento, se usa como jugador y la tabla será la del mapa actual
+            targetPlayer = args[0].trim();  // Este es el nombre del jugador
+            tableName = ConfigManager.getTableForMap(PGM.get().getMatchManager().getMatch(sender).getMap().getName()); // Usa la tabla por defecto
         } else {
-            // Si hay dos argumentos, se usan ambos como tabla y jugador
-            tableName = args[0].trim();  // Este es el nombre de la tabla
-            targetPlayer = args[1].trim();  // Este es el nombre del jugador
+            // Si hay dos argumentos, se usan ambos como jugador y tabla
+            targetPlayer = args[0].trim();  // Este es el nombre del jugador
+            tableName = args[1].trim();  // Este es el nombre de la tabla
         }
 
         // Verifica si la tabla especificada existe en la configuración
@@ -69,17 +69,17 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
-        
+
         if (args.length == 1) {
-            // Autocompletar con las tablas disponibles
-            completions = ConfigManager.getTables(); 
-        } else if (args.length == 2) {
             // Autocompletar con los nombres de jugadores en línea
             for (Player player : plugin.getServer().getOnlinePlayers()) {
                 completions.add(player.getName());
             }
+        } else if (args.length == 2) {
+            // Autocompletar con las tablas disponibles
+            completions = ConfigManager.getTables();
         }
-        
+
         // Filtrar las opciones basadas en lo que el usuario ha escrito
         String input = args[args.length - 1].toLowerCase();
         return completions.stream()

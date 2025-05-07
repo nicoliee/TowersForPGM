@@ -79,35 +79,4 @@ public class SendMessage {
             }
         }
     }
-
-    public static void soundToWorld(String worldName, String sound, float volume, float pitch) {
-        World world = Bukkit.getWorld(worldName);
-
-        if (world == null) {
-            System.out.println("El mundo '" + worldName + "' no existe o no está cargado.");
-            return;
-        }
-
-        for (Player player : world.getPlayers()) {
-            player.playSound(player.getLocation(), sound, 1.0f, 2.0f);
-        }
-    }
-
-    public static void soundBroadcast(String sound, float volume, float pitch) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.playSound(player.getLocation(), sound, volume, pitch);
-        }
-    }
-
-    public static void titleBroadcast(String title, String subtitle, int fadeIn, int stay, int fadeOut) {
-        if (title == null || subtitle == null) {
-            return;
-        }
-        String coloredTitle = ChatColor.translateAlternateColorCodes('&', title);
-        String coloredSubtitle = ChatColor.translateAlternateColorCodes('&', subtitle);
-
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.sendTitle(coloredTitle, coloredSubtitle, fadeIn, stay, fadeOut);
-        }
-    }
 }

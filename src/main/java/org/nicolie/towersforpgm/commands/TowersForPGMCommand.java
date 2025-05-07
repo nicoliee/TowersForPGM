@@ -1,16 +1,10 @@
 package org.nicolie.towersforpgm.commands;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -38,17 +32,20 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (!sender.hasPermission("towers.admin")) {
+            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("errors.noPermission"));
+            return true;
+        }
+
         Player player = (Player) sender;
+        
         if (args.length == 0) {
             SendMessage.sendToPlayer(player, "§8[§bTowersForPGM§8] §7Version: " + plugin.getDescription().getVersion());
             return true;
         }
 
         String argument = args[0].toLowerCase();
-        AutoUpdate updateChecker = new AutoUpdate(plugin);
         switch (argument) {
-            case "forceUpdate":
-                updateChecker.forceUpdate();
             case "setlanguage":
                 if (args.length < 2) {
                     SendMessage.sendToPlayer(player, languageManager.getPluginMessage("TowersForPGM.noLanguage"));
@@ -73,35 +70,14 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
                         return true;
                     }
                 }
-
                 plugin.saveResource("messages.yml", false);
                 languageManager.reloadMessages();
                 SendMessage.sendToPlayer(player, languageManager.getPluginMessage("messages.reloadSuccess"));
                 return true;
-
             case "update":
-                String currentVersion = plugin.getDescription().getVersion();
-                SendMessage.sendToPlayer(player, "§8[§bTowersForPGM§8] §7v" + currentVersion);
-                updateChecker.checkForUpdates();
+                AutoUpdate update = new AutoUpdate(plugin);
+                update.checkForUpdates();
                 return true;
-
-            case "configreplace":
-                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("configReplace.start"));
-                String zipFileUrl = "https://github.com/nicoliee/configForTowers/archive/refs/heads/main.zip";
-                File pluginsFolder = new File("plugins");
-
-                try {
-                    downloadFile(zipFileUrl, new File(pluginsFolder, "configForTowers.zip"));
-                    unzipFile(new File(pluginsFolder, "configForTowers.zip"), pluginsFolder);
-                    new File(pluginsFolder, "configForTowers.zip").delete();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("configReplace.error"));
-                    return true;
-                }
-                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("configReplace.success"));
-                return true;
-
             default:
                 SendMessage.sendToPlayer(player, "§8[§bTowersForPGM§8] §7Version: " + plugin.getDescription().getVersion());
                 return true;
@@ -110,65 +86,35 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!(sender instanceof Player) || !sender.hasPermission("towers.admin")) {
-            return Arrays.asList(); // No sugerir nada si no tiene permisos
-        }
-
         if (args.length == 1) {
-            return Arrays.asList("reloadMessages", "setLanguage", "update");
-        }
-        if (args[0].equalsIgnoreCase("setLanguage") && args.length == 2) {
-            return Arrays.asList("en", "es");
-        }
-        return Arrays.asList();
-    }
+            // Lista de opciones posibles
+            List<String> options = Arrays.asList("setlanguage", "reloadmessages", "update");
 
-    private void downloadFile(String fileUrl, File destinationFile) throws IOException {
-        URL url = new URL(fileUrl);
-        try (InputStream in = url.openStream(); FileOutputStream out = new FileOutputStream(destinationFile)) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = in.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
+            // Filtrar las opciones que comienzan con el texto ingresado por el usuario
+            String input = args[0].toLowerCase();
+            List<String> filteredOptions = new ArrayList<>();
+            for (String option : options) {
+                if (option.toLowerCase().startsWith(input)) {
+                    filteredOptions.add(option);
+                }
             }
+            return filteredOptions;
         }
-    }
+        
+        if (args.length == 2 && args[0].equalsIgnoreCase("setlanguage")) {
+            // Lista de idiomas disponibles
+            List<String> languages = Arrays.asList("en", "es");
 
-    private void unzipFile(File zipFile, File destinationFolder) throws IOException {
-        try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFile))) {
-            ZipEntry entry = zipIn.getNextEntry();
-            
-            // Si la primera entrada tiene un prefijo, se utiliza para ajustar las rutas
-            String mainDirPrefix = entry.getName().split("/")[0] + "/";
-            
-            // Recorre todas las entradas del ZIP
-            while (entry != null) {
-                String fileName = entry.getName();
-                
-                // Elimina el prefijo del nombre del archivo para evitar el directorio principal
-                if (fileName.startsWith(mainDirPrefix)) {
-                    fileName = fileName.substring(mainDirPrefix.length());
+            // Filtrar las opciones que comienzan con el texto ingresado por el usuario
+            String input = args[1].toLowerCase();
+            List<String> filteredLanguages = new ArrayList<>();
+            for (String language : languages) {
+                if (language.toLowerCase().startsWith(input)) {
+                    filteredLanguages.add(language);
                 }
-                
-                // Crea los archivos o directorios en el destino
-                File file = new File(destinationFolder, fileName);
-                if (entry.isDirectory()) {
-                    file.mkdirs();
-                } else {
-                    // Asegúrate de crear el directorio si no existe
-                    file.getParentFile().mkdirs();
-                    
-                    try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
-                        byte[] buffer = new byte[1024];
-                        int bytesRead;
-                        while ((bytesRead = zipIn.read(buffer)) != -1) {
-                            out.write(buffer, 0, bytesRead);
-                        }
-                    }
-                }
-                zipIn.closeEntry();
-                entry = zipIn.getNextEntry();
             }
+            return filteredLanguages;
         }
+        return null;
     }
 }

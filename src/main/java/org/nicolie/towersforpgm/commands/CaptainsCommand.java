@@ -69,11 +69,6 @@ public class CaptainsCommand implements CommandExecutor {
 
         UUID captain1 = Bukkit.getPlayer(args[0]).getUniqueId();
         UUID captain2 = Bukkit.getPlayer(args[1]).getUniqueId();
-
-        // Enviar mensaje a todos los jugadores para anunciar los capitanes
-        SendMessage.broadcast(languageManager.getPluginMessage("captains.captainsHeader"));
-        SendMessage.broadcast("&4" + Bukkit.getPlayer(captain1).getName() + " &l&6vs. " + "&9" + Bukkit.getPlayer(captain2).getName());
-        SendMessage.broadcast("§8§m---------------------------------");
         draft.startDraft(captain1, captain2, PGM.get().getMatchManager().getMatch(sender));
         pickInventory.giveItemToPlayers();
         return true;

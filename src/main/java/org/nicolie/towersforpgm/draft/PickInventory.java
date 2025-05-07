@@ -68,7 +68,8 @@ public class PickInventory implements Listener {
         // === CASO 1: <= 28 jugadores ===
         if (totalPlayers <= 28) {
             int inventorySize = getInventorySizeWithBorder(totalPlayers);
-            inv = Bukkit.createInventory(null, inventorySize, languageManager.getPluginMessage("draft.inventoryName"));
+            inv = Bukkit.createInventory(null, inventorySize, languageManager.getPluginMessage("draft.inventoryName")
+                .replace("{players}", String.valueOf(totalPlayers)));
     
             // Cambiar el color de los cristales según las condiciones
             for (int i = 0; i < inventorySize; i++) {
@@ -122,7 +123,8 @@ public class PickInventory implements Listener {
         } else {
             // === CASO 2: >= 29 jugadores ===
             int inventorySize = getInventorySizeWithoutBorders(totalPlayers);
-            inv = Bukkit.createInventory(null, inventorySize, languageManager.getPluginMessage("draft.inventoryName"));
+            inv = Bukkit.createInventory(null, inventorySize, languageManager.getPluginMessage("draft.inventoryName")
+                .replace("{players}", String.valueOf(totalPlayers)));
             columnsPerRow = 9;
     
             for (String name : allPlayerNames) {
@@ -179,6 +181,8 @@ public class PickInventory implements Listener {
         lore.add("§7" + languageManager.getPluginMessage("stats.kills") + ": §a" + stats.getKills());
         lore.add("§7" + languageManager.getPluginMessage("stats.deaths") + ": §a" + stats.getDeaths());
         lore.add("§7" + languageManager.getPluginMessage("stats.assists") + ": §a" + stats.getAssists());
+        lore.add("§7" + languageManager.getPluginMessage("stats.damageDone") + ": §a" + String.format("%.1f", stats.getDamageDone()));
+        lore.add("§7" + languageManager.getPluginMessage("stats.damageTaken") + ": §a" + String.format("%.1f", stats.getDamageTaken()));
         lore.add("§7" + languageManager.getPluginMessage("stats.points") + ": §a" + stats.getPoints());
         lore.add("§7" + languageManager.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
         lore.add("§7" + languageManager.getPluginMessage("stats.games") + ": §a" + stats.getGames());
@@ -262,7 +266,6 @@ public class PickInventory implements Listener {
 
         // Ejecutar pick
         draft.pickPlayer(inputName);
-        updateAllInventories();
         clicker.closeInventory();
     }
 
@@ -324,7 +327,6 @@ public class PickInventory implements Listener {
         // Verificar si el jugador tiene el ítem especial y si hizo clic derecho
         if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK ||event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ItemStack item;
-
             // Compatibilidad con versiones antiguas y nuevas
             try {
                 item = player.getInventory().getItemInMainHand(); // Método para versiones nuevas
@@ -335,6 +337,12 @@ public class PickInventory implements Listener {
             if (item != null && item.getType() == Material.NETHER_STAR && item.hasItemMeta()) {
                 ItemMeta meta = item.getItemMeta();
                 if (meta != null && "§6Draft Menu".equals(meta.getDisplayName())) {
+                    // Comprobar si el draft está activo
+                    if (!Draft.isDraftActive()) {
+                        SendMessage.sendToPlayer(player, languageManager.getPluginMessage("picks.noDraft"));
+                        player.getInventory().remove(Material.NETHER_STAR); // Quitar el ítem especial de Draft Menu
+                        return;
+                    }
                     openInventory(player); // Abrir el inventario
                     event.setCancelled(true); // Cancelar cualquier otra acción
                 }

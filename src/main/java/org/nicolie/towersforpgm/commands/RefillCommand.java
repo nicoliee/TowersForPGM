@@ -4,6 +4,7 @@ package org.nicolie.towersforpgm.commands;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.refill.RefillManager;
@@ -13,9 +14,14 @@ import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
 
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.bukkit.Location;
 
-public class RefillCommand implements CommandExecutor {
+public class RefillCommand implements CommandExecutor, TabCompleter {
     private final LanguageManager languageManager;
     private final RefillManager refillManager;
     private final TowersForPGM plugin = TowersForPGM.getInstance();
@@ -73,6 +79,25 @@ public class RefillCommand implements CommandExecutor {
 
         SendMessage.sendToPlayer(player, languageManager.getPluginMessage("refill.usage"));
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            // Lista de opciones posibles
+            List<String> options = Arrays.asList("add", "delete", "test");
+
+            // Filtrar las opciones que comienzan con el texto ingresado por el usuario
+            String input = args[0].toLowerCase();
+            List<String> filteredOptions = new ArrayList<>();
+            for (String option : options) {
+                if (option.toLowerCase().startsWith(input)) {
+                    filteredOptions.add(option);
+                }
+            }
+            return filteredOptions;
+        }
+        return null;
     }
 
     private void addRefillLocation(String mapName, String coords) {

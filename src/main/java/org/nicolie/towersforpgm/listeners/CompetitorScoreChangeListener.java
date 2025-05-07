@@ -10,6 +10,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import tc.oc.pgm.api.party.event.CompetitorScoreChangeEvent;
 import tc.oc.pgm.score.ScoreCause;
 
+// Sonido de puntuación imitando el plugin de The Towers
 
 public class CompetitorScoreChangeListener implements Listener {
     @EventHandler

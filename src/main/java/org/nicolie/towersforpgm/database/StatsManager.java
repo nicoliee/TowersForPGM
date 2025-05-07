@@ -23,14 +23,16 @@ public class StatsManager {
             return;
         }
     
-        String sql = "INSERT INTO " + table + " (username, kills, deaths, assists, points, wins, games) VALUES (?, ?, ?, ?, ?, ?, ?) " +
+        String sql = "INSERT INTO " + table + " (username, kills, deaths, assists, damageDone, damageTaken, points, wins, games) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                      "ON DUPLICATE KEY UPDATE " +
-                     "kills = kills + VALUES(kills), " +
-                     "deaths = deaths + VALUES(deaths), " +
-                     "assists = assists + VALUES(assists), " +
-                     "points = points + VALUES(points), " +
-                     "wins = wins + VALUES(wins), " +
-                     "games = games + VALUES(games)";
+                     "kills = VALUES(kills) + kills, " +
+                     "deaths = VALUES(deaths) + deaths, " +
+                     "assists = VALUES(assists) + assists, " +
+                     "damageDone = VALUES(damageDone) + damageDone, " +
+                     "damageTaken = VALUES(damageTaken) + damageTaken, " +
+                     "points = VALUES(points) + points, " +
+                     "wins = VALUES(wins) + wins, " +
+                     "games = VALUES(games) + games";
     
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
@@ -43,10 +45,12 @@ public class StatsManager {
                     stmt.setString(1, playerStat.getUsername());
                     stmt.setInt(2, playerStat.getKills());
                     stmt.setInt(3, playerStat.getDeaths());
-                    stmt.setInt(4, playerStat.getAssists());  // Asistencias
-                    stmt.setInt(5, playerStat.getPoints());
-                    stmt.setInt(6, playerStat.getWins());
-                    stmt.setInt(7, playerStat.getGames());
+                    stmt.setInt(4, playerStat.getAssists()); 
+                    stmt.setDouble(5, playerStat.getDamageDone());
+                    stmt.setDouble(6, playerStat.getDamageTaken());
+                    stmt.setInt(7, playerStat.getPoints());
+                    stmt.setInt(8, playerStat.getWins());
+                    stmt.setInt(9, playerStat.getGames());
     
                     stmt.addBatch();
                     batchSize++;
@@ -71,7 +75,7 @@ public class StatsManager {
         if ("none".equalsIgnoreCase(table)) {
             return;
         }
-        String sql = "SELECT kills, deaths, assists, points, wins, games FROM " + table + " WHERE username = ?";
+        String sql = "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM " + table + " WHERE username = ?";
         
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
@@ -85,8 +89,10 @@ public class StatsManager {
                                 .replace("{player}", player)
                                 .replace("{table}", table));
                         sender.sendMessage("  §7" + languageManager.getPluginMessage("stats.kills") + ": §a" + rs.getInt("kills")
-                                + " §7| " + languageManager.getPluginMessage("stats.deaths") + ": §a" + rs.getInt("deaths")
+                                + " §7| " + languageManager.getPluginMessage("stats.deaths") + ": §c" + rs.getInt("deaths")
                                 + " §7| " + languageManager.getPluginMessage("stats.assists") + ": §a" + rs.getInt("assists")
+                                + " §7| " + languageManager.getPluginMessage("stats.damageDone") + ": §a" + String.format("%.1f", rs.getDouble("damageDone"))
+                                + " §7| " + languageManager.getPluginMessage("stats.damageTaken") + ": §c" + String.format("%.1f", rs.getDouble("damageTaken"))
                                 + " §7| " + languageManager.getPluginMessage("stats.points") + ": §a" + rs.getInt("points")
                                 + " §7| " + languageManager.getPluginMessage("stats.wins") + ": §a" + rs.getInt("wins")
                                 + " §7| " + languageManager.getPluginMessage("stats.games") + ": §a" + rs.getInt("games"));

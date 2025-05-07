@@ -17,7 +17,9 @@ import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.bukkit.Sounds;
 
 public class RemoveCommand implements CommandExecutor, TabCompleter{
     private final Draft draft;
@@ -39,7 +41,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
             sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
-        if(!draft.isDraftActive()){
+        if(!Draft.isDraftActive()){
             sender.sendMessage(languageManager.getPluginMessage("picks.noDraft"));
             return true;
         }
@@ -54,7 +56,10 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
         availablePlayers.removePlayer(playerName);
         pickInventory.updateAllInventories();
         SendMessage.broadcast(languageManager.getConfigurableMessage("picks.remove").replace("{player}", playerName));
-        SendMessage.soundBroadcast("note.pling", 1f, 0.5f);
+        PGM.get().getMatchManager().getMatch(sender).getMatch().playSound(Sounds.WARNING);
+        if (availablePlayers.getAllAvailablePlayers().isEmpty()) {
+            draft.endDraft();
+        }
         return true;
     }
     @Override
