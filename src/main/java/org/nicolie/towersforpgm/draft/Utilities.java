@@ -65,7 +65,7 @@ public class Utilities {
             topPlayers = new ArrayList<>(topPlayers.subList(0, 3)); // Limitar a los 3 mejores jugadores
         }else if (size > 3){
             topPlayers = new ArrayList<>(topPlayers.subList(0, 2)); // Limitar a los 2 mejores jugadores
-        }else if (size > 1){
+        }else if (size <= 3){
             topPlayers = new ArrayList<>(topPlayers.subList(0, 1)); // Limitar a los 1 mejores jugadores
         }
         java.util.Collections.shuffle(topPlayers); // Ordenar aleatoriamente las sugerencias

@@ -1,5 +1,4 @@
 package org.nicolie.towersforpgm.commands;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import org.nicolie.towersforpgm.preparationTime.TorneoListener;
@@ -20,7 +19,6 @@ import tc.oc.pgm.api.match.Match;
 public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
     private final TorneoListener torneoListener;
     private final LanguageManager languageManager;
-    private final TowersForPGM plugin = TowersForPGM.getInstance();
 
     public PreparationTimeCommand(LanguageManager languageManager, TorneoListener torneoListener) {
         this.languageManager = languageManager;
@@ -38,10 +36,6 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
 
         // Verificar si no hay argumentos
         if (args.length == 0) {
-            boolean newState = !plugin.isPreparationEnabled();
-            plugin.setPreparationEnabled(newState);
-            String messageKey = newState ? "preparation.enabled" : "preparation.disabled";
-            SendMessage.sendToPlayer(player, languageManager.getPluginMessage(messageKey));
             return true;
         }
 
@@ -67,7 +61,7 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            List<String> options = Arrays.asList("on", "off", "enabled", "disabled");
+            List<String> options = Arrays.asList("on", "off");
             String input = args[0].toLowerCase();
             List<String> filteredOptions = new ArrayList<>();
             for (String option : options) {

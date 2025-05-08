@@ -12,20 +12,12 @@ commands:
     usage: /captains <nick1> <nick2>
     aliases: [capitanes]
     permission: towers.admin
-  config:
-    description: Administra las regiones.
-    usage: /config <add|cancelStats|delete|draftSuggestions|draftTimer|haste|help|list|max|min|timer> [valor]
-    permission: towers.admin
   pick:
     description: Elegir un jugador para el draft.
     usage: /pick <jugador>
   preparationTime:
     description: Habilita o desactiva el tiempo de preparación.
-    usage: /preparationTime <on|off|enable|disable>
-    permission: towers.admin
-  privateMatch:
-    description: Crea una partida privada.
-    usage: /privateMatch <true|false>
+    usage: /preparationTime <on|off>
     permission: towers.admin
   ready:
     description: Marca como listo a un jugador.
@@ -38,21 +30,18 @@ commands:
     description: Eliminar un jugador del Draft.
     usage: /remove <nick>
     permission: towers.admin
-  setTable:
-    description: Cambia la tabla donde se envían estadísticas.
-    usage: /setTable <add|delete|default> <table>
-    permission: towers.admin
   stat:
     description: Muestra estadísticas de un jugador.
     usage: /stat <jugador> [tabla]
     aliases: [estadisticas]
-  table:
-    description: Administra las tablas del torneo.
-    usage: /table <add|delete|list> [nombre]
-    permission: towers.admin
   top:
     description: Muestra las mejores estadísticas de un jugador.
     usage: /top <categoria> [cantidad] [tabla]
+  towers:
+    description: Comando principal de TowersForPGM.
+    usage: /towers help
+    permission: towers.admin
+    aliases: [tt, tower]
   towersForPGM:
     description: Comando principal de TowersForPGM.
     usage: /towersForPGM
