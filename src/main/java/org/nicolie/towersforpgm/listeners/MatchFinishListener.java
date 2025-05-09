@@ -93,6 +93,7 @@ public class MatchFinishListener implements Listener {
                         System.out.println("[-] Stats cancelled for match-" + event.getMatch().getId() + ": "
                                 + mapName + ", stats not sent to database.");
                         SendMessage.sendToDevelopers(languageManager.getPluginMessage("stats.consoleCancel")
+                                .replace("{id}", String.valueOf(event.getMatch().getId()))
                                 .replace("{map}", mapName)
                                 .replace("{size}", String.valueOf(playerStatsList.size())));
                         plugin.setStatsCancel(false);

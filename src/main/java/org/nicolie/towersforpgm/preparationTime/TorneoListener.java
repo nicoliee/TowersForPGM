@@ -5,6 +5,7 @@ import java.util.Map;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.spawns.events.ParticipantKitApplyEvent;
@@ -198,10 +199,11 @@ public class TorneoListener implements Listener {
         if (matchConfig != null) {
             // Verifica si la ubicación está dentro de la región
             if (matchConfig.isInside(location)) {
+                Player player = event.getPlayer();
                 // Cancela el evento si la ubicación está dentro de la región
                 event.setCancelled(true);
-                SendMessage.sendToPlayer(event.getPlayer(), languageManager.getConfigurableMessage("preparation.blockPlace"));
-                PGM.get().getMatchManager().getPlayer(event.getPlayer()).playSound(Sounds.WARNING);
+                Component message = Component.text(languageManager.getPluginMessage("preparation.blockPlace"));
+                PGM.get().getMatchManager().getPlayer(player).sendWarning(message);
             }
         }
     }
@@ -209,7 +211,6 @@ public class TorneoListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event){
         // Obtén la ubicación donde el jugador intenta romper el bloque
-        Player player = event.getPlayer();
         Location location = event.getBlock().getLocation();
         String worldName = location.getWorld().getName();
 
@@ -220,9 +221,10 @@ public class TorneoListener implements Listener {
             // Verifica si la ubicación está dentro de la región
             if (matchConfig.isInside(location)) {
                 // Cancela el evento si la ubicación está dentro de la región
+                Player player = event.getPlayer();
                 event.setCancelled(true);
-                SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("preparation.blockBreak"));
-                PGM.get().getMatchManager().getPlayer(player).playSound(Sounds.WARNING);
+                Component message = Component.text(languageManager.getPluginMessage("preparation.blockBreak"));
+                PGM.get().getMatchManager().getPlayer(player).sendWarning(message);
             }
         }
     }

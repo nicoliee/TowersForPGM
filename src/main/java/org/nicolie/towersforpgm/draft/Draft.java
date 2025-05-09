@@ -105,32 +105,39 @@ public class Draft {
         if (!ConfigManager.isDraftTimer()) {
             return;
         }
+
+        if (pickTimerBar == null) {
+            // Crear BossBar personalizada solo si no existe
+            String currentCaptainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
+            String currentCaptainColor = captains.isCaptain1Turn() ? "§4" : "§9";
+            String bossbarMessage = languageManager.getPluginMessage("captains.bossbar")
+                    .replace("{captain}", currentCaptainColor + currentCaptainName);
+
+            pickTimerBar = BossBar.bossBar(
+                    Component.text(bossbarMessage.replace("{time}", String.valueOf(utilities.timerDuration()))),
+                    1f,
+                    BossBar.Color.YELLOW,
+                    BossBar.Overlay.PROGRESS);
+            matchManager.getMatch().showBossBar(pickTimerBar);
+        }
+
         if (draftTimer != null) {
             draftTimer.cancel();
         }
+
+        int initialTime = utilities.timerDuration();
+        int[] timeLeft = { initialTime };
+
+        // Actualizar el mensaje de la BossBar antes de iniciar el Runnable
         String currentCaptainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
         String currentCaptainColor = captains.isCaptain1Turn() ? "§4" : "§9";
         String bossbarMessage = languageManager.getPluginMessage("captains.bossbar")
                 .replace("{captain}", currentCaptainColor + currentCaptainName);
-        if (!isDraftActive)
-            return;
-
-        MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
-        int initialTime = utilities.timerDuration();
-        int[] timeLeft = { initialTime }; // Usar un array para poder modificar el valor dentro del Runnable
-
-        // Crear BossBar personalizada
-        pickTimerBar = BossBar.bossBar(
-                Component.text(bossbarMessage.replace("{time}", String.valueOf(timeLeft[0]))),
-                1f,
-                BossBar.Color.YELLOW,
-                BossBar.Overlay.PROGRESS);
-        matchManager.getMatch().showBossBar(pickTimerBar);
 
         draftTimer = new BukkitRunnable() {
             @Override
             public void run() {
-                // Actualizar BossBar
+                // Actualizar solo los segundos en la BossBar
                 float progress = Math.max(0f, (float) timeLeft[0] / initialTime);
                 pickTimerBar.name(Component.text(bossbarMessage.replace("{time}", String.valueOf(timeLeft[0]))));
                 pickTimerBar.progress(progress);
@@ -140,15 +147,19 @@ public class Draft {
                     utilities.suggestPicksForCaptains();
                 }
                 if (timeLeft[0] <= 30 && timeLeft[0] > 3) {
+                    MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
                     currentCaptain.playSound(Sounds.INVENTORY_CLICK);
                 } else if (timeLeft[0] <= 3 && timeLeft[0] >= 1) {
+                    MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
                     currentCaptain.playSound(Sounds.WARNING);
                 }
                 if ((timeLeft[0] <= 5 && timeLeft[0] > 1)) {
+                    MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
                     SendMessage.sendToPlayer(currentCaptain.getBukkit(),
                             languageManager.getConfigurableMessage("captains.seconds").replace("{seconds}",
                                     String.valueOf(timeLeft[0])));
                 } else if (timeLeft[0] == 1) {
+                    MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
                     SendMessage.sendToPlayer(currentCaptain.getBukkit(),
                             languageManager.getConfigurableMessage("captains.second"));
                 }
@@ -201,10 +212,6 @@ public class Draft {
     public void endDraft() {
         if (draftTimer != null) {
             draftTimer.cancel();
-        }
-
-        if (pickTimerBar != null) {
-            pickTimerBar = null;
         }
 
         if (!isDraftActive) {

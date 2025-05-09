@@ -14,8 +14,6 @@ picks:
   playerPicked: "&8[&6Bigotes Bot&8] &c{player} ya ha sido elegido."
   remove: "&8[&6Bigotes Bot&8] §7El jugador §3{player} §7ha sido eliminado de la lista."
 preparation:
-  blockBreak: "&8[&6Bigotes Bot&8] &eNo puedes romper bloques en tiempo de preparación."
-  blockPlace: "&8[&6Bigotes Bot&8] &eNo puedes salir de tu base en tiempo de preparación."
   end: "&8[&6Bigotes Bot&8] &aLa preparación ha terminado."
   minutesRemaining: "&8[&6Bigotes Bot&8] &aQuedan &e{minutes} minutos &ade preparación."
   secondRemaining: "&8[&6Bigotes Bot&8] &aQueda &e1 segundo &ade preparación."

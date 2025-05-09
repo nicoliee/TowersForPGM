@@ -45,6 +45,8 @@ messages:
       usage: "§cUsage: /pick <player>"
     preparation:
       alreadyStarted: "§cThe protection is already active."
+      blockBreak: "§cYou cannot break blocks during preparation time."
+      blockPlace: "§cYou cannot leave your base during preparation time."
       disabled: "§cProtection disabled."
       enabled: "§aProtection enabled."
       isAvailable: "§ePreparation time available in §2{map}§e."
@@ -80,7 +82,7 @@ messages:
       usage: "§cUsage: /remove <nickname>"
     stats:
       console: "§a[+] match-{id} finished with {map} in {table} with {size} players."
-      consoleCancel: "§c[-] No stats sent for match-{id} with {map} in {table} with {size} players."
+      consoleCancel: "§c[-] No stats sent for match-{id} with {map} with {size} players."
       disabled: "§cStats disabled."
       error: "§cError fetching stats."
       header: "§7Stats for §3{player}§7 in §2{table}:"
@@ -159,6 +161,8 @@ messages:
       usage: "§cUso: /pick <jugador>"
     preparation:
       alreadyStarted: "§cLa protección ya está activa."
+      blockBreak: "§cNo puedes romper bloques en tiempo de preparación."
+      blockPlace: "§cNo puedes salir de tu base en tiempo de preparación."
       disabled: "§cProtección desactivada."
       enabled: "§aProtección activada."
       isAvailable: "§eTiempo de preparación disponible en §2{map}§e."
@@ -194,7 +198,7 @@ messages:
       usage: "§cUso: /remove <nick>"
     stats:
       console: "§a[+] Se ha terminado match-{id}: {map} en {table} con {size} jugadores."
-      consoleCancel: "§c[-] No se enviaron estadísticas para match-{id}: {map} en {table} con {size} jugadores."
+      consoleCancel: "§c[-] No se enviaron estadísticas para match-{id}: {map} con {size} jugadores."
       disabled: "§cEstadísticas desactivadas."
       error: "§cError al obtener las estadísticas."
       header: "&m-------------------§r §2{table} &r&m-------------------"
