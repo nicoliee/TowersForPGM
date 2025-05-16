@@ -70,6 +70,7 @@ public class Draft {
             matchManager.setCurrentMatch(match);
         }
         cleanLists();
+        setCustomOrderPattern(ConfigManager.getDraftOrder(), ConfigManager.getMinDraftOrder());
         isDraftActive = true;
         captains.setCaptain1(captain1);
         captains.setCaptain2(captain2);

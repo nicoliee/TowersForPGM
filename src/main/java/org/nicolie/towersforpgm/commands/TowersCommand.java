@@ -175,7 +175,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                         break;
                     case "list":
                         preparationConfig.handleListCommand(sender);
-                        break;
+                        return true;
                     default:
                         break;
                 }
@@ -236,10 +236,10 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                         }
                         String removeTableName = args[2];
                         statsConfig.deleteTable(sender, removeTableName);
-                        break;
+                        return true;
                     case "list":
                         statsConfig.listTables(sender);
-                        break;
+                        return true;
                     case "addmap":
                         if (args.length < 3) {
                             sender.sendMessage("§c/towers stats addMap <tabla>");
@@ -247,10 +247,21 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                         }
                         String addMapTableName = args[2];
                         statsConfig.addTableForMap(sender, addMapTableName);
-                        break;
+                        return true;
                     case "removemap":
                         statsConfig.deleteTableForMap(sender);
                         break;
+                    case "addTemporary":
+                        if (args.length < 3) {
+                            sender.sendMessage("§c/towers stats addTemporary <tabla>");
+                            return true;
+                        }
+                        String addTemporaryTableName = args[2];
+                        statsConfig.addTempTable(sender, addTemporaryTableName);
+                        return true;
+                    case "removeTemporary":
+                        statsConfig.removeTempTable(sender);
+                        return true;
                     default:
                         break;
                 }
@@ -333,12 +344,12 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
             case "stats":
                 if (args.length == 2) {
-                    List<String> options = Arrays.asList("default", "add", "remove", "list", "addMap", "removeMap");
+                    List<String> options = Arrays.asList("default", "add", "remove", "list", "addMap", "removeMap", "addTemporary", "removeTemporary");
                     return filterPrefix(options, args[1]);
                 }
                 if (args.length == 3) {
                     String sub = args[1].toLowerCase();
-                    if (Arrays.asList("default", "add", "remove", "addmap", "removemap").contains(sub)) {
+                    if (Arrays.asList("default", "add", "remove", "addmap", "removemap", "addTemporary").contains(sub)) {
                         List<String> tables = ConfigManager.getTables();
                         return filterPrefix(tables, args[2]);
                     }

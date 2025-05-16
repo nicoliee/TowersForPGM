@@ -95,4 +95,19 @@ public class StatsConfig {
         SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("table.mapDeleted")
                 .replace("{map}", mapName));
     }
+
+    public void addTempTable(CommandSender sender, String table){
+        ConfigManager.addTempTable(table);
+        SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("table.tempAdded")
+                .replace("{table}", table));
+    }
+
+    public void removeTempTable(CommandSender sender){
+        if (ConfigManager.getTempTable() == null) {
+            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("table.tempNotExists"));
+            return;
+        }
+        ConfigManager.removeTempTable();
+        SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("table.tempRemoved"));
+    }
 }

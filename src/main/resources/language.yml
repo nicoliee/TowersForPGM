@@ -113,6 +113,9 @@ messages:
       mapDeleted: "§adeleted."
       mapNotExists: "§cMap §4{map} §cis not linked to any table."
       success: "§aTable §2{table} §aset."
+      tempAdded: "§aTemporary table added: §2{table}§a."
+      tempNotExists: "§cNo temporary table found."
+      tempRemoved: "§aTemporary table removed."
     top:
       header: "§7Top §3{category} §7in §2{table} §8[§7Page: §f{page}§8]"
       invalidCategory: "§cInvalid category. Valid categories are: kills, deaths, points, wins, games."
@@ -234,6 +237,9 @@ messages:
       mapDeleted: "§aEl mapa §2{map} §aha sido desvinculado."
       mapNotExists: "§cEl mapa §4{map} §cno está vinculado a ninguna tabla."
       success: "§aTabla §2{table} §aestablecida correctamente."
+      tempAdded: "§aTabla temporal añadida: §2{table}§a."
+      tempNotExists: "§cNo hay tabla temporal."
+      tempRemoved: "§aTabla temporal eliminada."
     top:
       header: "§7Top §3{category} §7en §2{table} §8[§7Página: §f{page}§8]"
       invalidCategory: "§cCategoría inválida. Las categorías son: kills, deaths, points, wins, games."
