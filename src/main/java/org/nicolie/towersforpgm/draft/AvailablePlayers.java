@@ -144,9 +144,16 @@ public class AvailablePlayers {
             return; // Ya están cargadas
         }
 
+        String table;
+            if (ConfigManager.getTempTable() != null) {
+                table = ConfigManager.getTempTable();
+            } else {
+                table = ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName());
+            } 
+
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
             String sql = "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM "
-                    + ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName()) + " WHERE username = ?";
+                    + table + " WHERE username = ?";
 
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
                     PreparedStatement stmt = conn.prepareStatement(sql)) {

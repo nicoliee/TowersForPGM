@@ -108,6 +108,11 @@ public class TorneoListener implements Listener {
 
     private void startProtectionTimer(Player player, int timer, int haste, Region region, Match match) {
         String worldName = match.getWorld().getName(); // Obtener el nombre del mundo
+        Component message = Component.text(languageManager.getPluginMessage("preparation.actionBar"));
+        SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.timeRemaining")
+                        .replace("{time}", SendMessage.formatTime(timer)));
+        match.playSound(Sounds.INVENTORY_CLICK);
+
         // Iniciar el temporizador para detener la protección después de 'timer' segundos
         BukkitTask task = new BukkitRunnable() {
             @Override
@@ -116,25 +121,17 @@ public class TorneoListener implements Listener {
                 long currentTime = System.currentTimeMillis();
                 long timeElapsed = (currentTime - plugin.getMatchConfig(worldName).getTimeStart()) / 1000; // Tiempo transcurrido en segundos
                 int timeRemaining = (int) (timer - timeElapsed); // Tiempo restante de protección en segundos
+                match.sendActionBar(message.append(Component.text(SendMessage.formatTime(timeRemaining))));
                 if (timeRemaining > 0 && timeRemaining <= timer) {
                     // Enviar mensajes a intervalos específicos
-                    if (timeRemaining % 60 == 0 && timeRemaining > 60) {
-                        // Si el tiempo restante es divisible por 60 y mayor a 60
-                        int minutesRemaining = timeRemaining / 60;
-                        SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.minutesRemaining")
-                            .replace("{minutes}", String.valueOf(minutesRemaining)));
-                        match.playSound(Sounds.MATCH_COUNTDOWN);
-                    } else if (timeRemaining == 60 || timeRemaining == 30 || timeRemaining == 10 || (timeRemaining <= 5 && timeRemaining >= 2)) {
+                    if (timeRemaining != timer && (timeRemaining == 60 || timeRemaining == 30 || timeRemaining == 10 || (timeRemaining <= 5 && timeRemaining >= 1))) {
                         // Si el tiempo restante son 30, 10, 5, 4, 3, 2, 1 segundos
-                        SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.secondsRemaining")
-                            .replace("{seconds}", String.valueOf(timeRemaining)));
-                    }else if (timeRemaining == 1){
-                        SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.secondRemaining")
-                            .replace("{seconds}", String.valueOf(timeRemaining)));
+                        SendMessage.sendToWorld(worldName, languageManager.getConfigurableMessage("preparation.timeRemaining")
+                                .replace("{time}", SendMessage.formatTime(timeRemaining)));
                     }
-    
-                    if (timeRemaining == 60 || timeRemaining <= 30 && timeRemaining > 3) {
-                        // Reproducir un sonido de alerta si el tiempo restante es menor o igual a 30 segundos
+                    
+                    // Reproducir sonidos a intervalos específicos
+                    if (timeRemaining != timer && (timeRemaining == 60 || timeRemaining <= 30 && timeRemaining > 3)) {
                         match.playSound(Sounds.INVENTORY_CLICK);
                     }
                     if (timeRemaining <= 3 && timeRemaining > 0) {

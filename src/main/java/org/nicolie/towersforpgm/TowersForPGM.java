@@ -27,6 +27,7 @@ import java.io.IOException;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Location;
@@ -138,6 +139,20 @@ public final class TowersForPGM extends JavaPlugin {
 // Capitanes
     public void updateInventories(){
         pickInventory.updateAllInventories();
+    }
+
+    public void giveItem(Player player){
+        if(player != null){
+            pickInventory.giveItemToPlayer(player);
+        }
+    }
+
+    public void giveitem(){
+        pickInventory.giveItemToPlayers();
+    }
+
+    public Draft getDraft() {
+        return draft;
     }
     
 // Preparation Time
@@ -282,6 +297,10 @@ public final class TowersForPGM extends JavaPlugin {
 
     public FileConfiguration getRefillConfig() {
         return refillConfig;
+    }
+
+    public RefillManager getRefillManager() {
+        return refillManager;
     }
 
     public void saveRefillConfig() {

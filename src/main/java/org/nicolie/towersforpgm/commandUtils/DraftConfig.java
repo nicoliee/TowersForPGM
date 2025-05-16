@@ -37,4 +37,23 @@ public class DraftConfig {
                 .replace("{map}", mapName);
         SendMessage.sendToPlayer(sender, message);
     }
+
+    public void setDraftOrder(CommandSender sender, String order) {
+        if (!order.matches("A[AB]+")) { 
+            String errorMessage = languageManager.getPluginMessage("draft.invalidOrder");
+            SendMessage.sendToPlayer(sender, errorMessage);
+            return;
+        }
+        ConfigManager.setDraftOrder(order);
+        String message = languageManager.getPluginMessage("draft.orderSet")
+                .replace("{order}", order);
+        SendMessage.sendToPlayer(sender, message);
+    }
+
+    public void setMinDraftOrder(CommandSender sender, int size) {
+        ConfigManager.setMinDraftOrder(size);
+        String message = languageManager.getPluginMessage("draft.sizeSet")
+                .replace("{size}", String.valueOf(size));
+        SendMessage.sendToPlayer(sender, message);
+    }
 }

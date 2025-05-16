@@ -72,7 +72,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
         Player player = (Player) sender;
 
         // Comprobar si el draft está activo
-        if (!!Draft.isDraftActive()) {
+        if (!Draft.isDraftActive()) {
             SendMessage.sendToPlayer(player, languageManager.getPluginMessage("picks.noDraft"));
             return true;
         }

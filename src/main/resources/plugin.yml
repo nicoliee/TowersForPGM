@@ -1,17 +1,21 @@
 name: TowersForPGM
 version: '${project.version}'
 main: org.nicolie.towersforpgm.TowersForPGM
-Depend: [PGM]
+depend: [PGM]
 commands:
   add:
     description: Agregar un jugador al Draft.
     usage: /add <nick>
+    permission: towers.captains
+  cancelMatch:
+    description: Cancela una partida y no sube stats a database.
+    usage: /cancelMatch
     permission: towers.admin
   captains:
     description: Comienza el Draft con 2 capitanes.
     usage: /captains <nick1> <nick2>
     aliases: [capitanes]
-    permission: towers.admin
+    permission: towers.captains
   pick:
     description: Elegir un jugador para el draft.
     usage: /pick <jugador>
@@ -22,14 +26,10 @@ commands:
   ready:
     description: Marca como listo a un jugador.
     usage: /ready
-  refill:
-    description: Configurar la cantidad de torres a rellenar.
-    usage: /refill
-    permission: towers.admin
   remove:
     description: Eliminar un jugador del Draft.
     usage: /remove <nick>
-    permission: towers.admin
+    permission: towers.captains
   stat:
     description: Muestra estadísticas de un jugador.
     usage: /stat <jugador> [tabla]
@@ -46,14 +46,12 @@ commands:
     description: Comando principal de TowersForPGM.
     usage: /towersForPGM
     permission: towers.admin
-  turn:
-    description: Cambia el turno de un jugador.
-    usage: /turn
-    aliases: [turno]
-    permission: towers.admin
 permissions:
   towers.admin:
     description: Permite administrar y cambiar configuraciones.
+    default: op
+  towers.captains:
+    description: Permite manejar el draft.
     default: op
   towers.developer:
     description: Permite ver mensajes de depuración.

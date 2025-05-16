@@ -79,4 +79,11 @@ public class SendMessage {
             }
         }
     }
+
+    public static String formatTime(long timeElapsed) {
+        long minutes = timeElapsed / 60;
+        long seconds = timeElapsed % 60;
+
+        return String.format("%d:%02d", minutes, seconds);
+    }
 }

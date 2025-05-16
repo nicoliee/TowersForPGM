@@ -12,8 +12,10 @@ database:
   - TorneoT1
   defaultTable: Amistoso
 draft:
-  suggestions: true
-  timer: true
+  suggestions: true # Los capitanes recibirán sugerencias de jugadores para elegir de la base de datos
+  timer: true # Los capitanes tendrán un tiempo límite para elegir a los jugadores
+  order: "ABBAAB" # Orden de elección de los capitanes A = Primer Capitán, B = Segundo Capitán
+  min: 8 # Número mínimo de jugadores para aplicar el orden
 stats:
   maps:
     Mini Towers:TE: # Nombre del mapa

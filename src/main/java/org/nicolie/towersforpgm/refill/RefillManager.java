@@ -18,6 +18,7 @@ import java.util.*;
 // Aunque PGM no soporta por el momento varios mapas a la vez, se implementa la funcionalidad
 // para cargar cofres de recarga en varios mapas, por si en el futuro se implementa esta funcionalidad
 // Se implementa la funcionalidad de recarga de cofres en un intervalo de tiempo de 60 segundos
+
 public class RefillManager {
     private final LanguageManager languageManager;
     private final TowersForPGM plugin = TowersForPGM.getInstance();

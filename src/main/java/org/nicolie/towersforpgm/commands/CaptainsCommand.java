@@ -7,8 +7,11 @@ import org.nicolie.towersforpgm.utils.SendMessage;
 
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.player.MatchPlayer;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -21,12 +24,10 @@ import org.bukkit.entity.Player;
 public class CaptainsCommand implements CommandExecutor {
     private final Draft draft;
     private final LanguageManager languageManager;
-    private final PickInventory pickInventory;
 
-    public CaptainsCommand(Draft draft, LanguageManager languageManager, PickInventory pickInventory) {
+    public CaptainsCommand(Draft draft, LanguageManager languageManager) {
         this.draft = draft;
         this.languageManager = languageManager;
-        this.pickInventory = pickInventory;
     }
 
     @Override
@@ -69,8 +70,14 @@ public class CaptainsCommand implements CommandExecutor {
 
         UUID captain1 = Bukkit.getPlayer(args[0]).getUniqueId();
         UUID captain2 = Bukkit.getPlayer(args[1]).getUniqueId();
-        draft.startDraft(captain1, captain2, PGM.get().getMatchManager().getMatch(sender));
-        pickInventory.giveItemToPlayers();
+        
+        // Crear una lista de jugadores en línea excluyendo a los capitanes
+        List<MatchPlayer> onlinePlayersExcludingCaptains = PGM.get().getMatchManager().getMatch(sender).getPlayers().stream()
+            .filter(player -> !player.getId().equals(captain1) && !player.getId().equals(captain2))
+            .collect(Collectors.toList());
+
+        // Iniciar el draft con los capitanes y los jugadores restantes
+        draft.startDraft(captain1, captain2, onlinePlayersExcludingCaptains, PGM.get().getMatchManager().getMatch(sender));
         return true;
     }
 }

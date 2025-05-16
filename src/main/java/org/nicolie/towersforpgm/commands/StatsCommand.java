@@ -29,12 +29,8 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         String targetPlayer;
-        String tableName;
+        String table;
         
-        if (!plugin.getIsDatabaseActivated()){
-            sender.sendMessage(languageManager.getPluginMessage("stats.disabled"));
-            return true;
-        }
         // Verifica si no se proporciona ningún argumento
         if (args.length == 0) {
             // Si no hay argumentos, se usa el nombre del jugador que ejecutó el comando
@@ -43,26 +39,34 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             targetPlayer = sender.getName();  // Usa al jugador que ejecuta el comando
-            tableName = ConfigManager.getTableForMap(PGM.get().getMatchManager().getMatch(sender).getMap().getName()); // Usa la tabla por defecto
+            if (ConfigManager.getTempTable() != null) {
+                table = ConfigManager.getTempTable();
+            } else {
+                table = ConfigManager.getTableForMap(PGM.get().getMatchManager().getMatch(sender).getMap().getName());
+            }
         } else if (args.length == 1) {
             // Si solo hay un argumento, se usa como jugador y la tabla será la del mapa actual
             targetPlayer = args[0].trim();  // Este es el nombre del jugador
-            tableName = ConfigManager.getTableForMap(PGM.get().getMatchManager().getMatch(sender).getMap().getName()); // Usa la tabla por defecto
+            if (ConfigManager.getTempTable() != null) {
+                table = ConfigManager.getTempTable();
+            } else {
+                table = ConfigManager.getTableForMap(PGM.get().getMatchManager().getMatch(sender).getMap().getName());
+            }
         } else {
             // Si hay dos argumentos, se usan ambos como jugador y tabla
             targetPlayer = args[0].trim();  // Este es el nombre del jugador
-            tableName = args[1].trim();  // Este es el nombre de la tabla
+            table = args[1].trim();  // Este es el nombre de la tabla
         }
 
         // Verifica si la tabla especificada existe en la configuración
-        if (!ConfigManager.getTables().contains(tableName)) {
+        if (!ConfigManager.getTables().contains(table)) {
             sender.sendMessage(languageManager.getPluginMessage("stats.tableNotFound")
-                    .replace("{table}", tableName));
+                    .replace("{table}", table));
             return true;
         }
 
         // Muestra las estadísticas del jugador especificado
-        StatsManager.showStats(sender, tableName, targetPlayer, languageManager);
+        StatsManager.showStats(sender, table, targetPlayer, languageManager);
 
         return true;
     }

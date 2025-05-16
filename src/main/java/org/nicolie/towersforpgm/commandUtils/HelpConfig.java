@@ -9,6 +9,8 @@ public class HelpConfig {
         sender.sendMessage("§6/towers §bdraft §asuggestions §7- Muestra sugerencias de configuración para el draft.");
         sender.sendMessage("§6/towers §bdraft §atimer §7- Muestra o modifica el temporizador del draft.");
         sender.sendMessage("§6/towers §bdraft §aprivate <true/false> §7- Define si el draft es privado.");
+        sender.sendMessage("§6/towers §bdraft §aorder <A[AB]+> §7- Establece el orden del draft.");
+        sender.sendMessage("§6/towers §bdraft §amin <size> §7- Establece el tamaño mínimo del draft. para aplicar el orden custom.");
     }
 
     public static void sendPreparationHelp(CommandSender sender) {
@@ -20,6 +22,13 @@ public class HelpConfig {
         sender.sendMessage("§6/towers §bpreparation §atimer <mins> §7- Establece el tiempo de preparación en minutos.");
         sender.sendMessage("§6/towers §bpreparation §ahaste <mins> §7- Establece la duración del efecto de haste.");
         sender.sendMessage("§6/towers §bpreparation §alist §7- Lista todas las configuraciones de preparación.");
+    }
+
+    public static void sendRefillHelp(CommandSender sender) {
+        sender.sendMessage("§6§m--------------------§6§lRefill §6§m--------------------");
+        sender.sendMessage("§6/towers §brefill §aadd §7- Añade un cofre a la lista de refill.");
+        sender.sendMessage("§6/towers §brefill §aremove §7- Elimina un cofre de la lista de refill.");
+        sender.sendMessage("§6/towers §brefill §areload §7- Recarga la configuración de refill.");
     }
 
     public static void sendStatsHelp(CommandSender sender) {

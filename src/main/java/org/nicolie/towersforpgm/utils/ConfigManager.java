@@ -11,10 +11,13 @@ public class ConfigManager {
 
     private static List<String> Tables;
     private static String defaultTable;
+    private static String tempTable;
     private static Map<String, String> MapTables = new HashMap<>();
     private static Map<String, Boolean> MapPrivateMatch = new HashMap<>();
     private static boolean draftSuggestions;
     private static boolean draftTimer;
+    private static String order;
+    private static int minOrder;
 
     public static void loadConfig() {
         TowersForPGM plugin = TowersForPGM.getInstance();
@@ -36,6 +39,8 @@ public class ConfigManager {
         // Cargar configuraciones del draft
         draftSuggestions = plugin.getConfig().getBoolean("draft.suggestions", false);
         draftTimer = plugin.getConfig().getBoolean("draft.timer", false);
+        order = plugin.getConfig().getString("draft.order", "");
+        minOrder = plugin.getConfig().getInt("draft.minOrder", 0);
     }
 
     // --- Tablas ---
@@ -111,6 +116,18 @@ public class ConfigManager {
         }
     }
 
+    public static void addTempTable(String tableName){
+        tempTable = tableName;
+    }
+
+    public static void removeTempTable(){
+        tempTable = null;
+    }
+
+    public static String getTempTable(){
+        return tempTable;
+    }
+
     // Verificar si un mapa tiene partida privada habilitada
     public static boolean isPrivateMatch(String mapName) {
         return MapPrivateMatch.getOrDefault(mapName, false);
@@ -149,6 +166,32 @@ public class ConfigManager {
         TowersForPGM plugin = TowersForPGM.getInstance();
         ConfigManager.draftTimer = draftTimer;
         plugin.getConfig().set("draft.timer", draftTimer);
+        plugin.saveConfig();
+    }
+
+    // Obtener el orden del draft
+    public static String getDraftOrder() {
+        return order;
+    }
+
+    // Establecer el orden del draft
+    public static void setDraftOrder(String order) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        ConfigManager.order = order;
+        plugin.getConfig().set("draft.order", order);
+        plugin.saveConfig();
+    }
+
+    // Obtener el mínimo de orden del draft
+    public static int getMinDraftOrder() {
+        return minOrder;
+    }
+
+    // Establecer el mínimo de orden del draft
+    public static void setMinDraftOrder(int minOrder) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        ConfigManager.minOrder = minOrder;
+        plugin.getConfig().set("draft.minOrder", minOrder);
         plugin.saveConfig();
     }
 }
