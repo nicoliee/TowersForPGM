@@ -1,7 +1,7 @@
 package org.nicolie.towersforpgm.commands;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
-import org.nicolie.towersforpgm.preparationTime.TorneoListener;
+import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,12 +17,12 @@ import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 
 public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
-    private final TorneoListener torneoListener;
+    private final PreparationListener preparationListener;
     private final LanguageManager languageManager;
 
-    public PreparationTimeCommand(LanguageManager languageManager, TorneoListener torneoListener) {
+    public PreparationTimeCommand(LanguageManager languageManager, PreparationListener preparationListener) {
         this.languageManager = languageManager;
-        this.torneoListener = torneoListener;
+        this.preparationListener = preparationListener;
     }
 
     @Override
@@ -45,11 +45,11 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
 
         switch (action) {
             case "on":
-                torneoListener.startProtection(player, match);
+                preparationListener.startProtection(player, match);
                 break;
             
             case "off":
-                torneoListener.stopProtection(player, match);
+                preparationListener.stopProtection(player, match);
                 break;
 
             default:

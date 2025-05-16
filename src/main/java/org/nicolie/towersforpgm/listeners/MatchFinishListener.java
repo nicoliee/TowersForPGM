@@ -16,7 +16,7 @@ import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import org.nicolie.towersforpgm.refill.RefillManager;
-import org.nicolie.towersforpgm.preparationTime.TorneoListener;
+import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,14 +24,14 @@ import java.util.List;
 public class MatchFinishListener implements Listener {
     private final TowersForPGM plugin;
     private final LanguageManager languageManager;
-    private final TorneoListener torneoListener;
+    private final PreparationListener preparationListener;
     private final RefillManager refillManager;
     private final Draft draft;
 
-    public MatchFinishListener(TowersForPGM plugin, TorneoListener torneoListener, RefillManager refillManager,
+    public MatchFinishListener(TowersForPGM plugin, PreparationListener preparationListener, RefillManager refillManager,
             Draft draft, LanguageManager languageManager) {
         this.plugin = plugin;
-        this.torneoListener = torneoListener;
+        this.preparationListener = preparationListener;
         this.refillManager = refillManager;
         this.draft = draft;
         this.languageManager = languageManager;
@@ -55,7 +55,7 @@ public class MatchFinishListener implements Listener {
             return;
         }
         
-        torneoListener.stopProtection(null, event.getMatch());
+        preparationListener.stopProtection(null, event.getMatch());
         refillManager.clearWorldData(worldName);
         draft.cleanLists();
         ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);

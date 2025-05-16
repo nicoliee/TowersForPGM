@@ -7,17 +7,17 @@ import tc.oc.pgm.api.match.event.MatchStartEvent;
 
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Captains;
-import org.nicolie.towersforpgm.preparationTime.TorneoListener;
+import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 
 public class MatchStartListener implements Listener{
-    private final TorneoListener torneoListener;
+    private final PreparationListener preparationListener;
     private final RefillManager refillManager;
     private final TowersForPGM plugin;
     private final Captains captains;
 
-    public MatchStartListener(TorneoListener torneoListener, RefillManager refillManager, Captains captains) {
+    public MatchStartListener(PreparationListener preparationListener, RefillManager refillManager, Captains captains) {
         this.captains = captains;
-        this.torneoListener = torneoListener;
+        this.preparationListener = preparationListener;
         this.refillManager = refillManager;
         this.plugin = TowersForPGM.getInstance();
         
@@ -31,7 +31,7 @@ public class MatchStartListener implements Listener{
         captains.setReady2(false, null);
         refillManager.startRefillTask(worldName);
         if (plugin.isPreparationEnabled()) {
-            torneoListener.startProtection(null, event.getMatch());
+            preparationListener.startProtection(null, event.getMatch());
         }
     }
 }

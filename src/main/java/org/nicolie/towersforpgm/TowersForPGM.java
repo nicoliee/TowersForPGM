@@ -12,7 +12,7 @@ import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
 import org.nicolie.towersforpgm.preparationTime.Region;
-import org.nicolie.towersforpgm.preparationTime.TorneoListener;
+import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.update.AutoUpdate;
 
@@ -38,7 +38,7 @@ public final class TowersForPGM extends JavaPlugin {
 // preparationTime
     private final Map<String, Region> regions = new HashMap<>(); // Mapa para almacenar las regiones definidas
     private Map<String, MatchConfig> matchConfigs = new HashMap<>(); // Mapa para almacenar MatchConfig por nombre de mundo
-    private TorneoListener torneoListener;
+    private PreparationListener preparationListener;
     private boolean preparationEnabled = true; // Protección de partida
 
 // Base de datos
@@ -82,7 +82,7 @@ public final class TowersForPGM extends JavaPlugin {
         refillManager = new RefillManager(languageManager);
 
         // Inicializar el TorneoListener
-        torneoListener = new TorneoListener(languageManager);
+        preparationListener = new PreparationListener(languageManager);
 
         // Base de datos
         ConfigManager.loadConfig();
@@ -112,11 +112,11 @@ public final class TowersForPGM extends JavaPlugin {
         
         // Registrar comandos
         Commands commandManager = new Commands(this);
-        commandManager.registerCommands(availablePlayers, captains, draft, languageManager, pickInventory, refillManager, teams, torneoListener);
+        commandManager.registerCommands(availablePlayers, captains, draft, languageManager, pickInventory, refillManager, teams, preparationListener);
 
         // Registrar eventos
         Events eventManager = new Events(this);
-        eventManager.registerEvents(availablePlayers, captains, draft, matchManager, languageManager, pickInventory, refillManager, teams, torneoListener);
+        eventManager.registerEvents(availablePlayers, captains, draft, matchManager, languageManager, pickInventory, refillManager, teams, preparationListener);
 
         // Verificar actualizaciones
         AutoUpdate updateChecker = new AutoUpdate(this);

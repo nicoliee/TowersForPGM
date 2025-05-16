@@ -30,12 +30,12 @@ import org.nicolie.towersforpgm.TowersForPGM;
 // (MatchLoadEvent, MatchUnloadEvent, MatchStartEvent, MatchEndEvent, etc.)
 // y esto hace que se asuma que solo hay una partida en ejecución en todo el servidor.
 
-public class TorneoListener implements Listener {
+public class PreparationListener implements Listener {
     private final TowersForPGM plugin = TowersForPGM.getInstance(); // Instancia del plugin
     private final LanguageManager languageManager; // Instancia del LanguageManager
     private Map<String, Long> protectionStartTimes = new HashMap<>(); // Mapa para almacenar el tiempo de inicio de la protección por nombre de mundo
     private Map<String, BukkitTask> activeTimers = new HashMap<>(); // Mapa para almacenar temporizadores activos por nombre de mundo
-    public TorneoListener(LanguageManager languageManager) {
+    public PreparationListener(LanguageManager languageManager) {
         this.languageManager = languageManager;
     }
 

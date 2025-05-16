@@ -13,18 +13,18 @@ import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
-import org.nicolie.towersforpgm.preparationTime.TorneoListener;
+import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 
 public class MatchLoadListener implements Listener {
     private final RefillManager refillManager;
-    private final TorneoListener torneoListener;
+    private final PreparationListener preparationListener;
     private final MatchManager matchManager;
     private final Draft draft;
     private final LanguageManager languageManager;
 
-    public MatchLoadListener(RefillManager refillManager, TorneoListener torneoListener, MatchManager matchManager, Draft draft, LanguageManager languageManager) {
+    public MatchLoadListener(RefillManager refillManager, PreparationListener preparationListener, MatchManager matchManager, Draft draft, LanguageManager languageManager) {
         this.refillManager = refillManager;
-        this.torneoListener = torneoListener;
+        this.preparationListener = preparationListener;
         this.matchManager = matchManager;
         this.draft = draft;
         this.languageManager = languageManager;
@@ -40,10 +40,10 @@ public class MatchLoadListener implements Listener {
         matchManager.setCurrentMatch(match); // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM (10/03/2025)
         // plugin.setCurrentMap(map); // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM (10/03/2025)
         refillManager.loadChests(map, world);
-        if(torneoListener.isMapInConfig(map) && TowersForPGM.getInstance().isPreparationEnabled()){
+        if(preparationListener.isMapInConfig(map) && TowersForPGM.getInstance().isPreparationEnabled()){
             SendMessage.sendToAdmins(languageManager.getPluginMessage("preparation.isAvailable")
                     .replace("{map}", map));
-        }else if (torneoListener.isMapInConfig(map) && !TowersForPGM.getInstance().isPreparationEnabled()){
+        }else if (preparationListener.isMapInConfig(map) && !TowersForPGM.getInstance().isPreparationEnabled()){
             SendMessage.sendToAdmins(languageManager.getPluginMessage("preparation.isAvailableButDisabled")
                     .replace("{map}", map));
         }
