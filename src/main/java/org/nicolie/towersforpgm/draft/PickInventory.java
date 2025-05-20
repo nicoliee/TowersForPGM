@@ -69,7 +69,7 @@ public class PickInventory implements Listener {
         if (totalPlayers <= 28) {
             int inventorySize = getInventorySizeWithBorder(totalPlayers);
             inv = Bukkit.createInventory(null, inventorySize, languageManager.getPluginMessage("draft.inventoryName")
-                .replace("{players}", String.valueOf(totalPlayers)));
+                .replace("{size}", String.valueOf(totalPlayers)));
     
             // Cambiar el color de los cristales según las condiciones
             for (int i = 0; i < inventorySize; i++) {
@@ -124,7 +124,7 @@ public class PickInventory implements Listener {
             // === CASO 2: >= 29 jugadores ===
             int inventorySize = getInventorySizeWithoutBorders(totalPlayers);
             inv = Bukkit.createInventory(null, inventorySize, languageManager.getPluginMessage("draft.inventoryName")
-                .replace("{players}", String.valueOf(totalPlayers)));
+                .replace("{size}", String.valueOf(totalPlayers)));
             columnsPerRow = 9;
     
             for (String name : allPlayerNames) {

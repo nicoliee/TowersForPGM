@@ -36,7 +36,7 @@ public class RefillManager {
         FileConfiguration refillConfig = plugin.getRefillConfig();
         ConfigurationSection refillSection = refillConfig.getConfigurationSection("refill." + mapName);
         if (refillSection == null) {
-            return; // No se encontró sección de recarga para este mapa, no hacer nada
+            return; // No section found for this map, do nothing
         } else {
             SendMessage.sendToAdmins(languageManager.getPluginMessage("refill.mapFound")
             .replace("{map}", mapName));
@@ -44,7 +44,7 @@ public class RefillManager {
 
         World world = Bukkit.getWorld(worldName);
         if (world == null) {
-            return; // No se encontró el mundo, no hacer nada
+            return; // No world found, do nothing
         }
 
         Map<Location, ItemStack[]> chests = new HashMap<>();
@@ -52,13 +52,13 @@ public class RefillManager {
         for (String key : refillSection.getKeys(false)) {
             String coordsString = refillSection.getString(key);
             if (coordsString == null || coordsString.isEmpty()) {
-                continue; // Coordenadas vacías, saltar este cofre
+                continue; // Skip empty coordinates
             }
 
-            // Dividir la cadena en partes y convertirlas a enteros
+            // Split the string into parts and convert to integers
             String[] coordsArray = coordsString.split(", ");
             if (coordsArray.length != 3) {
-                continue; // Coordenadas inválidas, saltar este cofre
+                continue; // Invalid coordinates, skip this chest
             }
 
             try {
@@ -67,20 +67,20 @@ public class RefillManager {
                 int z = Integer.parseInt(coordsArray[2].trim());
                 Location loc = new Location(world, x, y, z);
 
-                // Depuración: verificar el tipo de bloque
+                // Debug: verify block type
                 Material blockType = loc.getBlock().getType();
-                // Verificar si el bloque en la ubicación es un cofre
+                // Check if the block at the location is a chest
                 if (blockType == Material.CHEST || blockType == Material.TRAPPED_CHEST) {
                     Inventory chestInv = ((org.bukkit.block.Chest) loc.getBlock().getState()).getBlockInventory();
                     chests.put(loc, chestInv.getContents());
                 } else {
-                    // Enviar mensaje a los administradores
-                    String message = "&c¡Advertencia! No hay cofre en la ubicación: "
+                    // Send message to administrators
+                    String message = "&cWarning! No chest found at location: "
                             + "x=" + loc.getBlockX()
                             + ", y=" + loc.getBlockY()
                             + ", z=" + loc.getBlockZ()
-                            + " bloque: " + blockType;
-                    SendMessage.sendToAdmins(message);  // Llamada para enviar mensaje a los administradores
+                            + " block: " + blockType;
+                    SendMessage.sendToAdmins(message);
                 }
             } catch (NumberFormatException e) {
                 continue;
@@ -135,7 +135,7 @@ public class RefillManager {
         // Verificamos si hay cofres cargados para el mundo antes de intentar acceder a ellos
         Map<Location, ItemStack[]> chests = chestContents.get(worldName);
         if (chests == null) {
-            SendMessage.sendToAdmins("No se encontraron cofres para el mundo: " + worldName);
+            SendMessage.sendToAdmins("No chests found for world: " + worldName);
             return; // Si no hay cofres para este mundo, salir
         }
     

@@ -349,7 +349,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                 }
                 if (args.length == 3) {
                     String sub = args[1].toLowerCase();
-                    if (Arrays.asList("default", "add", "remove", "addmap", "removemap", "addTemporary").contains(sub)) {
+                    if (Arrays.asList("default", "add", "remove", "addmap", "addTemporary").contains(sub)) {
                         List<String> tables = ConfigManager.getTables();
                         return filterPrefix(tables, args[2]);
                     }
