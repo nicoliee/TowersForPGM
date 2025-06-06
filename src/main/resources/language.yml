@@ -18,7 +18,9 @@ messages:
       notInDraft: "§cThe player is not in the draft."
       notOnline: "§cThe player is not online."
       offline: "§cOne of the captains is offline."
+      ready: "Use §b/ready §fto start the game."
       teamsHeader: "§m-----------§r §b§lTeams §f§m-----------"
+      tip: "§bUse the star to pick a player."
       usage: "§cUsage: /captains <nick1> <nick2>"
     draft:
       clickToPick: "§eClick to pick."
@@ -61,6 +63,10 @@ messages:
       false: "§aThe map: §2{map} §ahas been set to public."
       true: "§aThe map: §2{map} §ahas been set to private."
       usage: "§cUsage: /privateMatch <on|off>"
+    ready:
+      alreadyReady: "You are already marked as ready."
+      notAvailable: "You cannot mark as ready yet."
+      ready: "§8[§6{teamcolor}§8] {teamcolor}{team} §fis ready."
     refill:
       mapFound: "§eRefill available in §2{map}§e."
       chestAlreadyExists: "§cChest already exists. &8[&2{coords}&8]"
@@ -141,7 +147,9 @@ messages:
       notInDraft: "§cEl jugador no está en el draft."
       notOnline: "§cEl jugador no está conectado."
       offline: "§cUno de los capitanes está desconectado."
+      ready: "§bUsa /ready para empezar la partida."
       teamsHeader: "§m-----------§r §b§lEquipos §f§m-----------"
+      tip: "§bUsa la estrella para elegir a un jugador."
       usage: "§cUso: /captains <nick1> <nick2>"
     draft:
       clickToPick: "§eHaz clic para elegir."
@@ -185,6 +193,10 @@ messages:
       false: "§aSe ha establecido el mapa: §2{map} §acomo público."
       true: "§aSe ha establecido el mapa: §2{map} §acomo privado."
       usage: "§cUso: /privateMatch <on|off>"
+    ready:
+      alreadyReady: "Ya has marcado como listo."
+      notAvailable: "Aún no puedes marcar como listo."
+      ready: "{teamcolor}{team} §festá listo."
     refill:
       mapFound: "§eRefill disponible en §2{map}§e."
       chestAlreadyExists: "§cCofre ya existe. &8[&2{coords}&8]"

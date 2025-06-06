@@ -7,6 +7,7 @@ import tc.oc.pgm.api.match.event.MatchStartEvent;
 
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Captains;
+import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 
 public class MatchStartListener implements Listener{
@@ -26,9 +27,12 @@ public class MatchStartListener implements Listener{
     @EventHandler
     public void onMatchStart(MatchStartEvent event) {
         String worldName = event.getMatch().getWorld().getName();
-        captains.setReadyActive(false);
-        captains.setReady1(false, null);
-        captains.setReady2(false, null);
+        if (captains.isReadyActive()){
+            Draft.cancelReadyReminder();
+            captains.setReadyActive(false);
+            captains.setReady1(false, null);
+            captains.setReady2(false, null);
+        }
         refillManager.startRefillTask(worldName);
         if (plugin.isPreparationEnabled()) {
             preparationListener.startProtection(null, event.getMatch());

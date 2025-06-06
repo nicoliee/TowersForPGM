@@ -17,6 +17,8 @@ import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.text.Component;
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 // Comando para seleccionar un jugador en el draft
@@ -70,10 +72,10 @@ public class PickCommand implements CommandExecutor, TabCompleter{
         }
 
         Player player = (Player) sender;
-
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
         // Comprobar si el draft está activo
         if (!Draft.isDraftActive()) {
-            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("picks.noDraft"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("picks.noDraft")));
             return true;
         }
 
@@ -90,7 +92,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
                 // Verificar si es el turno del jugador
                 if ((captains.isCaptain1Turn() && captains.isCaptain2(player.getUniqueId())) ||
                     (!captains.isCaptain1Turn() && captains.isCaptain1(player.getUniqueId()))) {
-                    SendMessage.sendToPlayer(player, languageManager.getConfigurableMessage("picks.notTurn"));
+                    matchPlayer.sendWarning(Component.text(languageManager.getConfigurableMessage("picks.notTurn")));
                     return true;
                 }
 
@@ -99,7 +101,7 @@ public class PickCommand implements CommandExecutor, TabCompleter{
                 // Validar el jugador a seleccionar
                 String validationError = validatePlayerToPick(inputName, player);
                 if (validationError != null) {
-                    SendMessage.sendToPlayer(player, validationError);
+                    matchPlayer.sendWarning(Component.text(validationError));
                     return true;
                 }
 

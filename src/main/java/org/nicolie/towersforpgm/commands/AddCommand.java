@@ -12,7 +12,9 @@ import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class AddCommand implements CommandExecutor {
@@ -36,14 +38,14 @@ public class AddCommand implements CommandExecutor {
             SendMessage.sendToConsole(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
-
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
         if (!Draft.isDraftActive()) {
-            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("picks.noDraft"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("picks.noDraft")));
             return true;
         }
 
         if (args.length < 1) {
-            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("add.usage"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("add.usage")));
             return true;
         }
 
@@ -61,20 +63,21 @@ public class AddCommand implements CommandExecutor {
     }
 
     private boolean isInvalidPlayer(String playerName, CommandSender sender) {
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
         if ((captains.getCaptain1Name() != null && captains.getCaptain1Name().equalsIgnoreCase(playerName)) ||
             (captains.getCaptain2Name() != null && captains.getCaptain2Name().equalsIgnoreCase(playerName))) {
-                SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("add.captain"));
+                matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("add.captain")));
             return true;
         }
 
 
         if (teams.isPlayerInAnyTeam(playerName)) {
-            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("captains.alreadyInTeam"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("add.alreadyInTeam")));
             return true;
         }
 
         if (availablePlayers.getAllAvailablePlayers().contains(playerName)) {
-            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("captains.alreadyInDraft"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("add.alreadyInDraft")));
             return true;
         }
         return false;

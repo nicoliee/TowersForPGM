@@ -1,4 +1,5 @@
 package org.nicolie.towersforpgm.draft;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
@@ -23,15 +24,12 @@ public class Utilities {
     }
 
     public void suggestPicksForCaptains() {
-        if (!ConfigManager.isDraftSuggestions()) {
-            return;
-        }
+        if (!ConfigManager.isDraftSuggestions()) {return;}
+        if (!TowersForPGM.getInstance().getIsDatabaseActivated()){return;} // No sugerencias si la base de datos no está activada
         MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
         int size = availablePlayers.getAllAvailablePlayers().size();
         List<String> topPlayers = availablePlayers.getTopPlayers();
-        if (topPlayers.isEmpty() || size <= 1) {
-            return;
-        }
+        if (topPlayers.isEmpty() || size <= 1) {return;}
         if (size > 6){
 
             topPlayers = topPlayers.subList(0, Math.min(topPlayers.size(), 3)); // Limitar a los 3 mejores jugadores
@@ -55,17 +53,26 @@ public class Utilities {
         currentCaptain.sendMessage(Component.text(suggestions));
     }
 
-    public String randomPick(){
-        List<String> topPlayers = availablePlayers.getTopPlayers();
+    public String randomPick() {
         int size = availablePlayers.getAllAvailablePlayers().size();
+        // Si la base de datos está desactivada, devolver un usuario aleatorio de los disponibles
+        if (!TowersForPGM.getInstance().getIsDatabaseActivated()) {
+            List<String> allPlayers = new ArrayList<>(availablePlayers.getAllAvailablePlayers());
+            if (allPlayers.isEmpty()) {
+                return null;
+            }
+            java.util.Collections.shuffle(allPlayers);
+            return allPlayers.get(0);
+        }
+        List<String> topPlayers = availablePlayers.getTopPlayers();
         if (topPlayers.isEmpty() || size == 0) {
             return null;
         }
-        if (size > 6){
+        if (size > 6) {
             topPlayers = new ArrayList<>(topPlayers.subList(0, 3)); // Limitar a los 3 mejores jugadores
-        }else if (size > 3){
+        } else if (size > 3) {
             topPlayers = new ArrayList<>(topPlayers.subList(0, 2)); // Limitar a los 2 mejores jugadores
-        }else if (size <= 3){
+        } else if (size <= 3) {
             topPlayers = new ArrayList<>(topPlayers.subList(0, 1)); // Limitar a los 1 mejores jugadores
         }
         java.util.Collections.shuffle(topPlayers); // Ordenar aleatoriamente las sugerencias

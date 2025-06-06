@@ -39,25 +39,33 @@ public class MatchFinishListener implements Listener {
 
     @EventHandler
     public void onMatchFinish(MatchFinishEvent event) {
-
-        Match match = event.getMatch();
-        String worldName = event.getMatch().getWorld().getName();
-        String mapName = event.getMatch().getMap().getName();
-
-        if (plugin.isStatsCancel()) {
-            System.out.println("[-] Stats cancelled for match-" + event.getMatch().getId() + ": "
-                                + mapName + ", stats not sent to database.");
-                        SendMessage.sendToDevelopers(languageManager.getPluginMessage("stats.consoleCancel")
-                                .replace("{id}", String.valueOf(event.getMatch().getId()))
-                                .replace("{map}", mapName)
-                                .replace("{size}", String.valueOf(event.getMatch().getParticipants().size())));
-                        plugin.setStatsCancel(false);
-            return;
-        }
-        
+        // Detener eventos de protección, refill y draft
         preparationListener.stopProtection(null, event.getMatch());
-        refillManager.clearWorldData(worldName);
+        refillManager.clearWorldData(event.getMatch().getWorld().getName());
         draft.cleanLists();
+
+        // Estadísticas
+        if (plugin.isStatsCancel()) {
+            cancelStats(event);
+        }else{
+            matchStats(event);
+        }
+    }
+
+    private void cancelStats(MatchFinishEvent event) {
+        String mapName = event.getMatch().getMap().getName();
+        System.out.println("[-] Stats cancelled for match-" + event.getMatch().getId() + ": "
+                                + mapName + ", stats not sent to database.");
+        SendMessage.sendToDevelopers(languageManager.getPluginMessage("stats.consoleCancel")
+                .replace("{id}", String.valueOf(event.getMatch().getId()))
+                .replace("{map}", mapName)
+                .replace("{size}", String.valueOf(event.getMatch().getParticipants().size())));
+        plugin.setStatsCancel(false);
+    }
+
+    private void matchStats(MatchFinishEvent event) {
+        Match match = event.getMatch();
+        String mapName = match.getMap().getName();
         ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);
         StatsMatchModule statsModule = match.getModule(StatsMatchModule.class);
 
@@ -87,7 +95,7 @@ public class MatchFinishListener implements Listener {
                         totalPoints,
                         isWinner ? 1 : 0,
                         1));
-            };
+            }
             // Si hay estadísticas que enviar, realizar la actualización
             if (!playerStatsList.isEmpty()) {
                 String table;

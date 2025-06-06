@@ -3,7 +3,9 @@ package org.nicolie.towersforpgm.commands;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
+import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.player.MatchPlayer;
 
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
@@ -30,12 +32,11 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         String targetPlayer;
         String table;
-        
-        // Verifica si no se proporciona ningún argumento
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
         if (args.length == 0) {
             // Si no hay argumentos, se usa el nombre del jugador que ejecutó el comando
             if (!(sender instanceof Player)) {
-                sender.sendMessage(languageManager.getPluginMessage("stats.usage"));
+                matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("stats.usage")));
                 return true;
             }
             targetPlayer = sender.getName();  // Usa al jugador que ejecuta el comando
@@ -60,8 +61,8 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
 
         // Verifica si la tabla especificada existe en la configuración
         if (!ConfigManager.getTables().contains(table)) {
-            sender.sendMessage(languageManager.getPluginMessage("stats.tableNotFound")
-                    .replace("{table}", table));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("stats.tableNotFound")
+                    .replace("{table}", table)));
             return true;
         }
 

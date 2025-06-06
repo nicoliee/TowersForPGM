@@ -43,7 +43,9 @@ public class AvailablePlayers {
             }
             // Eliminar de availableOfflinePlayers si está presente
             availableOfflinePlayers.removeIf(name -> name.equalsIgnoreCase(playerName));
-            loadStatsForPlayer(playerName);
+            if (TowersForPGM.getInstance().getIsDatabaseActivated()) {
+                loadStatsForPlayer(playerName);
+            }
         } else {
             // Verificar si el jugador está offline y agregarlo a availableOfflinePlayers si
             // no está allí
@@ -56,18 +58,23 @@ public class AvailablePlayers {
                 availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()));
             }
 
-            loadStatsForPlayer(playerName);
+            if (TowersForPGM.getInstance().getIsDatabaseActivated()) {
+                loadStatsForPlayer(playerName);
+            }
         }
-
-        updateTopPlayers();
+        if (TowersForPGM.getInstance().getIsDatabaseActivated()){
+            updateTopPlayers();
+        }
     }
 
     // Método para eliminar jugador
     public void removePlayer(String playerName) {
         availablePlayers.removeIf(p -> p.getNameLegacy().equalsIgnoreCase(playerName));
         availableOfflinePlayers.removeIf(p -> p.equalsIgnoreCase(playerName));
-        playerStats.remove(playerName);
-
+        if (TowersForPGM.getInstance().getIsDatabaseActivated()){
+            playerStats.remove(playerName);
+        }
+        
         // Remover de la lista de mejores jugadores
         topPlayers.removeIf(name -> name.equalsIgnoreCase(playerName));
     }
@@ -179,7 +186,6 @@ public class AvailablePlayers {
                     }
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
                 // En caso de error, agregamos estadísticas predeterminadas
                 playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0));
             }

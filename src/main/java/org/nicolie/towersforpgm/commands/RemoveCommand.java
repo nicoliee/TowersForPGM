@@ -15,8 +15,8 @@ import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
@@ -41,22 +41,24 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
             sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
         }
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
         if(!Draft.isDraftActive()){
-            sender.sendMessage(languageManager.getPluginMessage("picks.noDraft"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("picks.noDraft")));
             return true;
         }
         if (args.length < 1) {
-            sender.sendMessage(languageManager.getPluginMessage("remove.usage"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("remove.usage")));
             return true;
         }
         String playerName = args[0];
-        if (isInvalidPlayer(playerName, sender)) {
+        if (isInvalidPlayer(playerName, matchPlayer)) {
             return true;
         }
         availablePlayers.removePlayer(playerName);
         pickInventory.updateAllInventories();
-        SendMessage.broadcast(languageManager.getConfigurableMessage("picks.remove").replace("{player}", playerName));
-        PGM.get().getMatchManager().getMatch(sender).getMatch().playSound(Sounds.WARNING);
+        String message = languageManager.getConfigurableMessage("picks.remove").replace("{player}", playerName);
+        matchPlayer.getMatch().sendMessage(Component.text(message));
+        matchPlayer.getMatch().playSound(Sounds.WARNING);
         if (availablePlayers.getAllAvailablePlayers().isEmpty()) {
             draft.endDraft();
         }
@@ -81,7 +83,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
         return null;
     }
 
-    private boolean isInvalidPlayer(String playerName, CommandSender sender) {
+    private boolean isInvalidPlayer(String playerName, MatchPlayer sender) {
         if (!availablePlayers.getAllAvailablePlayers().contains(playerName)) {
             sendErrorMessage(sender, "remove.notInDraft");
             return true;
@@ -95,7 +97,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter{
         return false;
     }
 
-    private void sendErrorMessage(CommandSender sender, String messageKey) {
-        sender.sendMessage(languageManager.getPluginMessage(messageKey));
+    private void sendErrorMessage(MatchPlayer player, String messageKey) {
+        player.sendWarning(Component.text(languageManager.getPluginMessage(messageKey)));
     }
 }

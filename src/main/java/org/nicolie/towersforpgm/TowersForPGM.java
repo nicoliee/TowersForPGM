@@ -31,6 +31,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Location;
+import org.bukkit.World;
 
 public final class TowersForPGM extends JavaPlugin {
     private static TowersForPGM instance; // Instancia de la clase principal
@@ -73,7 +74,8 @@ public final class TowersForPGM extends JavaPlugin {
         loadRegions();
         loadRefillConfig();
         ConfigManager.loadConfig();
-        preparationEnabled = getConfig().getBoolean("preparationTime.enabled", false);
+        preparationEnabled = getConfig()
+                    .getBoolean("preparationTime.enabled", false);
 
         // Inicializar LanguageManager
         languageManager = new LanguageManager(this);
@@ -86,7 +88,8 @@ public final class TowersForPGM extends JavaPlugin {
 
         // Base de datos
         ConfigManager.loadConfig();
-        isDatabaseActivated = getConfig().getBoolean("database.enabled", false);
+        isDatabaseActivated = getConfig()
+                    .getBoolean("database.enabled", false);
         if (isDatabaseActivated) {
             // Conectar a MySQL
             databaseManager = new DatabaseManager(this);
@@ -94,9 +97,7 @@ public final class TowersForPGM extends JavaPlugin {
         
             // Crear tablas al inicio si la base de datos está activada
             createTablesOnStartup();
-        } else {
-            getLogger().info("Database is disabled.");
-        }
+        } else {getLogger().info("Database is disabled.");}
 
         // Inicializar el Match
         MatchManager matchManager = new MatchManager();
@@ -105,18 +106,26 @@ public final class TowersForPGM extends JavaPlugin {
         availablePlayers = new AvailablePlayers(matchManager);
         captains = new Captains();
         teams = new Teams(matchManager);
-        utilities = new Utilities(availablePlayers, captains, languageManager);
-        draft = new Draft(captains, availablePlayers, teams, languageManager, matchManager, utilities);
-        pickInventory = new PickInventory(draft, captains, availablePlayers, teams, languageManager);
+        utilities = new Utilities(
+            availablePlayers, captains, languageManager);
+        draft = new Draft(
+            captains, availablePlayers, teams, 
+            languageManager, matchManager, utilities);
+        pickInventory = new PickInventory(
+            draft, captains, availablePlayers, teams, languageManager);
         getServer().getPluginManager().registerEvents(pickInventory, this);
         
         // Registrar comandos
         Commands commandManager = new Commands(this);
-        commandManager.registerCommands(availablePlayers, captains, draft, languageManager, pickInventory, refillManager, teams, preparationListener);
+        commandManager.registerCommands(
+            availablePlayers, captains, draft, languageManager, 
+            pickInventory, refillManager, teams, preparationListener);
 
         // Registrar eventos
         Events eventManager = new Events(this);
-        eventManager.registerEvents(availablePlayers, captains, draft, matchManager, languageManager, pickInventory, refillManager, teams, preparationListener);
+        eventManager.registerEvents(
+            availablePlayers, captains, draft, matchManager, languageManager,
+            pickInventory, refillManager, teams, preparationListener);
 
         // Verificar actualizaciones
         AutoUpdate updateChecker = new AutoUpdate(this);
@@ -133,28 +142,17 @@ public final class TowersForPGM extends JavaPlugin {
         }
     }
 
-    public static TowersForPGM getInstance() {
-        return instance;
-    }
-// Capitanes
-    public void updateInventories(){
-        pickInventory.updateAllInventories();
-    }
+    public static TowersForPGM getInstance() {return instance;}
+    public LanguageManager getLanguageManager() {return languageManager;}
+    public void updateInventories(){pickInventory.updateAllInventories();}
+    public void giveitem(World world){pickInventory.giveItemToPlayers(world);}
+    public void removeItem(World world){pickInventory.removeItemToPlayers(world);}
+    public Draft getDraft() {return draft;}
 
     public void giveItem(Player player){
-        if(player != null){
-            pickInventory.giveItemToPlayer(player);
-        }
+        if(player != null){pickInventory.giveItemToPlayer(player);}
     }
 
-    public void giveitem(){
-        pickInventory.giveItemToPlayers();
-    }
-
-    public Draft getDraft() {
-        return draft;
-    }
-    
 // Preparation Time
     // Método para cargar las regiones desde el archivo de configuración
     private void loadRegions() {
@@ -165,12 +163,15 @@ public final class TowersForPGM extends JavaPlugin {
         }
 
         for (String regionName : section.getKeys(false)) {
-            ConfigurationSection regionSection = section.getConfigurationSection(regionName);
+            ConfigurationSection regionSection = 
+                section.getConfigurationSection(regionName);
             if (regionSection == null) continue;
 
             // Obtener P1 y P2
-            Location p1 = parseLocation(regionSection.getString("P1"));
-            Location p2 = parseLocation(regionSection.getString("P2"));
+            Location p1 = parseLocation(
+                regionSection.getString("P1"));
+            Location p2 = parseLocation(
+                regionSection.getString("P2"));
 
             if (p1 == null || p2 == null) {
                 getLogger().warning("Error loading region: " + regionName);
@@ -198,7 +199,7 @@ public final class TowersForPGM extends JavaPlugin {
             double x = Double.parseDouble(parts[0]);
             double y = Double.parseDouble(parts[1]);
             double z = Double.parseDouble(parts[2]);
-            return new Location(Bukkit.getWorlds().get(0), x, y, z); // Usa el mundo por defecto
+            return new Location(Bukkit.getWorlds().get(0), x, y, z);
         } catch (NumberFormatException e) {
             getLogger().warning("Invalid coordinates: " + input);
             return null;
@@ -295,13 +296,8 @@ public final class TowersForPGM extends JavaPlugin {
         refillConfig = YamlConfiguration.loadConfiguration(refillFile);
     }
 
-    public FileConfiguration getRefillConfig() {
-        return refillConfig;
-    }
-
-    public RefillManager getRefillManager() {
-        return refillManager;
-    }
+    public FileConfiguration getRefillConfig() {return refillConfig;}
+    public RefillManager getRefillManager() {return refillManager;}
 
     public void saveRefillConfig() {
         try {

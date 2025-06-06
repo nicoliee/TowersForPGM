@@ -1,31 +1,40 @@
-autoupdate: true
-language: es
+# Configuración general del plugin
+autoupdate: true  # Actualización automática del plugin
+language: es      # Idioma del plugin
+
+# Configuración de la base de datos
 database:
-  enabled: false
+  enabled: false  # Habilitar/deshabilitar la base de datos
   host: "localhost"
   port: 3306
   name: "torneodb"
   user: "root" 
   password: "password" 
-  tables:
-  - Amistoso
-  - TorneoT1
-  defaultTable: Amistoso
+  tables:         # Tablas disponibles en la base de datos
+    - Amistoso
+    - TorneoT1
+  defaultTable: Amistoso  # Tabla por defecto
+
+# Configuración del sistema de draft (selección de jugadores)
 draft:
-  suggestions: true # Los capitanes recibirán sugerencias de jugadores para elegir de la base de datos
-  timer: true # Los capitanes tendrán un tiempo límite para elegir a los jugadores
-  order: "ABBAAB" # Orden de elección de los capitanes A = Primer Capitán, B = Segundo Capitán
-  min: 8 # Número mínimo de jugadores para aplicar el orden
+  suggestions: true    # Los capitanes recibirán sugerencias de jugadores para elegir
+  timer: true         # Los capitanes tendrán un tiempo límite para elegir
+  order: "ABBAAB"     # Orden de elección: A = Primer Capitán, B = Segundo Capitán
+  min: 8              # Número mínimo de jugadores para aplicar el orden
+
+# Configuración de estadísticas por mapa
 stats:
   maps:
-    Mini Towers:TE: # Nombre del mapa
-      privateMatch: true # Si es un mapa privado, no podrán entrar antes de que el torneo comience
-      table: TorneoT1 # Tabla donde se guardarán las estadísticas del mapa
+    Mini Towers:TE:   # Nombre del mapa
+      privateMatch: true  # Si es true, no se podrá entrar antes del torneo
+      table: TorneoT1    # Tabla donde se guardarán las estadísticas
+
+# Configuración del tiempo de preparación
 preparationTime:
   enabled: true
   maps:
-    Mini Towers:TE: # Nombre del mapa
-      P1: -9, 0, -16 # Coordenada mínima de la región protegida
-      P2: 37, 45, 20 # Coordenada máxima de la región protegida
-      Timer: 4 # Tiempo de preparación en minutos
-      Haste: 3 # Tiempo de haste en minutos
+    Mini Towers:TE:   # Nombre del mapa
+      P1: -9, 0, -16  # Coordenada mínima de la región protegida
+      P2: 37, 45, 20  # Coordenada máxima de la región protegida
+      Timer: 4        # Tiempo de preparación en minutos
+      Haste: 3        # Tiempo de haste en minutos

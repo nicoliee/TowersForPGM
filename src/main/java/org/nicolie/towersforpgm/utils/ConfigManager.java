@@ -8,12 +8,14 @@ import java.util.List;
 import java.util.Map;
 
 public class ConfigManager {
-
+    // --- Configuración de la base de datos ---
     private static List<String> Tables;
     private static String defaultTable;
     private static String tempTable;
     private static Map<String, String> MapTables = new HashMap<>();
     private static Map<String, Boolean> MapPrivateMatch = new HashMap<>();
+
+    // --- Configuración del draft ---
     private static boolean draftSuggestions;
     private static boolean draftTimer;
     private static String order;

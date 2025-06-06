@@ -26,7 +26,6 @@ public class RefillManager {
     private final Map<String, BukkitRunnable> refillTasks = new HashMap<>();
 
     // Variable para almacenar el último tiempo de recarga
-    private final Map<String, Long> lastRefillTimes = new HashMap<>();
 
     public RefillManager(LanguageManager languageManager) {
         this.languageManager = languageManager;
@@ -36,7 +35,7 @@ public class RefillManager {
         FileConfiguration refillConfig = plugin.getRefillConfig();
         ConfigurationSection refillSection = refillConfig.getConfigurationSection("refill." + mapName);
         if (refillSection == null) {
-            return; // No section found for this map, do nothing
+            return; // No se encontró sección de recarga para este mapa, no hacer nada
         } else {
             SendMessage.sendToAdmins(languageManager.getPluginMessage("refill.mapFound")
             .replace("{map}", mapName));
@@ -44,7 +43,7 @@ public class RefillManager {
 
         World world = Bukkit.getWorld(worldName);
         if (world == null) {
-            return; // No world found, do nothing
+            return; // No se encontró el mundo, no hacer nada
         }
 
         Map<Location, ItemStack[]> chests = new HashMap<>();
@@ -52,13 +51,13 @@ public class RefillManager {
         for (String key : refillSection.getKeys(false)) {
             String coordsString = refillSection.getString(key);
             if (coordsString == null || coordsString.isEmpty()) {
-                continue; // Skip empty coordinates
+                continue; // Coordenadas vacías, saltar este cofre
             }
 
-            // Split the string into parts and convert to integers
+            // Dividir la cadena en partes y convertirlas a enteros
             String[] coordsArray = coordsString.split(", ");
             if (coordsArray.length != 3) {
-                continue; // Invalid coordinates, skip this chest
+                continue; // Coordenadas inválidas, saltar este cofre
             }
 
             try {
@@ -67,20 +66,20 @@ public class RefillManager {
                 int z = Integer.parseInt(coordsArray[2].trim());
                 Location loc = new Location(world, x, y, z);
 
-                // Debug: verify block type
+                // Depuración: verificar el tipo de bloque
                 Material blockType = loc.getBlock().getType();
-                // Check if the block at the location is a chest
+                // Verificar si el bloque en la ubicación es un cofre
                 if (blockType == Material.CHEST || blockType == Material.TRAPPED_CHEST) {
                     Inventory chestInv = ((org.bukkit.block.Chest) loc.getBlock().getState()).getBlockInventory();
                     chests.put(loc, chestInv.getContents());
                 } else {
-                    // Send message to administrators
-                    String message = "&cWarning! No chest found at location: "
+                    // Enviar mensaje a los administradores
+                    String message = "&c¡Advertencia! No hay cofre en la ubicación: "
                             + "x=" + loc.getBlockX()
                             + ", y=" + loc.getBlockY()
                             + ", z=" + loc.getBlockZ()
-                            + " block: " + blockType;
-                    SendMessage.sendToAdmins(message);
+                            + " bloque: " + blockType;
+                    SendMessage.sendToAdmins(message);  // Llamada para enviar mensaje a los administradores
                 }
             } catch (NumberFormatException e) {
                 continue;
@@ -94,7 +93,6 @@ public class RefillManager {
 
     public void clearWorldData(String worldName) {
         chestContents.remove(worldName);
-        lastRefillTimes.remove(worldName);  // Limpiar el tiempo de recarga cuando se borra el mundo
         stopRefillTask(worldName);
     }
 
@@ -112,30 +110,20 @@ public class RefillManager {
         BukkitRunnable task = new BukkitRunnable() {
             @Override
             public void run() {
-                long currentTime = System.currentTimeMillis();
-                long lastRefillTime = lastRefillTimes.getOrDefault(worldName, 0L);
-
-                // Verificamos si han pasado 60 segundos (60000 milisegundos)
-                if (currentTime - lastRefillTime >= 60000) {
-                    // Si han pasado 60 segundos, hacemos el refill
-                    refill(worldName);
-
-                    // Actualizamos el último tiempo de recarga
-                    lastRefillTimes.put(worldName, currentTime);
-                }
+                refill(worldName);
             }
         };
 
         // Guardamos la tarea en el mapa y la iniciamos
         refillTasks.put(worldName, task);
-        task.runTaskTimer(plugin, 0L, 20L); // 20L = 1 segundo
+        task.runTaskTimer(plugin, 0L, 60 * 20);
     }
 
     public void refill(String worldName) {
         // Verificamos si hay cofres cargados para el mundo antes de intentar acceder a ellos
         Map<Location, ItemStack[]> chests = chestContents.get(worldName);
         if (chests == null) {
-            SendMessage.sendToAdmins("No chests found for world: " + worldName);
+            SendMessage.sendToAdmins("No se encontraron cofres para el mundo: " + worldName);
             return; // Si no hay cofres para este mundo, salir
         }
     

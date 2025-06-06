@@ -42,7 +42,6 @@ public class Draft {
     // Custom draft order pattern variables
     private String customOrderPattern = ""; // Ejemplo: "ABABAB"
     // 'A' significa turno del capitán que fue primero, 'B' significa turno del otro capitán
-    // Se usa para determinar el orden de los turnos
     private int customOrderMinPlayers = 6; // Número mínimo de jugadores para usar el patrón
     private int currentPatternIndex = 0; // Índice actual del patrón
     private boolean usingCustomPattern = false; // Indica si se está usando un patrón personalizado
@@ -121,22 +120,19 @@ public class Draft {
         SendMessage.broadcast(languageManager.getConfigurableMessage("captains.turn")
                 .replace("{teamcolor}", teamColor)
                 .replace("{captain}", captainName));
-        plugin.giveitem();
+        plugin.giveitem(match.getWorld());
         startDraftTimer();
 
         // Trigger DraftStartEvent
         Bukkit.getPluginManager().callEvent(new DraftStartEvent());
     }
-    public void startDraft(UUID captain1, UUID captain2, List<MatchPlayer> availablePlayers) {
-
-    }
+    
     public void startDraftTimer() {
         if (!ConfigManager.isDraftTimer()) {
             return;
         }
 
         if (pickTimerBar == null) {
-            // Crear BossBar personalizada solo si no existe
             String currentCaptainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
             String currentCaptainColor = captains.isCaptain1Turn() ? "§4" : "§9";
             String bossbarMessage = languageManager.getPluginMessage("captains.bossbar")
@@ -158,11 +154,12 @@ public class Draft {
         int[] timeLeft = { initialTime };
 
         // Actualizar el mensaje de la BossBar antes de iniciar el Runnable
+        MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
         String currentCaptainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
         String currentCaptainColor = captains.isCaptain1Turn() ? "§4" : "§9";
         String bossbarMessage = languageManager.getPluginMessage("captains.bossbar")
                 .replace("{captain}", currentCaptainColor + currentCaptainName);
-
+        currentCaptain.sendActionBar(Component.text(languageManager.getPluginMessage("captains.tip")));
         draftTimer = new BukkitRunnable() {
             @Override
             public void run() {
@@ -314,6 +311,10 @@ public class Draft {
         captains.setReadyActive(true);
         captains.setMatchWithCaptains(true);
 
+        // Recordatorio de poner /ready
+        plugin.removeItem(matchManager.getMatch().getWorld());
+        readyReminder();
+
         // Quitar bossbar
         removeBossbar();
         // Iniciar el juego
@@ -322,6 +323,43 @@ public class Draft {
 
         // Trigger DraftEndEvent
         Bukkit.getPluginManager().callEvent(new DraftEndEvent());
+    }
+    
+    private static BukkitRunnable readyReminderTask;
+
+    private void readyReminder() {
+        String readyMessage = languageManager.getPluginMessage("captains.ready");
+        MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
+        MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
+        captain1.sendActionBar(Component.text(readyMessage));
+        captain2.sendActionBar(Component.text(readyMessage));
+        readyReminderTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!captains.isReadyActive()) {
+                    this.cancel();
+                    return;
+                }
+                if (!captains.isReady1()) {
+                    captain1.sendMessage(Component.text(readyMessage));
+                    captain1.playSound(Sounds.DIRECT_MESSAGE);
+                }
+                if (!captains.isReady2()) {
+                    captain2.sendMessage(Component.text(readyMessage));
+                    captain2.playSound(Sounds.DIRECT_MESSAGE);
+                }
+            }
+        };
+        readyReminderTask.runTaskTimer(TowersForPGM.getInstance(), 5 * 20, 25 * 20);
+    }
+
+    public static void cancelReadyReminder() {
+        readyReminderTask.cancel();
+        readyReminderTask = null;
+    }
+
+    public static void cancelReadyTimer(){
+        
     }
 
     // misc

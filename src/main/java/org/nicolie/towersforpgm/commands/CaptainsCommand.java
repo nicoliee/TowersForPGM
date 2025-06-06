@@ -2,8 +2,8 @@ package org.nicolie.towersforpgm.commands;
 
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -36,34 +36,34 @@ public class CaptainsCommand implements CommandExecutor {
             return true;
         }
         Match match = PGM.get().getMatchManager().getMatch(sender);
-
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
         // Verificar si la partida está en curso
         if (match.isRunning()|| match.isFinished()) {
-            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("captains.matchStarted"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.matchStarted")));
             return true;
         }
         
         // Verificar si los argumentos son suficientes
         if (args.length < 2) {
-            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("captains.usage"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.usage")));
             return true;
         }
 
         // Verificar si hay suficientes jugadores en línea
         if (Bukkit.getOnlinePlayers().size() < 2) {
-            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("captains.notEnoughPlayers"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.notEnoughPlayers")));
             return true;
         }
 
         // Evitar que los argumentos sean iguales (duplicados)
         if (args[0].equalsIgnoreCase(args[1])) {
-            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("captains.usage"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.usage")));
             return true;
         }
 
         // Verificar si los capitanes están en línea
         if (Bukkit.getPlayer(args[0]) == null || Bukkit.getPlayer(args[1]) == null) {
-            SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("captains.offline"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.offline")));
             return true;
         }
 

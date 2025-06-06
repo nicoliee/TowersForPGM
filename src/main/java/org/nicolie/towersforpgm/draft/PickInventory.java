@@ -2,6 +2,7 @@ package org.nicolie.towersforpgm.draft;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,6 +19,8 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.text.Component;
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 import java.util.ArrayList;
@@ -104,10 +107,11 @@ public class PickInventory implements Listener {
                 boolean isOnline = Bukkit.getPlayerExact(name) != null;
                 
                 ItemStack skull = createPlayerSkull(name, isOnline);
-    
-                PlayerStats stats = availablePlayers.getStatsForPlayer(name);
-                addSkullLore(skull, stats);
-    
+                
+                if (TowersForPGM.getInstance().getIsDatabaseActivated()){
+                    PlayerStats stats = availablePlayers.getStatsForPlayer(name);
+                    addSkullLore(skull, stats);
+                }
                 int row = currentIndex / columnsPerRow;
                 int col = currentIndex % columnsPerRow;
                 int slot = rowOffset + row * 9 + (col + 1); // +1 para saltar el primer borde
@@ -132,8 +136,10 @@ public class PickInventory implements Listener {
     
                 ItemStack skull = createPlayerSkull(name, isOnline);
     
-                PlayerStats stats = availablePlayers.getStatsForPlayer(name);
-                addSkullLore(skull, stats);
+                if (TowersForPGM.getInstance().getIsDatabaseActivated()){
+                    PlayerStats stats = availablePlayers.getStatsForPlayer(name);
+                    addSkullLore(skull, stats);
+                }
     
                 int slot = currentIndex;
                 Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
@@ -181,8 +187,8 @@ public class PickInventory implements Listener {
         lore.add("§7" + languageManager.getPluginMessage("stats.kills") + ": §a" + stats.getKills());
         lore.add("§7" + languageManager.getPluginMessage("stats.deaths") + ": §a" + stats.getDeaths());
         lore.add("§7" + languageManager.getPluginMessage("stats.assists") + ": §a" + stats.getAssists());
-        lore.add("§7" + languageManager.getPluginMessage("stats.damageDone") + ": §a" + String.format("%.1f", stats.getDamageDone()));
-        lore.add("§7" + languageManager.getPluginMessage("stats.damageTaken") + ": §a" + String.format("%.1f", stats.getDamageTaken()));
+        lore.add("§7" + languageManager.getPluginMessage("stats.damageDone") + ": §a" + String.format("%.1f", stats.getGames() > 0 ? stats.getDamageDone() / stats.getGames() : 0.0));
+        lore.add("§7" + languageManager.getPluginMessage("stats.damageTaken") + ": §a" + String.format("%.1f", stats.getGames() > 0 ? stats.getDamageTaken() / stats.getGames() : 0.0));
         lore.add("§7" + languageManager.getPluginMessage("stats.points") + ": §a" + stats.getPoints());
         lore.add("§7" + languageManager.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
         lore.add("§7" + languageManager.getPluginMessage("stats.games") + ": §a" + stats.getGames());
@@ -238,12 +244,12 @@ public class PickInventory implements Listener {
 
         SkullMeta meta = (SkullMeta) clicked.getItemMeta();
         if (meta == null || meta.getOwner() == null) return;
-
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(clicker);
         // Validar si el clicker es capitán y si es su turno
         if (!captains.isCaptain(clickerId)) {
             openInventories.remove(clickerId);
             clicker.closeInventory();
-            SendMessage.sendToPlayer(clicker, languageManager.getConfigurableMessage("picks.notCaptain"));
+            matchPlayer.sendWarning(Component.text(languageManager.getConfigurableMessage("picks.notCaptain")));
             return;
         }
 
@@ -251,7 +257,7 @@ public class PickInventory implements Listener {
             (!captains.isCaptain1Turn() && captains.isCaptain1(clickerId))) {
             openInventories.remove(clickerId);
             clicker.closeInventory();
-            SendMessage.sendToPlayer(clicker, languageManager.getConfigurableMessage("picks.notTurn"));
+            matchPlayer.sendWarning(Component.text(languageManager.getConfigurableMessage("picks.notTurn")));
             return;
         }
 
@@ -260,7 +266,7 @@ public class PickInventory implements Listener {
         if (validationError != null) {
             openInventories.remove(clickerId);
             clicker.closeInventory();
-            SendMessage.sendToPlayer(clicker, validationError);
+            matchPlayer.sendWarning(Component.text(validationError));
             return;
         }
 
@@ -302,8 +308,8 @@ public class PickInventory implements Listener {
         }
     }
 
-    public void giveItemToPlayers() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
+    public void giveItemToPlayers(World world) {
+        for (Player player : world.getPlayers()) {
             giveItemToPlayer(player);
         }
     }
@@ -319,13 +325,30 @@ public class PickInventory implements Listener {
         player.getInventory().setItem(2, specialItem);
     }
 
+    public void removeItemToPlayers(World world) {
+        for (Player player : world.getPlayers()) {
+            removeItemToPlayer(player);
+        }
+    }
+
+    public void removeItemToPlayer(Player player){
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.getType() == Material.NETHER_STAR && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null && "§6Draft Menu".equals(meta.getDisplayName())) {
+                    player.getInventory().remove(item);
+                }
+            }
+        }
+    }
+
     @SuppressWarnings("deprecation")
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
         // Verificar si el jugador tiene el ítem especial y si hizo clic derecho
-        if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK ||event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ItemStack item;
             // Compatibilidad con versiones antiguas y nuevas
             try {
@@ -334,13 +357,15 @@ public class PickInventory implements Listener {
                 item = player.getItemInHand(); // Método para versiones antiguas
             }
 
-            if (item != null && item.getType() == Material.NETHER_STAR && item.hasItemMeta()) {
+            if (item != null && item.hasItemMeta()) {
                 ItemMeta meta = item.getItemMeta();
-                if (meta != null && "§6Draft Menu".equals(meta.getDisplayName())) {
-                    // Comprobar si el draft está activo
+
+                // Draft Menu (NETHER_STAR)
+                if (item.getType() == Material.NETHER_STAR && meta != null && "§6Draft Menu".equals(meta.getDisplayName())) {
+                    // Si el draft no está activo, mostrar mensaje
                     if (!Draft.isDraftActive()) {
                         SendMessage.sendToPlayer(player, languageManager.getPluginMessage("picks.noDraft"));
-                        player.getInventory().remove(Material.NETHER_STAR); // Quitar el ítem especial de Draft Menu
+                        player.getInventory().remove(Material.NETHER_STAR);
                         return;
                     }
                     openInventory(player); // Abrir el inventario

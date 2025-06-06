@@ -13,9 +13,10 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.player.MatchPlayer;
 
 public class TopCommand implements CommandExecutor, TabCompleter {
     private final LanguageManager languageManager;
@@ -31,14 +32,15 @@ public class TopCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         Player player = (Player) sender;
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
         if (args.length < 1 || args.length > 3) {
-            sender.sendMessage(languageManager.getPluginMessage("top.usage"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("top.usage")));
             return true;
         }
 
         String category = args[0].toLowerCase();
         if (!category.matches("kills|deaths|assists|damageDone|damageTaken|points|wins|games")) {
-            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("top.invalidCategory"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("top.invalidCategory")));
             return true;
         }
 
@@ -47,17 +49,17 @@ public class TopCommand implements CommandExecutor, TabCompleter {
             try {
                 page = Integer.parseInt(args[1]);
                 if (page < 1) {
-                    SendMessage.sendToPlayer(player, languageManager.getPluginMessage("top.invalidPage"));
+                    matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("top.invalidPage")));
                     return true;
                 }
             } catch (NumberFormatException e) {
-                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("top.invalidPage"));
+                matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("top.invalidPage")));
                 return true;
             }
         }
         String table = (args.length == 3) ? args[2] : ConfigManager.getTableForMap(PGM.get().getMatchManager().getMatch(sender).getMap().getName());
         if (!ConfigManager.getTables().contains(table)) {
-            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("stats.tableNotFound"));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("stats.tableNotFound")));
             return true;
         }
         StatsManager.showTop(category, page, table, sender, languageManager);

@@ -1,6 +1,9 @@
 package org.nicolie.towersforpgm.commands;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
+
+import net.kyori.adventure.text.Component;
+
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 
 import java.util.ArrayList;
@@ -15,6 +18,7 @@ import org.bukkit.entity.Player;
 
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.player.MatchPlayer;
 
 public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
     private final PreparationListener preparationListener;
@@ -40,6 +44,7 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
         }
 
         Match match = PGM.get().getMatchManager().getMatch(player);
+        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
         // Procesar el comando dependiendo del primer argumento
         String action = args[0].toLowerCase();
 
@@ -53,7 +58,7 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter{
                 break;
 
             default:
-                SendMessage.sendToPlayer(player, languageManager.getPluginMessage("preparation.usage"));
+                matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("preparation.usage")));
                 return true;
         }
         return true;

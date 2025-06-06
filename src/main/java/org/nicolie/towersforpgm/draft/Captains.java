@@ -69,7 +69,7 @@ public class Captains {
     public void setReady1(boolean ready1, Match match) {
         this.ready1 = ready1;
         if (match != null){
-            checkAndTriggerEvent(match);
+            checkReady(match);
         }
     }
 
@@ -80,7 +80,7 @@ public class Captains {
     public void setReady2(boolean ready2, Match match) {
         this.ready2 = ready2;
         if (match != null){
-            checkAndTriggerEvent(match);
+            checkReady(match);
         }
         
     }
@@ -93,9 +93,13 @@ public class Captains {
         return isReadyActive;
     }
 
-    private void checkAndTriggerEvent(Match match) {
+    private void checkReady(Match match) {
         if (ready1 && ready2) {
             match.needModule(StartMatchModule.class).forceStartCountdown(Duration.ofSeconds(5), Duration.ZERO);
+            isReadyActive = false;
+            Draft.cancelReadyReminder();
+            ready1 = false;
+            ready2 = false;
         }
     }
 

@@ -29,6 +29,7 @@ commands:
   remove:
     description: Eliminar un jugador del Draft.
     usage: /remove <nick>
+    aliases: [rem, delete, del]
     permission: towers.captains
   stat:
     description: Muestra estadísticas de un jugador.
