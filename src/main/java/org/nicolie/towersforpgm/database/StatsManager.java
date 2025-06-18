@@ -16,9 +16,6 @@ import java.util.logging.Level;
 
 public class StatsManager {
     public static void updateStats(String table, List<Stats> playerStatsList) {
-        if ("none".equalsIgnoreCase(table)) {
-            return;
-        }
         if (playerStatsList.isEmpty()) {
             return;
         }
@@ -72,9 +69,6 @@ public class StatsManager {
     }    
 
     public static void showStats(CommandSender sender, String table, String player, LanguageManager languageManager) {
-        if ("none".equalsIgnoreCase(table)) {
-            return;
-        }
         String sql = "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM " + table + " WHERE username = ?";
         
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
@@ -110,9 +104,6 @@ public class StatsManager {
     }    
 
     public static void showTop(String category, int page, String table, CommandSender sender, LanguageManager languageManager) {
-        if ("none".equalsIgnoreCase(table)) {
-            return;
-        }
         int offset = (page - 1) * 10;
         String sql = "SELECT username, " + category + " FROM " + table + " ORDER BY " + category + " DESC LIMIT 10 OFFSET ?";
 

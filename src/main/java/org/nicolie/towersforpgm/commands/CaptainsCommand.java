@@ -1,6 +1,7 @@
 package org.nicolie.towersforpgm.commands;
 
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 import net.kyori.adventure.text.Component;
@@ -76,6 +77,7 @@ public class CaptainsCommand implements CommandExecutor {
             .collect(Collectors.toList());
 
         // Iniciar el draft con los capitanes y los jugadores restantes
+        draft.setCustomOrderPattern(ConfigManager.getDraftOrder(), ConfigManager.getMinDraftOrder());
         draft.startDraft(captain1, captain2, onlinePlayersExcludingCaptains, PGM.get().getMatchManager().getMatch(sender));
         return true;
     }

@@ -54,7 +54,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
         switch (mainArg) {
             case "draft":
                 if (args.length == 1) {
-                    sender.sendMessage("§c/towers draft <min|order|private|suggestions|timer>");
+                    sender.sendMessage("§c/towers draft <min|order|private|secondpickbalance|suggestions|timer>");
                     return true;
                 }
 
@@ -89,6 +89,9 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                         }
                         boolean isPrivateMatch = Boolean.parseBoolean(args[2]);
                         draftConfig.setPrivateMatch(sender, isPrivateMatch);
+                        break;
+                    case "secondpickbalance":
+                        draftConfig.handleSecondGetsExtraPlayerCommand(sender);
                         break;
 
                     case "suggestions":
@@ -313,7 +316,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
         switch (first) {
             case "draft":
                 if (args.length == 2) {
-                    List<String> options = Arrays.asList("min", "order", "private", "suggestions", "timer");
+                    List<String> options = Arrays.asList("min", "order", "private", "secondpickbalance" ,"suggestions", "timer");
                     return filterPrefix(options, args[1]);
                 }
                 if (args.length == 3 && args[1].equalsIgnoreCase("private")) {

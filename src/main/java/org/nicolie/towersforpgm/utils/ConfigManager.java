@@ -18,6 +18,7 @@ public class ConfigManager {
     // --- Configuración del draft ---
     private static boolean draftSuggestions;
     private static boolean draftTimer;
+    private static boolean secondPickBalance;
     private static String order;
     private static int minOrder;
 
@@ -41,6 +42,7 @@ public class ConfigManager {
         // Cargar configuraciones del draft
         draftSuggestions = plugin.getConfig().getBoolean("draft.suggestions", false);
         draftTimer = plugin.getConfig().getBoolean("draft.timer", false);
+        secondPickBalance = plugin.getConfig().getBoolean("draft.secondPickBalance", false);
         order = plugin.getConfig().getString("draft.order", "");
         minOrder = plugin.getConfig().getInt("draft.minOrder", 0);
     }
@@ -168,6 +170,19 @@ public class ConfigManager {
         TowersForPGM plugin = TowersForPGM.getInstance();
         ConfigManager.draftTimer = draftTimer;
         plugin.getConfig().set("draft.timer", draftTimer);
+        plugin.saveConfig();
+    }
+
+    // Verificar si el segundo jugador obtiene un jugador extra en el draft
+    public static boolean isSecondPickBalance() {
+        return secondPickBalance;
+    }
+
+    // Establecer el estado de si el segundo jugador obtiene un jugador extra en el draft
+    public static void setSecondPickBalance(boolean secondPickBalance) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        ConfigManager.secondPickBalance = secondPickBalance;
+        plugin.getConfig().set("draft.secondPickBalance", secondPickBalance);
         plugin.saveConfig();
     }
 

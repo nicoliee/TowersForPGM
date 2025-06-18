@@ -28,8 +28,15 @@ public class DraftConfig {
         SendMessage.sendToPlayer(sender, message);
     }
 
+    public void handleSecondGetsExtraPlayerCommand(CommandSender sender) {
+        boolean isSecondPickBalance = ConfigManager.isSecondPickBalance();
+        ConfigManager.setSecondPickBalance(!isSecondPickBalance);
+        String message = isSecondPickBalance ? "Second player does not get an extra player." : "Second player gets an extra player.";
+        SendMessage.sendToPlayer(sender, message);
+    }
+
     public void setPrivateMatch(CommandSender sender, boolean isPrivateMatch) {
-        String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName(); // Obtener el mapa actual
+        String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
         ConfigManager.setPrivateMatch(mapName, isPrivateMatch);
         String message = isPrivateMatch ? languageManager.getPluginMessage("privateMatch.true")
         .replace("{map}", mapName)

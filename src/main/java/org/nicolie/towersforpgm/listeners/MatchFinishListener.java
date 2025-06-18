@@ -43,7 +43,7 @@ public class MatchFinishListener implements Listener {
         preparationListener.stopProtection(null, event.getMatch());
         refillManager.clearWorldData(event.getMatch().getWorld().getName());
         draft.cleanLists();
-
+        if (!plugin.getIsDatabaseActivated()){return;}
         // Estadísticas
         if (plugin.isStatsCancel()) {
             cancelStats(event);

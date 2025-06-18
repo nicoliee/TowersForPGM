@@ -19,8 +19,9 @@ database:
 draft:
   suggestions: true    # Los capitanes recibirán sugerencias de jugadores para elegir
   timer: true         # Los capitanes tendrán un tiempo límite para elegir
+  secondPickBalance: true # Si es true y el draft es impar, el segundo capitán tendrá un jugador más
   order: "ABBAAB"     # Orden de elección: A = Primer Capitán, B = Segundo Capitán
-  min: 8              # Número mínimo de jugadores para aplicar el orden
+  minOrder: 8              # Número mínimo de jugadores para aplicar el orden
 
 # Configuración de estadísticas por mapa
 stats:

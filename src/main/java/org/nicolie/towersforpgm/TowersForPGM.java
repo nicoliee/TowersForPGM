@@ -87,7 +87,6 @@ public final class TowersForPGM extends JavaPlugin {
         preparationListener = new PreparationListener(languageManager);
 
         // Base de datos
-        ConfigManager.loadConfig();
         isDatabaseActivated = getConfig()
                     .getBoolean("database.enabled", false);
         if (isDatabaseActivated) {

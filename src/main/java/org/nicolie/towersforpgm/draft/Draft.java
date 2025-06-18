@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import org.nicolie.towersforpgm.draft.events.DraftEndEvent;
 import org.nicolie.towersforpgm.draft.events.DraftStartEvent;
@@ -69,7 +70,6 @@ public class Draft {
             matchManager.setCurrentMatch(match);
         }
         cleanLists();
-        setCustomOrderPattern(ConfigManager.getDraftOrder(), ConfigManager.getMinDraftOrder());
         isDraftActive = true;
         captains.setCaptain1(captain1);
         captains.setCaptain2(captain2);
@@ -222,6 +222,42 @@ public class Draft {
 
         // Manejar el orden de los turnos según el patrón personalizado o alternado
         updateTurnOrder();
+
+        if (ConfigManager.isSecondPickBalance()){
+            // Verificar si quedan solo dos jugadores y si el total de jugadores es impar
+            if (availablePlayers.getAllAvailablePlayers().size() == 2) {
+                Set<String> team1List = teams.getAllTeam(1);
+                Set<String> team2List = teams.getAllTeam(2);
+                int totalPlayers = team1List.size() + team2List.size() + availablePlayers.getAllAvailablePlayers().size();
+
+                if (totalPlayers % 2 != 0) { // Si total es impar
+                    List<String> lastTwoPlayers = new ArrayList<>(availablePlayers.getAllAvailablePlayers());
+
+                    int team1Size = team1List.size();
+                    int team2Size = team2List.size();
+                    int teamToAssign = team1Size < team2Size ? 1 : 2;
+
+                    for (String p : lastTwoPlayers) {
+                        Player pl = Bukkit.getPlayerExact(p);
+                        String exactName = availablePlayers.getExactUser(p);
+                        teams.addPlayerToTeam(exactName, teamToAssign);
+                        availablePlayers.removePlayer(exactName);
+                        teams.assignTeam(pl, teamToAssign);
+                        plugin.giveItem(pl);
+
+                        SendMessage.broadcast(languageManager.getConfigurableMessage("captains.choose")
+                            .replace("{teamcolor}", teamToAssign == 1 ? "§4" : "§9")
+                            .replace("{captain}", teamToAssign == 1 ? captains.getCaptain1Name() : captains.getCaptain2Name())
+                            .replace("{player}", exactName));
+                    }
+                    plugin.updateInventories();
+                    matchManager.getMatch().playSound(Sounds.MATCH_START);
+                    endDraft();
+                    return;
+                }
+            }
+        }
+        
 
         // Verificar si el draft ha terminado
         if (availablePlayers.isEmpty()) {

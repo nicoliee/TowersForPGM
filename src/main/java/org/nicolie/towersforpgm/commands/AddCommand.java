@@ -72,12 +72,12 @@ public class AddCommand implements CommandExecutor {
 
 
         if (teams.isPlayerInAnyTeam(playerName)) {
-            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("add.alreadyInTeam")));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.alreadyInTeam")));
             return true;
         }
 
         if (availablePlayers.getAllAvailablePlayers().contains(playerName)) {
-            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("add.alreadyInDraft")));
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.alreadyInDraft")));
             return true;
         }
         return false;
