@@ -23,6 +23,16 @@ draft:
   order: "ABBAAB"     # Orden de elección: A = Primer Capitán, B = Segundo Capitán
   minOrder: 8              # Número mínimo de jugadores para aplicar el orden
 
+# Configuración de Rankeds (Es necesario tener una base de Datos)
+rankeds:
+  size: 8          # Número de jugadores
+  order: "ABBAAB"  # Orden de elección para rankeds
+  tables:              # Tablas disponibles para rankeds
+    - RankedT1
+  defaultTable: RankedT1  # Tabla por defecto para rankeds
+  maps: # Lista de mapas disponibles para rankeds
+    - Mini Towers:TE
+
 # Configuración de estadísticas por mapa
 stats:
   maps:

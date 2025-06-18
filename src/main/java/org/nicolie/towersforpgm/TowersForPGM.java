@@ -19,7 +19,6 @@ import org.nicolie.towersforpgm.update.AutoUpdate;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.io.File;
 import java.io.IOException;
@@ -243,10 +242,8 @@ public final class TowersForPGM extends JavaPlugin {
 
     // Método para crear tablas al inicio
     private void createTablesOnStartup() {
-        List<String> tables = ConfigManager.getTables();
-        for (String table : tables) {
-            TableManager.createTable(table);
-        }
+        ConfigManager.getTables().forEach(TableManager::createTable);
+        ConfigManager.getRankedTables().forEach(TableManager::createTable);
     }
 
     // Método para obtener el booleano de activación de la base de datos

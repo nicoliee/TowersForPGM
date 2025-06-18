@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.database;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.bukkit.Bukkit;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,30 +13,41 @@ public class TableManager {
         if ("none".equalsIgnoreCase(tableName)) {
             return;
         }
-    
+        
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
-            String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
-                    "username VARCHAR(16) PRIMARY KEY, " +
-                    "kills INT DEFAULT 0, " +
-                    "deaths INT DEFAULT 0, " +
-                    "assists INT DEFAULT 0, " +
-                    "damageDone DOUBLE DEFAULT 0, " +
-                    "damageTaken DOUBLE DEFAULT 0, " +
-                    "points INT DEFAULT 0, " +
-                    "wins INT DEFAULT 0, " +
-                    "games INT DEFAULT 0" +
-                    ");";
-            
+            boolean isRanked = ConfigManager.getRankedTables() != null && ConfigManager.getRankedTables().contains(tableName);
+            StringBuilder sqlBuilder = new StringBuilder();
+            sqlBuilder.append("CREATE TABLE IF NOT EXISTS ").append(tableName).append(" (")
+                .append("username VARCHAR(16) PRIMARY KEY, ")
+                .append("kills INT DEFAULT 0, ")
+                .append("deaths INT DEFAULT 0, ")
+                .append("assists INT DEFAULT 0, ")
+                .append("damageDone DOUBLE DEFAULT 0, ")
+                .append("damageTaken DOUBLE DEFAULT 0, ")
+                .append("points INT DEFAULT 0, ")
+                .append("wins INT DEFAULT 0, ")
+                .append("games INT DEFAULT 0");
+            if (isRanked) {
+                sqlBuilder.append(", elo INT DEFAULT 0, lastElo INT DEFAULT 0, maxElo INT DEFAULT 0");
+            }
+            sqlBuilder.append(");");
+            String sql = sqlBuilder.toString();
+
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.executeUpdate();
             } catch (SQLException e) {
                 TowersForPGM.getInstance().getLogger().log(Level.SEVERE, "Error ejecutando SQL", e);
             }
-    
+
             // Lista de columnas requeridas
-            String[] requiredColumns = {"username", "kills", "deaths", "assists", "damageDone", "damageTaken", "points", "games", "wins"};
-            
+            String[] requiredColumns;
+            if (isRanked) {
+                requiredColumns = new String[]{"username", "kills", "deaths", "assists", "damageDone", "damageTaken", "points", "games", "wins", "elo", "lastElo", "maxElo"};
+            } else {
+                requiredColumns = new String[]{"username", "kills", "deaths", "assists", "damageDone", "damageTaken", "points", "games", "wins"};
+            }
+
             // Verificar y agregar columnas si no existen
             for (String column : requiredColumns) {
                 if (!columnExists(tableName, column)) {
