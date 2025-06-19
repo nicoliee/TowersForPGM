@@ -17,6 +17,8 @@ import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
+import org.nicolie.towersforpgm.rankeds.Elo;
+import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +67,7 @@ public class MatchFinishListener implements Listener {
 
     private void matchStats(MatchFinishEvent event) {
         Match match = event.getMatch();
-        String mapName = match.getMap().getName();
+        String map = match.getMap().getName();
         ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);
         StatsMatchModule statsModule = match.getModule(StatsMatchModule.class);
 
@@ -77,12 +79,23 @@ public class MatchFinishListener implements Listener {
             allPlayers.addAll(event.getMatch().getParticipants());
             allPlayers.addAll(plugin.getDisconnectedPlayers().values());
 
+            // Listas para winners y losers
+            List<MatchPlayer> winners = new ArrayList<>();
+            List<MatchPlayer> losers = new ArrayList<>();
+
             // Recorrer todos los jugadores
             for (MatchPlayer player : allPlayers) {
                 // Obtenemos estadísticas del jugador
                 PlayerStats playerStats = statsModule.getPlayerStat(player);
                 int totalPoints = (int) scoreMatchModule.getContribution(player.getId());
                 boolean isWinner = event.getMatch().getWinners().contains(player.getCompetitor());
+
+                // Agregar a la lista correspondiente
+                if (isWinner) {
+                    winners.add(player);
+                } else {
+                    losers.add(player);
+                }
 
                 playerStatsList.add(new Stats(
                         player.getNameLegacy(),
@@ -103,18 +116,32 @@ public class MatchFinishListener implements Listener {
                     table = ConfigManager.getTempTable();
                     ConfigManager.removeTempTable();
                 } else {
-                    table = ConfigManager.getTableForMap(mapName);
+                    table = ConfigManager.getTableForMap(map);
                 } 
                 // Aquí envías las estadísticas a la base de datos o lo que sea necesario
-                StatsManager.updateStats(table, playerStatsList);
-                System.out.println("[+] match-" + event.getMatch().getId() + ": " + mapName
-                        + ", stats on table " + table + ": " + playerStatsList.toString());
+                String consoleMeString;
+                if (isRanked(table, map)) {
+                    List<PlayerEloChange> eloChanges = Elo.addWin(winners, losers);
+                    StatsManager.updateStats(table, playerStatsList, eloChanges);
+                    consoleMeString = "[+Ranked] match-" + event.getMatch().getId() + ": " + map
+                        + ", stats on table " + table + ": " + playerStatsList.toString();
+                } else {
+                    StatsManager.updateStats(table, playerStatsList);
+                    consoleMeString = "[+] match-" + event.getMatch().getId() + ": " + map
+                        + ", stats on table " + table + ": " + playerStatsList.toString();
+                }
+                System.out.println(consoleMeString);
                 SendMessage.sendToDevelopers(languageManager.getPluginMessage("stats.console")
                         .replace("{id}", String.valueOf(event.getMatch().getId()))
-                        .replace("{map}", mapName)
+                        .replace("{map}", map)
                         .replace("{table}", table)
                         .replace("{size}", String.valueOf(playerStatsList.size())));
             }
         }
+    }
+
+    private boolean isRanked(String table, String map){
+        return ConfigManager.getRankedTables() != null && ConfigManager.getRankedTables().contains(table) &&
+                ConfigManager.getRankedMaps() != null && ConfigManager.getRankedMaps().contains(map);
     }
 }
