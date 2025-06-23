@@ -29,6 +29,10 @@ public class ConfigManager {
     private static String rankedDefaultTable;
     private static List<String> rankedMaps;
 
+    // --- MatchBot para rankeds ---
+    private static String rankedChannel;
+    private static String rankedRoleID;
+
     public static void loadConfig() {
         TowersForPGM plugin = TowersForPGM.getInstance();
         plugin.reloadConfig();
@@ -59,13 +63,27 @@ public class ConfigManager {
         rankedTables = plugin.getConfig().getStringList("rankeds.tables");
         rankedDefaultTable = plugin.getConfig().getString("rankeds.defaultTable", "");
         rankedMaps = plugin.getConfig().getStringList("rankeds.maps");
+        // Cargar configuraciones de matchbot para rankeds
+        rankedChannel = plugin.getConfig().getString("rankeds.matchbot.discordChannel", "");
+        rankedRoleID = plugin.getConfig().getString("rankeds.matchbot.rankedRoleId", "");
     }
 
     // --- Tablas ---
 
-    // Obtener la lista de tablas
+    // Obtener la lista combinada de tablas (normales y ranked)
     public static List<String> getTables() {
-        return Tables;
+        List<String> combinedTables = new ArrayList<>();
+        if (Tables != null) {
+            combinedTables.addAll(Tables);
+        }
+        if (rankedTables != null) {
+            for (String table : rankedTables) {
+                if (!combinedTables.contains(table)) {
+                    combinedTables.add(table);
+                }
+            }
+        }
+        return combinedTables;
     }
 
     // Agregar una tabla a la lista de tablas
@@ -220,7 +238,7 @@ public class ConfigManager {
     public static void setRankedSize(int rankedSize) {
         TowersForPGM plugin = TowersForPGM.getInstance();
         ConfigManager.rankedSize = rankedSize;
-        plugin.getConfig().set("ranked.size", rankedSize);
+        plugin.getConfig().set("rankeds.size", rankedSize);
         plugin.saveConfig();
     }
 
@@ -229,7 +247,7 @@ public class ConfigManager {
     public static void setRankedOrder(String rankedOrder) {
         TowersForPGM plugin = TowersForPGM.getInstance();
         ConfigManager.rankedOrder = rankedOrder;
-        plugin.getConfig().set("ranked.order", rankedOrder);
+        plugin.getConfig().set("rankeds.order", rankedOrder);
         plugin.saveConfig();
     }
 
@@ -238,14 +256,14 @@ public class ConfigManager {
     public static void addRankedTable(String tableName) {
         TowersForPGM plugin = TowersForPGM.getInstance();
         rankedTables.add(tableName);
-        plugin.getConfig().set("ranked.tables", rankedTables);
+        plugin.getConfig().set("rankeds.tables", rankedTables);
         plugin.saveConfig();
     }
 
     public static void removeRankedTable(String tableName) {
         TowersForPGM plugin = TowersForPGM.getInstance();
         rankedTables.remove(tableName);
-        plugin.getConfig().set("ranked.tables", rankedTables);
+        plugin.getConfig().set("rankeds.tables", rankedTables);
         plugin.saveConfig();
     }
 
@@ -253,7 +271,7 @@ public class ConfigManager {
     public static void setRankedDefaultTable(String rankedDefaultTable) {
         TowersForPGM plugin = TowersForPGM.getInstance();
         ConfigManager.rankedDefaultTable = rankedDefaultTable;
-        plugin.getConfig().set("ranked.defaultTable", rankedDefaultTable);
+        plugin.getConfig().set("rankeds.defaultTable", rankedDefaultTable);
         plugin.saveConfig();
     }
 
@@ -264,14 +282,18 @@ public class ConfigManager {
     public static void addRankedMap(String mapName) {
         TowersForPGM plugin = TowersForPGM.getInstance();
         rankedMaps.add(mapName);
-        plugin.getConfig().set("ranked.maps", rankedMaps);
+        plugin.getConfig().set("rankeds.maps", rankedMaps);
         plugin.saveConfig();
     }
 
     public static void removeRankedMap(String mapName) {
         TowersForPGM plugin = TowersForPGM.getInstance();
         rankedMaps.remove(mapName);
-        plugin.getConfig().set("ranked.maps", rankedMaps);
+        plugin.getConfig().set("rankeds.maps", rankedMaps);
         plugin.saveConfig();
     }
+
+    // --- MatchBot ---
+    public static String getRankedChannel() {return rankedChannel;}
+    public static String getRankedRoleID() {return rankedRoleID;}
 }

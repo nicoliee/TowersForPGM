@@ -1,15 +1,17 @@
 package org.nicolie.towersforpgm.rankeds;
 
+import org.nicolie.towersforpgm.TowersForPGM;
+
 public enum Rank {
-    BRONZE("Bronce", "§7", -100, -1),
-    BRONZE_PLUS("Bronce+", "§7", 0, 99),
-    SILVER("Plata", "§8", 100, 199),
-    SILVER_PLUS("Plata+", "§8", 200, 299),
-    GOLD("Oro", "§6", 300, 399),
-    GOLD_PLUS("Oro+", "§6", 400, 499),
-    EMERALD("Esmeralda", "§2", 500, 599),
-    EMERALD_PLUS("Esmeralda+", "§2", 600, 699),
-    DIAMOND("Diamante", "§9", 700, Integer.MAX_VALUE);
+    BRONZE(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.bronze"), "§7", -100, -1),
+    BRONZE_PLUS(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.bronze") + "+", "§7", 0, 99),
+    SILVER(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.silver"), "§8", 100, 199),
+    SILVER_PLUS(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.silver") + "+", "§8", 200, 299),
+    GOLD(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.gold"), "§6", 300, 399),
+    GOLD_PLUS(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.gold") + "+", "§6", 400, 499),
+    EMERALD(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.emerald"), "§2", 500, 599),
+    EMERALD_PLUS(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.emerald") + "+", "§2", 600, 699),
+    DIAMOND(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.diamond"), "§9", 700, Integer.MAX_VALUE);
 
     private final String name;
     private final String color;
@@ -26,6 +28,14 @@ public enum Rank {
     @Override
     public String toString() {
         return name;
+    }
+
+    public String getPrefixedRank(boolean withColor) {
+        if (withColor) {
+            return "§8[" + color + name + "§8]§r";
+        } else {
+            return "[" + name + "]";
+        }
     }
 
     public String getColor() {

@@ -32,6 +32,9 @@ rankeds:
   defaultTable: RankedT1  # Tabla por defecto para rankeds
   maps: # Lista de mapas disponibles para rankeds
     - Mini Towers:TE
+  matchbot: # Bot que envía mensajes al canal de Discord (es necesario tener el plugin MatchBot configurado)
+    discordChannel: "" # Canal de Discord donde se enviarán los mensajes
+    rankedRoleId: "" # ID del rol de Discord que se asignará a los jugadores en rankeds
 
 # Configuración de estadísticas por mapa
 stats:

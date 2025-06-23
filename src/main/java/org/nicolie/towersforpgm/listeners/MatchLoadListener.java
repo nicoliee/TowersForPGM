@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
@@ -48,5 +49,6 @@ public class MatchLoadListener implements Listener {
                     .replace("{map}", map));
         }
         plugin.getDisconnectedPlayers().clear();
+        ForfeitCommand.forfeitedPlayers.clear(); // Limpia la lista de jugadores que se han rendido
     }
 }

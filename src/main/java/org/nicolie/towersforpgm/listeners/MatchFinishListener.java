@@ -2,26 +2,35 @@ package org.nicolie.towersforpgm.listeners;
 
 import tc.oc.pgm.api.match.event.MatchFinishEvent;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.score.ScoreMatchModule;
 import tc.oc.pgm.stats.StatsMatchModule;
 import tc.oc.pgm.stats.PlayerStats;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.matchbot.EloStats;
+import org.nicolie.towersforpgm.matchbot.Embed;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
+
+import me.tbg.match.bot.MatchBot;
+
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.Elo;
+import org.nicolie.towersforpgm.rankeds.ItemListener;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class MatchFinishListener implements Listener {
     private final TowersForPGM plugin;
@@ -68,6 +77,7 @@ public class MatchFinishListener implements Listener {
     private void matchStats(MatchFinishEvent event) {
         Match match = event.getMatch();
         String map = match.getMap().getName();
+        giveItemToPlayers(match);
         ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);
         StatsMatchModule statsModule = match.getModule(StatsMatchModule.class);
 
@@ -121,18 +131,27 @@ public class MatchFinishListener implements Listener {
                 // Aquí envías las estadísticas a la base de datos o lo que sea necesario
                 String consoleMeString;
                 if (isRanked(table, map)) {
-                    List<PlayerEloChange> eloChanges = Elo.addWin(winners, losers);
-                    StatsManager.updateStats(table, playerStatsList, eloChanges);
+                    Elo.addWin(winners, losers).thenAccept(eloChanges -> {
+                        StatsManager.updateStats(table, playerStatsList, eloChanges);
+                        for (PlayerEloChange eloChange : eloChanges) {
+                            eloChange.sendMessage();
+                        }
+                        if(TowersForPGM.getInstance().isMatchBotEnabled()) {
+                            Map<String, List<EloStats>> statsMap = Embed.getPlayerStats(match, allPlayers, eloChanges);
+                            EmbedBuilder embed = Embed.createMatchFinishEmbed(match, match.getMap(), statsMap.get("winners"), statsMap.get("losers"), eloChanges);
+                            MatchBot.getInstance().getBot().sendMatchEmbed(embed, match, ConfigManager.getRankedChannel(), null);
+                        }
+                    });
                     consoleMeString = "[+Ranked] match-" + event.getMatch().getId() + ": " + map
                         + ", stats on table " + table + ": " + playerStatsList.toString();
                 } else {
-                    StatsManager.updateStats(table, playerStatsList);
+                    StatsManager.updateStats(table, playerStatsList, null);
                     consoleMeString = "[+] match-" + event.getMatch().getId() + ": " + map
                         + ", stats on table " + table + ": " + playerStatsList.toString();
                 }
                 System.out.println(consoleMeString);
                 SendMessage.sendToDevelopers(languageManager.getPluginMessage("stats.console")
-                        .replace("{id}", String.valueOf(event.getMatch().getId()))
+                        .replace("{id}", (isRanked(table, map) ? "ranked-" : "") + event.getMatch().getId())
                         .replace("{map}", map)
                         .replace("{table}", table)
                         .replace("{size}", String.valueOf(playerStatsList.size())));
@@ -143,5 +162,12 @@ public class MatchFinishListener implements Listener {
     private boolean isRanked(String table, String map){
         return ConfigManager.getRankedTables() != null && ConfigManager.getRankedTables().contains(table) &&
                 ConfigManager.getRankedMaps() != null && ConfigManager.getRankedMaps().contains(map);
+    }
+    
+    private void giveItemToPlayers(Match match) {
+        String nextMap = PGM.get().getMapOrder().getNextMap().getName();
+        if (ConfigManager.getRankedMaps().contains(nextMap)){
+            ItemListener.giveItemToPlayers(match);
+        }
     }
 }

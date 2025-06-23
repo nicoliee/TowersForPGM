@@ -2,6 +2,7 @@ package org.nicolie.towersforpgm.commands;
 
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.utils.SendMessage;
 
 import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
@@ -30,6 +31,11 @@ public class StatsCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!TowersForPGM.getInstance().getIsDatabaseActivated()){return true;}
+        if (!(sender instanceof Player)) {
+            SendMessage.sendToConsole(languageManager.getPluginMessage("errors.noPlayer"));
+            return true;
+        }
         String targetPlayer;
         String table;
         MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
