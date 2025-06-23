@@ -22,6 +22,13 @@ public class ConfigManager {
     private static String order;
     private static int minOrder;
 
+    // --- Configuración de rankeds ---
+    private static int rankedSize;
+    private static String rankedOrder;
+    private static List<String> rankedTables;
+    private static String rankedDefaultTable;
+    private static List<String> rankedMaps;
+
     public static void loadConfig() {
         TowersForPGM plugin = TowersForPGM.getInstance();
         plugin.reloadConfig();
@@ -45,6 +52,13 @@ public class ConfigManager {
         secondPickBalance = plugin.getConfig().getBoolean("draft.secondPickBalance", false);
         order = plugin.getConfig().getString("draft.order", "");
         minOrder = plugin.getConfig().getInt("draft.minOrder", 0);
+
+        // Cargar configuraciones de rankeds
+        rankedSize = plugin.getConfig().getInt("rankeds.size", 0);
+        rankedOrder = plugin.getConfig().getString("rankeds.order", "");
+        rankedTables = plugin.getConfig().getStringList("rankeds.tables");
+        rankedDefaultTable = plugin.getConfig().getString("rankeds.defaultTable", "");
+        rankedMaps = plugin.getConfig().getStringList("rankeds.maps");
     }
 
     // --- Tablas ---
@@ -128,9 +142,7 @@ public class ConfigManager {
         tempTable = null;
     }
 
-    public static String getTempTable(){
-        return tempTable;
-    }
+    public static String getTempTable(){return tempTable;}
 
     // Verificar si un mapa tiene partida privada habilitada
     public static boolean isPrivateMatch(String mapName) {
@@ -148,9 +160,7 @@ public class ConfigManager {
     // --- Configuraciones del draft ---
 
     // Verificar si las sugerencias de draft están habilitadas
-    public static boolean isDraftSuggestions() {
-        return draftSuggestions;
-    }
+    public static boolean isDraftSuggestions() {return draftSuggestions;}
 
     // Establecer el estado de las sugerencias de draft
     public static void setDraftSuggestions(boolean draftSuggestions) {
@@ -161,9 +171,7 @@ public class ConfigManager {
     }
 
     // Verificar si el temporizador de draft está habilitado
-    public static boolean isDraftTimer() {
-        return draftTimer;
-    }
+    public static boolean isDraftTimer() {return draftTimer;}
 
     // Establecer el estado del temporizador de draft
     public static void setDraftTimer(boolean draftTimer) {
@@ -174,9 +182,7 @@ public class ConfigManager {
     }
 
     // Verificar si el segundo jugador obtiene un jugador extra en el draft
-    public static boolean isSecondPickBalance() {
-        return secondPickBalance;
-    }
+    public static boolean isSecondPickBalance() {return secondPickBalance;}
 
     // Establecer el estado de si el segundo jugador obtiene un jugador extra en el draft
     public static void setSecondPickBalance(boolean secondPickBalance) {
@@ -187,9 +193,7 @@ public class ConfigManager {
     }
 
     // Obtener el orden del draft
-    public static String getDraftOrder() {
-        return order;
-    }
+    public static String getDraftOrder() {return order;}
 
     // Establecer el orden del draft
     public static void setDraftOrder(String order) {
@@ -200,15 +204,74 @@ public class ConfigManager {
     }
 
     // Obtener el mínimo de orden del draft
-    public static int getMinDraftOrder() {
-        return minOrder;
-    }
+    public static int getMinDraftOrder() {return minOrder;}
 
     // Establecer el mínimo de orden del draft
     public static void setMinDraftOrder(int minOrder) {
         TowersForPGM plugin = TowersForPGM.getInstance();
         ConfigManager.minOrder = minOrder;
         plugin.getConfig().set("draft.minOrder", minOrder);
+        plugin.saveConfig();
+    }
+
+    // --- Configuraciones de rankeds ---
+    public static int getRankedSize() {return rankedSize;}
+
+    public static void setRankedSize(int rankedSize) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        ConfigManager.rankedSize = rankedSize;
+        plugin.getConfig().set("ranked.size", rankedSize);
+        plugin.saveConfig();
+    }
+
+    public static String getRankedOrder() {return rankedOrder;}
+
+    public static void setRankedOrder(String rankedOrder) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        ConfigManager.rankedOrder = rankedOrder;
+        plugin.getConfig().set("ranked.order", rankedOrder);
+        plugin.saveConfig();
+    }
+
+    public static List<String> getRankedTables(){return rankedTables;}
+
+    public static void addRankedTable(String tableName) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        rankedTables.add(tableName);
+        plugin.getConfig().set("ranked.tables", rankedTables);
+        plugin.saveConfig();
+    }
+
+    public static void removeRankedTable(String tableName) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        rankedTables.remove(tableName);
+        plugin.getConfig().set("ranked.tables", rankedTables);
+        plugin.saveConfig();
+    }
+
+    public static String getRankedDefaultTable() {return rankedDefaultTable;}
+    public static void setRankedDefaultTable(String rankedDefaultTable) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        ConfigManager.rankedDefaultTable = rankedDefaultTable;
+        plugin.getConfig().set("ranked.defaultTable", rankedDefaultTable);
+        plugin.saveConfig();
+    }
+
+    public static List<String> getRankedMaps() {
+        return rankedMaps;
+    }
+
+    public static void addRankedMap(String mapName) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        rankedMaps.add(mapName);
+        plugin.getConfig().set("ranked.maps", rankedMaps);
+        plugin.saveConfig();
+    }
+
+    public static void removeRankedMap(String mapName) {
+        TowersForPGM plugin = TowersForPGM.getInstance();
+        rankedMaps.remove(mapName);
+        plugin.getConfig().set("ranked.maps", rankedMaps);
         plugin.saveConfig();
     }
 }

@@ -1,6 +1,7 @@
 package org.nicolie.towersforpgm.database;
 
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import org.bukkit.Bukkit;
@@ -11,15 +12,22 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class StatsManager {
     public static void updateStats(String table, List<Stats> playerStatsList) {
+        updateStats(table, playerStatsList, null);
+    }
+
+    public static void updateStats(String table, List<Stats> playerStatsList, List<PlayerEloChange> eloChange) {
         if (playerStatsList.isEmpty()) {
             return;
         }
-    
+
         String sql = "INSERT INTO " + table + " (username, kills, deaths, assists, damageDone, damageTaken, points, wins, games) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                      "ON DUPLICATE KEY UPDATE " +
                      "kills = VALUES(kills) + kills, " +
@@ -30,37 +38,50 @@ public class StatsManager {
                      "points = VALUES(points) + points, " +
                      "wins = VALUES(wins) + wins, " +
                      "games = VALUES(games) + games";
-    
+
+        String rankedSql = "UPDATE " + table + " SET elo = ?, lastElo = ?, maxElo = ? WHERE username = ?";
+
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
-    
+
                 conn.setAutoCommit(false);  // Deshabilita autocommit para mejorar rendimiento
-    
+
                 int batchSize = 0;
                 for (Stats playerStat : playerStatsList) {
                     stmt.setString(1, playerStat.getUsername());
                     stmt.setInt(2, playerStat.getKills());
                     stmt.setInt(3, playerStat.getDeaths());
-                    stmt.setInt(4, playerStat.getAssists()); 
+                    stmt.setInt(4, playerStat.getAssists());
                     stmt.setDouble(5, playerStat.getDamageDone());
                     stmt.setDouble(6, playerStat.getDamageTaken());
                     stmt.setInt(7, playerStat.getPoints());
                     stmt.setInt(8, playerStat.getWins());
                     stmt.setInt(9, playerStat.getGames());
-    
                     stmt.addBatch();
                     batchSize++;
-    
-                    // Ejecuta en lotes de 100 registros para evitar consultas gigantes
                     if (batchSize % 100 == 0) {
                         stmt.executeBatch();
                     }
                 }
-    
                 stmt.executeBatch();  // Ejecuta los datos restantes
                 conn.commit();  // Confirma los cambios
-    
+
+                // Si se recibe un PlayerEloChange, actualiza elo, lastElo y maxElo en la base de datos
+                if (eloChange != null && !eloChange.isEmpty()) {
+                    try (PreparedStatement rankedStmt = conn.prepareStatement(rankedSql)) {
+                        for (PlayerEloChange change : eloChange) {
+                            rankedStmt.setInt(1, change.getNewElo());
+                            rankedStmt.setInt(2, change.getCurrentElo());
+                            rankedStmt.setInt(3, change.getMaxElo());
+                            rankedStmt.setString(4, change.getUsername());
+                            rankedStmt.addBatch();
+                        }
+                        rankedStmt.executeBatch();
+                        conn.commit();
+                    }
+                }
+
             } catch (SQLException e) {
                 TowersForPGM.getInstance().getLogger().log(Level.SEVERE, "Error al actualizar estadísticas", e);
                 SendMessage.sendToDevelopers("§cError al actualizar estadísticas en la base de datos.");
@@ -135,6 +156,48 @@ public class StatsManager {
                 TowersForPGM.getInstance().getLogger().log(Level.SEVERE, "Error al obtener el top de " + category + " en la tabla " + table, e);
                 SendMessage.sendToDevelopers("§cError al obtener el top de " + category + " en la tabla " + table + "para el jugador " + sender.getName());
                 sender.sendMessage("§cHubo un error al obtener los datos.");
+            }
+        });
+    }
+
+    public static void getEloForUsernames(String table, List<String> usernames, Consumer<List<PlayerEloChange>> callback) {
+        if (usernames == null || usernames.isEmpty()) {
+            callback.accept(Collections.emptyList());
+            return;
+        }
+
+        String placeholders = usernames.stream().map(u -> "?").collect(Collectors.joining(","));
+        String sql = "SELECT username, elo, maxElo FROM " + table + " WHERE username IN (" + placeholders + ")";
+
+        Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
+            try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                for (int i = 0; i < usernames.size(); i++) {
+                    stmt.setString(i + 1, usernames.get(i));
+                }
+
+                ResultSet rs = stmt.executeQuery();
+                List<org.nicolie.towersforpgm.rankeds.PlayerEloChange> result = new java.util.ArrayList<>();
+                while (rs.next()) {
+                    String username = rs.getString("username");
+                    int elo = rs.getInt("elo");
+                    int maxElo = rs.getInt("maxElo");
+                    result.add(new org.nicolie.towersforpgm.rankeds.PlayerEloChange(username, elo, elo, maxElo));
+                }
+                // Mantener el orden de entrada
+                List<org.nicolie.towersforpgm.rankeds.PlayerEloChange> orderedResult = new java.util.ArrayList<>();
+                for (String username : usernames) {
+                    for (org.nicolie.towersforpgm.rankeds.PlayerEloChange change : result) {
+                        if (change.getUsername().equals(username)) {
+                            orderedResult.add(change);
+                            break;
+                        }
+                    }
+                }
+                callback.accept(orderedResult);
+            } catch (SQLException e) {
+                TowersForPGM.getInstance().getLogger().log(Level.SEVERE, "Error al obtener el elo de los usuarios", e);
+                callback.accept(Collections.emptyList());
             }
         });
     }
