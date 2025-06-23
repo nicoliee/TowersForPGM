@@ -15,3 +15,6 @@ picks:
 preparation:
   end: "&8[&6Bigotes Bot&8] &aLa preparación ha terminado."
   timeRemaining: "&8[&6Bigotes Bot&8] &aTiempo de preparación: &e{time}"
+matchbot:
+  author:  "Towers Champagne"
+  authorUrl: "https://cdn.discordapp.com/emojis/1297392507105050706.png?v=1"

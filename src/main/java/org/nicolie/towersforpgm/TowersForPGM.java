@@ -1,5 +1,9 @@
 package org.nicolie.towersforpgm;
 
+import org.nicolie.towersforpgm.commands.EloCommand;
+import org.nicolie.towersforpgm.commands.ForfeitCommand;
+import org.nicolie.towersforpgm.commands.RankedCommand;
+import org.nicolie.towersforpgm.commands.TagCommand;
 import org.nicolie.towersforpgm.database.DatabaseManager;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
@@ -12,6 +16,7 @@ import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
 import org.nicolie.towersforpgm.preparationTime.Region;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.update.AutoUpdate;
@@ -63,6 +68,9 @@ public final class TowersForPGM extends JavaPlugin {
 // Language
     private LanguageManager languageManager; // Instancia del LanguageManager
 
+// MatchBot (opcional)
+    private boolean isMatchBotEnabled = false; // Variable para verificar si MatchBot está habilitado
+
     @Override
     public void onEnable() {
         // Guardar la instancia de la clase principal
@@ -112,7 +120,13 @@ public final class TowersForPGM extends JavaPlugin {
         pickInventory = new PickInventory(
             draft, captains, availablePlayers, teams, languageManager);
         getServer().getPluginManager().registerEvents(pickInventory, this);
-        
+
+        // Registrar Rankeds
+        Queue queue = new Queue(draft, languageManager);
+        getCommand("ranked").setExecutor(new RankedCommand(languageManager, queue, utilities));
+        getCommand("elo").setExecutor(new EloCommand(languageManager));
+        getCommand("forfeit").setExecutor(new ForfeitCommand(languageManager));
+        getCommand("tag").setExecutor(new TagCommand(languageManager));
         // Registrar comandos
         Commands commandManager = new Commands(this);
         commandManager.registerCommands(
@@ -122,8 +136,14 @@ public final class TowersForPGM extends JavaPlugin {
         // Registrar eventos
         Events eventManager = new Events(this);
         eventManager.registerEvents(
-            availablePlayers, captains, draft, matchManager, languageManager,
+            availablePlayers, captains, draft, matchManager, queue, languageManager,
             pickInventory, refillManager, teams, preparationListener);
+
+        if (getServer().getPluginManager().getPlugin("MatchBot") != null &&
+            getServer().getPluginManager().getPlugin("MatchBot").isEnabled()) {
+            getLogger().info("MatchBot plugin found, initializing MatchBot integration.");
+            isMatchBotEnabled = true;
+        }
 
         // Verificar actualizaciones
         AutoUpdate updateChecker = new AutoUpdate(this);
@@ -305,5 +325,10 @@ public final class TowersForPGM extends JavaPlugin {
 
     public void reloadRefillConfig() {
         refillConfig = YamlConfiguration.loadConfiguration(refillFile);
+    }
+
+// MatchBot
+    public boolean isMatchBotEnabled() {
+        return isMatchBotEnabled;
     }
 }

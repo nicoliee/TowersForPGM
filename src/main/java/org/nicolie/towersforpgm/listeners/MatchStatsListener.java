@@ -36,13 +36,18 @@ public class MatchStatsListener implements Listener {
         
         Map<Integer, List<String>> killsMap = new TreeMap<>(Collections.reverseOrder());
         Map<Integer, List<String>> pointsMap = new TreeMap<>(Collections.reverseOrder());
-        
+
         for (MatchPlayer player : allPlayers) {
             PlayerStats playerStats = statsModule != null ? statsModule.getPlayerStat(player) : null;
             int kills = playerStats != null ? playerStats.getKills() : 0;
             int totalPoints = scoreMatchModule != null ? (int) scoreMatchModule.getContribution(player.getId()) : 0;
             
-            String playerName = (player.getParty() != null && player.getParty().getColor() != null ? player.getParty().getColor().toString() : "§3") + player.getNameLegacy();
+            String playerName;
+            if (player.getParty() == null) {
+                playerName = "§3" + player.getNameLegacy();
+            } else {
+                playerName = player.getPrefixedName();
+            }
             
             killsMap.computeIfAbsent(kills, k -> new ArrayList<>()).add(playerName);
             if (totalPoints > 0) {

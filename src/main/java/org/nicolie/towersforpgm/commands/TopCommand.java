@@ -10,9 +10,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.utils.SendMessage;
 
 import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
@@ -27,6 +29,11 @@ public class TopCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!TowersForPGM.getInstance().getIsDatabaseActivated()){return true;}
+        if (!(sender instanceof Player)) {
+            SendMessage.sendToConsole(languageManager.getPluginMessage("errors.noPlayer"));
+            return true;
+        }
         if (!(sender instanceof Player)) {
             sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
             return true;
@@ -39,7 +46,7 @@ public class TopCommand implements CommandExecutor, TabCompleter {
         }
 
         String category = args[0].toLowerCase();
-        if (!category.matches("kills|deaths|assists|damageDone|damageTaken|points|wins|games")) {
+        if (!category.matches("elo|maxelo|kills|deaths|assists|damagedone|damagetaken|points|wins|games")) {
             matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("top.invalidCategory")));
             return true;
         }
@@ -69,7 +76,7 @@ public class TopCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return filterSuggestions(args[0], Arrays.asList("kills", "deaths", "assists", "damageDone", "damageTaken", "points", "wins", "games"));
+            return filterSuggestions(args[0], Arrays.asList("elo", "maxelo", "kills", "deaths", "assists", "damageDone", "damageTaken", "points", "wins", "games"));
         }
         if (args.length == 2) {
             return Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");

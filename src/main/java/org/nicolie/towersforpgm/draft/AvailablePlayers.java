@@ -156,11 +156,18 @@ public class AvailablePlayers {
                 table = ConfigManager.getTempTable();
             } else {
                 table = ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName());
-            } 
+            }
+            boolean isRanked = ConfigManager.getRankedTables().contains(table); 
 
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
-            String sql = "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM "
-                    + table + " WHERE username = ?";
+            String sql;
+            if (isRanked) {
+                sql = "SELECT elo, kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM "
+                        + table + " WHERE username = ?";
+            } else {
+                sql = "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM "
+                        + table + " WHERE username = ?";
+            }
 
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
                     PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -170,7 +177,9 @@ public class AvailablePlayers {
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         // Guardar las estadísticas del jugador
+                        int elo = isRanked ? rs.getInt("elo") : -9999;
                         PlayerStats stats = new PlayerStats(
+                                elo,
                                 rs.getInt("kills"),
                                 rs.getInt("deaths"),
                                 rs.getInt("assists"),
@@ -182,18 +191,20 @@ public class AvailablePlayers {
                         playerStats.put(playerName, stats);
                     } else {
                         // Si no hay estadísticas, poner valores predeterminados
-                        playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0));
+                        int elo = isRanked ? 0 : -9999;
+                        playerStats.put(playerName, new PlayerStats(elo, 0, 0, 0, 0, 0, 0, 0, 0));
                     }
                 }
             } catch (SQLException e) {
                 // En caso de error, agregamos estadísticas predeterminadas
-                playerStats.put(playerName, new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0));
+                int elo = isRanked ? 0 : -9999;
+                playerStats.put(playerName, new PlayerStats(elo,0, 0, 0, 0, 0, 0, 0, 0));
             }
         });
     }
 
     public PlayerStats getStatsForPlayer(String playerName) {
-        return playerStats.getOrDefault(playerName, new PlayerStats(0, 0, 0, 0, 0, 0, 0, 0));
+        return playerStats.getOrDefault(playerName, new PlayerStats(-9999,0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     private void updateTopPlayers() {

@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
@@ -184,14 +185,20 @@ public class PickInventory implements Listener {
     private void addSkullLore(ItemStack skull, PlayerStats stats) {
         SkullMeta meta = (SkullMeta) skull.getItemMeta();
         List<String> lore = new ArrayList<>();
-        lore.add("§7" + languageManager.getPluginMessage("stats.kills") + ": §a" + stats.getKills());
-        lore.add("§7" + languageManager.getPluginMessage("stats.deaths") + ": §a" + stats.getDeaths());
-        lore.add("§7" + languageManager.getPluginMessage("stats.assists") + ": §a" + stats.getAssists());
-        lore.add("§7" + languageManager.getPluginMessage("stats.damageDone") + ": §a" + String.format("%.1f", stats.getGames() > 0 ? stats.getDamageDone() / stats.getGames() : 0.0));
-        lore.add("§7" + languageManager.getPluginMessage("stats.damageTaken") + ": §a" + String.format("%.1f", stats.getGames() > 0 ? stats.getDamageTaken() / stats.getGames() : 0.0));
-        lore.add("§7" + languageManager.getPluginMessage("stats.points") + ": §a" + stats.getPoints());
-        lore.add("§7" + languageManager.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
-        lore.add("§7" + languageManager.getPluginMessage("stats.games") + ": §a" + stats.getGames());
+        int elo = stats.getElo();
+        if (elo != -9999){
+            Rank rank = Rank.getRankByElo(elo);
+            lore.add(languageManager.getPluginMessage("stats.elo") + ": " + rank.getPrefixedRank(true)  +" " + rank.getColor() + elo);
+            lore.add(" ");
+        }
+        lore.add(languageManager.getPluginMessage("stats.kills") + ": §a" + stats.getKills());
+        lore.add(languageManager.getPluginMessage("stats.deaths") + ": §a" + stats.getDeaths());
+        lore.add(languageManager.getPluginMessage("stats.assists") + ": §a" + stats.getAssists());
+        lore.add(languageManager.getPluginMessage("stats.damageDone") + ": §a" + String.format("%.1f", stats.getGames() > 0 ? stats.getDamageDone() / stats.getGames() : 0.0));
+        lore.add(languageManager.getPluginMessage("stats.damageTaken") + ": §a" + String.format("%.1f", stats.getGames() > 0 ? stats.getDamageTaken() / stats.getGames() : 0.0));
+        lore.add(languageManager.getPluginMessage("stats.points") + ": §a" + stats.getPoints());
+        lore.add(languageManager.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
+        lore.add(languageManager.getPluginMessage("stats.games") + ": §a" + stats.getGames());
         lore.add(" ");
         lore.add(languageManager.getPluginMessage("draft.clickToPick"));
         meta.setLore(lore);

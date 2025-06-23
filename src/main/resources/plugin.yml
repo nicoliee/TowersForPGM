@@ -2,6 +2,7 @@ name: TowersForPGM
 version: '${project.version}'
 main: org.nicolie.towersforpgm.TowersForPGM
 depend: [PGM]
+softdepend: [MatchBot]
 commands:
   add:
     description: Agregar un jugador al Draft.
@@ -16,6 +17,13 @@ commands:
     usage: /captains <nick1> <nick2>
     aliases: [capitanes]
     permission: towers.captains
+  elo:
+    description: Muestra el ELO de un jugador.
+    usage: /elo <jugador>
+  forfeit:
+    description: Rindete para terminar la partida.
+    aliases: [ff]
+    usage: /forfeit
   pick:
     description: Elegir un jugador para el draft.
     usage: /pick <jugador>
@@ -23,6 +31,9 @@ commands:
     description: Habilita o desactiva el tiempo de preparación.
     usage: /preparationTime <on|off>
     permission: towers.admin
+  ranked:
+    description: Unete a una partida Ranked.
+    usage: /ranked <join|leave|list>
   ready:
     description: Marca como listo a un jugador.
     usage: /ready
@@ -35,6 +46,9 @@ commands:
     description: Muestra estadísticas de un jugador.
     usage: /stat <jugador> [tabla]
     aliases: [estadisticas]
+  tag:
+    description: Tagea a jugadores en discord para jugar rankeds.
+    usage: /tag
   top:
     description: Muestra las mejores estadísticas de un jugador.
     usage: /top <categoria> [cantidad] [tabla]

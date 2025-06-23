@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm.rankeds;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.nicolie.towersforpgm.database.StatsManager;
@@ -13,71 +14,59 @@ import tc.oc.pgm.api.player.MatchPlayer;
 public class Elo {
     private static final int K_FACTOR = 32;
 
-    public static List<PlayerEloChange> addWin(List<MatchPlayer> winners, List<MatchPlayer> losers) {
+    public static CompletableFuture<List<PlayerEloChange>> addWin(List<MatchPlayer> winners, List<MatchPlayer> losers) {
+        CompletableFuture<List<PlayerEloChange>> future = new CompletableFuture<>();
         List<PlayerEloChange> changes = new ArrayList<>();
         List<MatchPlayer> allPlayers = new ArrayList<>();
         allPlayers.addAll(winners);
         allPlayers.addAll(losers);
         List<String> usernames = allPlayers.stream().map(MatchPlayer::getNameLegacy).collect(Collectors.toList());
         String table = ConfigManager.getRankedDefaultTable();
-        System.out.println("[Elo.addWin] Table: " + table);
-        System.out.println("[Elo.addWin] Usernames: " + usernames);
         if (table == null || table.isEmpty()) {
             org.bukkit.Bukkit.getLogger().warning("[Elo.addWin] Table is null or empty");
-            return null;
+            future.completeExceptionally(new RuntimeException("Table is null or empty"));
+            return future;
         }
+
         StatsManager.getEloForUsernames(table, usernames, eloList -> {
-            System.out.println("[Elo.addWin] eloList: " + eloList);
-            java.util.Map<String, PlayerEloChange> eloMap = eloList.stream().collect(Collectors.toMap(PlayerEloChange::getUsername, e -> e));
-            java.util.Map<String, Integer> currentEloMap = eloMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getCurrentElo()));
-            System.out.println("[Elo.addWin] currentEloMap: " + currentEloMap);
+            Map<String, PlayerEloChange> eloMap = eloList.stream().collect(Collectors.toMap(PlayerEloChange::getUsername, e -> e));
+            Map<String, Integer> currentEloMap = eloMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getCurrentElo()));
             double expectedScore = calculateExpectedScore(winners, losers, currentEloMap);
-            System.out.println("[Elo.addWin] expectedScore: " + expectedScore);
             int eloChange = calculateEloChange(1.0, expectedScore);
-            System.out.println("[Elo.addWin] eloChange: " + eloChange);
 
             winners.forEach(winner -> {
                 String username = winner.getNameLegacy();
-                PlayerEloChange playerElo = eloMap.getOrDefault(username, new PlayerEloChange(username, 0, 0, 0));
+                PlayerEloChange playerElo = eloMap.getOrDefault(username, new PlayerEloChange(username, 0, 0, 0, 0));
                 int currentElo = playerElo.getCurrentElo();
                 int newElo = currentElo + eloChange;
-                int maxElo = playerElo.getMaxElo();
-                if (newElo > maxElo) {
-                    maxElo = newElo;
-                }
-                System.out.println("[Elo.addWin] WINNER " + username + " | currentElo: " + currentElo + ", newElo: " + newElo + ", maxElo: " + maxElo);
-                changes.add(new PlayerEloChange(username, currentElo, newElo, maxElo));
+                int maxElo = Math.max(newElo, playerElo.getMaxElo());
+                changes.add(new PlayerEloChange(username, currentElo, newElo, eloChange, maxElo));
             });
 
             losers.forEach(loser -> {
                 String username = loser.getNameLegacy();
-                PlayerEloChange playerElo = eloMap.getOrDefault(username, new PlayerEloChange(username, 0, 0, 0));
+                PlayerEloChange playerElo = eloMap.getOrDefault(username, new PlayerEloChange(username, 0, 0, 0, 0));
                 int currentElo = playerElo.getCurrentElo();
-                int newElo = currentElo - eloChange;
-                if (newElo < -100) {
-                    newElo = -100;
-                }
+                int newElo = Math.max(-100, currentElo - eloChange);
                 int maxElo = playerElo.getMaxElo();
-                System.out.println("[Elo.addWin] LOSER " + username + " | currentElo: " + currentElo + ", newElo: " + newElo + ", maxElo: " + maxElo);
-                changes.add(new PlayerEloChange(username, currentElo, newElo, maxElo));
+                changes.add(new PlayerEloChange(username, currentElo, newElo, -eloChange, maxElo));
             });
-            System.out.println("[Elo.addWin] changes: " + changes);
+
+            future.complete(changes);
         });
-        return changes;
+
+        return future;
     }
 
     public static void eloOrder(List<MatchPlayer> players, java.util.function.BiConsumer<List<PlayerEloChange>, Integer> callback) {
         List<String> usernames = players.stream().map(MatchPlayer::getNameLegacy).collect(Collectors.toList());
         String table = ConfigManager.getRankedDefaultTable();
-        System.out.println("[Elo.eloOrder] Table: " + table);
-        System.out.println("[Elo.eloOrder] Usernames: " + usernames);
         if (table == null || table.isEmpty()) {
             org.bukkit.Bukkit.getLogger().warning("[Elo.eloOrder] Table is null or empty");
             callback.accept(null, 0);
             return;
         }
         StatsManager.getEloForUsernames(table, usernames, eloList -> {
-            System.out.println("[Elo.eloOrder] eloList: " + eloList);
             List<PlayerEloChange> sortedList = eloList.stream()
                     .sorted((e1, e2) -> Integer.compare(e2.getCurrentElo(), e1.getCurrentElo()))
                     .collect(Collectors.toList());
