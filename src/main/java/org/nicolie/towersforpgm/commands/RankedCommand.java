@@ -25,6 +25,7 @@ public class RankedCommand implements CommandExecutor, TabCompleter{
     private final Utilities utilities;
     private final Queue queue;
     private final LanguageManager languageManager;
+    private static Boolean RANKED_AVAILABLE = TowersForPGM.getInstance().getIsDatabaseActivated() || !ConfigManager.getRankedTables().isEmpty();
     public RankedCommand(LanguageManager languageManager, Queue queue, Utilities utilities) {
         this.languageManager = languageManager;
         this.utilities = utilities;
@@ -35,6 +36,11 @@ public class RankedCommand implements CommandExecutor, TabCompleter{
         if (!TowersForPGM.getInstance().getIsDatabaseActivated()){return true;}
         if (args.length == 0) {
             sender.sendMessage("§c/ranked <join|leave|list>");
+            return true;
+        }
+
+        if (!RANKED_AVAILABLE) {
+            PGM.get().getMatchManager().getPlayer((Player) sender).sendWarning(Component.text(languageManager.getPluginMessage("ranked.unavailable")));
             return true;
         }
         
@@ -59,14 +65,14 @@ public class RankedCommand implements CommandExecutor, TabCompleter{
                     Match matchList = PGM.get().getMatchManager().getMatch(sender);
                     MatchPlayer playerList = matchList.getPlayer((Player) sender);
                     List<String> queuePlayers = queue.getQueueList();
-                    playerList.sendMessage(Component.text("§8[§6Ranked§8] §a" + queue.getQueueSize() + "/" + ConfigManager.getRankedSize()));
+                    playerList.sendMessage(Component.text("§8[§6Ranked§8] §a" + Queue.getQueueSize() + "/" + ConfigManager.getRankedSize()));
                     if (!queuePlayers.isEmpty()) {
                         StringBuilder playersList = utilities.buildLists(queuePlayers, "", false);
                         playerList.sendMessage(Component.text(playersList.toString()));
                     }
                 } else {
                     List<String> queuePlayers = queue.getQueueList();
-                    sender.sendMessage("§8[§6Ranked§8] §a" + queue.getQueueSize() + "/" + ConfigManager.getRankedSize());
+                    sender.sendMessage("§8[§6Ranked§8] §a" + Queue.getQueueSize() + "/" + ConfigManager.getRankedSize());
                     if (!queuePlayers.isEmpty()) {
                         StringBuilder playersList = utilities.buildLists(queuePlayers, "", false);
                         sender.sendMessage(playersList.toString());

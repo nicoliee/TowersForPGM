@@ -50,16 +50,14 @@ public class Captains {
         this.isCaptain1Turn = true;
     }
 
-    public boolean isCaptain(UUID player) {
-        return player.equals(captain1) || player.equals(captain2);
-    }
-
-    public boolean isCaptain1(UUID player) {
-        return player.equals(captain1);
-    }
-    
-    public boolean isCaptain2(UUID player) {
-        return player.equals(captain2);
+    public int getCaptainTeam(UUID playerUUID) {
+        int teamId = -1;
+        if (captain1 != null && captain1.equals(playerUUID)) {
+            teamId = 1;
+        } else if (captain2 != null && captain2.equals(playerUUID)) {
+            teamId = 2;
+        }
+        return teamId;
     }
     
     public boolean isReady1() {
@@ -97,7 +95,7 @@ public class Captains {
         if (ready1 && ready2) {
             match.needModule(StartMatchModule.class).forceStartCountdown(Duration.ofSeconds(5), Duration.ZERO);
             isReadyActive = false;
-            Draft.cancelReadyReminder();
+            Utilities.cancelReadyReminder();
             ready1 = false;
             ready2 = false;
         }

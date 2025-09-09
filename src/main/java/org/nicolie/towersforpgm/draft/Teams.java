@@ -71,6 +71,14 @@ public class Teams {
         return allPlayers;
     }
 
+    public Set<MatchPlayer> getTeamOnlinePlayers(int teamNumber) {
+        return Collections.unmodifiableSet(onlineTeams.get(teamNumber));
+    }
+
+    public Set<String> getTeamOfflinePlayers(int teamNumber) {
+        return Collections.unmodifiableSet(offlineTeams.get(teamNumber));
+    }
+
     public void assignTeam(Player player, int teamNumber) {
         Match match = PGM.get().getMatchManager().getMatch(player);
         if (match == null) return;

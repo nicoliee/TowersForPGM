@@ -4,6 +4,7 @@ captains:
   suggestions: "&8[&6Bigotes Bot&8]&r Te sugerimos que elijas a {suggestions}&f."
   timeRemaining: "&8[&6Bigotes Bot&8]&r Tiempo restante para elegir: &e{time}"
 picks:
+  choosing: "&8[&6Bigotes Bot&8] §eSeleccionando jugadores..."
   add: "&8[&6Bigotes Bot&8] §7El jugador §3{player} §7ha sido añadido a la lista."
   alreadyPicked: "&8[&6Bigotes Bot&8] &cEl jugador {player} ya ha sido elegido."
   noDraft: "&8[&6Bigotes Bot&8] &cNo hay un draft en curso."

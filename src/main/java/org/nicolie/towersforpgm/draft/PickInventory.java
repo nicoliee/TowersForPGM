@@ -68,6 +68,8 @@ public class PickInventory implements Listener {
         Inventory inv;
         int columnsPerRow;
         int currentIndex = 0;
+        int captainNumber = captains.getCaptainTeam(player.getUniqueId());
+
     
         // === CASO 1: <= 28 jugadores ===
         if (totalPlayers <= 28) {
@@ -80,13 +82,13 @@ public class PickInventory implements Listener {
                 if (i < 9 || i >= inventorySize - 9 || i % 9 == 0 || i % 9 == 8) {
                     ItemStack glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 15); // Vidrio negro por defecto
 
-                    if (captains.isCaptain1(player.getUniqueId())) {
+                    if (captainNumber == 1) {
                         if (captains.isCaptain1Turn()) {
                             glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 5); // Verde si es su turno
                         } else {
                             glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 14); // Rojo si no es su turno
                         }
-                    } else if (captains.isCaptain2(player.getUniqueId())) {
+                    } else if (captainNumber == 2) {
                         if (captains.isCaptain1Turn()) {
                             glassPane = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 11); // Azul si no es su turno
                         } else {
@@ -252,16 +254,16 @@ public class PickInventory implements Listener {
         SkullMeta meta = (SkullMeta) clicked.getItemMeta();
         if (meta == null || meta.getOwner() == null) return;
         MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(clicker);
-        // Validar si el clicker es capitán y si es su turno
-        if (!captains.isCaptain(clickerId)) {
+        int captainNumber = captains.getCaptainTeam(clickerId);
+        if (captainNumber == -1) {
             openInventories.remove(clickerId);
             clicker.closeInventory();
             matchPlayer.sendWarning(Component.text(languageManager.getConfigurableMessage("picks.notCaptain")));
             return;
         }
 
-        if ((captains.isCaptain1Turn() && captains.isCaptain2(clickerId)) ||
-            (!captains.isCaptain1Turn() && captains.isCaptain1(clickerId))) {
+        if ((captains.isCaptain1Turn() && captainNumber == 1) ||
+            (!captains.isCaptain1Turn() && captainNumber == 2)) {
             openInventories.remove(clickerId);
             clicker.closeInventory();
             matchPlayer.sendWarning(Component.text(languageManager.getConfigurableMessage("picks.notTurn")));

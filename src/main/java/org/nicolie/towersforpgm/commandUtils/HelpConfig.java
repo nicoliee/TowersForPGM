@@ -42,12 +42,25 @@ public class HelpConfig {
         sender.sendMessage("§6/towers §bstats §aremoveMap <tabla> §7- Desasocia un mapa de una tabla.");
     }
 
+    public static void sendRankedHelp(CommandSender sender){
+        sender.sendMessage("§6§m--------------------§6§lRanked §6§m--------------------");
+        sender.sendMessage("§6/towers §branked §asize [2-12] §7- Establece o muestra el tamaño de partidas rankeds.");
+        sender.sendMessage("§6/towers §branked §aorder [A[AB]+] §7- Establece o muestra el orden de draft rankeado.");
+        sender.sendMessage("§6/towers §branked §amatchmaking [true/false] §7- Activa o desactiva el matchmaking.");
+        sender.sendMessage("§6/towers §branked §aaddmap §7- Añade el mapa actual a la lista de mapas para rankeds.");
+        sender.sendMessage("§6/towers §branked §aremovemap §7- Elimina el mapa actual de la lista de mapas para rankeds.");
+        sender.sendMessage("§6/towers §branked §aaddtable <tabla> §7- Añade una nueva tabla para rankeds.");
+        sender.sendMessage("§6/towers §branked §aremovetable <tabla> §7- Elimina una tabla para rankeds.");
+        sender.sendMessage("§6/towers §branked §adefault <tabla> §7- Establece una tabla para rankeds por defecto.");
+    }
+
     public static void sendGeneralHelp(CommandSender sender) {
         sender.sendMessage("§6§m--------------------§6§lTowers §6§m--------------------");
         sender.sendMessage("§6Uso general de /towers:");
         sender.sendMessage("§6/towers §bdraft §7- Opciones relacionadas al draft.");
         sender.sendMessage("§6/towers §bpreparation §7- Configuraciones de preparación del mapa.");
         sender.sendMessage("§6/towers §bstats §7- Gestión de tablas y estadísticas.");
-        sender.sendMessage("§6/towers §bhelp <suggestions|preparation|stats> §7- Muestra ayuda detallada.");
+        sender.sendMessage("§6/towers §branked §7- Configuraciones de partidas rankeadas.");
+        sender.sendMessage("§6/towers §bhelp <suggestions|preparation|stats|ranked> §7- Muestra ayuda detallada.");
     }
 }

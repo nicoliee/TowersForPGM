@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm.listeners;
 import tc.oc.pgm.api.match.event.MatchFinishEvent;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.map.Gamemode;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.score.ScoreMatchModule;
 import tc.oc.pgm.stats.StatsMatchModule;
@@ -64,6 +65,9 @@ public class MatchFinishListener implements Listener {
     }
 
     private void cancelStats(MatchFinishEvent event) {
+        if (ConfigManager.getTempTable() != null) {
+            ConfigManager.removeTempTable();
+        }
         String mapName = event.getMatch().getMap().getName();
         System.out.println("[-] Stats cancelled for match-" + event.getMatch().getId() + ": "
                                 + mapName + ", stats not sent to database.");
@@ -97,7 +101,7 @@ public class MatchFinishListener implements Listener {
             for (MatchPlayer player : allPlayers) {
                 // Obtenemos estadísticas del jugador
                 PlayerStats playerStats = statsModule.getPlayerStat(player);
-                int totalPoints = (int) scoreMatchModule.getContribution(player.getId());
+                int totalPoints = match.getMap().getGamemodes().contains(Gamemode.SCOREBOX) ? (int) scoreMatchModule.getContribution(player.getId()) : 0;
                 boolean isWinner = event.getMatch().getWinners().contains(player.getCompetitor());
 
                 // Agregar a la lista correspondiente
@@ -109,17 +113,18 @@ public class MatchFinishListener implements Listener {
 
                 playerStatsList.add(new Stats(
                         player.getNameLegacy(),
-                        playerStats != null ? playerStats.getKills() : 0,
-                        playerStats != null ? playerStats.getDeaths() : 0,
-                        playerStats != null ? playerStats.getAssists() : 0,
-                        playerStats != null ? ((playerStats.getDamageDone() + playerStats.getBowDamage()) / 2) : 0,
+                        playerStats != null ? playerStats.getKills() : 0, // Kills
+                        playerStats != null ? playerStats.getDeaths() : 0, // Deaths
+                        playerStats != null ? playerStats.getAssists() : 0, // Assists
+                        playerStats != null ? ((playerStats.getDamageDone() + playerStats.getBowDamage()) / 2) : 0, // Damage done
                         playerStats != null ? ((playerStats.getDamageTaken() + playerStats.getBowDamageTaken()) / 2)
-                                : 0,
-                        totalPoints,
-                        isWinner ? 1 : 0,
-                        1));
+                                : 0, // Damage taken
+                        totalPoints, // Points
+                        isWinner ? 1 : 0, // Wins
+                        1, // Games played
+                        isWinner ? 1 : 0 // Winstreak
+                ));
             }
-            // Si hay estadísticas que enviar, realizar la actualización
             if (!playerStatsList.isEmpty()) {
                 String table;
                 if (ConfigManager.getTempTable() != null) {

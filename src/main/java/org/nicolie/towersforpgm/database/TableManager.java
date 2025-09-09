@@ -26,7 +26,9 @@ public class TableManager {
                 .append("damageTaken DOUBLE DEFAULT 0, ")
                 .append("points INT DEFAULT 0, ")
                 .append("wins INT DEFAULT 0, ")
-                .append("games INT DEFAULT 0");
+                .append("games INT DEFAULT 0, ")
+                .append("winstreak INT DEFAULT 0, ")
+                .append("maxWinstreak INT DEFAULT 0");
             if (isRanked) {
                 sqlBuilder.append(", elo INT DEFAULT 0, lastElo INT DEFAULT 0, maxElo INT DEFAULT 0");
             }
@@ -43,9 +45,9 @@ public class TableManager {
             // Lista de columnas requeridas
             String[] requiredColumns;
             if (isRanked) {
-                requiredColumns = new String[]{"username", "kills", "deaths", "assists", "damageDone", "damageTaken", "points", "games", "wins", "elo", "lastElo", "maxElo"};
+                requiredColumns = new String[]{"username", "kills", "deaths", "assists", "damageDone", "damageTaken", "points", "games", "wins", "winstreak", "maxWinstreak", "elo", "lastElo", "maxElo"};
             } else {
-                requiredColumns = new String[]{"username", "kills", "deaths", "assists", "damageDone", "damageTaken", "points", "games", "wins"};
+                requiredColumns = new String[]{"username", "kills", "deaths", "assists", "damageDone", "damageTaken", "points", "games", "wins", "winstreak", "maxWinstreak"};
             }
 
             // Verificar y agregar columnas si no existen
@@ -54,7 +56,9 @@ public class TableManager {
                     String alterTable = "ALTER TABLE " + tableName + " ADD COLUMN " + column + " DOUBLE DEFAULT 0;";
                     if ("username".equals(column)) {
                         alterTable = "ALTER TABLE " + tableName + " ADD COLUMN " + column + " VARCHAR(16) PRIMARY KEY;";
-                    } else if ("kills".equals(column) || "deaths".equals(column) || "assists".equals(column) || "points".equals(column) || "games".equals(column) || "wins".equals(column)) {
+                    } else if ("kills".equals(column) || "deaths".equals(column) || "assists".equals(column) || "points".equals(column) 
+                        || "games".equals(column) || "wins".equals(column) || "winstreak".equals(column) || "maxWinstreak".equals(column) 
+                        || "elo".equals(column) || "lastElo".equals(column) || "maxElo".equals(column)) {
                         alterTable = "ALTER TABLE " + tableName + " ADD COLUMN " + column + " INT DEFAULT 0;";
                     }
                     try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();

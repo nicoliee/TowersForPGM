@@ -16,7 +16,7 @@ import tc.oc.pgm.api.player.MatchPlayer;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.draft.Captains;
-import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.Utilities;
 import org.nicolie.towersforpgm.matchbot.Embed;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class MatchStartListener implements Listener{
     public void onMatchStart(MatchStartEvent event) {
         String worldName = event.getMatch().getWorld().getName();
         if (captains.isReadyActive()){
-            Draft.cancelReadyReminder();
+            Utilities.cancelReadyReminder();
             captains.setReadyActive(false);
             captains.setReady1(false, null);
             captains.setReady2(false, null);

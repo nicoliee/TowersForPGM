@@ -27,6 +27,7 @@ draft:
 rankeds:
   size: 8          # Número de jugadores
   order: "ABBAAB"  # Orden de elección para rankeds
+  matchmaking: false # Si es true, los equipos se balancearán automáticamente, si es false, los capitanes elegirán a los jugadores
   tables:              # Tablas disponibles para rankeds
     - RankedT1
   defaultTable: RankedT1  # Tabla por defecto para rankeds

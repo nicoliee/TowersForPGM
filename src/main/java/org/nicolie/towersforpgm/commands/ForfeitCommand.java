@@ -38,7 +38,7 @@ public class ForfeitCommand implements CommandExecutor{
             return true;
         }
         MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
-        if (ConfigManager.getRankedTables().contains(ConfigManager.getTempTable()) || matchPlayer.isObserving()) {
+        if (!ConfigManager.getRankedTables().contains(ConfigManager.getTempTable()) || matchPlayer.isObserving()) {
             matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("ranked.noForfeit")));
             return true;
         }

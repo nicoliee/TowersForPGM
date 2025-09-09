@@ -12,9 +12,11 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.refill.RefillManager;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
+import org.nicolie.towersforpgm.rankeds.Queue;
 
 public class MatchLoadListener implements Listener {
     private final RefillManager refillManager;
@@ -50,5 +52,14 @@ public class MatchLoadListener implements Listener {
         }
         plugin.getDisconnectedPlayers().clear();
         ForfeitCommand.forfeitedPlayers.clear(); // Limpia la lista de jugadores que se han rendido
+        if (plugin.isStatsCancel()) {
+            if (ConfigManager.getTempTable() != null) {
+                ConfigManager.removeTempTable();
+                plugin.setStatsCancel(false);
+            }
+        }
+        if (!ConfigManager.getRankedMaps().contains(map) && Queue.getQueueSize() > 0) {
+            Queue.clearQueue();
+        }
     }
 }

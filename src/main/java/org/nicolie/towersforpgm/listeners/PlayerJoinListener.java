@@ -7,13 +7,11 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
-import org.nicolie.towersforpgm.rankeds.ItemListener;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.start.StartCountdown;
 
 import org.bukkit.entity.Player;
 
@@ -22,14 +20,12 @@ public class PlayerJoinListener implements Listener {
     private final Captains captains;
     private final Teams teams;
     private final TowersForPGM plugin;
-    private final PickInventory pickInventory;
 
-    public PlayerJoinListener(TowersForPGM plugin, AvailablePlayers availablePlayers, Teams teams, Captains captains, PickInventory pickInventory) {
+    public PlayerJoinListener(TowersForPGM plugin, AvailablePlayers availablePlayers, Teams teams, Captains captains) {
         this.availablePlayers = availablePlayers;
         this.captains = captains;
         this.teams = teams;
         this.plugin = plugin;
-        this.pickInventory = pickInventory;
 
     }
 
@@ -37,16 +33,17 @@ public class PlayerJoinListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         String username = player.getName();
-        Match match = PGM.get().getMatchManager().getMatch(player);
-        String map = match.getMap().getName();
         // Si el draft está activo
-        if(Draft.isDraftActive() && !PGM.get().getMatchManager().getMatch(player).isRunning()) {
+        if(Draft.isDraftActive()) {
             // Si el jugador está en getAvailableOfflinePlayers, pasarlo a getAvailablePlayers
             availablePlayers.handleReconnect(player);
-            pickInventory.giveItemToPlayer(player);
             // Si el jugador está en algún equipo, añadirlo a la lista de jugadores desconectados
             if (teams.isPlayerInAnyTeam(username)) {
                 teams.handleReconnect(player);
+            }
+            if ((teams.getTeamOfflinePlayers(1).size() - 1 == 0) || (teams.getTeamOfflinePlayers(2).size() - 1 == 0)) {
+                Match match = PGM.get().getMatchManager().getMatch(player);
+                match.getCountdown().cancelAll(StartCountdown.class);
             }
         }
 
@@ -64,10 +61,6 @@ public class PlayerJoinListener implements Listener {
 
         if (plugin.getDisconnectedPlayers().get(player.getName()) != null){
             plugin.getDisconnectedPlayers().remove(player.getName());
-        }
-
-        if (ConfigManager.getRankedMaps().contains(map) && !match.isRunning()){
-            ItemListener.giveItem(player);
         }
     }
 }

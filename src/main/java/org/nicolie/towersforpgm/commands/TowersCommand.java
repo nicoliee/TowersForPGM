@@ -10,12 +10,14 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commandUtils.DraftConfig;
 import org.nicolie.towersforpgm.commandUtils.HelpConfig;
 import org.nicolie.towersforpgm.commandUtils.PreparationConfig;
+import org.nicolie.towersforpgm.commandUtils.RankedConfig;
 import org.nicolie.towersforpgm.commandUtils.StatsConfig;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.commandUtils.RefillConfig;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
+import org.nicolie.towersforpgm.gui.TowersConfigGUI;
 
 import tc.oc.pgm.api.PGM;
 
@@ -32,7 +34,9 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
     private final StatsConfig statsConfig;
     private final PreparationConfig preparationConfig;
     private final RefillConfig refillConfig;
+    private final RankedConfig rankedConfig;
     private final RefillManager refillManager;
+    private static TowersConfigGUI configGUI;
 
     public TowersCommand(LanguageManager languageManager) {
         this.refillManager = TowersForPGM.getInstance().getRefillManager();
@@ -41,12 +45,22 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
         this.statsConfig = new StatsConfig(languageManager);
         this.preparationConfig = new PreparationConfig(languageManager);
         this.refillConfig = new RefillConfig(languageManager, refillManager);
+        this.rankedConfig = new RankedConfig(languageManager);
+        
+        // Solo crear una instancia del GUI si no existe
+        if (configGUI == null) {
+            configGUI = new TowersConfigGUI(languageManager);
+        }
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage("§c/towers <draft|preparation|refill|stats|help>");
+            if (sender instanceof Player) {
+                configGUI.openMainMenu((Player) sender);
+            } else {
+                sender.sendMessage("§c/towers <draft|preparation|refill|stats|help>");
+            }
             return true;
         }
         String mainArg = args[0].toLowerCase();
@@ -91,15 +105,18 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                         draftConfig.setPrivateMatch(sender, isPrivateMatch);
                         break;
                     case "secondpickbalance":
-                        draftConfig.handleSecondGetsExtraPlayerCommand(sender);
+                        Boolean secondPickValue = args.length >= 3 ? parseBoolean(args[2]) : null;
+                        draftConfig.handleSecondGetsExtraPlayerCommand(sender, secondPickValue);
                         break;
 
                     case "suggestions":
-                        draftConfig.handleDraftSuggestionsCommand(sender);
+                        Boolean suggestionsValue = args.length >= 3 ? parseBoolean(args[2]) : null;
+                        draftConfig.handleDraftSuggestionsCommand(sender, suggestionsValue);
                         break;
 
                     case "timer":
-                        draftConfig.handleDraftTimerCommand(sender);
+                        Boolean timerValue = args.length >= 3 ? parseBoolean(args[2]) : null;
+                        draftConfig.handleDraftTimerCommand(sender, timerValue);
                         break;
                     default:
                         break;
@@ -183,7 +200,59 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                         break;
                 }
                 break;
+            case "ranked":
+                if (args.length == 1) {
+                    sender.sendMessage("§c/towers ranked <size|order|matchmaking|addmap|removemap|addtable|removetable>");
+                    return true;
+                }
+                switch (args[1].toLowerCase()) {
+                    case "size":
+                        String sizeArg = args.length >= 3 ? args[2] : null;
+                        rankedConfig.size(sender, sizeArg);
+                        return true;
 
+                    case "order":
+                        String orderArg = args.length >= 3 ? args[2] : null;
+                        rankedConfig.draftOrder(sender, orderArg);
+                        return true;
+
+                    case "addmap":
+                        rankedConfig.addMap(sender);
+                        return true;
+                    case "removemap":
+                        rankedConfig.removeMap(sender);
+                        return true;
+                    
+                    case "addtable":
+                        if (args.length < 3) {
+                            sender.sendMessage("§c/towers ranked addtable <tabla>");
+                            return true;
+                        }
+                        String tableName = args[2];
+                        rankedConfig.addTable(sender, tableName);
+                        return true;
+                    
+                    case "removetable":
+                        if (args.length < 3) {
+                            sender.sendMessage("§c/towers ranked removetable <tabla>");
+                            return true;
+                        }
+                        String removeTableName = args[2];
+                        rankedConfig.deleteTable(sender, removeTableName);
+                        return true;
+                    
+                    case "matchmaking":
+                        Boolean matchmakingArg = null;
+                        if (args.length >= 3) {
+                            matchmakingArg = parseBoolean(args[2]);
+                        }
+                        rankedConfig.matchmaking(sender, matchmakingArg);
+                        return true;
+
+                    default:
+                        sender.sendMessage("§c/towers ranked <size|order|addmap|removemap|addtable|removetable|matchmaking>");
+                }
+                break;
             case "refill":
                 if (args.length == 1) {
                     sender.sendMessage("§c/towers refill <add|delete|reload>");
@@ -254,7 +323,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                     case "removemap":
                         statsConfig.deleteTableForMap(sender);
                         break;
-                    case "addTemporary":
+                    case "addtemporary":
                         if (args.length < 3) {
                             sender.sendMessage("§c/towers stats addTemporary <tabla>");
                             return true;
@@ -262,7 +331,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                         String addTemporaryTableName = args[2];
                         statsConfig.addTempTable(sender, addTemporaryTableName);
                         return true;
-                    case "removeTemporary":
+                    case "removetemporary":
                         statsConfig.removeTempTable(sender);
                         return true;
                     default:
@@ -285,6 +354,9 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                         case "stats":
                             HelpConfig.sendStatsHelp(sender);
                             break;
+                        case "ranked":
+                            HelpConfig.sendRankedHelp(sender);
+                            break;
                         default:
                             break;
                     }
@@ -304,7 +376,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            List<String> base = Arrays.asList("draft", "preparation", "refill", "stats", "help");
+            List<String> base = Arrays.asList("draft", "preparation", "ranked", "refill", "stats", "help");
             String input = args[0].toLowerCase();
             return base.stream()
                     .filter(s -> s.startsWith(input))
@@ -319,8 +391,11 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                     List<String> options = Arrays.asList("min", "order", "private", "secondpickbalance" ,"suggestions", "timer");
                     return filterPrefix(options, args[1]);
                 }
-                if (args.length == 3 && args[1].equalsIgnoreCase("private")) {
-                    return filterPrefix(Arrays.asList("true", "false"), args[2]);
+                if (args.length == 3) {
+                    String sub = args[1].toLowerCase();
+                    if (Arrays.asList("private", "secondpickbalance", "suggestions", "matchmaking", "timer").contains(sub)) {
+                        return filterPrefix(Arrays.asList("true", "false"), args[2]);
+                    }
                 }
                 break;
 
@@ -338,6 +413,11 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                     }
                 }
                 break;
+            case "ranked":
+                if (args.length == 2) {
+                    List<String> options = Arrays.asList("size", "order", "addmap", "removemap", "addtable", "removetable", "matchmaking");
+                    return filterPrefix(options, args[1]);
+                }
             case "refill":
                 if (args.length == 2) {
                     List<String> options = Arrays.asList("add", "delete", "reload");
@@ -352,7 +432,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                 }
                 if (args.length == 3) {
                     String sub = args[1].toLowerCase();
-                    if (Arrays.asList("default", "add", "remove", "addmap", "addTemporary").contains(sub)) {
+                    if (Arrays.asList("default", "add", "remove", "addmap", "addtemporary").contains(sub)) {
                         List<String> tables = ConfigManager.getTables();
                         return filterPrefix(tables, args[2]);
                     }
@@ -361,12 +441,21 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
             case "help":
                 if (args.length == 2) {
-                    List<String> options = Arrays.asList("draft", "preparation", "refill", "stats");
+                    List<String> options = Arrays.asList("draft", "preparation", "refill", "ranked", "stats");
                     return filterPrefix(options, args[1]);
                 }
                 break;
         }
 
+        return null;
+    }
+
+    private Boolean parseBoolean(String value) {
+        if (value.equalsIgnoreCase("true")) {
+            return true;
+        } else if (value.equalsIgnoreCase("false")) {
+            return false;
+        }
         return null;
     }
 

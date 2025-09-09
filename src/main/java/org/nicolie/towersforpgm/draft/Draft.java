@@ -22,7 +22,6 @@ import tc.oc.pgm.util.bukkit.Sounds;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import org.nicolie.towersforpgm.draft.events.DraftEndEvent;
@@ -65,55 +64,59 @@ public class Draft {
         }
     }
 
-    public void startDraft(UUID captain1, UUID captain2, List<MatchPlayer> players, Match match) {
+    public void startDraft(UUID captain1, UUID captain2, List<MatchPlayer> players, Match match, boolean randomizeOrder) {
         if (matchManager.getMatch() == null) {
             matchManager.setCurrentMatch(match);
         }
         cleanLists();
         isDraftActive = true;
-        captains.setCaptain1(captain1);
-        captains.setCaptain2(captain2);
+        captains.setCaptain1Turn(true);
+        if (randomizeOrder) {
+            if (Math.random() < 0.5) {
+                captains.setCaptain1(captain1);
+                captains.setCaptain2(captain2);
+            } else {
+                captains.setCaptain1(captain2);
+                captains.setCaptain2(captain1);
+            }
+        } else {
+            captains.setCaptain1(captain1);
+            captains.setCaptain2(captain2);
+        }
         teams.removeFromTeams(match);
 
         teams.addPlayerToTeam(Bukkit.getPlayer(captain1).getName(), 1);
         teams.addPlayerToTeam(Bukkit.getPlayer(captain2).getName(), 2);
 
-        // Agregar jugadores disponibles a la lista
         for (MatchPlayer player : players) {
             availablePlayers.addPlayer(player.getNameLegacy());
         }
-        // Agregar a los capitanes a sus respectivos equipos
         teams.assignTeam(Bukkit.getPlayer(captain1), 1);
         teams.assignTeam(Bukkit.getPlayer(captain2), 2);
 
         match.getCountdown().cancelAll(StartCountdown.class);
         teams.setTeamsSize(0);
-        Random rand = new Random();
-        captains.setCaptain1Turn(rand.nextBoolean());
 
         // Guardar quién fue el primer capitán en pickear (será el "A" en el patrón)
         firstCaptainTurn = captains.isCaptain1Turn();
         
-        // Revisar si se debe usar un patrón de orden personalizado
         if (!customOrderPattern.isEmpty() && availablePlayers.getAllAvailablePlayers().size() >= customOrderMinPlayers) {
             usingCustomPattern = true;
             currentPatternIndex = 0;
         } else {
             usingCustomPattern = false;
-            customOrderPattern = ""; // Reiniciar el patrón si no se usa
-            currentPatternIndex = 0; // Reiniciar el índice del patrón
+            customOrderPattern = "";
+            currentPatternIndex = 0;
         }
         
         captains.setMatchWithCaptains(true);
 
-        // Enviar mensaje a todos los jugadores para anunciar los capitanes
         matchManager.getMatch().playSound(Sounds.RAINDROPS);
         SendMessage.broadcast(languageManager.getPluginMessage("captains.captainsHeader"));
         SendMessage.broadcast("&4" + Bukkit.getPlayer(captain1).getName() + " &l&bvs. " + "&9"
                 + Bukkit.getPlayer(captain2).getName());
         SendMessage.broadcast("§m---------------------------------");
 
-        // Enviar mensaje al capitán que le toca
         String teamColor = captains.isCaptain1Turn() ? "&4" : "&9";
         UUID captainUUID = captains.isCaptain1Turn() ? captains.getCaptain1() : captains.getCaptain2();
         String captainName = Bukkit.getPlayer(captainUUID).getName();
@@ -123,7 +126,6 @@ public class Draft {
         plugin.giveitem(match.getWorld());
         startDraftTimer();
 
-        // Trigger DraftStartEvent
         Bukkit.getPluginManager().callEvent(new DraftStartEvent());
     }
     
@@ -153,7 +155,6 @@ public class Draft {
         int initialTime = utilities.timerDuration();
         int[] timeLeft = { initialTime };
 
-        // Actualizar el mensaje de la BossBar antes de iniciar el Runnable
         MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
         String currentCaptainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
         String currentCaptainColor = captains.isCaptain1Turn() ? "§4" : "§9";
@@ -163,30 +164,33 @@ public class Draft {
         draftTimer = new BukkitRunnable() {
             @Override
             public void run() {
-                // Actualizar solo los segundos en la BossBar
                 float progress = Math.max(0f, (float) timeLeft[0] / initialTime);
                 pickTimerBar.name(Component.text(bossbarMessage.replace("{time}", SendMessage.formatTime(timeLeft[0]))));
                 pickTimerBar.progress(progress);
 
-                // Sugerencias, sonidos y mensajes
                 if (timeLeft[0] == initialTime - 5) {
                     utilities.suggestPicksForCaptains();
                 }
                 if (timeLeft[0] <= 30 && timeLeft[0] > 3) {
                     MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
-                    currentCaptain.playSound(Sounds.INVENTORY_CLICK);
+                    if (currentCaptain != null) {
+                        currentCaptain.playSound(Sounds.INVENTORY_CLICK);
+                    }
                 } else if (timeLeft[0] <= 3 && timeLeft[0] >= 1) {
                     MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
-                    currentCaptain.playSound(Sounds.WARNING);
+                    if (currentCaptain != null) {
+                        currentCaptain.playSound(Sounds.WARNING);
+                    }
                 }
                 if ((timeLeft[0] <= 5 && timeLeft[0] >= 1)) {
                     MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
+                    if (currentCaptain != null){
                     SendMessage.sendToPlayer(currentCaptain.getBukkit(),
                             languageManager.getConfigurableMessage("captains.timeRemaining").replace("{time}",
                                     SendMessage.formatTime(timeLeft[0])));
+                    }
                 }
 
-                // Si el tiempo se acaba, el capitán elige un jugador aleatorio
                 if (timeLeft[0] == 0) {
                     if (utilities.randomPick() == null) {
                         endDraft();
@@ -220,17 +224,15 @@ public class Draft {
                 .replace("{player}", exactUsername));
         matchManager.getMatch().playSound(sound);
 
-        // Manejar el orden de los turnos según el patrón personalizado o alternado
         updateTurnOrder();
 
         if (ConfigManager.isSecondPickBalance()){
-            // Verificar si quedan solo dos jugadores y si el total de jugadores es impar
             if (availablePlayers.getAllAvailablePlayers().size() == 2) {
                 Set<String> team1List = teams.getAllTeam(1);
                 Set<String> team2List = teams.getAllTeam(2);
                 int totalPlayers = team1List.size() + team2List.size() + availablePlayers.getAllAvailablePlayers().size();
 
-                if (totalPlayers % 2 != 0) { // Si total es impar
+                if (totalPlayers % 2 != 0) {
                     List<String> lastTwoPlayers = new ArrayList<>(availablePlayers.getAllAvailablePlayers());
 
                     int team1Size = team1List.size();
@@ -259,12 +261,10 @@ public class Draft {
         }
         
 
-        // Verificar si el draft ha terminado
         if (availablePlayers.isEmpty()) {
-            endDraft(); // Terminar el draft si no hay más jugadores disponibles
+            endDraft();
             return;
         }
-        // Reiniciar el temporizador al pickear un jugador
         plugin.updateInventories();
         startDraftTimer();
     }
@@ -300,12 +300,10 @@ public class Draft {
                 captains.setCaptain1Turn(shouldBeCaptain1Turn);
             }
         } else {
-            // Alternar el turno de los capitanes si no estamos usando un patrón
             captains.toggleTurn();
         }
     }
 
-    // Método para finalizar el draft
     public void endDraft() {
         if (draftTimer != null) {
             draftTimer.cancel();
@@ -315,7 +313,6 @@ public class Draft {
             return;
         }
 
-        // Finaliza el draft y muestra los equipos a los capitanes
         isDraftActive = false;
 
         // cancelar timer
@@ -323,7 +320,6 @@ public class Draft {
             draftTimer.cancel();
         }
 
-        // Usar el método getAllTeam para obtener todos los jugadores de cada equipo
         List<String> team1Names = new ArrayList<>(teams.getAllTeam(1));
         List<String> team2Names = new ArrayList<>(teams.getAllTeam(2));
 
@@ -331,74 +327,30 @@ public class Draft {
         StringBuilder team2 = utilities.buildLists(team2Names, "§9", false);
         int team1Size = team1Names.size();
         int team2Size = team2Names.size();
-        int teamsize = Math.max(team1Size, team2Size); // Tamaño máximo de los equipos
+        int teamsize = Math.max(team1Size, team2Size);
 
-        // Mostrar los equipos
         SendMessage.broadcast(languageManager.getPluginMessage("captains.teamsHeader"));
         SendMessage.broadcast(team1.toString());
         SendMessage.broadcast("&8[&4" + team1Size + "&8] &l&bvs. " + "&8[&9" + team2Size + "&8]");
         SendMessage.broadcast(team2.toString());
         SendMessage.broadcast("§m------------------------------");
 
-        // Limpiar jugadores disponibles y resetear tamaño de los equipos
         teams.setTeamsSize(teamsize);
 
-        // Marcar a los capitanes como listos
         captains.setReadyActive(true);
         captains.setMatchWithCaptains(true);
 
-        // Recordatorio de poner /ready
         plugin.removeItem(matchManager.getMatch().getWorld());
-        readyReminder();
+        utilities.readyReminder(5, 20);
 
-        // Quitar bossbar
         removeBossbar();
-        // Iniciar el juego
         matchManager.getMatch().needModule(StartMatchModule.class).forceStartCountdown(Duration.ofSeconds(90),
                 Duration.ZERO);
 
-        // Trigger DraftEndEvent
         Bukkit.getPluginManager().callEvent(new DraftEndEvent());
     }
-    
-    private static BukkitRunnable readyReminderTask;
 
-    private void readyReminder() {
-        String readyMessage = languageManager.getPluginMessage("captains.ready");
-        MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
-        MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
-        captain1.sendActionBar(Component.text(readyMessage));
-        captain2.sendActionBar(Component.text(readyMessage));
-        readyReminderTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!captains.isReadyActive()) {
-                    this.cancel();
-                    return;
-                }
-                if (!captains.isReady1()) {
-                    captain1.sendMessage(Component.text(readyMessage));
-                    captain1.playSound(Sounds.DIRECT_MESSAGE);
-                }
-                if (!captains.isReady2()) {
-                    captain2.sendMessage(Component.text(readyMessage));
-                    captain2.playSound(Sounds.DIRECT_MESSAGE);
-                }
-            }
-        };
-        readyReminderTask.runTaskTimer(TowersForPGM.getInstance(), 5 * 20, 25 * 20);
-    }
 
-    public static void cancelReadyReminder() {
-        readyReminderTask.cancel();
-        readyReminderTask = null;
-    }
-
-    public static void cancelReadyTimer(){
-        
-    }
-
-    // misc
     public void cleanLists() {
         captains.clear();
         availablePlayers.clear();
@@ -418,7 +370,6 @@ public class Draft {
         }
     }
 
-    // Getters y Setters
     public static boolean isDraftActive() {
         return isDraftActive;
     }

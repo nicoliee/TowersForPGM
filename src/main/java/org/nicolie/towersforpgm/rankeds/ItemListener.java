@@ -1,5 +1,7 @@
 package org.nicolie.towersforpgm.rankeds;
 
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -10,6 +12,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
@@ -17,10 +20,12 @@ import tc.oc.pgm.api.player.MatchPlayer;
 
 public class ItemListener implements Listener{
     private final Queue queue;
+    private static final Boolean RANKED_AVAILABLE = TowersForPGM.getInstance().getIsDatabaseActivated() || !ConfigManager.getRankedTables().isEmpty();
 
     public ItemListener(Queue queue) {
         this.queue = queue;
     }
+
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event){
@@ -59,17 +64,17 @@ public class ItemListener implements Listener{
     }
 
     public static void giveItem(MatchPlayer player) {
-        if (!TowersForPGM.getInstance().getIsDatabaseActivated()){return;}
+        if (!RANKED_AVAILABLE) return;
         player.getBukkit().getInventory().setItem(4, getQueueItem());
     }
 
     public static void giveItem(Player player) {
-        if (!TowersForPGM.getInstance().getIsDatabaseActivated()){return;}
+        if (!RANKED_AVAILABLE) return;
         player.getInventory().setItem(4, getQueueItem());
     }
 
     public static void giveItemToPlayers(Match match) {
-        if (!TowersForPGM.getInstance().getIsDatabaseActivated()){return;}
+        if (!RANKED_AVAILABLE) return;
         Bukkit.getScheduler().runTaskLater(
             TowersForPGM.getInstance(),
             () -> {
@@ -79,5 +84,12 @@ public class ItemListener implements Listener{
             },
             10L
         );
+    }
+
+    public static void removeItemToPlayers(List<MatchPlayer> players) {
+        if (!RANKED_AVAILABLE) return;
+        for (MatchPlayer player : players) {
+            player.getBukkit().getInventory().setItem(4, new ItemStack(Material.AIR));
+        }
     }
 }

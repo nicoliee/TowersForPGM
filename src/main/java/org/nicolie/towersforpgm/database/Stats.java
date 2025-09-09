@@ -10,9 +10,10 @@ public class Stats {
     private int points;
     private int wins;
     private int games;
+    private int winstreak;
 
     // Constructor
-    public Stats(String username, int kills, int deaths, int assists, double damageDone, double damageTaken, int points, int wins, int games) {
+    public Stats(String username, int kills, int deaths, int assists, double damageDone, double damageTaken, int points, int wins, int games, int winstreak) {
         this.username = username;
         this.kills = kills;
         this.deaths = deaths;
@@ -22,6 +23,7 @@ public class Stats {
         this.points = points;
         this.wins = wins;
         this.games = games;
+        this.winstreak = winstreak;
     }
 
     @Override
@@ -36,43 +38,18 @@ public class Stats {
                 ", points=" + points +
                 ", wins=" + wins +
                 ", games=" + games +
+                ", winstreak=" + winstreak +
                 '}';
     }
 
-    // Getters
-    public String getUsername() {
-        return username;
-    }
-
-    public int getKills() {
-        return kills;
-    }
-
-    public int getDeaths() {
-        return deaths;
-    }
-
-    public int getAssists() {
-        return assists;
-    }
-
-    public double getDamageDone() {
-        return damageDone;
-    }
-
-    public double getDamageTaken() {
-        return damageTaken;
-    }
-
-    public int getPoints() {
-        return points;
-    }
-
-    public int getWins() {
-        return wins;
-    }
-
-    public int getGames() {
-        return games;
-    }
+    public String getUsername() {return username;}
+    public int getKills() {return kills;}
+    public int getDeaths() {return deaths;}
+    public int getAssists() {return assists;}
+    public double getDamageDone() {return damageDone;}
+    public double getDamageTaken() {return damageTaken;}
+    public int getPoints() {return points;}
+    public int getWins() {return wins;}
+    public int getGames() {return games;}
+    public int getWinstreak() {return winstreak;}
 }

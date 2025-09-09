@@ -87,11 +87,12 @@ public class PickCommand implements CommandExecutor, TabCompleter{
         
 
         // Comprobar si el jugador es un capitán
-        if (captains.isCaptain(player.getUniqueId())) {
+        int captainNumber = captains.getCaptainTeam(player.getUniqueId());
+        if (captainNumber != -1) {
             if (args.length == 1) {
                 // Verificar si es el turno del jugador
-                if ((captains.isCaptain1Turn() && captains.isCaptain2(player.getUniqueId())) ||
-                    (!captains.isCaptain1Turn() && captains.isCaptain1(player.getUniqueId()))) {
+                if ((captains.isCaptain1Turn() && captainNumber == 2) ||
+                    (!captains.isCaptain1Turn() && captainNumber == 1)) {
                     matchPlayer.sendWarning(Component.text(languageManager.getConfigurableMessage("picks.notTurn")));
                     return true;
                 }

@@ -9,6 +9,7 @@ import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
@@ -46,6 +47,11 @@ public class AddCommand implements CommandExecutor {
 
         if (args.length < 1) {
             matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("add.usage")));
+            return true;
+        }
+
+        if (ConfigManager.getRankedTables().contains(ConfigManager.getTempTable())) {
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("ranked.notAllowed")));
             return true;
         }
 

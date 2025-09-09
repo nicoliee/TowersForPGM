@@ -8,6 +8,7 @@ import org.nicolie.towersforpgm.utils.LanguageManager;
 
 import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.match.Match;
 
 
 public class CancelMatchCommand implements CommandExecutor{
@@ -20,8 +21,13 @@ public class CancelMatchCommand implements CommandExecutor{
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         statsConfig.toggleStats(sender);
-        PGM.get().getMatchManager().getMatch(sender).sendWarning(Component.text(message));
-        sender.getServer().dispatchCommand(sender.getServer().getConsoleSender(), "end");
+        Match match = PGM.get().getMatchManager().getMatch(sender);
+        match.sendWarning(Component.text(message));
+        if (match.isRunning()){
+            sender.getServer().dispatchCommand(sender.getServer().getConsoleSender(), "end");
+        }else{
+            sender.getServer().dispatchCommand(sender.getServer().getConsoleSender(), "cycle 5");
+        }
         return true;
     }
 }

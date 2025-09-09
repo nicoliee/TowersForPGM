@@ -9,6 +9,7 @@ import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.Matchmaking;
 import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.draft.Utilities;
@@ -121,8 +122,13 @@ public final class TowersForPGM extends JavaPlugin {
             draft, captains, availablePlayers, teams, languageManager);
         getServer().getPluginManager().registerEvents(pickInventory, this);
 
+        // Inicializar el matchmaking
+        Matchmaking matchmaking = new Matchmaking(
+            availablePlayers, captains, languageManager,
+            matchManager, teams, utilities);
+
         // Registrar Rankeds
-        Queue queue = new Queue(draft, languageManager);
+        Queue queue = new Queue(draft, matchmaking, languageManager, teams);
         getCommand("ranked").setExecutor(new RankedCommand(languageManager, queue, utilities));
         getCommand("elo").setExecutor(new EloCommand(languageManager));
         getCommand("forfeit").setExecutor(new ForfeitCommand(languageManager));

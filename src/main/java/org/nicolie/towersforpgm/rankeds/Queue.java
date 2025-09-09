@@ -15,6 +15,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.Matchmaking;
+import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
@@ -28,14 +30,18 @@ import tc.oc.pgm.util.bukkit.Sounds;
 public class Queue {
     private final TowersForPGM plugin = TowersForPGM.getInstance();
     private final Draft draft;
+    private final Matchmaking matchmaking;
     private static final List<UUID> queuePlayers = new java.util.ArrayList<>();
     private static boolean countdownActive = false;
     public static final String RANKED_PREFIX = "§8[§6Ranked§8]§r ";
     private final LanguageManager languageManager;
+    private final Teams teams;
 
-    public Queue(Draft draft, LanguageManager languageManager) {
+    public Queue(Draft draft, Matchmaking matchmaking, LanguageManager languageManager, Teams teams) {
         this.draft = draft;
+        this.matchmaking = matchmaking;
         this.languageManager = languageManager;
+        this.teams = teams;
     }
 
     public void setSize(CommandSender sender, int size){
@@ -58,7 +64,7 @@ public class Queue {
 
     public void addPlayer(MatchPlayer player){
         UUID playerUUID = player.getId();
-        if(player.isParticipating() || player.getMatch().isRunning()){
+        if(player.isParticipating() || player.getMatch().isRunning() || teams.isPlayerInAnyTeam(player.getNameLegacy())){
             player.sendWarning(Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.matchInProgress")));
             return;
         }
@@ -122,38 +128,13 @@ public class Queue {
             @Override
             public void run() {
                 if(countdown[0] <= 0){
-                    // Obtener a los primeros jugadores y borrarlos de la queue
-                    List<String> rankedPlayers = queuePlayers
-                            .subList(0, ConfigManager.getRankedSize()).stream()
-                            .map(uuid -> PGM.get().getMatchManager().getPlayer(uuid).getNameLegacy())
-                            .collect(Collectors.toList());
-                    // Borrar los jugadores de la cola
-                    queuePlayers.subList(0, ConfigManager.getRankedSize()).clear();
-                    // Obtener el elo
                     String table = ConfigManager.getRankedDefaultTable();
-                    StatsManager.getEloForUsernames(table, rankedPlayers, eloList -> {
-                        List<Map.Entry<MatchPlayer, Integer>> playersWithElo = eloList.stream()
-                            .map(e -> {
-                                UUID uuid = getUUIDFromUsername(e.getUsername());
-                                MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
-                                return new AbstractMap.SimpleEntry<>(player, e.getCurrentElo());
-                            })
-                            .filter(entry -> entry.getKey() != null) // Validar que el MatchPlayer no sea null
-                            .collect(Collectors.toList());
-
-                        // Seleccionar capitanes
-                        RankedPlayers pair = RankedPlayers.selectCaptains(playersWithElo);
-
-                        // Aquí podrías hacer algo con los capitanes seleccionados
-                        UUID captain1 = pair.getCaptain1();
-                        UUID captain2 = pair.getCaptain2();
-                        List<MatchPlayer> remaining = pair.getRemainingPlayers();
-
-                        // Iniciar el draft
-                        ConfigManager.addTempTable(table);
-                        draft.setCustomOrderPattern(ConfigManager.getRankedOrder(), 0);
-                        draft.startDraft(captain1, captain2, remaining, match);
-                    });
+                    ConfigManager.addTempTable(table);  
+                    if (ConfigManager.isRankedMatchmaking()) {
+                        queueWithMatchmaking(match);
+                    } else {
+                        queueWithCaptains(match, table);
+                    }
                     // Cancelar el countdown
                         this.cancel();
                         countdownActive = false;
@@ -173,6 +154,65 @@ public class Queue {
         }.runTaskTimer(plugin, 0, 20L);
     }
 
+    private void queueWithCaptains(Match match, String table){
+        // Obtener a los primeros jugadores y borrarlos de la queue
+        List<String> rankedPlayers = queuePlayers
+                .subList(0, ConfigManager.getRankedSize()).stream()
+                .map(uuid -> PGM.get().getMatchManager().getPlayer(uuid).getNameLegacy())
+                .collect(Collectors.toList());
+        // Obtener los MatchPlayers de los jugadores seleccionados
+        List<MatchPlayer> rankedMatchPlayers = rankedPlayers.stream()
+                .map(username -> PGM.get().getMatchManager().getPlayer(getUUIDFromUsername(username)))
+                .collect(Collectors.toList());
+        ItemListener.removeItemToPlayers(rankedMatchPlayers);
+        // Borrar los jugadores de la cola
+        queuePlayers.subList(0, ConfigManager.getRankedSize()).clear();
+        // Obtener el elo
+        StatsManager.getEloForUsernames(table, rankedPlayers, eloList -> {
+            List<Map.Entry<MatchPlayer, Integer>> playersWithElo = eloList.stream()
+                .map(e -> {
+                    UUID uuid = getUUIDFromUsername(e.getUsername());
+                    MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
+                    return new AbstractMap.SimpleEntry<>(player, e.getCurrentElo());
+                })
+                .filter(entry -> entry.getKey() != null) // Validar que el MatchPlayer no sea null
+                .collect(Collectors.toList());
+
+            // Seleccionar capitanes
+            RankedPlayers pair = RankedPlayers.selectCaptains(playersWithElo);
+
+            // Aquí podrías hacer algo con los capitanes seleccionados
+            UUID captain1 = pair.getCaptain1();
+            UUID captain2 = pair.getCaptain2();
+            List<MatchPlayer> remaining = pair.getRemainingPlayers();
+
+            // Iniciar el draft
+            draft.setCustomOrderPattern(ConfigManager.getRankedOrder(), 0);
+            draft.startDraft(captain1, captain2, remaining, match, true);
+            
+            // Limpiar las listas de jugadores
+            rankedPlayers.clear();
+            rankedMatchPlayers.clear();
+            playersWithElo.clear();
+        });
+    }
+
+    private void queueWithMatchmaking(Match match){
+        // Obtener a los primeros jugadores y borrarlos de la queue
+        List<String> rankedPlayers = queuePlayers
+                .subList(0, ConfigManager.getRankedSize()).stream()
+                .map(uuid -> PGM.get().getMatchManager().getPlayer(uuid).getNameLegacy())
+                .collect(Collectors.toList());
+        // Obtener los MatchPlayers de los jugadores seleccionados
+        List<MatchPlayer> rankedMatchPlayers = rankedPlayers.stream()
+                .map(username -> PGM.get().getMatchManager().getPlayer(getUUIDFromUsername(username)))
+                .collect(Collectors.toList());
+        ItemListener.removeItemToPlayers(rankedMatchPlayers);
+        // Borrar los jugadores de la cola
+        queuePlayers.subList(0, ConfigManager.getRankedSize()).clear();
+        matchmaking.startMatchmaking(rankedMatchPlayers, match);
+    }
+
     public List<String> getQueueList() {
         List<String> players = new ArrayList<>();
         for (UUID uuid : queuePlayers) {
@@ -185,12 +225,17 @@ public class Queue {
         return players;
     }
 
-    public int getQueueSize() {
+    public static int getQueueSize() {
         return queuePlayers.size();
     }
 
     public List<UUID> getQueuePlayers() {
         return new ArrayList<>(queuePlayers);
+    }
+
+    public static void clearQueue() {
+        queuePlayers.clear();
+        countdownActive = false;
     }
 
     private UUID getUUIDFromUsername(String username) {

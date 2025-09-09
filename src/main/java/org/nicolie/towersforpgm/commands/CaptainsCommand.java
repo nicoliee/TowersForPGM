@@ -9,6 +9,7 @@ import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -17,11 +18,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 // Comando para iniciar un draft de capitanes, actualmente solo soporta dos equipos "red" y "blue"
 // PGM actualmente solo soporta una partida a la vez, por lo que no se pueden realizar múltiples drafts simultáneamente
-public class CaptainsCommand implements CommandExecutor {
+public class CaptainsCommand implements CommandExecutor, TabCompleter {
     private final Draft draft;
     private final LanguageManager languageManager;
 
@@ -68,8 +70,21 @@ public class CaptainsCommand implements CommandExecutor {
             return true;
         }
 
+        // Verificar que no sea una ranked
+        if (ConfigManager.getRankedTables().contains(ConfigManager.getTempTable()) && Draft.isDraftActive()) {
+            matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("ranked.notAllowed")));
+            return true;
+        }
+
         UUID captain1 = Bukkit.getPlayer(args[0]).getUniqueId();
         UUID captain2 = Bukkit.getPlayer(args[1]).getUniqueId();
+
+        boolean randomizeOrder = true;
+        if (args.length >= 3 && args[2].equalsIgnoreCase("force")) {
+            randomizeOrder = false;
+        } else {
+            randomizeOrder = true;
+        }
         
         // Crear una lista de jugadores en línea excluyendo a los capitanes
         List<MatchPlayer> onlinePlayersExcludingCaptains = PGM.get().getMatchManager().getMatch(sender).getPlayers().stream()
@@ -78,7 +93,37 @@ public class CaptainsCommand implements CommandExecutor {
 
         // Iniciar el draft con los capitanes y los jugadores restantes
         draft.setCustomOrderPattern(ConfigManager.getDraftOrder(), ConfigManager.getMinDraftOrder());
-        draft.startDraft(captain1, captain2, onlinePlayersExcludingCaptains, PGM.get().getMatchManager().getMatch(sender));
+        draft.startDraft(captain1, captain2, onlinePlayersExcludingCaptains, PGM.get().getMatchManager().getMatch(sender), randomizeOrder);
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!(sender instanceof Player)) return Collections.emptyList();
+
+        if (args.length == 1) {
+            return Bukkit.getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        if (args.length == 2) {
+            return Bukkit.getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .filter(name -> !name.equalsIgnoreCase(args[0])) // Evitar duplicar capitán 1
+                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        // Tercer argumento: solo "force"
+        if (args.length == 3) {
+            if ("force".startsWith(args[2].toLowerCase())) {
+                return Collections.singletonList("force");
+            }
+            return Collections.emptyList();
+        }
+
+        return Collections.emptyList();
     }
 }

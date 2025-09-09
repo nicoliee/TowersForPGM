@@ -33,21 +33,20 @@ public class ReadyCommand implements CommandExecutor{
             matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("ready.notAvailable")));
             return true;
         }
-        if (captains.isCaptain(player.getUniqueId())) {
-            boolean isCaptain1 = captains.isCaptain1(player.getUniqueId());
-            boolean alreadyReady = isCaptain1 ? captains.isReady1() : captains.isReady2();
+        int captainNumber = captains.getCaptainTeam(player.getUniqueId());
+        if (captainNumber != -1) {
+            boolean alreadyReady = captainNumber == 1 ? captains.isReady1() : captains.isReady2();
 
             if (alreadyReady) {
                 matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("ready.alreadyReady")));
                 return true;
             }
-            if (isCaptain1) {
+            if (captainNumber == 1) {
                 captains.setReady1(true, PGM.get().getMatchManager().getMatch(player));
             } else {
                 captains.setReady2(true, PGM.get().getMatchManager().getMatch(player));
             }
-            String readyMessage = getReadyMessage(matchPlayer);
-            matchPlayer.getMatch().sendMessage(Component.text(readyMessage));
+            matchPlayer.getMatch().sendMessage(Component.text(getReadyMessage(matchPlayer)));
         } else {
             matchPlayer.sendWarning(Component.text(languageManager.getConfigurableMessage("picks.notCaptain")));
             return true;

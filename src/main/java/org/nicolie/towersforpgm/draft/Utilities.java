@@ -1,4 +1,5 @@
 package org.nicolie.towersforpgm.draft;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
@@ -47,10 +48,13 @@ public class Utilities {
 
         }
         StringBuilder suggestionsBuilder = buildLists(topPlayers, "§b", true);
-        String suggestions = languageManager.getConfigurableMessage("captains.suggestions")
+        if (currentCaptain != null) {
+            String suggestions = languageManager.getConfigurableMessage("captains.suggestions")
             .replace("{suggestions}", suggestionsBuilder.toString());
-        currentCaptain.playSound(Sounds.RAINDROPS);
-        currentCaptain.sendMessage(Component.text(suggestions));
+            currentCaptain.playSound(Sounds.RAINDROPS);
+            currentCaptain.sendMessage(Component.text(suggestions));
+        }
+        
     }
 
     public String randomPick() {
@@ -115,5 +119,38 @@ public class Utilities {
         } else {
             return 30; // 30 segundos
         }
+    }
+
+    private static BukkitRunnable readyReminderTask;
+
+    public void readyReminder(int delay, int period) {
+        String readyMessage = languageManager.getPluginMessage("captains.ready");
+        MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
+        MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
+        captain1.sendActionBar(Component.text(readyMessage));
+        captain2.sendActionBar(Component.text(readyMessage));
+        readyReminderTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!captains.isReadyActive()) {
+                    this.cancel();
+                    return;
+                }
+                if (!captains.isReady1()) {
+                    captain1.sendMessage(Component.text(readyMessage));
+                    captain1.playSound(Sounds.DIRECT_MESSAGE);
+                }
+                if (!captains.isReady2()) {
+                    captain2.sendMessage(Component.text(readyMessage));
+                    captain2.playSound(Sounds.DIRECT_MESSAGE);
+                }
+            }
+        };
+        readyReminderTask.runTaskTimer(TowersForPGM.getInstance(), delay * 20, period * 20);
+    }
+
+    public static void cancelReadyReminder() {
+        readyReminderTask.cancel();
+        readyReminderTask = null;
     }
 }

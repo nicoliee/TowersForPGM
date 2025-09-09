@@ -26,16 +26,20 @@ public class StatsManager {
             return;
         }
 
-        String sql = "INSERT INTO " + table + " (username, kills, deaths, assists, damageDone, damageTaken, points, wins, games) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-                     "ON DUPLICATE KEY UPDATE " +
-                     "kills = VALUES(kills) + kills, " +
-                     "deaths = VALUES(deaths) + deaths, " +
-                     "assists = VALUES(assists) + assists, " +
-                     "damageDone = VALUES(damageDone) + damageDone, " +
-                     "damageTaken = VALUES(damageTaken) + damageTaken, " +
-                     "points = VALUES(points) + points, " +
-                     "wins = VALUES(wins) + wins, " +
-                     "games = VALUES(games) + games";
+        String sql = "INSERT INTO " + table + " (username, kills, deaths, assists, damageDone, damageTaken, points, wins, games, winstreak, maxWinstreak) " +
+             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0) " +
+             "ON DUPLICATE KEY UPDATE " +
+             "kills = kills + VALUES(kills), " +
+             "deaths = deaths + VALUES(deaths), " +
+             "assists = assists + VALUES(assists), " +
+             "damageDone = damageDone + VALUES(damageDone), " +
+             "damageTaken = damageTaken + VALUES(damageTaken), " +
+             "points = points + VALUES(points), " +
+             "wins = wins + VALUES(wins), " +
+             "games = games + VALUES(games), " +
+             "winstreak = IF(VALUES(winstreak) = 1, winstreak + 1, 0), " +
+             "maxWinstreak = GREATEST(maxWinstreak, winstreak)";
+
 
         String rankedSql = "UPDATE " + table + " SET elo = ?, lastElo = ?, maxElo = ? WHERE username = ?";
 
@@ -56,6 +60,7 @@ public class StatsManager {
                     stmt.setInt(7, playerStat.getPoints());
                     stmt.setInt(8, playerStat.getWins());
                     stmt.setInt(9, playerStat.getGames());
+                    stmt.setInt(10, playerStat.getWinstreak());
                     stmt.addBatch();
                     batchSize++;
                     if (batchSize % 100 == 0) {
@@ -82,7 +87,7 @@ public class StatsManager {
 
             } catch (SQLException e) {
                 TowersForPGM.getInstance().getLogger().log(Level.SEVERE, "Error al actualizar estadísticas", e);
-                SendMessage.sendToDevelopers("§cError al actualizar estadísticas en la base de datos.");
+                SendMessage.sendToDevelopers("§cError al actualizar estadísticas en la base de   datos.");
             }
         });
     }    
@@ -90,8 +95,8 @@ public class StatsManager {
     public static void showStats(CommandSender sender, String table, String player, LanguageManager languageManager) {
         boolean isRankedTable = ConfigManager.getRankedTables().contains(table);
         String sql = isRankedTable
-                ? "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games, elo, maxElo FROM " + table + " WHERE username = ?"
-                : "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM " + table + " WHERE username = ?";
+                ? "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games, winstreak, maxWinstreak, elo, maxElo FROM " + table + " WHERE username = ?"
+                : "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, winstreak, maxWinstreak, games FROM " + table + " WHERE username = ?";
         Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
             try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -122,7 +127,9 @@ public class StatsManager {
                                 + " §7| " + languageManager.getPluginMessage("stats.damageTaken") + ": §c" + String.format("%.1f", damageTaken)
                                 + " §7| " + languageManager.getPluginMessage("stats.points") + ": §a" + rs.getInt("points")
                                 + " §7| " + languageManager.getPluginMessage("stats.wins") + ": §a" + rs.getInt("wins")
-                                + " §7| " + languageManager.getPluginMessage("stats.games") + ": §a" + games);
+                                + " §7| " + languageManager.getPluginMessage("stats.games") + ": §a" + games
+                                + " §7| " + languageManager.getPluginMessage("stats.winstreak") + ": §a" + rs.getInt("winstreak")
+                                + " §7| " + languageManager.getPluginMessage("stats.maxWinstreak") + ": §a" + rs.getInt("maxWinstreak"));
                     } else {
                         sender.sendMessage(languageManager.getPluginMessage("stats.noStats"));
                     }

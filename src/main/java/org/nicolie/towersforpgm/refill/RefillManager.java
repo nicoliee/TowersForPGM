@@ -32,63 +32,80 @@ public class RefillManager {
     }
 
     public void loadChests(String mapName, String worldName) {
-        FileConfiguration refillConfig = plugin.getRefillConfig();
-        ConfigurationSection refillSection = refillConfig.getConfigurationSection("refill." + mapName);
-        if (refillSection == null) {
-            return; // No se encontró sección de recarga para este mapa, no hacer nada
-        } else {
-            SendMessage.sendToAdmins(languageManager.getPluginMessage("refill.mapFound")
-            .replace("{map}", mapName));
-        }
-
-        World world = Bukkit.getWorld(worldName);
-        if (world == null) {
-            return; // No se encontró el mundo, no hacer nada
-        }
-
-        Map<Location, ItemStack[]> chests = new HashMap<>();
-
-        for (String key : refillSection.getKeys(false)) {
-            String coordsString = refillSection.getString(key);
-            if (coordsString == null || coordsString.isEmpty()) {
-                continue; // Coordenadas vacías, saltar este cofre
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            FileConfiguration refillConfig = plugin.getRefillConfig();
+            ConfigurationSection refillSection = refillConfig.getConfigurationSection("refill." + mapName);
+            if (refillSection == null) {
+                return; // No se encontró sección de recarga para este mapa, no hacer nada
+            } else {
+                // Enviar mensaje desde el hilo principal
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    SendMessage.sendToAdmins(languageManager.getPluginMessage("refill.mapFound")
+                        .replace("{map}", mapName));
+                });
             }
 
-            // Dividir la cadena en partes y convertirlas a enteros
-            String[] coordsArray = coordsString.split(", ");
-            if (coordsArray.length != 3) {
-                continue; // Coordenadas inválidas, saltar este cofre
+            World world = Bukkit.getWorld(worldName);
+            if (world == null) {
+                return; // No se encontró el mundo, no hacer nada
             }
 
-            try {
-                int x = Integer.parseInt(coordsArray[0].trim());
-                int y = Integer.parseInt(coordsArray[1].trim());
-                int z = Integer.parseInt(coordsArray[2].trim());
-                Location loc = new Location(world, x, y, z);
-
-                // Depuración: verificar el tipo de bloque
-                Material blockType = loc.getBlock().getType();
-                // Verificar si el bloque en la ubicación es un cofre
-                if (blockType == Material.CHEST || blockType == Material.TRAPPED_CHEST) {
-                    Inventory chestInv = ((org.bukkit.block.Chest) loc.getBlock().getState()).getBlockInventory();
-                    chests.put(loc, chestInv.getContents());
-                } else {
-                    // Enviar mensaje a los administradores
-                    String message = "&c¡Advertencia! No hay cofre en la ubicación: "
-                            + "x=" + loc.getBlockX()
-                            + ", y=" + loc.getBlockY()
-                            + ", z=" + loc.getBlockZ()
-                            + " bloque: " + blockType;
-                    SendMessage.sendToAdmins(message);  // Llamada para enviar mensaje a los administradores
+            // Recopilar todas las ubicaciones en el hilo asíncrono
+            List<Location> chestLocations = new ArrayList<>();
+            
+            for (String key : refillSection.getKeys(false)) {
+                String coordsString = refillSection.getString(key);
+                if (coordsString == null || coordsString.isEmpty()) {
+                    continue; // Coordenadas vacías, saltar este cofre
                 }
-            } catch (NumberFormatException e) {
-                continue;
-            }
-        }
 
-        if (!chests.isEmpty()) {
-            chestContents.put(worldName, chests);
-        }
+                // Dividir la cadena en partes y convertirlas a enteros
+                String[] coordsArray = coordsString.split(", ");
+                if (coordsArray.length != 3) {
+                    continue; // Coordenadas inválidas, saltar este cofre
+                }
+
+                try {
+                    int x = Integer.parseInt(coordsArray[0].trim());
+                    int y = Integer.parseInt(coordsArray[1].trim());
+                    int z = Integer.parseInt(coordsArray[2].trim());
+                    Location loc = new Location(world, x, y, z);
+                    chestLocations.add(loc);
+                } catch (NumberFormatException e) {
+                    continue;
+                }
+            }
+
+            // Procesar todas las ubicaciones en el hilo principal
+            if (!chestLocations.isEmpty()) {
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    Map<Location, ItemStack[]> chests = new HashMap<>();
+                    
+                    for (Location loc : chestLocations) {
+                        // Depuración: verificar el tipo de bloque
+                        Material blockType = loc.getBlock().getType();
+                        // Verificar si el bloque en la ubicación es un cofre
+                        if (blockType == Material.CHEST || blockType == Material.TRAPPED_CHEST) {
+                            Inventory chestInv = ((org.bukkit.block.Chest) loc.getBlock().getState()).getBlockInventory();
+                            chests.put(loc, chestInv.getContents());
+                        } else {
+                            // Enviar mensaje a los administradores
+                            String message = "&c¡Advertencia! No hay cofre en la ubicación: "
+                                    + "x=" + loc.getBlockX()
+                                    + ", y=" + loc.getBlockY()
+                                    + ", z=" + loc.getBlockZ()
+                                    + " bloque: " + blockType;
+                            SendMessage.sendToAdmins(message);
+                        }
+                    }
+                    
+                    // Guardar los cofres después de procesarlos todos
+                    if (!chests.isEmpty()) {
+                        chestContents.put(worldName, chests);
+                    }
+                });
+            }
+        });
     }
 
     public void clearWorldData(String worldName) {
@@ -123,7 +140,6 @@ public class RefillManager {
         // Verificamos si hay cofres cargados para el mundo antes de intentar acceder a ellos
         Map<Location, ItemStack[]> chests = chestContents.get(worldName);
         if (chests == null) {
-            SendMessage.sendToAdmins("No se encontraron cofres para el mundo: " + worldName);
             return; // Si no hay cofres para este mundo, salir
         }
     

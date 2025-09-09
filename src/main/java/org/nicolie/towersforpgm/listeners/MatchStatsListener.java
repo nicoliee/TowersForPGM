@@ -9,6 +9,8 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
+import net.kyori.adventure.text.Component;
+import tc.oc.pgm.api.map.Gamemode;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.event.MatchStatsEvent;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -28,6 +30,10 @@ public class MatchStatsListener implements Listener {
     @EventHandler
     public void onMatchStatsEvent(MatchStatsEvent event) {
         Match match = event.getMatch();
+        Collection<Gamemode> gamemodes = match.getMap().getGamemodes();
+        if (!gamemodes.contains(Gamemode.SCOREBOX)) {
+            return;
+        }
         ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);
         StatsMatchModule statsModule = match.getModule(StatsMatchModule.class);
         
@@ -60,9 +66,8 @@ public class MatchStatsListener implements Listener {
             if (!killsMap.isEmpty()) {
                 SendMessage.sendToWorld(event.getWorld().getName(), "&m--------------------§r &6Top Killers &f&m--------------------");
                 int position = 1;
-                // Ordenamos killsMap por el número de kills en orden descendente
                 List<Map.Entry<Integer, List<String>>> sortedKills = new ArrayList<>(killsMap.entrySet());
-                sortedKills.sort((entry1, entry2) -> Integer.compare(entry2.getKey(), entry1.getKey())); // Ordenamos de mayor a menor
+                sortedKills.sort((entry1, entry2) -> Integer.compare(entry2.getKey(), entry1.getKey()));
                 
                 for (int i = 0; i < Math.min(5, sortedKills.size()); i++) { // Limita a las primeras 5 líneas
                     Map.Entry<Integer, List<String>> entry = sortedKills.get(i);
@@ -85,6 +90,33 @@ public class MatchStatsListener implements Listener {
                 }
             }
         }, 10L);
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (statsModule != null) {
+                double bestRatio = -1;
+                String mvpName = null;
+                for (MatchPlayer player : allPlayers) {
+                    PlayerStats stats = statsModule.getPlayerStat(player);
+                    double damageDone = stats != null ? stats.getDamageDone() : 0;
+                    double damageTaken = stats != null ? stats.getDamageTaken() : 0;
+                    double ratio = damageTaken > 0 ? damageDone / damageTaken : (damageDone > 0 ? damageDone : 0);
+
+                    if (ratio > bestRatio) {
+                        bestRatio = ratio;
+                        if (player.getParty() == null) {
+                            mvpName = "§3" + player.getNameLegacy();
+                        } else {
+                            mvpName = player.getPrefixedName();
+                        }
+                    }
+                }
+                if (mvpName != null) {
+                    Component mvpmessage = Component.text(languageManager.getPluginMessage("stats.mvp")
+                            .replace("{player}", mvpName));
+                    match.sendMessage(mvpmessage);
+                }
+            }
+        }, 15L);
     }
     
     private String formatPlayerNames(List<String> names) {

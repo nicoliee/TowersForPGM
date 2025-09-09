@@ -6,7 +6,7 @@
 
   <groupId>org.nicolie</groupId>
   <artifactId>TowersForPGM</artifactId>
-  <version>1.4.3</version>
+  <version>3.0.0</version>
   <packaging>jar</packaging>
 
   <name>TowersForPGM</name>
