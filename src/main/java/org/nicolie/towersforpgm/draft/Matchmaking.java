@@ -21,21 +21,19 @@ public class Matchmaking {
     private final AvailablePlayers availablePlayers;
     private final Teams teams;
     private final LanguageManager languageManager;
-    private final MatchManager matchManager;
     
     public Matchmaking(AvailablePlayers availablePlayers, Captains captains, LanguageManager languageManager,
-                       MatchManager matchManager, Teams teams, Utilities utilities) {
+                       Teams teams, Utilities utilities) {
         this.captains = captains;
         this.availablePlayers = availablePlayers;
         this.teams = teams;
         this.languageManager = languageManager;
-        this.matchManager = matchManager;
         this.utilities = utilities;
     }
     
     public void startMatchmaking(List<MatchPlayer> players, Match match) {
-        if (matchManager.getMatch() == null) {
-            matchManager.setCurrentMatch(match);
+        if (MatchManager.getMatch() == null) {
+            MatchManager.setCurrentMatch(match);
         }
         
         if (players.size() < 4) {
@@ -167,7 +165,7 @@ public class Matchmaking {
         SendMessage.broadcast(team2.toString());
         SendMessage.broadcast("§m------------------------------");
         teams.setTeamsSize(teamsize);
-        matchManager.getMatch().playSound(Sounds.MATCH_START);
+        MatchManager.getMatch().playSound(Sounds.MATCH_START);
         captains.setReady1(false, match);
         captains.setReady2(false, match);
         captains.setReadyActive(true);
@@ -177,7 +175,7 @@ public class Matchmaking {
         MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
         captain1.sendActionBar(Component.text(readyMessage));
         captain2.sendActionBar(Component.text(readyMessage));
-        Match currentMatch = matchManager.getMatch();
+        Match currentMatch = MatchManager.getMatch();
         if (currentMatch != null) {
             StartMatchModule startModule = currentMatch.needModule(StartMatchModule.class);
             if (startModule != null) {

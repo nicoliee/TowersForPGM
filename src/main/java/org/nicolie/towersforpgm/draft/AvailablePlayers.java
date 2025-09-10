@@ -17,25 +17,23 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class AvailablePlayers {
     private final List<MatchPlayer> availablePlayers = new ArrayList<>();
     private final List<String> availableOfflinePlayers = new ArrayList<>();
     private final Map<String, PlayerStats> playerStats = new HashMap<>();
-    private final MatchManager matchManager;
     private final List<String> topPlayers = new ArrayList<>();
 
-    public AvailablePlayers(MatchManager matchManager) {
-        this.matchManager = matchManager;
-    }
 
     public void addPlayer(String playerName) {
         Player player = Bukkit.getPlayerExact(playerName);
-        MatchPlayer matchPlayer = matchManager.getMatch().getPlayer(player);
+        Match match = PGM.get().getMatchManager().getMatch(player);
+        MatchPlayer matchPlayer = match.getPlayer(player);
 
         // Verificar si el jugador y matchPlayer no son null antes de continuar
-        if (player != null && matchPlayer != null && player.isOnline()) {
+        if (match != null && player != null && matchPlayer != null && player.isOnline()) {
             // Si el jugador no está en availablePlayers, lo agregamos
             if (availablePlayers.stream()
                     .noneMatch(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()))) {
@@ -155,7 +153,7 @@ public class AvailablePlayers {
             if (ConfigManager.getTempTable() != null) {
                 table = ConfigManager.getTempTable();
             } else {
-                table = ConfigManager.getTableForMap(matchManager.getMatch().getMap().getName());
+                table = ConfigManager.getTableForMap(MatchManager.getMatch().getMap().getName());
             }
             boolean isRanked = ConfigManager.getRankedTables().contains(table); 
 

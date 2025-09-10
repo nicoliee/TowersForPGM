@@ -106,26 +106,22 @@ public final class TowersForPGM extends JavaPlugin {
             createTablesOnStartup();
         } else {getLogger().info("Database is disabled.");}
 
-        // Inicializar el Match
-        MatchManager matchManager = new MatchManager();
-
         // Inicializar el Draft
-        availablePlayers = new AvailablePlayers(matchManager);
+        availablePlayers = new AvailablePlayers();
         captains = new Captains();
-        teams = new Teams(matchManager);
+        teams = new Teams();
         utilities = new Utilities(
             availablePlayers, captains, languageManager);
         draft = new Draft(
             captains, availablePlayers, teams, 
-            languageManager, matchManager, utilities);
+            languageManager, utilities);
         pickInventory = new PickInventory(
             draft, captains, availablePlayers, teams, languageManager);
         getServer().getPluginManager().registerEvents(pickInventory, this);
 
         // Inicializar el matchmaking
         Matchmaking matchmaking = new Matchmaking(
-            availablePlayers, captains, languageManager,
-            matchManager, teams, utilities);
+            availablePlayers, captains, languageManager, teams, utilities);
 
         // Registrar Rankeds
         Queue queue = new Queue(draft, matchmaking, languageManager, teams);
@@ -142,7 +138,7 @@ public final class TowersForPGM extends JavaPlugin {
         // Registrar eventos
         Events eventManager = new Events(this);
         eventManager.registerEvents(
-            availablePlayers, captains, draft, matchManager, queue, languageManager,
+            availablePlayers, captains, draft, queue, languageManager,
             pickInventory, refillManager, teams, preparationListener);
 
         if (getServer().getPluginManager().getPlugin("MatchBot") != null &&

@@ -16,12 +16,10 @@ import java.util.*;
 
 public class Teams {
 
-    private final MatchManager matchManager;
     private final Map<Integer, Set<MatchPlayer>> onlineTeams = new HashMap<>();
     private final Map<Integer, Set<String>> offlineTeams = new HashMap<>();
 
-    public Teams(MatchManager matchManager) {
-        this.matchManager = matchManager;
+    public Teams() {
         onlineTeams.put(1, new HashSet<>());
         onlineTeams.put(2, new HashSet<>());
         offlineTeams.put(1, new HashSet<>());
@@ -102,7 +100,7 @@ public class Teams {
     }
 
     public void setTeamsSize(int teamSize) {
-        Match match = matchManager.getMatch();
+        Match match = MatchManager.getMatch();
         if (match == null) return;
 
         TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);

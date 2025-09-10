@@ -30,11 +30,11 @@ public class Events {
         this.plugin = plugin;
     }
 
-    public void registerEvents(AvailablePlayers availablePlayers, Captains captains, Draft draft, MatchManager matchManager, Queue queue, LanguageManager languageManager, PickInventory pickInventory, RefillManager refillManager, Teams teams, PreparationListener preparationListener) {
+    public void registerEvents(AvailablePlayers availablePlayers, Captains captains, Draft draft, Queue queue, LanguageManager languageManager, PickInventory pickInventory, RefillManager refillManager, Teams teams, PreparationListener preparationListener) {
         PluginManager pluginManager = plugin.getServer().getPluginManager();
 
         pluginManager.registerEvents(new PreparationListener(languageManager), plugin);
-        pluginManager.registerEvents(new MatchLoadListener(refillManager, preparationListener, matchManager, draft, languageManager), plugin);
+        pluginManager.registerEvents(new MatchLoadListener(refillManager, preparationListener, draft, languageManager), plugin);
         pluginManager.registerEvents(new MatchAfterLoadListener(queue), plugin);
         pluginManager.registerEvents(new MatchStartListener(preparationListener, refillManager, captains), plugin);
         pluginManager.registerEvents(new MatchFinishListener(plugin, preparationListener, refillManager, draft, languageManager), plugin);

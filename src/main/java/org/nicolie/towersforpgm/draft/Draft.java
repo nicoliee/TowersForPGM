@@ -33,7 +33,6 @@ public class Draft {
     private final AvailablePlayers availablePlayers;
     private final Teams teams;
     private final LanguageManager languageManager;
-    private final MatchManager matchManager;
     private final Utilities utilities;
     private static boolean isDraftActive = false;
     private BukkitRunnable draftTimer;
@@ -48,8 +47,7 @@ public class Draft {
     private boolean firstCaptainTurn; // Indica quién fue el primer capitán en pickear
 
     public Draft(Captains captains, AvailablePlayers availablePlayers, Teams teams, LanguageManager languageManager,
-            MatchManager matchManager, Utilities utilities) {
-        this.matchManager = matchManager;
+            Utilities utilities) {
         this.teams = teams;
         this.captains = captains;
         this.availablePlayers = availablePlayers;
@@ -65,8 +63,8 @@ public class Draft {
     }
 
     public void startDraft(UUID captain1, UUID captain2, List<MatchPlayer> players, Match match, boolean randomizeOrder) {
-        if (matchManager.getMatch() == null) {
-            matchManager.setCurrentMatch(match);
+        if (MatchManager.getMatch() == null) {
+            MatchManager.setCurrentMatch(match);
         }
         cleanLists();
         isDraftActive = true;
@@ -108,10 +106,8 @@ public class Draft {
             customOrderPattern = "";
             currentPatternIndex = 0;
         }
-        
-        captains.setMatchWithCaptains(true);
 
-        matchManager.getMatch().playSound(Sounds.RAINDROPS);
+        MatchManager.getMatch().playSound(Sounds.RAINDROPS);
         SendMessage.broadcast(languageManager.getPluginMessage("captains.captainsHeader"));
         SendMessage.broadcast("&4" + Bukkit.getPlayer(captain1).getName() + " &l&bvs. " + "&9"
                 + Bukkit.getPlayer(captain2).getName());
@@ -145,7 +141,7 @@ public class Draft {
                     1f,
                     BossBar.Color.YELLOW,
                     BossBar.Overlay.PROGRESS);
-            matchManager.getMatch().showBossBar(pickTimerBar);
+            MatchManager.getMatch().showBossBar(pickTimerBar);
         }
 
         if (draftTimer != null) {
@@ -222,7 +218,7 @@ public class Draft {
                 .replace("{teamcolor}", teamColor)
                 .replace("{captain}", captainName)
                 .replace("{player}", exactUsername));
-        matchManager.getMatch().playSound(sound);
+        MatchManager.getMatch().playSound(sound);
 
         updateTurnOrder();
 
@@ -253,7 +249,7 @@ public class Draft {
                             .replace("{player}", exactName));
                     }
                     plugin.updateInventories();
-                    matchManager.getMatch().playSound(Sounds.MATCH_START);
+                    MatchManager.getMatch().playSound(Sounds.MATCH_START);
                     endDraft();
                     return;
                 }
@@ -340,11 +336,11 @@ public class Draft {
         captains.setReadyActive(true);
         captains.setMatchWithCaptains(true);
 
-        plugin.removeItem(matchManager.getMatch().getWorld());
+        plugin.removeItem(MatchManager.getMatch().getWorld());
         utilities.readyReminder(5, 20);
 
         removeBossbar();
-        matchManager.getMatch().needModule(StartMatchModule.class).forceStartCountdown(Duration.ofSeconds(90),
+        MatchManager.getMatch().needModule(StartMatchModule.class).forceStartCountdown(Duration.ofSeconds(90),
                 Duration.ZERO);
 
         Bukkit.getPluginManager().callEvent(new DraftEndEvent());
@@ -365,7 +361,7 @@ public class Draft {
 
     private void removeBossbar() {
         if (pickTimerBar != null) {
-            matchManager.getMatch().hideBossBar(pickTimerBar);
+            MatchManager.getMatch().hideBossBar(pickTimerBar);
             pickTimerBar = null;
         }
     }
