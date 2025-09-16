@@ -22,6 +22,7 @@ import tc.oc.pgm.util.bukkit.Sounds;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import org.nicolie.towersforpgm.draft.events.DraftEndEvent;
@@ -36,7 +37,7 @@ public class Draft {
     private final Utilities utilities;
     private static boolean isDraftActive = false;
     private BukkitRunnable draftTimer;
-    private BossBar pickTimerBar;
+    private static BossBar pickTimerBar;
     
     // Custom draft order pattern variables
     private String customOrderPattern = ""; // Ejemplo: "ABABAB"
@@ -69,18 +70,9 @@ public class Draft {
         cleanLists();
         isDraftActive = true;
         captains.setCaptain1Turn(true);
-        if (randomizeOrder) {
-            if (Math.random() < 0.5) {
-                captains.setCaptain1(captain1);
-                captains.setCaptain2(captain2);
-            } else {
-                captains.setCaptain1(captain2);
-                captains.setCaptain2(captain1);
-            }
-        } else {
-            captains.setCaptain1(captain1);
-            captains.setCaptain2(captain2);
-        }
+        captains.setCaptain1(captain1);
+        captains.setCaptain2(captain2);
+
         teams.removeFromTeams(match);
 
         teams.addPlayerToTeam(Bukkit.getPlayer(captain1).getName(), 1);
@@ -94,6 +86,11 @@ public class Draft {
 
         match.getCountdown().cancelAll(StartCountdown.class);
         teams.setTeamsSize(0);
+
+        if (randomizeOrder) {
+            Random random = new Random();
+            captains.setCaptain1Turn(random.nextBoolean());
+        }
 
         // Guardar quién fue el primer capitán en pickear (será el "A" en el patrón)
         firstCaptainTurn = captains.isCaptain1Turn();
@@ -152,11 +149,18 @@ public class Draft {
         int[] timeLeft = { initialTime };
 
         MatchPlayer currentCaptain = PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
-        String currentCaptainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
+        String currentCaptainName;
+        if (currentCaptain != null) {
+            currentCaptainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
+        } else {
+            currentCaptainName = captains.isCaptain1Turn() ? "Red" : "Blue";
+        }
         String currentCaptainColor = captains.isCaptain1Turn() ? "§4" : "§9";
         String bossbarMessage = languageManager.getPluginMessage("captains.bossbar")
                 .replace("{captain}", currentCaptainColor + currentCaptainName);
-        currentCaptain.sendActionBar(Component.text(languageManager.getPluginMessage("captains.tip")));
+        if (currentCaptain != null) {
+            currentCaptain.sendActionBar(Component.text(languageManager.getPluginMessage("captains.tip")));
+        }
         draftTimer = new BukkitRunnable() {
             @Override
             public void run() {
@@ -206,6 +210,9 @@ public class Draft {
         String exactUsername = availablePlayers.getExactUser(username);
         String teamColor = captains.isCaptain1Turn() ? "§4" : "§9";
         String captainName = captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
+        if (captainName == null) {
+            captainName = captains.isCaptain1Turn() ? "Red" : "Blue";
+        }
         Sound sound = captains.isCaptain1Turn() ? Sounds.MATCH_COUNTDOWN : Sounds.MATCH_START;
         int teamNumber = captains.isCaptain1Turn() ? 1 : 2;
 
@@ -368,5 +375,11 @@ public class Draft {
 
     public static boolean isDraftActive() {
         return isDraftActive;
+    }
+
+    public static void showBossBarToPlayer(MatchPlayer matchPlayer) {
+        if (pickTimerBar != null) {
+            matchPlayer.showBossBar(pickTimerBar);
+        }
     }
 }

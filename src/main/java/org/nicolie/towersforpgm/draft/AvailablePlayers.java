@@ -30,7 +30,7 @@ public class AvailablePlayers {
     public void addPlayer(String playerName) {
         Player player = Bukkit.getPlayerExact(playerName);
         Match match = PGM.get().getMatchManager().getMatch(player);
-        MatchPlayer matchPlayer = match.getPlayer(player);
+        MatchPlayer matchPlayer = match != null ? match.getPlayer(player) : null;
 
         // Verificar si el jugador y matchPlayer no son null antes de continuar
         if (match != null && player != null && matchPlayer != null && player.isOnline()) {

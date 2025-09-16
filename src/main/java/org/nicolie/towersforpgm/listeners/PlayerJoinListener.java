@@ -11,6 +11,7 @@ import org.nicolie.towersforpgm.draft.Teams;
 
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.start.StartCountdown;
 
 import org.bukkit.entity.Player;
@@ -35,6 +36,8 @@ public class PlayerJoinListener implements Listener {
         String username = player.getName();
         // Si el draft está activo
         if(Draft.isDraftActive()) {
+            MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
+            Draft.showBossBarToPlayer(matchPlayer);
             // Si el jugador está en getAvailableOfflinePlayers, pasarlo a getAvailablePlayers
             availablePlayers.handleReconnect(player);
             // Si el jugador está en algún equipo, añadirlo a la lista de jugadores desconectados

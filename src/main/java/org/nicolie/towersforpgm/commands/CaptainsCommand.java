@@ -78,7 +78,7 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
 
         UUID captain1 = Bukkit.getPlayer(args[0]).getUniqueId();
         UUID captain2 = Bukkit.getPlayer(args[1]).getUniqueId();
-
+        
         boolean randomizeOrder = true;
         if (args.length >= 3 && args[2].equalsIgnoreCase("force")) {
             randomizeOrder = false;

@@ -262,8 +262,8 @@ public class PickInventory implements Listener {
             return;
         }
 
-        if ((captains.isCaptain1Turn() && captainNumber == 1) ||
-            (!captains.isCaptain1Turn() && captainNumber == 2)) {
+        if ((captains.isCaptain1Turn() && captainNumber == 2) ||
+            (!captains.isCaptain1Turn() && captainNumber == 1)) {
             openInventories.remove(clickerId);
             clicker.closeInventory();
             matchPlayer.sendWarning(Component.text(languageManager.getConfigurableMessage("picks.notTurn")));

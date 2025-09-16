@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class StatsManager {
     public static void updateStats(String table, List<Stats> playerStatsList, List<PlayerEloChange> eloChange) {
-        if (playerStatsList.isEmpty()) {
+        if (playerStatsList.isEmpty() || table == null || table.isEmpty() || (!ConfigManager.getTables().contains(table))) {
             return;
         }
 
