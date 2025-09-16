@@ -1,7 +1,6 @@
 package org.nicolie.towersforpgm.rankeds;
 
 import java.util.List;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -13,83 +12,86 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
-
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
-public class ItemListener implements Listener{
-    private final Queue queue;
-    private static final Boolean RANKED_AVAILABLE = TowersForPGM.getInstance().getIsDatabaseActivated() || !ConfigManager.getRankedTables().isEmpty();
+public class ItemListener implements Listener {
+  private final Queue queue;
+  private static final Boolean RANKED_AVAILABLE =
+      TowersForPGM.getInstance().getIsDatabaseActivated()
+          || !ConfigManager.getRankedTables().isEmpty();
 
-    public ItemListener(Queue queue) {
-        this.queue = queue;
+  public ItemListener(Queue queue) {
+    this.queue = queue;
+  }
+
+  @EventHandler
+  public void onPlayerInteract(PlayerInteractEvent event) {
+    if (event.getAction() != Action.RIGHT_CLICK_AIR
+        && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+      return;
     }
 
-
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event){
-        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
-            return;
-        }
-
-        ItemStack item = event.getItem();
-        if (item == null || !isQueueItem(item)) {
-            return;
-        }
-        event.setCancelled(true);
-        Match match = PGM.get().getMatchManager().getMatch(event.getPlayer());
-        MatchPlayer player = match.getPlayer(event.getPlayer());
-        queue.addPlayer(player);
+    ItemStack item = event.getItem();
+    if (item == null || !isQueueItem(item)) {
+      return;
     }
+    event.setCancelled(true);
+    Match match = PGM.get().getMatchManager().getMatch(event.getPlayer());
+    MatchPlayer player = match.getPlayer(event.getPlayer());
+    queue.addPlayer(player);
+  }
 
-    private boolean isQueueItem(ItemStack item) {
-        if (item == null || item.getType() != Material.EYE_OF_ENDER) {
-            return false;
-        }
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.hasDisplayName()) {
-            return false;
-        }
-        String displayName = meta.getDisplayName();
-        return displayName.equals(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.item"));
+  private boolean isQueueItem(ItemStack item) {
+    if (item == null || item.getType() != Material.EYE_OF_ENDER) {
+      return false;
     }
-    
-    public static ItemStack getQueueItem() {
-        ItemStack queueItem = new ItemStack(Material.EYE_OF_ENDER);
-        ItemMeta meta = queueItem.getItemMeta();
-        meta.setDisplayName(TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.item"));
-        queueItem.setItemMeta(meta);
-        return queueItem;
+    ItemMeta meta = item.getItemMeta();
+    if (meta == null || !meta.hasDisplayName()) {
+      return false;
     }
+    String displayName = meta.getDisplayName();
+    return displayName.equals(
+        TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.item"));
+  }
 
-    public static void giveItem(MatchPlayer player) {
-        if (!RANKED_AVAILABLE) return;
-        player.getBukkit().getInventory().setItem(4, getQueueItem());
-    }
+  public static ItemStack getQueueItem() {
+    ItemStack queueItem = new ItemStack(Material.EYE_OF_ENDER);
+    ItemMeta meta = queueItem.getItemMeta();
+    meta.setDisplayName(
+        TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.item"));
+    queueItem.setItemMeta(meta);
+    return queueItem;
+  }
 
-    public static void giveItem(Player player) {
-        if (!RANKED_AVAILABLE) return;
-        player.getInventory().setItem(4, getQueueItem());
-    }
+  public static void giveItem(MatchPlayer player) {
+    if (!RANKED_AVAILABLE) return;
+    player.getBukkit().getInventory().setItem(4, getQueueItem());
+  }
 
-    public static void giveItemToPlayers(Match match) {
-        if (!RANKED_AVAILABLE) return;
-        Bukkit.getScheduler().runTaskLater(
+  public static void giveItem(Player player) {
+    if (!RANKED_AVAILABLE) return;
+    player.getInventory().setItem(4, getQueueItem());
+  }
+
+  public static void giveItemToPlayers(Match match) {
+    if (!RANKED_AVAILABLE) return;
+    Bukkit.getScheduler()
+        .runTaskLater(
             TowersForPGM.getInstance(),
             () -> {
-                for (MatchPlayer player : match.getPlayers()) {
-                    giveItem(player);
-                }
+              for (MatchPlayer player : match.getPlayers()) {
+                giveItem(player);
+              }
             },
-            10L
-        );
-    }
+            10L);
+  }
 
-    public static void removeItemToPlayers(List<MatchPlayer> players) {
-        if (!RANKED_AVAILABLE) return;
-        for (MatchPlayer player : players) {
-            player.getBukkit().getInventory().setItem(4, new ItemStack(Material.AIR));
-        }
+  public static void removeItemToPlayers(List<MatchPlayer> players) {
+    if (!RANKED_AVAILABLE) return;
+    for (MatchPlayer player : players) {
+      player.getBukkit().getInventory().setItem(4, new ItemStack(Material.AIR));
     }
+  }
 }

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -19,8 +19,6 @@ import org.nicolie.towersforpgm.draft.Matchmaking;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
-
-import net.kyori.adventure.text.Component;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.MatchPhase;
@@ -28,219 +26,238 @@ import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class Queue {
-    private final TowersForPGM plugin = TowersForPGM.getInstance();
-    private final Draft draft;
-    private final Matchmaking matchmaking;
-    private static final List<UUID> queuePlayers = new java.util.ArrayList<>();
-    private static boolean countdownActive = false;
-    public static final String RANKED_PREFIX = "§8[§6Ranked§8]§r ";
-    private final LanguageManager languageManager;
-    private final Teams teams;
+  private final TowersForPGM plugin = TowersForPGM.getInstance();
+  private final Draft draft;
+  private final Matchmaking matchmaking;
+  private static final List<UUID> queuePlayers = new java.util.ArrayList<>();
+  private static boolean countdownActive = false;
+  public static final String RANKED_PREFIX = "§8[§6Ranked§8]§r ";
+  private final LanguageManager languageManager;
+  private final Teams teams;
 
-    public Queue(Draft draft, Matchmaking matchmaking, LanguageManager languageManager, Teams teams) {
-        this.draft = draft;
-        this.matchmaking = matchmaking;
-        this.languageManager = languageManager;
-        this.teams = teams;
+  public Queue(Draft draft, Matchmaking matchmaking, LanguageManager languageManager, Teams teams) {
+    this.draft = draft;
+    this.matchmaking = matchmaking;
+    this.languageManager = languageManager;
+    this.teams = teams;
+  }
+
+  public void setSize(CommandSender sender, int size) {
+    if (size == ConfigManager.getRankedSize()) {
+      return;
     }
-
-    public void setSize(CommandSender sender, int size){
-        if (size == ConfigManager.getRankedSize()){return;}
-        if (size < 4 || size % 2 != 0) {
-            MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
-            matchPlayer.sendWarning(Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.sizeInvalid")));
-            RankedPlayers.clearCaptainHistory();
-            return;
-        }
-        Match match = PGM.get().getMatchManager().getMatch(sender);
-        ConfigManager.setRankedSize(size);
-        String message = RANKED_PREFIX + languageManager.getPluginMessage("ranked.sizeSet")
-                .replace("{size}", String.valueOf(size));
-        match.sendMessage(Component.text(message));
-        if (queuePlayers.size() >= ConfigManager.getRankedSize()) {
-            startRanked(match);
-        }
+    if (size < 4 || size % 2 != 0) {
+      MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
+      matchPlayer.sendWarning(
+          Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.sizeInvalid")));
+      RankedPlayers.clearCaptainHistory();
+      return;
     }
-
-    public void addPlayer(MatchPlayer player){
-        UUID playerUUID = player.getId();
-        if(player.isParticipating() || player.getMatch().isRunning() || teams.isPlayerInAnyTeam(player.getNameLegacy())){
-            player.sendWarning(Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.matchInProgress")));
-            return;
-        }
-        if(queuePlayers.contains(playerUUID)) {
-            player.sendWarning(Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.alreadyInQueue")));
-            return;
-        }
-        Match match = player.getMatch();
-        String map = match.getMap().getName();
-        if(!ConfigManager.getRankedMaps().contains(map)) {
-            player.sendWarning(Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.notRankedMap")
-                    .replace("{map}", map)));
-            return;
-        }
-        queuePlayers.add(playerUUID);
-        Component message = Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.joinedQueue")
-                .replace("{player}", player.getPrefixedName())
-                .replace("{size}", String.valueOf(queuePlayers.size()))
-                .replace("{max}", String.valueOf(ConfigManager.getRankedSize())));
-        match.sendMessage(message);
-        if (queuePlayers.size() >= ConfigManager.getRankedSize()) {
-            startRanked(match);
-        }
+    Match match = PGM.get().getMatchManager().getMatch(sender);
+    ConfigManager.setRankedSize(size);
+    String message = RANKED_PREFIX
+        + languageManager
+            .getPluginMessage("ranked.sizeSet")
+            .replace("{size}", String.valueOf(size));
+    match.sendMessage(Component.text(message));
+    if (queuePlayers.size() >= ConfigManager.getRankedSize()) {
+      startRanked(match);
     }
+  }
 
-    public void removePlayer(MatchPlayer player){
-        UUID playerUUID = player.getId();
-        if(!queuePlayers.contains(playerUUID)) {
-            player.sendWarning(Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.notInQueue")));
-            return;
+  public void addPlayer(MatchPlayer player) {
+    UUID playerUUID = player.getId();
+    if (player.isParticipating()
+        || player.getMatch().isRunning()
+        || teams.isPlayerInAnyTeam(player.getNameLegacy())) {
+      player.sendWarning(Component.text(
+          RANKED_PREFIX + languageManager.getPluginMessage("ranked.matchInProgress")));
+      return;
+    }
+    if (queuePlayers.contains(playerUUID)) {
+      player.sendWarning(Component.text(
+          RANKED_PREFIX + languageManager.getPluginMessage("ranked.alreadyInQueue")));
+      return;
+    }
+    Match match = player.getMatch();
+    String map = match.getMap().getName();
+    if (!ConfigManager.getRankedMaps().contains(map)) {
+      player.sendWarning(Component.text(RANKED_PREFIX
+          + languageManager.getPluginMessage("ranked.notRankedMap").replace("{map}", map)));
+      return;
+    }
+    queuePlayers.add(playerUUID);
+    Component message = Component.text(RANKED_PREFIX
+        + languageManager
+            .getPluginMessage("ranked.joinedQueue")
+            .replace("{player}", player.getPrefixedName())
+            .replace("{size}", String.valueOf(queuePlayers.size()))
+            .replace("{max}", String.valueOf(ConfigManager.getRankedSize())));
+    match.sendMessage(message);
+    if (queuePlayers.size() >= ConfigManager.getRankedSize()) {
+      startRanked(match);
+    }
+  }
+
+  public void removePlayer(MatchPlayer player) {
+    UUID playerUUID = player.getId();
+    if (!queuePlayers.contains(playerUUID)) {
+      player.sendWarning(
+          Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.notInQueue")));
+      return;
+    }
+    queuePlayers.remove(playerUUID);
+    Component message = Component.text(RANKED_PREFIX
+        + languageManager
+            .getPluginMessage("ranked.leftQueue")
+            .replace("{player}", player.getPrefixedName())
+            .replace("{size}", String.valueOf(queuePlayers.size()))
+            .replace("{max}", String.valueOf(ConfigManager.getRankedSize())));
+    player.getMatch().sendMessage(message);
+  }
+
+  public static void removePlayer(MatchPlayer player, LanguageManager languageManager) {
+    UUID playerUUID = player.getId();
+    if (!queuePlayers.contains(playerUUID)) {
+      player.sendWarning(
+          Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.notInQueue")));
+      return;
+    }
+    queuePlayers.remove(playerUUID);
+    Component message = Component.text(RANKED_PREFIX
+        + languageManager
+            .getPluginMessage("ranked.leftQueue")
+            .replace("{player}", player.getPrefixedName())
+            .replace("{size}", String.valueOf(queuePlayers.size()))
+            .replace("{max}", String.valueOf(ConfigManager.getRankedSize())));
+    player.getMatch().sendMessage(message);
+  }
+
+  public void startRanked(Match match) {
+    if (match.getPhase() == MatchPhase.RUNNING
+        || match.getPhase() == MatchPhase.FINISHED
+        || countdownActive) {
+      return;
+    }
+    countdownActive = true;
+    final int[] countdown = {5};
+    new BukkitRunnable() {
+      @Override
+      public void run() {
+        if (countdown[0] <= 0) {
+          String table = ConfigManager.getRankedDefaultTable();
+          ConfigManager.addTempTable(table);
+          if (ConfigManager.isRankedMatchmaking()) {
+            queueWithMatchmaking(match);
+          } else {
+            queueWithCaptains(match, table);
+          }
+          // Cancelar el countdown
+          this.cancel();
+          countdownActive = false;
+          return;
         }
-        queuePlayers.remove(playerUUID);
-        Component message = Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.leftQueue")
-                .replace("{player}", player.getPrefixedName())
-                .replace("{size}", String.valueOf(queuePlayers.size()))
-                .replace("{max}", String.valueOf(ConfigManager.getRankedSize())));
-        player.getMatch().sendMessage(message);
-    }
-
-    public static void removePlayer(MatchPlayer player, LanguageManager languageManager) {
-        UUID playerUUID = player.getId();
-        if(!queuePlayers.contains(playerUUID)) {
-            player.sendWarning(Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.notInQueue")));
-            return;
+        if (queuePlayers.size() < ConfigManager.getRankedSize()) {
+          this.cancel();
+          countdownActive = false;
+          match.sendWarning(
+              Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.cancelled")));
+          return;
         }
-        queuePlayers.remove(playerUUID);
-        Component message = Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.leftQueue")
-                .replace("{player}", player.getPrefixedName())
-                .replace("{size}", String.valueOf(queuePlayers.size()))
-                .replace("{max}", String.valueOf(ConfigManager.getRankedSize())));
-        player.getMatch().sendMessage(message);
-    }
+        match.sendMessage(Component.text(RANKED_PREFIX
+            + languageManager
+                .getPluginMessage("ranked.countdown")
+                .replace("{time}", String.valueOf(countdown[0]))));
+        match.playSound(Sounds.INVENTORY_CLICK);
+        countdown[0]--;
+      }
+    }.runTaskTimer(plugin, 0, 20L);
+  }
 
-    public void startRanked(Match match){
-        if (match.getPhase() == MatchPhase.RUNNING || match.getPhase() == MatchPhase.FINISHED || countdownActive) {
-            return;
-        }
-        countdownActive = true;
-        final int[] countdown = { 5 };
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if(countdown[0] <= 0){
-                    String table = ConfigManager.getRankedDefaultTable();
-                    ConfigManager.addTempTable(table);  
-                    if (ConfigManager.isRankedMatchmaking()) {
-                        queueWithMatchmaking(match);
-                    } else {
-                        queueWithCaptains(match, table);
-                    }
-                    // Cancelar el countdown
-                        this.cancel();
-                        countdownActive = false;
-                        return;
-                }
-                if (queuePlayers.size() < ConfigManager.getRankedSize()) {
-                    this.cancel();
-                    countdownActive = false;
-                    match.sendWarning(Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.cancelled")));
-                    return;
-                }
-                match.sendMessage(Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.countdown")
-                        .replace("{time}", String.valueOf(countdown[0]))));
-                match.playSound(Sounds.INVENTORY_CLICK);
-                countdown[0]--;
-            }
-        }.runTaskTimer(plugin, 0, 20L);
-    }
-
-    private void queueWithCaptains(Match match, String table){
-        // Obtener a los primeros jugadores y borrarlos de la queue
-        List<String> rankedPlayers = queuePlayers
-                .subList(0, ConfigManager.getRankedSize()).stream()
-                .map(uuid -> PGM.get().getMatchManager().getPlayer(uuid).getNameLegacy())
-                .collect(Collectors.toList());
-        // Obtener los MatchPlayers de los jugadores seleccionados
-        List<MatchPlayer> rankedMatchPlayers = rankedPlayers.stream()
-                .map(username -> PGM.get().getMatchManager().getPlayer(getUUIDFromUsername(username)))
-                .collect(Collectors.toList());
-        ItemListener.removeItemToPlayers(rankedMatchPlayers);
-        // Borrar los jugadores de la cola
-        queuePlayers.subList(0, ConfigManager.getRankedSize()).clear();
-        // Obtener el elo
-        StatsManager.getEloForUsernames(table, rankedPlayers, eloList -> {
-            List<Map.Entry<MatchPlayer, Integer>> playersWithElo = eloList.stream()
-                .map(e -> {
-                    UUID uuid = getUUIDFromUsername(e.getUsername());
-                    MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
-                    return new AbstractMap.SimpleEntry<>(player, e.getCurrentElo());
-                })
-                .filter(entry -> entry.getKey() != null) // Validar que el MatchPlayer no sea null
-                .collect(Collectors.toList());
-
-            // Seleccionar capitanes
-            RankedPlayers pair = RankedPlayers.selectCaptains(playersWithElo);
-
-            // Aquí podrías hacer algo con los capitanes seleccionados
-            UUID captain1 = pair.getCaptain1();
-            UUID captain2 = pair.getCaptain2();
-            List<MatchPlayer> remaining = pair.getRemainingPlayers();
-
-            // Iniciar el draft
-            draft.setCustomOrderPattern(ConfigManager.getRankedOrder(), 0);
-            draft.startDraft(captain1, captain2, remaining, match, true);
-            
-            // Limpiar las listas de jugadores
-            rankedPlayers.clear();
-            rankedMatchPlayers.clear();
-            playersWithElo.clear();
-        });
-    }
-
-    private void queueWithMatchmaking(Match match){
-        // Obtener a los primeros jugadores y borrarlos de la queue
-        List<String> rankedPlayers = queuePlayers
-                .subList(0, ConfigManager.getRankedSize()).stream()
-                .map(uuid -> PGM.get().getMatchManager().getPlayer(uuid).getNameLegacy())
-                .collect(Collectors.toList());
-        // Obtener los MatchPlayers de los jugadores seleccionados
-        List<MatchPlayer> rankedMatchPlayers = rankedPlayers.stream()
-                .map(username -> PGM.get().getMatchManager().getPlayer(getUUIDFromUsername(username)))
-                .collect(Collectors.toList());
-        ItemListener.removeItemToPlayers(rankedMatchPlayers);
-        // Borrar los jugadores de la cola
-        queuePlayers.subList(0, ConfigManager.getRankedSize()).clear();
-        matchmaking.startMatchmaking(rankedMatchPlayers, match);
-    }
-
-    public List<String> getQueueList() {
-        List<String> players = new ArrayList<>();
-        for (UUID uuid : queuePlayers) {
+  private void queueWithCaptains(Match match, String table) {
+    // Obtener a los primeros jugadores y borrarlos de la queue
+    List<String> rankedPlayers = queuePlayers.subList(0, ConfigManager.getRankedSize()).stream()
+        .map(uuid -> PGM.get().getMatchManager().getPlayer(uuid).getNameLegacy())
+        .collect(Collectors.toList());
+    // Obtener los MatchPlayers de los jugadores seleccionados
+    List<MatchPlayer> rankedMatchPlayers = rankedPlayers.stream()
+        .map(username -> PGM.get().getMatchManager().getPlayer(getUUIDFromUsername(username)))
+        .collect(Collectors.toList());
+    ItemListener.removeItemToPlayers(rankedMatchPlayers);
+    // Borrar los jugadores de la cola
+    queuePlayers.subList(0, ConfigManager.getRankedSize()).clear();
+    // Obtener el elo
+    StatsManager.getEloForUsernames(table, rankedPlayers, eloList -> {
+      List<Map.Entry<MatchPlayer, Integer>> playersWithElo = eloList.stream()
+          .map(e -> {
+            UUID uuid = getUUIDFromUsername(e.getUsername());
             MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
-            if (player != null) {
-                String playerName = player.getPrefixedName();
-                players.add(playerName);
-            }
-        }
-        return players;
-    }
+            return new AbstractMap.SimpleEntry<>(player, e.getCurrentElo());
+          })
+          .filter(entry -> entry.getKey() != null) // Validar que el MatchPlayer no sea null
+          .collect(Collectors.toList());
 
-    public static int getQueueSize() {
-        return queuePlayers.size();
-    }
+      // Seleccionar capitanes
+      RankedPlayers pair = RankedPlayers.selectCaptains(playersWithElo);
 
-    public List<UUID> getQueuePlayers() {
-        return new ArrayList<>(queuePlayers);
-    }
+      // Aquí podrías hacer algo con los capitanes seleccionados
+      UUID captain1 = pair.getCaptain1();
+      UUID captain2 = pair.getCaptain2();
+      List<MatchPlayer> remaining = pair.getRemainingPlayers();
 
-    public static void clearQueue() {
-        queuePlayers.clear();
-        countdownActive = false;
-    }
+      // Iniciar el draft
+      draft.setCustomOrderPattern(ConfigManager.getRankedOrder(), 0);
+      draft.startDraft(captain1, captain2, remaining, match, true);
 
-    private UUID getUUIDFromUsername(String username) {
-        OfflinePlayer offline = Bukkit.getPlayerExact(username);
-        return offline != null ? offline.getUniqueId() : null;
-    }
+      // Limpiar las listas de jugadores
+      rankedPlayers.clear();
+      rankedMatchPlayers.clear();
+      playersWithElo.clear();
+    });
+  }
 
+  private void queueWithMatchmaking(Match match) {
+    // Obtener a los primeros jugadores y borrarlos de la queue
+    List<String> rankedPlayers = queuePlayers.subList(0, ConfigManager.getRankedSize()).stream()
+        .map(uuid -> PGM.get().getMatchManager().getPlayer(uuid).getNameLegacy())
+        .collect(Collectors.toList());
+    // Obtener los MatchPlayers de los jugadores seleccionados
+    List<MatchPlayer> rankedMatchPlayers = rankedPlayers.stream()
+        .map(username -> PGM.get().getMatchManager().getPlayer(getUUIDFromUsername(username)))
+        .collect(Collectors.toList());
+    ItemListener.removeItemToPlayers(rankedMatchPlayers);
+    // Borrar los jugadores de la cola
+    queuePlayers.subList(0, ConfigManager.getRankedSize()).clear();
+    matchmaking.startMatchmaking(rankedMatchPlayers, match);
+  }
+
+  public List<String> getQueueList() {
+    List<String> players = new ArrayList<>();
+    for (UUID uuid : queuePlayers) {
+      MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
+      if (player != null) {
+        String playerName = player.getPrefixedName();
+        players.add(playerName);
+      }
+    }
+    return players;
+  }
+
+  public static int getQueueSize() {
+    return queuePlayers.size();
+  }
+
+  public List<UUID> getQueuePlayers() {
+    return new ArrayList<>(queuePlayers);
+  }
+
+  public static void clearQueue() {
+    queuePlayers.clear();
+    countdownActive = false;
+  }
+
+  private UUID getUUIDFromUsername(String username) {
+    OfflinePlayer offline = Bukkit.getPlayerExact(username);
+    return offline != null ? offline.getUniqueId() : null;
+  }
 }

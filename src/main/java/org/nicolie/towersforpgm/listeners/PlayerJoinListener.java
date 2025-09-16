@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.listeners;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -8,62 +9,62 @@ import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Teams;
-
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.start.StartCountdown;
 
-import org.bukkit.entity.Player;
-
 public class PlayerJoinListener implements Listener {
-    private final AvailablePlayers availablePlayers;
-    private final Captains captains;
-    private final Teams teams;
-    private final TowersForPGM plugin;
+  private final AvailablePlayers availablePlayers;
+  private final Captains captains;
+  private final Teams teams;
+  private final TowersForPGM plugin;
 
-    public PlayerJoinListener(TowersForPGM plugin, AvailablePlayers availablePlayers, Teams teams, Captains captains) {
-        this.availablePlayers = availablePlayers;
-        this.captains = captains;
-        this.teams = teams;
-        this.plugin = plugin;
+  public PlayerJoinListener(
+      TowersForPGM plugin, AvailablePlayers availablePlayers, Teams teams, Captains captains) {
+    this.availablePlayers = availablePlayers;
+    this.captains = captains;
+    this.teams = teams;
+    this.plugin = plugin;
+  }
 
+  @EventHandler
+  public void onPlayerJoin(PlayerJoinEvent event) {
+    Player player = event.getPlayer();
+    String username = player.getName();
+    // Si el draft está activo
+    if (Draft.isDraftActive()) {
+      MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
+      Draft.showBossBarToPlayer(matchPlayer);
+      // Si el jugador está en getAvailableOfflinePlayers, pasarlo a getAvailablePlayers
+      availablePlayers.handleReconnect(player);
+      // Si el jugador está en algún equipo, añadirlo a la lista de jugadores desconectados
+      if (teams.isPlayerInAnyTeam(username)) {
+        teams.handleReconnect(player);
+      }
+      if ((teams.getTeamOfflinePlayers(1).size() - 1 == 0)
+          || (teams.getTeamOfflinePlayers(2).size() - 1 == 0)) {
+        Match match = PGM.get().getMatchManager().getMatch(player);
+        match.getCountdown().cancelAll(StartCountdown.class);
+      }
     }
 
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        String username = player.getName();
-        // Si el draft está activo
-        if(Draft.isDraftActive()) {
-            MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
-            Draft.showBossBarToPlayer(matchPlayer);
-            // Si el jugador está en getAvailableOfflinePlayers, pasarlo a getAvailablePlayers
-            availablePlayers.handleReconnect(player);
-            // Si el jugador está en algún equipo, añadirlo a la lista de jugadores desconectados
-            if (teams.isPlayerInAnyTeam(username)) {
-                teams.handleReconnect(player);
-            }
-            if ((teams.getTeamOfflinePlayers(1).size() - 1 == 0) || (teams.getTeamOfflinePlayers(2).size() - 1 == 0)) {
-                Match match = PGM.get().getMatchManager().getMatch(player);
-                match.getCountdown().cancelAll(StartCountdown.class);
-            }
-        }
-
-        // Verificamos si el jugador está en team1
-        if (teams.isPlayerInTeam(player.getName(), 1) ||
-            (captains.getCaptain1() != null && captains.getCaptain1().equals(player.getUniqueId()))) {
-                teams.assignTeam(player, 1);
-        } 
-        
-        // Verificamos si el jugador está en team2
-        else if (teams.isPlayerInTeam(player.getName(), 2) ||
-                 (captains.getCaptain2() != null && captains.getCaptain2().equals(player.getUniqueId()))) {
-                    teams.assignTeam(player, 2);
-        }
-
-        if (plugin.getDisconnectedPlayers().get(player.getName()) != null){
-            plugin.getDisconnectedPlayers().remove(player.getName());
-        }
+    // Verificamos si el jugador está en team1
+    if (teams.isPlayerInTeam(player.getName(), 1)
+        || (captains.getCaptain1() != null
+            && captains.getCaptain1().equals(player.getUniqueId()))) {
+      teams.assignTeam(player, 1);
     }
+
+    // Verificamos si el jugador está en team2
+    else if (teams.isPlayerInTeam(player.getName(), 2)
+        || (captains.getCaptain2() != null
+            && captains.getCaptain2().equals(player.getUniqueId()))) {
+      teams.assignTeam(player, 2);
+    }
+
+    if (plugin.getDisconnectedPlayers().get(player.getName()) != null) {
+      plugin.getDisconnectedPlayers().remove(player.getName());
+    }
+  }
 }
