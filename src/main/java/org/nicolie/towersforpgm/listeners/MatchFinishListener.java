@@ -12,7 +12,7 @@ import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.matchbot.EloStats;
-import org.nicolie.towersforpgm.matchbot.Embed;
+import org.nicolie.towersforpgm.matchbot.Embeds;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.Elo;
 import org.nicolie.towersforpgm.rankeds.ItemListener;
@@ -152,8 +152,8 @@ public class MatchFinishListener implements Listener {
             }
             if (TowersForPGM.getInstance().isMatchBotEnabled()) {
               Map<String, List<EloStats>> statsMap =
-                  Embed.getPlayerStats(match, allPlayers, eloChanges);
-              EmbedBuilder embed = Embed.createMatchFinishEmbed(
+                  Embeds.getPlayerStats(match, allPlayers, eloChanges);
+              EmbedBuilder embed = Embeds.createMatchFinishEmbed(
                   match,
                   match.getMap(),
                   statsMap.get("winners"),

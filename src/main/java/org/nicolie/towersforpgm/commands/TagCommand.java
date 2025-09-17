@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
-import org.nicolie.towersforpgm.matchbot.Embed;
+import org.nicolie.towersforpgm.matchbot.Embeds;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
@@ -74,7 +74,7 @@ public class TagCommand implements CommandExecutor {
     System.out.println(match.getPlayers().size());
     StatsManager.getEloForUsernames(
         ConfigManager.getRankedDefaultTable(), usernames, eloChanges -> {
-          EmbedBuilder embed = Embed.notifyPlayers(sender, match, eloChanges);
+          EmbedBuilder embed = Embeds.notifyPlayers(sender, match, eloChanges);
           MatchBot.getInstance().getBot().setEmbedThumbnail(match.getMap(), embed);
           MatchBot.getInstance()
               .getBot()

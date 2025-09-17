@@ -24,7 +24,7 @@ import tc.oc.pgm.stats.StatsMatchModule;
 import tc.oc.pgm.teams.Team;
 import tc.oc.pgm.teams.TeamMatchModule;
 
-public class Embed {
+public class Embeds {
 
   public static EmbedBuilder notifyPlayers(
       CommandSender sender, Match match, List<PlayerEloChange> eloChange) {

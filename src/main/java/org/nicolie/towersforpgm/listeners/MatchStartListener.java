@@ -11,7 +11,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Utilities;
-import org.nicolie.towersforpgm.matchbot.Embed;
+import org.nicolie.towersforpgm.matchbot.Embeds;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
@@ -61,7 +61,7 @@ public class MatchStartListener implements Listener {
         usernames.add(player.getNameLegacy());
       }
       StatsManager.getEloForUsernames(table, usernames, eloChanges -> {
-        EmbedBuilder embed = Embed.createMatchStartEmbed(event.getMatch(), eloChanges);
+        EmbedBuilder embed = Embeds.createMatchStartEmbed(event.getMatch(), eloChanges);
         MatchBot.getInstance().getBot().setEmbedThumbnail(event.getMatch().getMap(), embed);
         MatchBot.getInstance()
             .getBot()
