@@ -75,9 +75,7 @@ public class TagCommand implements CommandExecutor {
     StatsManager.getEloForUsernames(
         ConfigManager.getRankedDefaultTable(), usernames, eloChanges -> {
           EmbedBuilder embed = Embed.notifyPlayers(sender, match, eloChanges);
-          MatchBot.getInstance()
-              .getBot()
-              .setEmbedThumbnail(match.getMap(), embed, MatchBot.getInstance().getBot());
+          MatchBot.getInstance().getBot().setEmbedThumbnail(match.getMap(), embed);
           MatchBot.getInstance()
               .getBot()
               .sendMatchEmbed(

@@ -62,10 +62,7 @@ public class MatchStartListener implements Listener {
       }
       StatsManager.getEloForUsernames(table, usernames, eloChanges -> {
         EmbedBuilder embed = Embed.createMatchStartEmbed(event.getMatch(), eloChanges);
-        MatchBot.getInstance()
-            .getBot()
-            .setEmbedThumbnail(
-                event.getMatch().getMap(), embed, MatchBot.getInstance().getBot());
+        MatchBot.getInstance().getBot().setEmbedThumbnail(event.getMatch().getMap(), embed);
         MatchBot.getInstance()
             .getBot()
             .sendMatchEmbed(embed, event.getMatch(), ConfigManager.getRankedChannel(), null);

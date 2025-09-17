@@ -142,7 +142,6 @@ public class Embed {
       List<EloStats> loserStats,
       List<PlayerEloChange> eloChange) {
     String table = ConfigManager.getRankedDefaultTable();
-    DiscordBot bot = MatchBot.getInstance().getBot();
     EmbedBuilder embed = new EmbedBuilder()
         .setColor(Color.RED)
         .setTitle(TowersForPGM.getInstance()
@@ -174,10 +173,10 @@ public class Embed {
                 + TowersForPGM.getInstance()
                     .getLanguageManager()
                     .getPluginMessage("ranked.matchbot.duration"),
-            bot.parseDuration(match.getDuration()),
+            DiscordBot.parseDuration(match.getDuration()),
             true);
 
-    if (bot.getMapGamemodes(match).contains("scorebox")) {
+    if (DiscordBot.getMapGamemodes(match).contains("scorebox")) {
       StringBuilder scores = new StringBuilder();
       for (Map.Entry<Competitor, Double> entry :
           match.getModule(ScoreMatchModule.class).getScores().entrySet()) {
