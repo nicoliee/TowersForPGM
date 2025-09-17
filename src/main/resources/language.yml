@@ -102,6 +102,8 @@ messages:
       damageDone: "§7Damage Done"
       damageTaken: "§7Damage Taken"
       games: "§7Games"
+      winstreak: "§7Winstreak"
+      maxWinstreak: "§7Max Winstreak"
       mvp: "§7MVP of the match: §6{player}§f."
       noStats: "§cPlayer not found."
       points: "§7Points"
@@ -125,7 +127,7 @@ messages:
       tempRemoved: "§aTemporary table removed."
     top:
       header: "§7Top §3{category} §7in §2{table} §8[§7Page: §f{page}§8]"
-      invalidCategory: "§cInvalid category. Valid categories are: kills, deaths, points, wins, games."
+      invalidCategory: "§cInvalid category. Valid categories are: "
       invalidPage: "§cInvalid page."
       usage: "§cUsage: /top <kills|deaths|points|wins|games> [page] [table]"
 
@@ -315,7 +317,7 @@ messages:
       notFound: "§cEl mapa §2{map} §cno fue encontrado."
     top:
       header: "§7Top §3{category} §7en §2{table} §8[§7Página: §f{page}§8]"
-      invalidCategory: "§cCategoría inválida. Las categorías son: kills, deaths, points, wins, games."
+      invalidCategory: "§cCategoría inválida. Las categorías son: "
       invalidPage: "§cPágina inválida."
       usage: "§cUso: /top <kills|deaths|points|wins|games> [página] [tabla]"
     gui:

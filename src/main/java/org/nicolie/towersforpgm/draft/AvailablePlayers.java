@@ -157,11 +157,12 @@ public class AvailablePlayers {
       String sql;
       if (isRanked) {
         sql =
-            "SELECT elo, kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM "
+            "SELECT elo, kills, deaths, assists, damageDone, damageTaken, points, wins, games, winstreak, maxWinstreak FROM "
                 + table + " WHERE username = ?";
       } else {
-        sql = "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games FROM "
-            + table + " WHERE username = ?";
+        sql =
+            "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games, winstreak, maxWinstreak FROM "
+                + table + " WHERE username = ?";
       }
 
       try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
@@ -182,24 +183,27 @@ public class AvailablePlayers {
                 rs.getDouble("damageTaken"),
                 rs.getInt("points"),
                 rs.getInt("wins"),
-                rs.getInt("games"));
+                rs.getInt("games"),
+                rs.getInt("winstreak"),
+                rs.getInt("maxWinstreak"));
             playerStats.put(playerName, stats);
           } else {
             // Si no hay estadísticas, poner valores predeterminados
             int elo = isRanked ? 0 : -9999;
-            playerStats.put(playerName, new PlayerStats(elo, 0, 0, 0, 0, 0, 0, 0, 0));
+            playerStats.put(playerName, new PlayerStats(elo, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
           }
         }
       } catch (SQLException e) {
         // En caso de error, agregamos estadísticas predeterminadas
         int elo = isRanked ? 0 : -9999;
-        playerStats.put(playerName, new PlayerStats(elo, 0, 0, 0, 0, 0, 0, 0, 0));
+        playerStats.put(playerName, new PlayerStats(elo, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
       }
     });
   }
 
   public PlayerStats getStatsForPlayer(String playerName) {
-    return playerStats.getOrDefault(playerName, new PlayerStats(-9999, 0, 0, 0, 0, 0, 0, 0, 0));
+    return playerStats.getOrDefault(
+        playerName, new PlayerStats(-9999, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
   }
 
   private void updateTopPlayers() {

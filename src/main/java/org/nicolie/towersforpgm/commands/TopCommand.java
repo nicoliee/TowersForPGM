@@ -46,10 +46,11 @@ public class TopCommand implements CommandExecutor, TabCompleter {
     }
 
     String category = args[0].toLowerCase();
-    if (!category.matches(
-        "elo|maxelo|kills|deaths|assists|damagedone|damagetaken|points|wins|games")) {
+    String categories =
+        "elo|maxelo|kills|deaths|assists|damagedone|damagetaken|points|wins|games|winstreak|maxwinstreak";
+    if (!category.matches(categories)) {
       matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("top.invalidCategory")));
+          Component.text(languageManager.getPluginMessage("top.invalidCategory") + categories));
       return true;
     }
 
@@ -97,7 +98,9 @@ public class TopCommand implements CommandExecutor, TabCompleter {
               "damageTaken",
               "points",
               "wins",
-              "games"));
+              "games",
+              "winstreak",
+              "maxWinstreak"));
     }
     if (args.length == 2) {
       return Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");

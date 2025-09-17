@@ -10,6 +10,8 @@ public class PlayerStats {
   private int points;
   private int wins;
   private int games;
+  private int winstreak;
+  private int maxWinstreak;
 
   public PlayerStats(
       int elo,
@@ -20,7 +22,9 @@ public class PlayerStats {
       double damageTaken,
       int points,
       int wins,
-      int games) {
+      int games,
+      int winstreak,
+      int maxWinstreak) {
     this.elo = elo;
     this.kills = kills;
     this.deaths = deaths;
@@ -30,6 +34,8 @@ public class PlayerStats {
     this.points = points;
     this.wins = wins;
     this.games = games;
+    this.winstreak = winstreak;
+    this.maxWinstreak = maxWinstreak;
   }
 
   public int getElo() {
@@ -66,5 +72,13 @@ public class PlayerStats {
 
   public int getGames() {
     return games;
+  }
+
+  public int getWinstreak() {
+    return winstreak;
+  }
+
+  public int getMaxWinstreak() {
+    return maxWinstreak;
   }
 }

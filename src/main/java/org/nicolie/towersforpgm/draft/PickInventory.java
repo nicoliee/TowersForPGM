@@ -221,6 +221,8 @@ public class PickInventory implements Listener {
     lore.add(languageManager.getPluginMessage("stats.points") + ": §a" + stats.getPoints());
     lore.add(languageManager.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
     lore.add(languageManager.getPluginMessage("stats.games") + ": §a" + stats.getGames());
+    lore.add(languageManager.getPluginMessage("stats.winstreak") + ": §a" + stats.getWinstreak()
+        + " §7(Max: §a" + stats.getMaxWinstreak() + ")");
     lore.add(" ");
     lore.add(languageManager.getPluginMessage("draft.clickToPick"));
     meta.setLore(lore);
