@@ -12,19 +12,23 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.nicolie.towersforpgm.commands.EloCommand;
 import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.commands.RankedCommand;
 import org.nicolie.towersforpgm.commands.TagCommand;
-import org.nicolie.towersforpgm.database.DatabaseManager;
-import org.nicolie.towersforpgm.database.TableManager;
+import org.nicolie.towersforpgm.database.sql.SQLDatabaseManager;
+import org.nicolie.towersforpgm.database.sqlite.SQLITEDatabaseManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Matchmaking;
-import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.draft.Utilities;
+import org.nicolie.towersforpgm.gui.Picks;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
+import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
+import org.nicolie.towersforpgm.matchbot.commands.stats.StatsCommand;
+import org.nicolie.towersforpgm.matchbot.commands.top.TopCommand;
+import org.nicolie.towersforpgm.matchbot.commands.top.TopPaginationListener;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.preparationTime.Region;
@@ -47,8 +51,10 @@ public final class TowersForPGM extends JavaPlugin {
   private boolean preparationEnabled = true; // Protección de partida
 
   // Base de datos
-  private DatabaseManager databaseManager; // Administrador de la base de datos
-  private boolean isDatabaseActivated = false; // Base de datos activada
+  private SQLDatabaseManager mysqlDatabaseManager;
+  private SQLITEDatabaseManager sqliteDatabaseManager;
+  private boolean database = false; // Base de datos activada
+  private String currentDatabaseType = "None"; // Tipo de base de datos actual (MySQL/SQLite/None)
   private final Map<String, MatchPlayer> disconnectedPlayers =
       new HashMap<>(); // Mapa para almacenar los jugadores
   private boolean isStatsCancel = false; // Variable para cancelar el envío de estadísticas
@@ -58,7 +64,7 @@ public final class TowersForPGM extends JavaPlugin {
   private Captains captains;
   private Draft draft;
   private Teams teams;
-  private PickInventory pickInventory;
+  private Picks pickInventory;
   private Utilities utilities;
 
   // Refill
@@ -71,6 +77,8 @@ public final class TowersForPGM extends JavaPlugin {
 
   // MatchBot (opcional)
   private boolean isMatchBotEnabled = false; // Variable para verificar si MatchBot está habilitado
+  private File matchBotFile;
+  private FileConfiguration matchBotConfig;
 
   @Override
   public void onEnable() {
@@ -94,16 +102,13 @@ public final class TowersForPGM extends JavaPlugin {
     preparationListener = new PreparationListener(languageManager);
 
     // Base de datos
-    isDatabaseActivated = getConfig().getBoolean("database.enabled", false);
-    if (isDatabaseActivated) {
-      // Conectar a MySQL
-      databaseManager = new DatabaseManager(this);
-      databaseManager.connect();
+    initializeDatabase();
 
-      // Crear tablas al inicio si la base de datos está activada
+    // Crear tablas al inicio si hay alguna conexión de base de datos disponible
+    if (database) {
       createTablesOnStartup();
     } else {
-      getLogger().info("Database is disabled.");
+      getLogger().warning("No database connections available!");
     }
 
     // Inicializar el Draft
@@ -112,7 +117,7 @@ public final class TowersForPGM extends JavaPlugin {
     teams = new Teams();
     utilities = new Utilities(availablePlayers, captains, languageManager);
     draft = new Draft(captains, availablePlayers, teams, languageManager, utilities);
-    pickInventory = new PickInventory(draft, captains, availablePlayers, teams, languageManager);
+    pickInventory = new Picks(draft, captains, availablePlayers, teams, languageManager);
     getServer().getPluginManager().registerEvents(pickInventory, this);
 
     // Inicializar el matchmaking
@@ -122,7 +127,6 @@ public final class TowersForPGM extends JavaPlugin {
     // Registrar Rankeds
     Queue queue = new Queue(draft, matchmaking, languageManager, teams);
     getCommand("ranked").setExecutor(new RankedCommand(languageManager, queue, utilities));
-    getCommand("elo").setExecutor(new EloCommand(languageManager));
     getCommand("forfeit").setExecutor(new ForfeitCommand(languageManager));
     getCommand("tag").setExecutor(new TagCommand(languageManager));
     // Registrar comandos
@@ -154,6 +158,17 @@ public final class TowersForPGM extends JavaPlugin {
         && getServer().getPluginManager().getPlugin("MatchBot").isEnabled()) {
       getLogger().info("MatchBot plugin found, initializing MatchBot integration.");
       isMatchBotEnabled = true;
+
+      // Cargar configuración de MatchBot
+      loadMatchBotConfig();
+
+      if (database) {
+
+        StatsCommand.register();
+        TopCommand.register();
+        TopPaginationListener.register();
+        AutocompleteHandler.register();
+      }
     }
 
     // Verificar actualizaciones
@@ -165,9 +180,12 @@ public final class TowersForPGM extends JavaPlugin {
 
   @Override
   public void onDisable() {
-    // Desconectar de MySQL
-    if (databaseManager != null) {
-      databaseManager.disconnect();
+    // Desconectar de las bases de datos
+    if (mysqlDatabaseManager != null) {
+      mysqlDatabaseManager.disconnect();
+    }
+    if (sqliteDatabaseManager != null) {
+      sqliteDatabaseManager.disconnect();
     }
   }
 
@@ -282,25 +300,122 @@ public final class TowersForPGM extends JavaPlugin {
   }
 
   // Base de datos
-  // Método para obtener el administrador de la base de datos
-  public DatabaseManager getDatabaseManager() {
-    return databaseManager;
+  // Método para obtener el administrador de la base de datos MySQL
+  public SQLDatabaseManager getMySQLDatabaseManager() {
+    return mysqlDatabaseManager;
+  }
+
+  // Método para obtener el administrador de la base de datos SQLite
+  public SQLITEDatabaseManager getSQLiteDatabaseManager() {
+    return sqliteDatabaseManager;
+  }
+
+  // Método para obtener una conexión de base de datos (la que esté activa)
+  public java.sql.Connection getDatabaseConnection() throws java.sql.SQLException {
+    if ("MySQL".equals(currentDatabaseType) && mysqlDatabaseManager != null) {
+      return mysqlDatabaseManager.getConnection();
+    } else if ("SQLite".equals(currentDatabaseType) && sqliteDatabaseManager != null) {
+      return sqliteDatabaseManager.getConnection();
+    }
+    throw new java.sql.SQLException("No hay conexiones de base de datos disponibles");
   }
 
   // Método para crear tablas al inicio
   private void createTablesOnStartup() {
-    ConfigManager.getTables().forEach(TableManager::createTable);
-    ConfigManager.getRankedTables().forEach(TableManager::createTable);
+    ConfigManager.getTables().forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
+    ConfigManager.getRankedTables()
+        .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
+  }
+
+  // Método para inicializar la base de datos
+  private void initializeDatabase() {
+    database = false; // Por defecto desactivada
+    currentDatabaseType = "None";
+
+    // Verificar si MySQL está habilitado en la configuración
+    if (getConfig().getBoolean("database.enabled", false)) {
+      mysqlDatabaseManager = new SQLDatabaseManager(this);
+      try {
+        mysqlDatabaseManager.connect();
+        // Verificar si la conexión MySQL realmente funciona
+        if (testDatabaseConnection(mysqlDatabaseManager)) {
+          database = true;
+          currentDatabaseType = "MySQL";
+          getLogger().info("Usando MySQL como base de datos.");
+          return;
+        }
+      } catch (Exception e) {
+        getLogger().warning("No se pudo conectar a MySQL: " + e.getMessage());
+      }
+    }
+
+    // Si MySQL falló o no está habilitado, intentar SQLite
+    sqliteDatabaseManager = new SQLITEDatabaseManager(this);
+    try {
+      // Forzar habilitación de SQLite para fallback
+      getConfig().set("database.sqlite.enabled", true);
+      sqliteDatabaseManager.connect();
+      // Verificar si la conexión SQLite realmente funciona
+      if (testDatabaseConnection(sqliteDatabaseManager)) {
+        database = true;
+        currentDatabaseType = "SQLite";
+        getLogger().info("Usando SQLite como base de datos (fallback).");
+      }
+    } catch (Exception e) {
+      getLogger().severe("No se pudo conectar a SQLite: " + e.getMessage());
+    }
+
+    if (!database) {
+      getLogger().severe("ADVERTENCIA: No hay conexiones de base de datos disponibles!");
+    }
+  }
+
+  // Método para probar la conexión de base de datos
+  private boolean testDatabaseConnection(Object databaseManager) {
+    try {
+      if (databaseManager instanceof SQLDatabaseManager) {
+        java.sql.Connection conn = ((SQLDatabaseManager) databaseManager).getConnection();
+        if (conn != null && !conn.isClosed() && conn.isValid(5)) {
+          conn.close();
+          return true;
+        }
+      } else if (databaseManager instanceof SQLITEDatabaseManager) {
+        java.sql.Connection conn = ((SQLITEDatabaseManager) databaseManager).getConnection();
+        // Para SQLite, solo verificar que la conexión no esté cerrada
+        // ya que isValid() no está implementado en el driver SQLite
+        if (conn != null && !conn.isClosed()) {
+          // Intentar ejecutar una consulta simple para verificar la conexión
+          try {
+            conn.createStatement().executeQuery("SELECT 1").close();
+            conn.close();
+            return true;
+          } catch (Exception queryException) {
+            if (!conn.isClosed()) {
+              conn.close();
+            }
+            throw queryException;
+          }
+        }
+      }
+    } catch (Exception e) {
+      getLogger().warning("Error probando conexión de base de datos: " + e.getMessage());
+    }
+    return false;
   }
 
   // Método para obtener el booleano de activación de la base de datos
   public boolean getIsDatabaseActivated() {
-    return isDatabaseActivated;
+    return database;
+  }
+
+  // Método para obtener el tipo de base de datos actual
+  public String getCurrentDatabaseType() {
+    return currentDatabaseType;
   }
 
   // Método para establecer el booleano de activación de la base de datos
   public void setIsDatabaseActivated(boolean activated) {
-    this.isDatabaseActivated = activated;
+    this.database = activated;
   }
 
   // Método para obtener los jugadores desconectados
@@ -362,5 +477,38 @@ public final class TowersForPGM extends JavaPlugin {
   // MatchBot
   public boolean isMatchBotEnabled() {
     return isMatchBotEnabled;
+  }
+
+  public void loadMatchBotConfig() {
+    matchBotFile = new File(getDataFolder(), "matchbot.yml");
+
+    // Si el archivo no existe, crearlo desde recursos
+    if (!matchBotFile.exists()) {
+      saveResource("matchbot.yml", false);
+    }
+
+    matchBotConfig = YamlConfiguration.loadConfiguration(matchBotFile);
+
+    // Cargar la configuración en MatchBotConfig
+    MatchBotConfig.loadConfig(matchBotConfig);
+
+    getLogger().info("MatchBot configuration loaded successfully.");
+  }
+
+  public FileConfiguration getMatchBotConfig() {
+    return matchBotConfig;
+  }
+
+  public void saveMatchBotConfig() {
+    try {
+      matchBotConfig.save(matchBotFile);
+    } catch (IOException e) {
+      getLogger().severe("Error al guardar matchbot.yml: " + e.getMessage());
+    }
+  }
+
+  public void reloadMatchBotConfig() {
+    matchBotConfig = YamlConfiguration.loadConfiguration(matchBotFile);
+    MatchBotConfig.loadConfig(matchBotConfig);
   }
 }

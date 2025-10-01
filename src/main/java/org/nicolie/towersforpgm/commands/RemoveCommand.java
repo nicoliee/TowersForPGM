@@ -12,8 +12,8 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
@@ -25,7 +25,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter {
   private final Teams teams;
   private final AvailablePlayers availablePlayers;
   private final LanguageManager languageManager;
-  private final PickInventory pickInventory;
+  private final Picks pickInventory;
 
   public RemoveCommand(
       Draft draft,
@@ -33,7 +33,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter {
       Captains captains,
       AvailablePlayers availablePlayers,
       LanguageManager languageManager,
-      PickInventory pickInventory) {
+      Picks pickInventory) {
     this.draft = draft;
     this.teams = teams;
     this.availablePlayers = availablePlayers;

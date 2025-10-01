@@ -5,6 +5,7 @@ import java.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.MatchManager;
+import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
@@ -58,7 +59,7 @@ public class Matchmaking {
     List<PlayerStatsPair> playerRatings = new ArrayList<>();
 
     for (MatchPlayer player : players) {
-      PlayerStats stats = availablePlayers.getStatsForPlayer(player.getNameLegacy());
+      Stats stats = availablePlayers.getStatsForPlayer(player.getNameLegacy());
       int rating = calculatePlayerRating(stats);
       playerRatings.add(new PlayerStatsPair(player.getNameLegacy(), rating));
     }
@@ -104,7 +105,7 @@ public class Matchmaking {
 
     List<PlayerStatsPair> playerStats = new ArrayList<>();
     for (String playerName : allPlayers) {
-      PlayerStats stats = availablePlayers.getStatsForPlayer(playerName);
+      Stats stats = availablePlayers.getStatsForPlayer(playerName);
       int rating = calculatePlayerRating(stats);
       playerStats.add(new PlayerStatsPair(playerName, rating));
     }
@@ -201,7 +202,7 @@ public class Matchmaking {
     }
   }
 
-  private int calculatePlayerRating(PlayerStats stats) {
+  private int calculatePlayerRating(Stats stats) {
     if (stats == null) {
       return 0;
     }
@@ -535,7 +536,7 @@ public class Matchmaking {
   private int calculateTeamRating(List<String> teamNames) {
     int totalRating = 0;
     for (String playerName : teamNames) {
-      PlayerStats stats = availablePlayers.getStatsForPlayer(playerName);
+      Stats stats = availablePlayers.getStatsForPlayer(playerName);
       totalRating += calculatePlayerRating(stats);
     }
     return totalRating;

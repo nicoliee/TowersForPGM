@@ -42,16 +42,9 @@ commands:
     usage: /remove <nick>
     aliases: [rem, delete, del]
     permission: towers.captains
-  stat:
-    description: Muestra estadísticas de un jugador.
-    usage: /stat <jugador> [tabla]
-    aliases: [estadisticas]
   tag:
     description: Tagea a jugadores en discord para jugar rankeds.
     usage: /tag
-  top:
-    description: Muestra las mejores estadísticas de un jugador.
-    usage: /top <categoria> [cantidad] [tabla]
   towers:
     description: Comando principal de TowersForPGM.
     usage: /towers help

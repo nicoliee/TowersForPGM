@@ -7,15 +7,13 @@ import org.nicolie.towersforpgm.commands.PickCommand;
 import org.nicolie.towersforpgm.commands.PreparationTimeCommand;
 import org.nicolie.towersforpgm.commands.ReadyCommand;
 import org.nicolie.towersforpgm.commands.RemoveCommand;
-import org.nicolie.towersforpgm.commands.StatsCommand;
-import org.nicolie.towersforpgm.commands.TopCommand;
 import org.nicolie.towersforpgm.commands.TowersCommand;
 import org.nicolie.towersforpgm.commands.TowersForPGMCommand;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
@@ -33,7 +31,7 @@ public class Commands {
       Captains captains,
       Draft draft,
       LanguageManager languageManager,
-      PickInventory pickInventory,
+      Picks pickInventory,
       RefillManager refillManager,
       Teams teams,
       PreparationListener preparationListener) {
@@ -57,8 +55,6 @@ public class Commands {
         .getCommand("remove")
         .setExecutor(new RemoveCommand(
             draft, teams, captains, availablePlayers, languageManager, pickInventory));
-    plugin.getCommand("stat").setExecutor(new StatsCommand(languageManager));
-    plugin.getCommand("top").setExecutor(new TopCommand(languageManager));
     plugin.getCommand("towersForPGM").setExecutor(new TowersForPGMCommand(plugin, languageManager));
   }
 }

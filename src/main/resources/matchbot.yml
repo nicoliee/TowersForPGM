@@ -1,0 +1,6 @@
+tables:
+  - Amistoso
+  - TorneoT1
+  - RankedT1
+discordChannel: "" # Canal de Discord donde se enviarán los mensajes
+rankedRoleId: "" # ID del rol a tagear cunado se use /tag

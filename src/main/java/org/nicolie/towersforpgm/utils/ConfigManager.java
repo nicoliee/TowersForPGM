@@ -29,10 +29,6 @@ public class ConfigManager {
   private static List<String> rankedMaps;
   private static boolean rankedMatchmaking;
 
-  // --- MatchBot para rankeds ---
-  private static String rankedChannel;
-  private static String rankedRoleID;
-
   public static void loadConfig() {
     TowersForPGM plugin = TowersForPGM.getInstance();
     plugin.reloadConfig();
@@ -65,9 +61,6 @@ public class ConfigManager {
     rankedDefaultTable = plugin.getConfig().getString("rankeds.defaultTable", "");
     rankedMaps = plugin.getConfig().getStringList("rankeds.maps");
     rankedMatchmaking = plugin.getConfig().getBoolean("rankeds.matchmaking", false);
-    // Cargar configuraciones de matchbot para rankeds
-    rankedChannel = plugin.getConfig().getString("rankeds.matchbot.discordChannel", "");
-    rankedRoleID = plugin.getConfig().getString("rankeds.matchbot.rankedRoleId", "");
   }
 
   // --- Tablas ---
@@ -327,12 +320,10 @@ public class ConfigManager {
     plugin.saveConfig();
   }
 
-  // --- MatchBot ---
-  public static String getRankedChannel() {
-    return rankedChannel;
-  }
-
-  public static String getRankedRoleID() {
-    return rankedRoleID;
+  public static boolean isRanked(String table, String map) {
+    return ConfigManager.getRankedTables() != null
+        && ConfigManager.getRankedTables().contains(table)
+        && ConfigManager.getRankedMaps() != null
+        && ConfigManager.getRankedMaps().contains(map);
   }
 }

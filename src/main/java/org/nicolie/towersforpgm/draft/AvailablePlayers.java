@@ -1,9 +1,5 @@
 package org.nicolie.towersforpgm.draft;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
@@ -21,7 +18,7 @@ import tc.oc.pgm.api.player.MatchPlayer;
 public class AvailablePlayers {
   private final List<MatchPlayer> availablePlayers = new ArrayList<>();
   private final List<String> availableOfflinePlayers = new ArrayList<>();
-  private final Map<String, PlayerStats> playerStats = new HashMap<>();
+  private final Map<String, Stats> playerStats = new HashMap<>();
   private final List<String> topPlayers = new ArrayList<>();
 
   public void addPlayer(String playerName) {
@@ -153,64 +150,41 @@ public class AvailablePlayers {
     }
     boolean isRanked = ConfigManager.getRankedTables().contains(table);
 
-    Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
-      String sql;
-      if (isRanked) {
-        sql =
-            "SELECT elo, kills, deaths, assists, damageDone, damageTaken, points, wins, games, winstreak, maxWinstreak FROM "
-                + table + " WHERE username = ?";
-      } else {
-        sql =
-            "SELECT kills, deaths, assists, damageDone, damageTaken, points, wins, games, winstreak, maxWinstreak FROM "
-                + table + " WHERE username = ?";
-      }
-
-      try (Connection conn = TowersForPGM.getInstance().getDatabaseManager().getConnection();
-          PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-        stmt.setString(1, playerName);
-
-        try (ResultSet rs = stmt.executeQuery()) {
-          if (rs.next()) {
-            // Guardar las estadísticas del jugador
-            int elo = isRanked ? rs.getInt("elo") : -9999;
-            PlayerStats stats = new PlayerStats(
-                elo,
-                rs.getInt("kills"),
-                rs.getInt("deaths"),
-                rs.getInt("assists"),
-                rs.getDouble("damageDone"),
-                rs.getDouble("damageTaken"),
-                rs.getInt("points"),
-                rs.getInt("wins"),
-                rs.getInt("games"),
-                rs.getInt("winstreak"),
-                rs.getInt("maxWinstreak"));
+    org.nicolie.towersforpgm.database.StatsManager.getStats(table, playerName)
+        .thenAccept(stats -> {
+          if (stats != null) {
             playerStats.put(playerName, stats);
           } else {
-            // Si no hay estadísticas, poner valores predeterminados
             int elo = isRanked ? 0 : -9999;
-            playerStats.put(playerName, new PlayerStats(elo, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+            int lastElo = isRanked ? 0 : -9999;
+            int maxElo = isRanked ? 0 : -9999;
+            Stats defaultStats =
+                new Stats(playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, elo, lastElo, maxElo);
+            playerStats.put(playerName, defaultStats);
           }
-        }
-      } catch (SQLException e) {
-        // En caso de error, agregamos estadísticas predeterminadas
-        int elo = isRanked ? 0 : -9999;
-        playerStats.put(playerName, new PlayerStats(elo, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-      }
-    });
+        })
+        .exceptionally(throwable -> {
+          // En caso de error, agregamos estadísticas predeterminadas
+          int elo = isRanked ? 0 : -9999;
+          int lastElo = isRanked ? 0 : -9999;
+          int maxElo = isRanked ? 0 : -9999;
+          Stats defaultStats =
+              new Stats(playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, elo, lastElo, maxElo);
+          playerStats.put(playerName, defaultStats);
+          return null;
+        });
   }
 
-  public PlayerStats getStatsForPlayer(String playerName) {
+  public Stats getStatsForPlayer(String playerName) {
     return playerStats.getOrDefault(
-        playerName, new PlayerStats(-9999, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        playerName, new Stats(playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -9999, -9999, -9999));
   }
 
   private void updateTopPlayers() {
     List<Map.Entry<String, Double>> playersWithRating = new ArrayList<>();
 
     for (String playerName : getAllAvailablePlayers()) {
-      PlayerStats stats = getStatsForPlayer(playerName);
+      Stats stats = getStatsForPlayer(playerName);
 
       int kills = stats.getKills();
       int deaths = stats.getDeaths();

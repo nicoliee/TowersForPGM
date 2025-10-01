@@ -3,15 +3,16 @@ package org.nicolie.towersforpgm.listeners;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import me.tbg.match.bot.MatchBot;
+import me.tbg.match.bot.configs.DiscordBot;
+import net.dv8tion.jda.api.EmbedBuilder;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Utilities;
-import org.nicolie.towersforpgm.matchbot.Embeds;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
+import org.nicolie.towersforpgm.matchbot.embeds.RankedStart;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
@@ -60,13 +61,19 @@ public class MatchStartListener implements Listener {
       for (MatchPlayer player : players) {
         usernames.add(player.getNameLegacy());
       }
-      StatsManager.getEloForUsernames(table, usernames, eloChanges -> {
-        EmbedBuilder embed = Embeds.createMatchStartEmbed(event.getMatch(), eloChanges);
-        MatchBot.getInstance().getBot().setEmbedThumbnail(event.getMatch().getMap(), embed);
-        MatchBot.getInstance()
-            .getBot()
-            .sendMatchEmbed(embed, event.getMatch(), ConfigManager.getRankedChannel(), null);
-      });
+      StatsManager.getEloForUsernames(table, usernames)
+          .thenAccept(eloChanges -> {
+            EmbedBuilder embed = RankedStart.create(event.getMatch(), eloChanges);
+            DiscordBot.setEmbedThumbnail(event.getMatch().getMap(), embed);
+            DiscordBot.sendMatchEmbed(
+                embed, event.getMatch(), MatchBotConfig.getDiscordChannel(), null);
+          })
+          .exceptionally(throwable -> {
+            plugin
+                .getLogger()
+                .severe("Error al obtener ELO para match start: " + throwable.getMessage());
+            return null;
+          });
     }
   }
 }

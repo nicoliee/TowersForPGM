@@ -3,16 +3,16 @@ package org.nicolie.towersforpgm.listeners;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import me.tbg.match.bot.MatchBot;
+import me.tbg.match.bot.configs.DiscordBot;
+import net.dv8tion.jda.api.EmbedBuilder;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.matchbot.EloStats;
-import org.nicolie.towersforpgm.matchbot.Embeds;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
+import org.nicolie.towersforpgm.matchbot.embeds.RankedFinish;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.Elo;
 import org.nicolie.towersforpgm.rankeds.ItemListener;
@@ -72,8 +72,10 @@ public class MatchFinishListener implements Listener {
       ConfigManager.removeTempTable();
     }
     String mapName = event.getMatch().getMap().getName();
-    System.out.println("[-] Stats cancelled for match-" + event.getMatch().getId() + ": " + mapName
-        + ", stats not sent to database.");
+    TowersForPGM.getInstance()
+        .getLogger()
+        .info("[-] Stats cancelled for match-" + event.getMatch().getId() + ": " + mapName
+            + ", stats not sent to database.");
     SendMessage.sendToDevelopers(languageManager
         .getPluginMessage("stats.consoleCancel")
         .replace("{id}", String.valueOf(event.getMatch().getId()))
@@ -128,40 +130,42 @@ public class MatchFinishListener implements Listener {
             playerStats != null
                 ? ((playerStats.getDamageTaken() + playerStats.getBowDamageTaken()) / 2)
                 : 0, // Damage taken
+            0, // bowAccuracy (not used)
             totalPoints, // Points
             isWinner ? 1 : 0, // Wins
             1, // Games played
-            isWinner ? 1 : 0 // Winstreak
+            isWinner ? 1 : 0, // Winstreak
+            0, // maxWinstreak (not used)
+            0, // elo (not used)
+            0, // lastElo (not used)
+            0 // maxElo (not used)
             ));
       }
       if (!playerStatsList.isEmpty()) {
         String table;
         if (ConfigManager.getTempTable() != null) {
           table = ConfigManager.getTempTable();
-          ConfigManager.removeTempTable();
         } else {
           table = ConfigManager.getTableForMap(map);
         }
         // Aquí envías las estadísticas a la base de datos o lo que sea necesario
         String consoleMeString;
-        if (isRanked(table, map)) {
+        if (ConfigManager.isRanked(table, map)) {
           Elo.addWin(winners, losers).thenAccept(eloChanges -> {
             StatsManager.updateStats(table, playerStatsList, eloChanges);
             for (PlayerEloChange eloChange : eloChanges) {
               eloChange.sendMessage();
             }
             if (TowersForPGM.getInstance().isMatchBotEnabled()) {
-              Map<String, List<EloStats>> statsMap =
-                  Embeds.getPlayerStats(match, allPlayers, eloChanges);
-              EmbedBuilder embed = Embeds.createMatchFinishEmbed(
+              Map<String, List<Stats>> statsMap =
+                  RankedFinish.getPlayerStats(match, allPlayers, eloChanges);
+              EmbedBuilder embed = RankedFinish.create(
                   match,
                   match.getMap(),
                   statsMap.get("winners"),
                   statsMap.get("losers"),
                   eloChanges);
-              MatchBot.getInstance()
-                  .getBot()
-                  .sendMatchEmbed(embed, match, ConfigManager.getRankedChannel(), null);
+              DiscordBot.sendMatchEmbed(embed, match, MatchBotConfig.getDiscordChannel(), null);
             }
           });
           consoleMeString = "[+Ranked] match-" + event.getMatch().getId() + ": " + map
@@ -171,24 +175,18 @@ public class MatchFinishListener implements Listener {
           consoleMeString = "[+] match-" + event.getMatch().getId() + ": " + map
               + ", stats on table " + table + ": " + playerStatsList.toString();
         }
-        System.out.println(consoleMeString);
+        TowersForPGM.getInstance().getLogger().info(consoleMeString);
         SendMessage.sendToDevelopers(languageManager
             .getPluginMessage("stats.console")
             .replace(
                 "{id}",
-                (isRanked(table, map) ? "ranked-" : "") + event.getMatch().getId())
+                (ConfigManager.isRanked(table, map) ? "ranked-" : "")
+                    + event.getMatch().getId())
             .replace("{map}", map)
             .replace("{table}", table)
             .replace("{size}", String.valueOf(playerStatsList.size())));
       }
     }
-  }
-
-  private boolean isRanked(String table, String map) {
-    return ConfigManager.getRankedTables() != null
-        && ConfigManager.getRankedTables().contains(table)
-        && ConfigManager.getRankedMaps() != null
-        && ConfigManager.getRankedMaps().contains(map);
   }
 
   private void giveItemToPlayers(Match match) {

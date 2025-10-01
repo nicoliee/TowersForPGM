@@ -49,7 +49,6 @@ public class SendMessage {
     World world = Bukkit.getWorld(worldName);
 
     if (world == null) {
-      System.out.println("El mundo '" + worldName + "' no existe o no está cargado.");
       return;
     }
 

@@ -5,7 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.PickInventory;
+import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.rankeds.ItemListener;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import tc.oc.pgm.api.PGM;
@@ -14,9 +14,9 @@ import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.spawns.events.ObserverKitApplyEvent;
 
 public class ObserversKitApplyListener implements Listener {
-  private final PickInventory pickInventory;
+  private final Picks pickInventory;
 
-  public ObserversKitApplyListener(PickInventory pickInventory) {
+  public ObserversKitApplyListener(Picks pickInventory) {
     this.pickInventory = pickInventory;
   }
 

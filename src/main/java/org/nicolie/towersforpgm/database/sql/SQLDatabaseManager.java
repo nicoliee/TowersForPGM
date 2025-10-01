@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.database;
+package org.nicolie.towersforpgm.database.sql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -6,11 +6,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import org.nicolie.towersforpgm.TowersForPGM;
 
-public class DatabaseManager {
+public class SQLDatabaseManager {
   private final TowersForPGM plugin;
   private HikariDataSource dataSource;
 
-  public DatabaseManager(TowersForPGM plugin) {
+  public SQLDatabaseManager(TowersForPGM plugin) {
     this.plugin = plugin;
   }
 
@@ -34,7 +34,8 @@ public class DatabaseManager {
       }
 
       HikariConfig config = new HikariConfig();
-      config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + name + "?useSSL=false");
+      config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + name
+          + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
       config.setUsername(user);
       config.setPassword(password);
       config.setMaximumPoolSize(10);
@@ -55,38 +56,15 @@ public class DatabaseManager {
   }
 
   public Connection getConnection() throws SQLException {
-    int retries = 3;
-    while (retries > 0) {
-      try {
-        if (dataSource == null || dataSource.isClosed()) {
-          plugin
-              .getLogger()
-              .warning("El pool de conexiones está cerrado. Reintentando conexión...");
-          connect(); // Reintenta conectar si el pool está cerrado
-        }
-
-        Connection connection = dataSource.getConnection();
-
-        if (connection == null || !connection.isValid(2)) {
-          throw new SQLException("La conexión obtenida no es válida.");
-        }
-
-        return connection;
-      } catch (SQLException e) {
-        retries--;
-        plugin
-            .getLogger()
-            .warning("Error al obtener la conexión a la base de datos. Reintentando... (" + retries
-                + " intentos restantes)");
-        try {
-          Thread.sleep(2000); // Espera antes de reintentar
-        } catch (InterruptedException ex) {
-          Thread.currentThread().interrupt();
-        }
-      }
+    if (dataSource == null || dataSource.isClosed()) {
+      plugin.getLogger().warning("El pool de conexiones está cerrado. Reconectando...");
+      connect();
     }
-    throw new SQLException(
-        "No se pudo obtener conexión a la base de datos después de varios intentos.");
+    Connection connection = dataSource.getConnection();
+    if (!connection.isValid(2)) {
+      throw new SQLException("La conexión obtenida no es válida.");
+    }
+    return connection;
   }
 
   public void disconnect() {

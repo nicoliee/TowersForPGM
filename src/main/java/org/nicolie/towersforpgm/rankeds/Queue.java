@@ -12,6 +12,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.draft.Draft;
@@ -50,11 +51,11 @@ public class Queue {
       MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
       matchPlayer.sendWarning(
           Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.sizeInvalid")));
-      RankedPlayers.clearCaptainHistory();
       return;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
     ConfigManager.setRankedSize(size);
+    RankedPlayers.clearCaptainHistory();
     String message = RANKED_PREFIX
         + languageManager
             .getPluginMessage("ranked.sizeSet")
@@ -63,6 +64,27 @@ public class Queue {
     if (queuePlayers.size() >= ConfigManager.getRankedSize()) {
       startRanked(match);
     }
+  }
+
+  public boolean setSize(int size) {
+    if (size == ConfigManager.getRankedSize()) {
+      return false;
+    }
+    if (size < 4 || size % 2 != 0) {
+      return false;
+    }
+    Match match = MatchManager.getMatch();
+    ConfigManager.setRankedSize(size);
+    RankedPlayers.clearCaptainHistory();
+    String message = RANKED_PREFIX
+        + languageManager
+            .getPluginMessage("ranked.sizeSet")
+            .replace("{size}", String.valueOf(size));
+    match.sendMessage(Component.text(message));
+    if (queuePlayers.size() >= ConfigManager.getRankedSize()) {
+      startRanked(match);
+    }
+    return true;
   }
 
   public void addPlayer(MatchPlayer player) {
@@ -187,33 +209,37 @@ public class Queue {
     // Borrar los jugadores de la cola
     queuePlayers.subList(0, ConfigManager.getRankedSize()).clear();
     // Obtener el elo
-    StatsManager.getEloForUsernames(table, rankedPlayers, eloList -> {
-      List<Map.Entry<MatchPlayer, Integer>> playersWithElo = eloList.stream()
-          .map(e -> {
-            UUID uuid = getUUIDFromUsername(e.getUsername());
-            MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
-            return new AbstractMap.SimpleEntry<>(player, e.getCurrentElo());
-          })
-          .filter(entry -> entry.getKey() != null) // Validar que el MatchPlayer no sea null
-          .collect(Collectors.toList());
+    StatsManager.getEloForUsernames(table, rankedPlayers)
+        .thenAccept(eloList -> {
+          List<Map.Entry<MatchPlayer, Integer>> playersWithElo = eloList.stream()
+              .map(e -> {
+                UUID uuid = getUUIDFromUsername(e.getUsername());
+                MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
+                return new AbstractMap.SimpleEntry<>(player, e.getCurrentElo());
+              })
+              .filter(entry -> entry.getKey() != null)
+              .collect(Collectors.toList());
 
-      // Seleccionar capitanes
-      RankedPlayers pair = RankedPlayers.selectCaptains(playersWithElo);
+          RankedPlayers pair = RankedPlayers.selectCaptains(playersWithElo);
 
-      // Aquí podrías hacer algo con los capitanes seleccionados
-      UUID captain1 = pair.getCaptain1();
-      UUID captain2 = pair.getCaptain2();
-      List<MatchPlayer> remaining = pair.getRemainingPlayers();
+          UUID captain1 = pair.getCaptain1();
+          UUID captain2 = pair.getCaptain2();
+          List<MatchPlayer> remaining = pair.getRemainingPlayers();
 
-      // Iniciar el draft
-      draft.setCustomOrderPattern(ConfigManager.getRankedOrder(), 0);
-      draft.startDraft(captain1, captain2, remaining, match, true);
+          draft.setCustomOrderPattern(ConfigManager.getRankedOrder(), 0);
+          draft.startDraft(captain1, captain2, remaining, match, true);
 
-      // Limpiar las listas de jugadores
-      rankedPlayers.clear();
-      rankedMatchPlayers.clear();
-      playersWithElo.clear();
-    });
+          rankedPlayers.clear();
+          rankedMatchPlayers.clear();
+          playersWithElo.clear();
+        })
+        .exceptionally(throwable -> {
+          plugin
+              .getLogger()
+              .severe("Error al obtener ELO para captains: " + throwable.getMessage());
+          match.sendWarning(Component.text(RANKED_PREFIX + "Error al obtener datos de ELO."));
+          return null;
+        });
   }
 
   private void queueWithMatchmaking(Match match) {

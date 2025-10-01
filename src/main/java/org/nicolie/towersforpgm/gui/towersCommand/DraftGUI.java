@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.gui;
+package org.nicolie.towersforpgm.gui.towersCommand;
 
 import java.util.ArrayList;
 import java.util.HashMap;

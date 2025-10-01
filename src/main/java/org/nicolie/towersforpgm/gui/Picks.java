@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.draft;
+package org.nicolie.towersforpgm.gui;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,13 +25,18 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.database.Stats;
+import org.nicolie.towersforpgm.draft.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.Captains;
+import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 
-public class PickInventory implements Listener {
+public class Picks implements Listener {
 
   private final Draft draft;
   private final Captains captains;
@@ -42,7 +47,7 @@ public class PickInventory implements Listener {
   // Para saber qué inventario pertenece a qué capitán
   private final Map<UUID, Inventory> openInventories = new HashMap<>();
 
-  public PickInventory(
+  public Picks(
       Draft draft,
       Captains captains,
       AvailablePlayers availablePlayers,
@@ -123,7 +128,7 @@ public class PickInventory implements Listener {
         ItemStack skull = createPlayerSkull(name, isOnline);
 
         if (TowersForPGM.getInstance().getIsDatabaseActivated()) {
-          PlayerStats stats = availablePlayers.getStatsForPlayer(name);
+          Stats stats = availablePlayers.getStatsForPlayer(name);
           addSkullLore(skull, stats);
         }
         int row = currentIndex / columnsPerRow;
@@ -155,7 +160,7 @@ public class PickInventory implements Listener {
         ItemStack skull = createPlayerSkull(name, isOnline);
 
         if (TowersForPGM.getInstance().getIsDatabaseActivated()) {
-          PlayerStats stats = availablePlayers.getStatsForPlayer(name);
+          Stats stats = availablePlayers.getStatsForPlayer(name);
           addSkullLore(skull, stats);
         }
 
@@ -199,7 +204,7 @@ public class PickInventory implements Listener {
   }
 
   // Añade lore con estadísticas
-  private void addSkullLore(ItemStack skull, PlayerStats stats) {
+  private void addSkullLore(ItemStack skull, Stats stats) {
     SkullMeta meta = (SkullMeta) skull.getItemMeta();
     List<String> lore = new ArrayList<>();
     int elo = stats.getElo();
@@ -222,7 +227,7 @@ public class PickInventory implements Listener {
     lore.add(languageManager.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
     lore.add(languageManager.getPluginMessage("stats.games") + ": §a" + stats.getGames());
     lore.add(languageManager.getPluginMessage("stats.winstreak") + ": §a" + stats.getWinstreak()
-        + " §7(Max: §a" + stats.getMaxWinstreak() + ")");
+        + " §7(Max: §a" + stats.getMaxWinstreak() + "§7)");
     lore.add(" ");
     lore.add(languageManager.getPluginMessage("draft.clickToPick"));
     meta.setLore(lore);

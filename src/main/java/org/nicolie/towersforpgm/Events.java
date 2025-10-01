@@ -4,8 +4,8 @@ import org.bukkit.plugin.PluginManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.listeners.CompetitorScoreChangeListener;
 import org.nicolie.towersforpgm.listeners.MatchAfterLoadListener;
 import org.nicolie.towersforpgm.listeners.MatchFinishListener;
@@ -36,7 +36,7 @@ public class Events {
       Draft draft,
       Queue queue,
       LanguageManager languageManager,
-      PickInventory pickInventory,
+      Picks pickInventory,
       RefillManager refillManager,
       Teams teams,
       PreparationListener preparationListener) {
@@ -58,7 +58,7 @@ public class Events {
         new PlayerParticipationListener(teams, captains, languageManager), plugin);
     pluginManager.registerEvents(new PlayerQuitListener(plugin, queue), plugin);
     pluginManager.registerEvents(new CompetitorScoreChangeListener(), plugin);
-    pluginManager.registerEvents(new MatchStatsListener(languageManager), plugin);
+    pluginManager.registerEvents(new MatchStatsListener(), plugin);
     pluginManager.registerEvents(new ItemListener(queue), plugin);
   }
 }

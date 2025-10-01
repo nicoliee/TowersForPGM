@@ -3,40 +3,28 @@
 
 **TowersForPGM** is a comprehensive Minecraft plugin designed specifically for **PGM** servers that enhances competitive gameplay with advanced features for tournaments, drafts, ranked matches, and match statistics.
 
+- - -
 ## 🎯 Map Requirements
 
 This plugin has specific map requirements:
 
 - ✅ **Exactly 2 teams** per map
 - ✅ Teams must be named **"red"** and **"blue"**
-
+- - -
 ## 🚀 Key Features
 
-### 🎭 Draft System
-Complete captain-based draft system with intelligent player suggestions and customizable picking orders.
-
-### ⏱️ Preparation Time
-Configurable preparation phases with protected regions, timers, and potion effects to ensure fair match starts.
-
-### 🏆 Ranked Matches
-Full ranked matchmaking system with ELO ratings, queue management, and automatic match creation.
-
-### 📊 Statistics Tracking
-Comprehensive player statistics with support for multiple tournaments and leaderboards.
-
-### 🔄 Auto-Refill System
-Automatic inventory refilling system for seamless gameplay experience.
-
-### 🤖 Discord Integration
-Integration with MatchBot for Discord notifications and player management.
+- **Draft System:** Captain-based drafts with smart player suggestions and flexible pick orders.
+- **Preparation Phase:** Customizable pre-game timers, protected regions, and potion effects for fair starts.
+- **Ranked Matches:** ELO-based matchmaking, queue management, and automated match setup.
+- **Stats Tracking:** Tracks player stats across tournaments with leaderboards.
+- **Chest Refills:** Define chests to auto-refill every 60 seconds during matches.
+- **Discord Integration:** With MatchBot, get Discord embeds for ranked matches and use `/stats` and `/top` to view stats in Discord.
 
 ## 📋 Requirements
 
 - **PGM Plugin** (Required) - Core functionality dependency
 - **MatchBot Plugin** (Optional) - For Discord integration features
-- **MySQL Database** (Optional) - Required only for ranked matches and statistics
-
-> **Note:** The database is completely optional. Without it, you can still use the draft system, preparation time, and other features. However, **ranked matches and statistics tracking require a database connection**.
+> **Note:** You can use a MySQL database if you have one available. If not, the plugin will automatically create and use a local SQLite database.
 
 ## 🛠️ Installation
 
@@ -44,39 +32,59 @@ Integration with MatchBot for Discord notifications and player management.
 2. Place the JAR file in your server's `plugins` folder
 3. Ensure PGM is installed and running
 4. Start your server to generate configuration files
-5. Configure the database settings in `config.yml` (if using ranked features)
+5. Configure the database settings in `config.yml`
 6. Restart the server
 
 ## ⚙️ Configuration
 
 ### Database Setup (Optional)
 ```yaml
+# Configuración de la base de datos
 database:
-  enabled: false  # Set to true for ranked features
+  enabled: false  # (true = MySQL | false = SQLite)
+  # Configuración de MySQL
   host: "localhost"
   port: 3306
-  name: "your_database"
-  user: "your_username"
-  password: "your_password"
+  name: "torneodb"
+  user: "root" 
+  password: "password" 
+  tables:         # Tablas disponibles en la base de datos
+    - Amistoso
+    - TorneoT1
+  defaultTable: Amistoso  # Tabla por defecto
+  matchbot:
+    tables: # Tablas que se usarán en los comandos de Discord
+      - Amistoso
+      - TorneoT1
+      - RankedT1
 ```
 
 ### Draft Configuration
 ```yaml
+# Configuración del sistema de draft (selección de jugadores)
 draft:
-  suggestions: true         # Captain suggestions
-  timer: true              # Pick timer
-  secondPickBalance: true  # Balance for odd drafts
-  order: "ABBAAB"         # Pick order pattern
-  minOrder: 8             # Minimum players for order
+  suggestions: true    # Los capitanes recibirán sugerencias de jugadores para elegir
+  timer: true         # Los capitanes tendrán un tiempo límite para elegir
+  secondPickBalance: true # Si es true y el draft es impar, el segundo capitán tendrá un jugador más
+  order: "ABBAAB"     # Orden de elección: A = Primer Capitán, B = Segundo Capitán
+  minOrder: 8              # Número mínimo de jugadores para aplicar el orden
 ```
 
 ### Ranked System
 ```yaml
+# Configuración de Rankeds (Es necesario tener una base de Datos)
 rankeds:
-  size: 8                 # Players per ranked match
-  order: "ABBAAB"        # Draft order for rankeds
-  tables: ["RankedT1"]   # Database tables
-  maps: ["Mini Towers:TE"] # Available maps
+  size: 8          # Número de jugadores
+  order: "ABBAAB"  # Orden de elección para rankeds
+  matchmaking: false # Si es true, los equipos se balancearán automáticamente, si es false, los capitanes elegirán a los jugadores
+  tables:              # Tablas disponibles para rankeds
+    - RankedT1
+  defaultTable: RankedT1  # Tabla por defecto para rankeds
+  maps: # Lista de mapas disponibles para rankeds
+    - Mini Towers:TE
+  matchbot: # Bot que envía mensajes al canal de Discord (es necesario tener el plugin MatchBot configurado)
+    discordChannel: "" # Canal de Discord donde se enviarán los mensajes
+    rankedRoleId: "" # ID del rol a tagear cunado se use /tag
 ```
 
 ## 🎮 Commands
@@ -98,31 +106,25 @@ rankeds:
 | `/ranked join` | Join ranked queue | Default |
 | `/ranked leave` | Leave ranked queue | Default |
 | `/ranked list` | Show queue status | Default |
-| `/elo [player]` | Show ELO rating | Default |
 | `/forfeit` | Forfeit current match | Default |
+| `/tag` | Tag players for Discord | Default |
 
-### Statistics
 
-| Command | Description | Permission |
-|---------|-------------|------------|
-| `/stat [player] [table]` | Show player statistics | `towersstats.use` |
-| `/top <category> [amount] [table]` | Show leaderboards | `towersstats.use` |
 
 ### Administration
 
 | Command | Description | Permission |
 |---------|-------------|------------|
 | `/towers` | Main admin command | `towers.admin` |
-| `/preparationTime <on\|off>` | Toggle preparation time | `towers.admin` |
 | `/cancelMatch` | Cancel current match | `towers.admin` |
-| `/tag` | Tag players for Discord | `towers.admin` |
 
-### Advanced Configuration
 
-Use `/towers help` for detailed configuration options:
-- `/towers draft` - Draft system settings
-- `/towers preparation` - Preparation time configuration  
-- `/towers stats` - Statistics and table management
+> **Note:** You can also use these commands to configure and manage the plugin:
+>
+> Use `/towers help` to see detailed configuration options:
+> - `/towers draft` - Draft system configuration
+> - `/towers preparation` - Preparation time configuration  
+> - `/towers stats` - Statistics and table management
 
 ## 🔐 Permissions
 
@@ -131,42 +133,43 @@ Use `/towers help` for detailed configuration options:
 | `towers.admin` | Full administrative access | `op` |
 | `towers.captains` | Draft management capabilities | `op` |
 | `towers.developer` | Debug message access | `op` |
-| `towersstats.use` | View player statistics | `true` |
 
-## 🎯 Usage Examples
+## 🤝 MatchBot Integration
 
-### Starting a Draft
-```
-/captains Player1 Player2
-/add Player3
-/add Player4
-/add Player5
-/add Player6
-# Captains will then use /pick to select their teams
-```
+## 🤝 MatchBot Integration
+MatchBot integration is optional, but it allows you to view your statistics directly on Discord using the `/stats` and `/top` commands.  
+Additionally, the plugin can automatically create Discord embeds when ranked matches start and end, showing every tracked stat for every player in the configured channel.
 
-### Joining Ranked Queue
-```
-/ranked join
-# Wait for 8 players, then automatic draft begins
-```
+### MatchBot Configuration
 
-### Viewing Statistics
-```
-/stat Player1           # Show Player1's stats
-/top kills 10 TorneoT1  # Page 10 of top killers in TorneoT1 table
-/elo Player1            # Show Player1's ELO rating
-```
+- The tables defined in `database.matchbot.tables` are used to display statistics in the `/top` and `/stats` Discord commands. Only data stored in these tables will appear in those commands.
 
-## 🤝 Integration
+  ```yaml
+  database:
+    matchbot:
+      tables:
+        - Amistoso
+        - TorneoT1
+        - RankedT1
+  ```
 
-### MatchBot Integration
-Configure Discord integration in `config.yml`:
-```yaml
-matchbot:
-  discordChannel: "your-channel-id"
-  rankedRoleId: "your-role-id"
-```
+- The value of `rankeds.matchbot.discordChannel` specifies the Discord channel where embeds will be automatically sent when ranked matches start or end.
+
+  ```yaml
+  rankeds:
+    matchbot:
+      discordChannel: "your-discord-channel-id"
+  ```
+
+- The option `rankeds.matchbot.rankedRole` lets you define the Discord role that will be mentioned (tagged) when using the `/tag` command.
+
+  ```yaml
+  rankeds:
+    matchbot:
+      rankedRole: "your-discord-role-id"
+  ```
+
+Make sure to configure these values correctly in your `config.yml` file for the integration to work as expected.
 
 ### Database Tables
-The plugin automatically manages database tables for different tournaments and contexts. Tables can be created and managed through in-game commands.
+The plugin automatically manages database tables for different tournaments and contexts. Tables can be created and managed through in-game via `/towers` command.

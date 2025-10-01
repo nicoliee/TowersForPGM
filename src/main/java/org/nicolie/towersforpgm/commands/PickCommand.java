@@ -12,8 +12,8 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.PickInventory;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
@@ -28,7 +28,7 @@ public class PickCommand implements CommandExecutor, TabCompleter {
   private final AvailablePlayers availablePlayers;
   private final Teams teams;
   private final LanguageManager languageManager;
-  private final PickInventory pickInventory;
+  private final Picks pickInventory;
 
   public PickCommand(
       Draft draft,
@@ -36,7 +36,7 @@ public class PickCommand implements CommandExecutor, TabCompleter {
       AvailablePlayers availablePlayers,
       Teams teams,
       LanguageManager languageManager,
-      PickInventory pickInventory) {
+      Picks pickInventory) {
     this.draft = draft;
     this.captains = captains;
     this.availablePlayers = availablePlayers;

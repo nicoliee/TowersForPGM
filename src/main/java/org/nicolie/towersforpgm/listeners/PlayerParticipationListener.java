@@ -36,10 +36,9 @@ public class PlayerParticipationListener implements Listener {
 
   @EventHandler
   public void onTeamChange(PlayerPartyChangeEvent event) {
+    boolean isMatchFinished = event.getMatch().getPhase() == MatchPhase.FINISHED;
+    if (isMatchFinished) return;
     if (captains.isMatchWithCaptains()) {
-      boolean isMatchFinished = event.getMatch().getPhase() == MatchPhase.FINISHED;
-      if (isMatchFinished) return;
-
       JoinRequest request =
           event.getRequest() instanceof JoinRequest ? (JoinRequest) event.getRequest() : null;
       if (request == null || !request.isForcedOr(JoinRequest.Flag.FORCE)) return;

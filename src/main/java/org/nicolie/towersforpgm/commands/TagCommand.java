@@ -2,16 +2,17 @@ package org.nicolie.towersforpgm.commands;
 
 import java.util.ArrayList;
 import java.util.List;
-import me.tbg.match.bot.MatchBot;
+import me.tbg.match.bot.configs.DiscordBot;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
-import org.nicolie.towersforpgm.matchbot.Embeds;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
+import org.nicolie.towersforpgm.matchbot.embeds.RankedNotify;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
@@ -71,19 +72,22 @@ public class TagCommand implements CommandExecutor {
     for (MatchPlayer matchPlayer : match.getPlayers()) {
       usernames.add(matchPlayer.getNameLegacy());
     }
-    System.out.println(match.getPlayers().size());
-    StatsManager.getEloForUsernames(
-        ConfigManager.getRankedDefaultTable(), usernames, eloChanges -> {
-          EmbedBuilder embed = Embeds.notifyPlayers(sender, match, eloChanges);
-          MatchBot.getInstance().getBot().setEmbedThumbnail(match.getMap(), embed);
-          MatchBot.getInstance()
-              .getBot()
-              .sendMatchEmbed(
-                  embed, match, ConfigManager.getRankedChannel(), ConfigManager.getRankedRoleID());
-          match.sendMessage(Component.text(Queue.RANKED_PREFIX
-              + languageManager
-                  .getPluginMessage("ranked.matchbot.tagSent")
-                  .replace("{name}", player.getPrefixedName())));
+    StatsManager.getEloForUsernames(ConfigManager.getRankedDefaultTable(), usernames)
+        .thenAccept(eloChanges -> {
+          EmbedBuilder embed = RankedNotify.create(sender, match, eloChanges);
+          DiscordBot.setEmbedThumbnail(match.getMap(), embed);
+          DiscordBot.sendMatchEmbed(
+              embed, match, MatchBotConfig.getDiscordChannel(), MatchBotConfig.getRankedRoleId());
+          org.bukkit.Bukkit.getScheduler()
+              .runTask(
+                  TowersForPGM.getInstance(),
+                  () -> match.sendMessage(Component.text(Queue.RANKED_PREFIX
+                      + languageManager
+                          .getPluginMessage("ranked.matchbot.tagSent")
+                          .replace("{name}", player.getPrefixedName()))));
+        })
+        .exceptionally(throwable -> {
+          return null;
         });
   }
 }

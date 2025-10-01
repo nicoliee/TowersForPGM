@@ -1,9 +1,11 @@
 package org.nicolie.towersforpgm.rankeds;
 
+import java.time.Duration;
 import java.util.UUID;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import org.nicolie.towersforpgm.TowersForPGM;
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
@@ -49,6 +51,8 @@ public class PlayerEloChange {
   }
 
   public void sendMessage() {
+    Duration durationSeconds = PGM.get().getConfiguration().showStatsAfter();
+    long delayTicks = (durationSeconds.getSeconds() * 20L) + 1L;
     org.bukkit.Bukkit.getScheduler()
         .runTaskLater(
             TowersForPGM.getInstance(),
@@ -74,7 +78,6 @@ public class PlayerEloChange {
               }
               player.sendMessage(Component.text(message));
             },
-            20L * 10 // 10 seconds delay (20 ticks per second)
-            );
+            delayTicks);
   }
 }

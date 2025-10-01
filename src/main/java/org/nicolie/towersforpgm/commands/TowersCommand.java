@@ -16,7 +16,7 @@ import org.nicolie.towersforpgm.commandUtils.PreparationConfig;
 import org.nicolie.towersforpgm.commandUtils.RankedConfig;
 import org.nicolie.towersforpgm.commandUtils.RefillConfig;
 import org.nicolie.towersforpgm.commandUtils.StatsConfig;
-import org.nicolie.towersforpgm.gui.TowersConfigGUI;
+import org.nicolie.towersforpgm.gui.towersCommand.TowersConfigGUI;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;

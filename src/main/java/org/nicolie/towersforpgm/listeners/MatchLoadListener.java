@@ -38,13 +38,10 @@ public class MatchLoadListener implements Listener {
     String map = match.getMap().getName();
     String world = match.getWorld().getName();
     TowersForPGM plugin = TowersForPGM.getInstance();
-    draft.cleanLists(); // Limpia las listas de jugadores disponibles y capitanes por si no se hizo
-    // en FinishEvent
+    draft.cleanLists();
     MatchManager.setCurrentMatch(
         match); // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM
     // (10/03/2025)
-    // plugin.setCurrentMap(map); // Toma en cuenta que solo hay un mundo en el plugin como lo hace
-    // actualmente PGM (10/03/2025)
     refillManager.loadChests(map, world);
     if (preparationListener.isMapInConfig(map)
         && TowersForPGM.getInstance().isPreparationEnabled()) {
@@ -57,7 +54,7 @@ public class MatchLoadListener implements Listener {
           .replace("{map}", map));
     }
     plugin.getDisconnectedPlayers().clear();
-    ForfeitCommand.forfeitedPlayers.clear(); // Limpia la lista de jugadores que se han rendido
+    ForfeitCommand.forfeitedPlayers.clear();
     if (plugin.isStatsCancel()) {
       if (ConfigManager.getTempTable() != null) {
         ConfigManager.removeTempTable();
