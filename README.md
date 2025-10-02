@@ -1,175 +1,74 @@
 # TowersForPGM
 ![PGM](https://img.shields.io/badge/requires-PGM-orange)
 
-**TowersForPGM** is a comprehensive Minecraft plugin designed specifically for **PGM** servers that enhances competitive gameplay with advanced features for tournaments, drafts, ranked matches, and match statistics.
+**TowersForPGM** adds essential competitive features to PGM servers. Main focus: **ranked matches with comprehensive statistics**. Also includes optional per-map features for specific scenarios.
 
-- - -
-## 🎯 Map Requirements
+> **Important:** Maps must have exactly **2 teams** named "**red**" and "**blue**"
 
-This plugin has specific map requirements:
+**Background:** Originally developed for "The Towers Champagne" community, inspired by "Godzilla Rankeds" and "Stratus Network" competitive systems.
 
-- ✅ **Exactly 2 teams** per map
-- ✅ Teams must be named **"red"** and **"blue"**
-- - -
-## 🚀 Key Features
+> [!NOTE]  
+> **Getting Started**: Start with `Rankeds` and `Stats` as core features. Other features are optional.
 
-- **Draft System:** Captain-based drafts with smart player suggestions and flexible pick orders.
-- **Preparation Phase:** Customizable pre-game timers, protected regions, and potion effects for fair starts.
-- **Ranked Matches:** ELO-based matchmaking, queue management, and automated match setup.
-- **Stats Tracking:** Tracks player stats across tournaments with leaderboards.
-- **Chest Refills:** Define chests to auto-refill every 60 seconds during matches.
-- **Discord Integration:** With MatchBot, get Discord embeds for ranked matches and use `/stats` and `/top` to view stats in Discord.
+## What This Plugin Adds
 
-## 📋 Requirements
+- 🏆 **Ranked System + Statistics** - ELO-based ranking with detailed player stats
+- 📊 **Advanced Analytics** - Multi-tournament/season tracking with leaderboards
+- ⚔️ **Draft System** - Captain-based team selection with balancing
+- ⏱️ **Preparation Phase** - Optional pre-match setup with protected regions
+- 🔄 **Chest Refills** - Automatic equipment restocking during matches
+- 🤖 **Discord Integration** - Match notifications and stats via MatchBot (optional)
 
-- **PGM Plugin** (Required) - Core functionality dependency
-- **MatchBot Plugin** (Optional) - For Discord integration features
-> **Note:** You can use a MySQL database if you have one available. If not, the plugin will automatically create and use a local SQLite database.
+---
 
-## 🛠️ Installation
+## Core Features
 
-1. Download the latest release of TowersForPGM
-2. Place the JAR file in your server's `plugins` folder
-3. Ensure PGM is installed and running
-4. Start your server to generate configuration files
-5. Configure the database settings in `config.yml`
-6. Restart the server
+### ⭐ Statistics & Ranked System
+- **Individual/Team Performance** - Kills, deaths, objectives, win rates, trends
+- **ELO Rating** - Skill-based matchmaking for fair games
+- **Queue Management** - Automated match creation when players join
+- **Tournament Tables** - Separate stats for different competitions/seasons
+- **Map Pool Control** - Admin-defined ranked-eligible maps
+- **Flexible Team Formation** - Auto-balance or captain-based drafts
 
-## ⚙️ Configuration
+### ⭐ Discord Integration (MatchBot)
+- **Live Match Updates** - Auto embeds when ranked matches start/end
+- **Discord Commands** - `/stats <player>` and `/top <category>` in Discord
+- **Role Notifications** - Tag roles for ranked match announcements
+- **Real-time Access** - View stats/leaderboards without joining server
 
-### Database Setup (Optional)
-```yaml
-# Configuración de la base de datos
-database:
-  enabled: false  # (true = MySQL | false = SQLite)
-  # Configuración de MySQL
-  host: "localhost"
-  port: 3306
-  name: "torneodb"
-  user: "root" 
-  password: "password" 
-  tables:         # Tablas disponibles en la base de datos
-    - Amistoso
-    - TorneoT1
-  defaultTable: Amistoso  # Tabla por defecto
-  matchbot:
-    tables: # Tablas que se usarán en los comandos de Discord
-      - Amistoso
-      - TorneoT1
-      - RankedT1
-```
+**Setup:** Install MatchBot → TowersForPGM auto-detects → Configure channel/role IDs
 
-### Draft Configuration
-```yaml
-# Configuración del sistema de draft (selección de jugadores)
-draft:
-  suggestions: true    # Los capitanes recibirán sugerencias de jugadores para elegir
-  timer: true         # Los capitanes tendrán un tiempo límite para elegir
-  secondPickBalance: true # Si es true y el draft es impar, el segundo capitán tendrá un jugador más
-  order: "ABBAAB"     # Orden de elección: A = Primer Capitán, B = Segundo Capitán
-  minOrder: 8              # Número mínimo de jugadores para aplicar el orden
-```
+## Other Features
+- **Draft System** - Captain selection with GUI/suggestions. Auto in ranked, manual with `/captains`
+- **Preparation Phase** - Pre-match setup time with protected regions/timers per-map
+- **Chest Refills** - 60s auto-restocking. Fast setup: Stand on chests + admin commands to setup
 
-### Ranked System
-```yaml
-# Configuración de Rankeds (Es necesario tener una base de Datos)
-rankeds:
-  size: 8          # Número de jugadores
-  order: "ABBAAB"  # Orden de elección para rankeds
-  matchmaking: false # Si es true, los equipos se balancearán automáticamente, si es false, los capitanes elegirán a los jugadores
-  tables:              # Tablas disponibles para rankeds
-    - RankedT1
-  defaultTable: RankedT1  # Tabla por defecto para rankeds
-  maps: # Lista de mapas disponibles para rankeds
-    - Mini Towers:TE
-  matchbot: # Bot que envía mensajes al canal de Discord (es necesario tener el plugin MatchBot configurado)
-    discordChannel: "" # Canal de Discord donde se enviarán los mensajes
-    rankedRoleId: "" # ID del rol a tagear cunado se use /tag
-```
+## Commands
 
-## 🎮 Commands
+| User Type | Commands | Description | Access |
+|-----------|----------|-------------|--------|
+| **Players** | `/ranked join` | Join ranked queue | When ranked enabled |
+| | `/pick [player]` | Draft selection/GUI | During drafts (captains pick) |
+| | `/ready` | Ready up faster | During drafts (captains) |
+| | `/tag` | Discord notification | Ranked maps |
+| | `/forfeit` | Team surrender | Ranked matches |
+| **Organizers** | `/captains <nick1> <nick2>` | Start draft | `towers.captains` |
+| | `/add/remove <player>` | Manage draft pool | `towers.captains` |
+| **Admins** | `/towers` | Configuration access | `towers.admin` |
+| | `/cancelMatch` | Cancel match (no stats) | `towers.admin` |
 
-### Core Commands
+## Setup & Configuration
 
-| Command | Description | Permission |
-|---------|-------------|------------|
-| `/captains <nick1> <nick2>` | Start draft with two captains | `towers.captains` |
-| `/add <player>` | Add player to draft pool | `towers.captains` |
-| `/remove <player>` | Remove player from draft pool | `towers.captains` |
-| `/pick <player>` | Pick a player during draft | Default |
-| `/ready` | Mark yourself as ready | Default |
+**Installation:** Install PGM → Add TowersForPGM.jar → Restart → Configure
 
-### Ranked System
+**Core Setup:**
+- **⭐ Ranked**: [System Guide](documentation/Rankeds.md) - Competitive matches with ELO
+- **⭐ Statistics**: [Setup Guide](documentation/Stats.md) - Database and analytics
+- **⭐ Discord**: [Integration Guide](documentation/Matchbot.md) - MatchBot features
 
-| Command | Description | Permission |
-|---------|-------------|------------|
-| `/ranked join` | Join ranked queue | Default |
-| `/ranked leave` | Leave ranked queue | Default |
-| `/ranked list` | Show queue status | Default |
-| `/forfeit` | Forfeit current match | Default |
-| `/tag` | Tag players for Discord | Default |
+**Optional:** [Draft](documentation/Draft.md) • [Preparation Time](documentation/Preparation%20Time.md) • [Chest Refills](documentation/Refill.md)
 
+---
 
-
-### Administration
-
-| Command | Description | Permission |
-|---------|-------------|------------|
-| `/towers` | Main admin command | `towers.admin` |
-| `/cancelMatch` | Cancel current match | `towers.admin` |
-
-
-> **Note:** You can also use these commands to configure and manage the plugin:
->
-> Use `/towers help` to see detailed configuration options:
-> - `/towers draft` - Draft system configuration
-> - `/towers preparation` - Preparation time configuration  
-> - `/towers stats` - Statistics and table management
-
-## 🔐 Permissions
-
-| Permission | Description | Default |
-|------------|-------------|---------|
-| `towers.admin` | Full administrative access | `op` |
-| `towers.captains` | Draft management capabilities | `op` |
-| `towers.developer` | Debug message access | `op` |
-
-## 🤝 MatchBot Integration
-
-## 🤝 MatchBot Integration
-MatchBot integration is optional, but it allows you to view your statistics directly on Discord using the `/stats` and `/top` commands.  
-Additionally, the plugin can automatically create Discord embeds when ranked matches start and end, showing every tracked stat for every player in the configured channel.
-
-### MatchBot Configuration
-
-- The tables defined in `database.matchbot.tables` are used to display statistics in the `/top` and `/stats` Discord commands. Only data stored in these tables will appear in those commands.
-
-  ```yaml
-  database:
-    matchbot:
-      tables:
-        - Amistoso
-        - TorneoT1
-        - RankedT1
-  ```
-
-- The value of `rankeds.matchbot.discordChannel` specifies the Discord channel where embeds will be automatically sent when ranked matches start or end.
-
-  ```yaml
-  rankeds:
-    matchbot:
-      discordChannel: "your-discord-channel-id"
-  ```
-
-- The option `rankeds.matchbot.rankedRole` lets you define the Discord role that will be mentioned (tagged) when using the `/tag` command.
-
-  ```yaml
-  rankeds:
-    matchbot:
-      rankedRole: "your-discord-role-id"
-  ```
-
-Make sure to configure these values correctly in your `config.yml` file for the integration to work as expected.
-
-### Database Tables
-The plugin automatically manages database tables for different tournaments and contexts. Tables can be created and managed through in-game via `/towers` command.
+**This plugin is perfect For:** Competitive communitys • Tournament Organizers.
