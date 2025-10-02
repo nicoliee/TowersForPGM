@@ -5,6 +5,9 @@
 
 > **Important:** Maps must have exactly **2 teams** named "**red**" and "**blue**"
 
+> [!TIP]  
+> **Language Support**: Change plugin language with `/towers language <en|es>`
+
 **Background:** Originally developed for "The Towers Champagne" community, inspired by "Godzilla Rankeds" and "Stratus Network" competitive systems.
 
 > [!NOTE]  
