@@ -39,6 +39,7 @@ public class MatchLoadListener implements Listener {
     String world = match.getWorld().getName();
     TowersForPGM plugin = TowersForPGM.getInstance();
     draft.cleanLists();
+    Queue.setRanked(false);
     MatchManager.setCurrentMatch(
         match); // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM
     // (10/03/2025)
@@ -56,13 +57,13 @@ public class MatchLoadListener implements Listener {
     plugin.getDisconnectedPlayers().clear();
     ForfeitCommand.forfeitedPlayers.clear();
     if (plugin.isStatsCancel()) {
-      if (ConfigManager.getTempTable() != null) {
-        ConfigManager.removeTempTable();
-        plugin.setStatsCancel(false);
-      }
+      plugin.setStatsCancel(false);
     }
     if (!ConfigManager.getRankedMaps().contains(map) && Queue.getQueueSize() > 0) {
       Queue.clearQueue();
+    }
+    if (ConfigManager.getTempTable() != null) {
+      ConfigManager.removeTempTable();
     }
   }
 }

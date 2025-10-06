@@ -119,6 +119,24 @@ public class ConfigManager {
 
   // --- Mapas y sus tablas ---
 
+  public static String getActiveTable(String mapName) {
+    // Prioridad 1: tempTable
+    if (tempTable != null && !tempTable.isEmpty()) {
+      return tempTable;
+    }
+
+    // Prioridad 2: tabla específica del mapa
+    if (mapName != null && MapTables.containsKey(mapName)) {
+      String mapTable = MapTables.get(mapName);
+      if (mapTable != null && !mapTable.isEmpty()) {
+        return mapTable;
+      }
+    }
+
+    // Prioridad 3: tabla por defecto
+    return defaultTable != null ? defaultTable : "";
+  }
+
   // Obtener el mapa de tablas
   public static Map<String, String> getMapTables() {
     return MapTables;
@@ -318,12 +336,5 @@ public class ConfigManager {
     ConfigManager.rankedMatchmaking = rankedMatchmaking;
     plugin.getConfig().set("rankeds.matchmaking", rankedMatchmaking);
     plugin.saveConfig();
-  }
-
-  public static boolean isRanked(String table, String map) {
-    return ConfigManager.getRankedTables() != null
-        && ConfigManager.getRankedTables().contains(table)
-        && ConfigManager.getRankedMaps() != null
-        && ConfigManager.getRankedMaps().contains(map);
   }
 }

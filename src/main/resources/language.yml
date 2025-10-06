@@ -140,6 +140,8 @@ messages:
     add:
       captain: "§cNo puedes añadir a un capitán."
       usage: "§cUso: /add <nick>"
+    balance:
+      usage: "§cUso: /balance <nick1> <nick2>"
     captains:
       alreadyInDraft: "§cEl jugador ya está en el draft."
       alreadyInTeam: "§cEl jugador ya está en un equipo."
@@ -179,20 +181,20 @@ messages:
       finish: "Ranked Terminada - {table}"
       stats:
         description: "Muestra las estadísticas de la partida."
-        player: "Jugador"
+        player: "jugador"
         desc-player: "Nombre del jugador."
-        table: "Tabla"
+        table: "tabla"
         desc-table: "Tabla de estadísticas a consultar."
         invalid-table: "La tabla `{table}` no es válida."
         error: "Hubo un error al obtener las estadísticas."
       top:
         description: "Muestra el top de jugadores basado en una estadística específica."
-        stat: "Estadística"
+        stat: "estadística"
         desc-stat: "Estadística para ordenar el top."
-        table: "Tabla"
+        table: "tabla"
         desc-table: "Tabla de estadísticas a consultar."
-        perPage: "por_partida"
-        desc-perPage: "¿Mostrar estadísticas por partida?"
+        per-game: "por_partida"
+        desc-per-game: "Mostrar estadísticas por partida?"
         perGame-restriction: "La estadística `{stat}` no se puede mostrar por partida."
         invalid-column: "La estadística `{stat}` no está disponible en la tabla `{table}`."
         error: "Hubo un error al obtener el top. {error}"
@@ -284,7 +286,6 @@ messages:
       consoleCancel: "§c[-] No se enviaron estadísticas para match-{id}: {map} con {size} jugadores."
       disabled: "§cEstadísticas desactivadas."
       error: "§cError al obtener las estadísticas."
-      header: "§m-------------------§r §2{table} §r§m-------------------"
       elo: "§7Elo"
       maxElo: "§7Elo máximo alcanzado"
       kills: "§7Kills"
@@ -299,7 +300,6 @@ messages:
       noStats: "§cJugador no encontrado."
       points: "§7Puntos"
       tableNotFound: "§cLa tabla §4{table} §cno fue encontrada."
-      usage: "§eUso: /stats [tabla] [jugador]"
       wins: "§7Victorias"
     table:
       created: "§aTabla añadida."
@@ -323,11 +323,6 @@ messages:
       removed: "§aEl mapa §2{map} §ase ha eliminado correctamente."
       exists: "§cEl mapa §2{map} §cya existe."
       notFound: "§cEl mapa §2{map} §cno fue encontrado."
-    top:
-      header: "§7Top §3{category} §7en §2{table} §8[§7Página: §f{page}§8]"
-      invalidCategory: "§cCategoría inválida. Las categorías son: "
-      invalidPage: "§cPágina inválida."
-      usage: "§cUso: /top <kills|deaths|points|wins|games> [página] [tabla]"
     gui:
       back: "§c§lVolver al Menú Principal"
       status:

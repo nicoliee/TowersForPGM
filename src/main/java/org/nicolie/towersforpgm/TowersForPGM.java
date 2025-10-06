@@ -136,6 +136,7 @@ public final class TowersForPGM extends JavaPlugin {
         captains,
         draft,
         languageManager,
+        matchmaking,
         pickInventory,
         refillManager,
         teams,

@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.Stats;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
@@ -142,13 +143,8 @@ public class AvailablePlayers {
       return; // Ya están cargadas
     }
 
-    String table;
-    if (ConfigManager.getTempTable() != null) {
-      table = ConfigManager.getTempTable();
-    } else {
-      table = ConfigManager.getTableForMap(MatchManager.getMatch().getMap().getName());
-    }
-    boolean isRanked = ConfigManager.getRankedTables().contains(table);
+    String table = ConfigManager.getActiveTable(MatchManager.getMatch().getMap().getName());
+    boolean isRanked = Queue.isRanked();
 
     org.nicolie.towersforpgm.database.StatsManager.getStats(table, playerName)
         .thenAccept(stats -> {

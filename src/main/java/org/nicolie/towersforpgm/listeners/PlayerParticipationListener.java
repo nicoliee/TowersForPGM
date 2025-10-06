@@ -8,7 +8,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Teams;
-import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.match.MatchPhase;
 import tc.oc.pgm.events.PlayerParticipationStartEvent;
@@ -34,6 +34,7 @@ public class PlayerParticipationListener implements Listener {
     this.languageManager = languageManager;
   }
 
+  // Manejar el cambio de equipo con comando en teams
   @EventHandler
   public void onTeamChange(PlayerPartyChangeEvent event) {
     boolean isMatchFinished = event.getMatch().getPhase() == MatchPhase.FINISHED;
@@ -45,9 +46,7 @@ public class PlayerParticipationListener implements Listener {
 
       String playerName = event.getPlayer().getBukkit().getName();
 
-      if (event.getNewParty() == null) {
-        return;
-      }
+      if (event.getNewParty() == null) return;
 
       String newParty = event.getNewParty().getDefaultName().toLowerCase();
       if (newParty.equalsIgnoreCase("red")) {
@@ -60,6 +59,7 @@ public class PlayerParticipationListener implements Listener {
     }
   }
 
+  // Meterlo a su team si hay draft
   @EventHandler
   public void onParticipate(PlayerParticipationStartEvent event) {
     if (captains.isMatchWithCaptains()) {
@@ -105,6 +105,7 @@ public class PlayerParticipationListener implements Listener {
     }
   }
 
+  // No dejar que un jugador se salga si es ranked
   @EventHandler
   public void onPlayerLeave(PlayerParticipationStopEvent event) {
     JoinRequest request = null;
@@ -117,8 +118,7 @@ public class PlayerParticipationListener implements Listener {
     if (request.isForcedOr(JoinRequest.Flag.FORCE)) {
       return;
     }
-    if (ConfigManager.getRankedTables().contains(ConfigManager.getTempTable())
-        && event.getMatch().isRunning()) {
+    if (Queue.isRanked() && event.getMatch().isRunning()) {
       event.cancel(Component.text(languageManager.getPluginMessage("ranked.notAllowed")));
       return;
     }

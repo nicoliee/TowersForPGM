@@ -120,7 +120,10 @@ public class TopPaginationListener extends ListenerAdapter {
     }
     State state = getState(token);
     if (state == null) {
-      event.reply("Estado expirado. Vuelve a usar el comando.").setEphemeral(true).queue();
+      event
+          .reply("Estado expirado. Vuelve a usar el comando.")
+          .setEphemeral(true)
+          .queue();
       return;
     }
 

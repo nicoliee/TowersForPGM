@@ -101,6 +101,12 @@ public class Captains {
     }
   }
 
+  public void resetReady() {
+    isReadyActive = false;
+    ready1 = false;
+    ready2 = false;
+  }
+
   public boolean isMatchWithCaptains() {
     return isMatchWithCaptains;
   }

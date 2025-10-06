@@ -6,6 +6,7 @@ import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.gui.Picks;
+import org.nicolie.towersforpgm.listeners.CommandListener;
 import org.nicolie.towersforpgm.listeners.CompetitorScoreChangeListener;
 import org.nicolie.towersforpgm.listeners.MatchAfterLoadListener;
 import org.nicolie.towersforpgm.listeners.MatchFinishListener;
@@ -42,6 +43,7 @@ public class Events {
       PreparationListener preparationListener) {
     PluginManager pluginManager = plugin.getServer().getPluginManager();
 
+    pluginManager.registerEvents(new CommandListener(captains), plugin);
     pluginManager.registerEvents(new PreparationListener(languageManager), plugin);
     pluginManager.registerEvents(
         new MatchLoadListener(refillManager, preparationListener, draft, languageManager), plugin);

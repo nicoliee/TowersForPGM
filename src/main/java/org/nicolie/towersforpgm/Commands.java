@@ -1,6 +1,7 @@
 package org.nicolie.towersforpgm;
 
 import org.nicolie.towersforpgm.commands.AddCommand;
+import org.nicolie.towersforpgm.commands.BalanceCommand;
 import org.nicolie.towersforpgm.commands.CancelMatchCommand;
 import org.nicolie.towersforpgm.commands.CaptainsCommand;
 import org.nicolie.towersforpgm.commands.PickCommand;
@@ -12,6 +13,7 @@ import org.nicolie.towersforpgm.commands.TowersForPGMCommand;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.Matchmaking;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
@@ -31,6 +33,7 @@ public class Commands {
       Captains captains,
       Draft draft,
       LanguageManager languageManager,
+      Matchmaking matchmaking,
       Picks pickInventory,
       RefillManager refillManager,
       Teams teams,
@@ -39,6 +42,7 @@ public class Commands {
         .getCommand("add")
         .setExecutor(
             new AddCommand(availablePlayers, captains, teams, languageManager, pickInventory));
+    plugin.getCommand("balance").setExecutor(new BalanceCommand(matchmaking));
     plugin.getCommand("cancelMatch").setExecutor(new CancelMatchCommand(languageManager));
     plugin.getCommand("captains").setExecutor(new CaptainsCommand(draft, languageManager));
     ;

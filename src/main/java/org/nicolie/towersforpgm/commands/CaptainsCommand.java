@@ -12,6 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
@@ -71,8 +72,7 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
     }
 
     // Verificar que no sea una ranked
-    if (ConfigManager.getRankedTables().contains(ConfigManager.getTempTable())
-        && Draft.isDraftActive()) {
+    if (Queue.isRanked()) {
       matchPlayer.sendWarning(
           Component.text(languageManager.getPluginMessage("ranked.notAllowed")));
       return true;
@@ -89,20 +89,13 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
     }
 
     // Crear una lista de jugadores en línea excluyendo a los capitanes
-    List<MatchPlayer> onlinePlayersExcludingCaptains =
-        PGM.get().getMatchManager().getMatch(sender).getPlayers().stream()
-            .filter(
-                player -> !player.getId().equals(captain1) && !player.getId().equals(captain2))
-            .collect(Collectors.toList());
+    List<MatchPlayer> onlinePlayersExcludingCaptains = match.getPlayers().stream()
+        .filter(player -> !player.getId().equals(captain1) && !player.getId().equals(captain2))
+        .collect(Collectors.toList());
 
     // Iniciar el draft con los capitanes y los jugadores restantes
     draft.setCustomOrderPattern(ConfigManager.getDraftOrder(), ConfigManager.getMinDraftOrder());
-    draft.startDraft(
-        captain1,
-        captain2,
-        onlinePlayersExcludingCaptains,
-        PGM.get().getMatchManager().getMatch(sender),
-        randomizeOrder);
+    draft.startDraft(captain1, captain2, onlinePlayersExcludingCaptains, match, randomizeOrder);
     return true;
   }
 

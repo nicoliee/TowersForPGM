@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
@@ -66,7 +65,10 @@ public class StatsCommand extends ListenerAdapter {
         tableOpt != null ? tableOpt.getAsString() : (tables.isEmpty() ? null : tables.get(0));
 
     if (tables != null && !tables.contains(table)) {
-      event.reply(lang.getPluginMessage("matchbot.stats.invalid-table").replace("{table}", table)).setEphemeral(true).queue();
+      event
+          .reply(lang.getPluginMessage("matchbot.stats.invalid-table").replace("{table}", table))
+          .setEphemeral(true)
+          .queue();
       return;
     }
 

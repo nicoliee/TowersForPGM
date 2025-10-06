@@ -112,19 +112,20 @@ public class Draft {
       currentPatternIndex = 0;
     }
 
-    MatchManager.getMatch().playSound(Sounds.RAINDROPS);
-    SendMessage.broadcast(languageManager.getPluginMessage("captains.captainsHeader"));
-    SendMessage.broadcast("&4" + Bukkit.getPlayer(captain1).getName() + " &l&bvs. " + "&9"
-        + Bukkit.getPlayer(captain2).getName());
-    SendMessage.broadcast("§m---------------------------------");
+    match.playSound(Sounds.RAINDROPS);
+    match.sendMessage(
+        Component.text((languageManager.getPluginMessage("captains.captainsHeader"))));
+    match.sendMessage(Component.text(("&4" + Bukkit.getPlayer(captain1).getName() + " &l&bvs. "
+        + "&9" + Bukkit.getPlayer(captain2).getName())));
+    match.sendMessage(Component.text("§m---------------------------------"));
 
     String teamColor = captains.isCaptain1Turn() ? "&4" : "&9";
     UUID captainUUID = captains.isCaptain1Turn() ? captains.getCaptain1() : captains.getCaptain2();
     String captainName = Bukkit.getPlayer(captainUUID).getName();
-    SendMessage.broadcast(languageManager
+    match.sendMessage(Component.text(languageManager
         .getConfigurableMessage("captains.turn")
         .replace("{teamcolor}", teamColor)
-        .replace("{captain}", captainName));
+        .replace("{captain}", captainName)));
     plugin.giveitem(match.getWorld());
     startDraftTimer();
 

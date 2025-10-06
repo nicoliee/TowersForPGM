@@ -27,6 +27,7 @@ import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class Queue {
+  private static Boolean ranked = false;
   private final TowersForPGM plugin = TowersForPGM.getInstance();
   private final Draft draft;
   private final Matchmaking matchmaking;
@@ -169,14 +170,11 @@ public class Queue {
         if (countdown[0] <= 0) {
           String table = ConfigManager.getRankedDefaultTable();
           ConfigManager.addTempTable(table);
-          if (ConfigManager.isRankedMatchmaking()) {
-            queueWithMatchmaking(match);
-          } else {
-            queueWithCaptains(match, table);
-          }
+          queue(match, table);
           // Cancelar el countdown
           this.cancel();
           countdownActive = false;
+          ranked = true;
           return;
         }
         if (queuePlayers.size() < ConfigManager.getRankedSize()) {
@@ -196,7 +194,7 @@ public class Queue {
     }.runTaskTimer(plugin, 0, 20L);
   }
 
-  private void queueWithCaptains(Match match, String table) {
+  private void queue(Match match, String table) {
     // Obtener a los primeros jugadores y borrarlos de la queue
     List<String> rankedPlayers = queuePlayers.subList(0, ConfigManager.getRankedSize()).stream()
         .map(uuid -> PGM.get().getMatchManager().getPlayer(uuid).getNameLegacy())
@@ -226,9 +224,12 @@ public class Queue {
           UUID captain2 = pair.getCaptain2();
           List<MatchPlayer> remaining = pair.getRemainingPlayers();
 
-          draft.setCustomOrderPattern(ConfigManager.getRankedOrder(), 0);
-          draft.startDraft(captain1, captain2, remaining, match, true);
-
+          if (ConfigManager.isRankedMatchmaking()) {
+            matchmaking.startMatchmaking(captain1, captain2, rankedMatchPlayers, match);
+          } else {
+            draft.setCustomOrderPattern(ConfigManager.getRankedOrder(), 0);
+            draft.startDraft(captain1, captain2, remaining, match, true);
+          }
           rankedPlayers.clear();
           rankedMatchPlayers.clear();
           playersWithElo.clear();
@@ -240,21 +241,6 @@ public class Queue {
           match.sendWarning(Component.text(RANKED_PREFIX + "Error al obtener datos de ELO."));
           return null;
         });
-  }
-
-  private void queueWithMatchmaking(Match match) {
-    // Obtener a los primeros jugadores y borrarlos de la queue
-    List<String> rankedPlayers = queuePlayers.subList(0, ConfigManager.getRankedSize()).stream()
-        .map(uuid -> PGM.get().getMatchManager().getPlayer(uuid).getNameLegacy())
-        .collect(Collectors.toList());
-    // Obtener los MatchPlayers de los jugadores seleccionados
-    List<MatchPlayer> rankedMatchPlayers = rankedPlayers.stream()
-        .map(username -> PGM.get().getMatchManager().getPlayer(getUUIDFromUsername(username)))
-        .collect(Collectors.toList());
-    ItemListener.removeItemToPlayers(rankedMatchPlayers);
-    // Borrar los jugadores de la cola
-    queuePlayers.subList(0, ConfigManager.getRankedSize()).clear();
-    matchmaking.startMatchmaking(rankedMatchPlayers, match);
   }
 
   public List<String> getQueueList() {
@@ -285,5 +271,13 @@ public class Queue {
   private UUID getUUIDFromUsername(String username) {
     OfflinePlayer offline = Bukkit.getPlayerExact(username);
     return offline != null ? offline.getUniqueId() : null;
+  }
+
+  public static Boolean isRanked() {
+    return ranked;
+  }
+
+  public static void setRanked(Boolean value) {
+    ranked = value;
   }
 }

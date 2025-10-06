@@ -17,6 +17,7 @@ import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.Elo;
 import org.nicolie.towersforpgm.rankeds.ItemListener;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
@@ -68,9 +69,6 @@ public class MatchFinishListener implements Listener {
   }
 
   private void cancelStats(MatchFinishEvent event) {
-    if (ConfigManager.getTempTable() != null) {
-      ConfigManager.removeTempTable();
-    }
     String mapName = event.getMatch().getMap().getName();
     TowersForPGM.getInstance()
         .getLogger()
@@ -94,7 +92,6 @@ public class MatchFinishListener implements Listener {
     if (scoreMatchModule != null && statsModule != null) {
       List<Stats> playerStatsList = new ArrayList<>();
 
-      // Crear una lista única con todos los jugadores (conectados y desconectados)
       List<MatchPlayer> allPlayers = new ArrayList<>();
       allPlayers.addAll(event.getMatch().getParticipants());
       allPlayers.addAll(plugin.getDisconnectedPlayers().values());
@@ -103,9 +100,7 @@ public class MatchFinishListener implements Listener {
       List<MatchPlayer> winners = new ArrayList<>();
       List<MatchPlayer> losers = new ArrayList<>();
 
-      // Recorrer todos los jugadores
       for (MatchPlayer player : allPlayers) {
-        // Obtenemos estadísticas del jugador
         PlayerStats playerStats = statsModule.getPlayerStat(player);
         int totalPoints = match.getMap().getGamemodes().contains(Gamemode.SCOREBOX)
             ? (int) scoreMatchModule.getContribution(player.getId())
@@ -142,15 +137,10 @@ public class MatchFinishListener implements Listener {
             ));
       }
       if (!playerStatsList.isEmpty()) {
-        String table;
-        if (ConfigManager.getTempTable() != null) {
-          table = ConfigManager.getTempTable();
-        } else {
-          table = ConfigManager.getTableForMap(map);
-        }
-        // Aquí envías las estadísticas a la base de datos o lo que sea necesario
+        String table = ConfigManager.getActiveTable(map);
         String consoleMeString;
-        if (ConfigManager.isRanked(table, map)) {
+        Boolean ranked = Queue.isRanked();
+        if (ranked) {
           Elo.addWin(winners, losers).thenAccept(eloChanges -> {
             StatsManager.updateStats(table, playerStatsList, eloChanges);
             for (PlayerEloChange eloChange : eloChanges) {
@@ -178,10 +168,7 @@ public class MatchFinishListener implements Listener {
         TowersForPGM.getInstance().getLogger().info(consoleMeString);
         SendMessage.sendToDevelopers(languageManager
             .getPluginMessage("stats.console")
-            .replace(
-                "{id}",
-                (ConfigManager.isRanked(table, map) ? "ranked-" : "")
-                    + event.getMatch().getId())
+            .replace("{id}", (ranked ? "ranked-" : "") + event.getMatch().getId())
             .replace("{map}", map)
             .replace("{table}", table)
             .replace("{size}", String.valueOf(playerStatsList.size())));
