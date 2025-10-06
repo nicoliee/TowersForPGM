@@ -14,18 +14,13 @@ import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
 
 public class PreparationConfig {
-  private final LanguageManager languageManager;
   private final TowersForPGM plugin = TowersForPGM.getInstance();
-
-  public PreparationConfig(LanguageManager languageManager) {
-    this.languageManager = languageManager;
-  }
 
   public void togglePreparation(CommandSender sender) {
     boolean newState = !plugin.isPreparationEnabled();
     plugin.setPreparationEnabled(newState);
     String messageKey = newState ? "preparation.enabled" : "preparation.disabled";
-    SendMessage.sendToPlayer(sender, languageManager.getPluginMessage(messageKey));
+    SendMessage.sendToPlayer(sender, LanguageManager.langMessage(messageKey));
   }
 
   public void handleAddCommand(CommandSender sender) {
@@ -33,8 +28,7 @@ public class PreparationConfig {
     String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
     if (config.getConfigurationSection("preparationTime.maps").getKeys(false).contains(mapName)) {
       SendMessage.sendToPlayer(
-          sender,
-          languageManager.getPluginMessage("region.mapAlreadyAdded").replace("{map}", mapName));
+          sender, LanguageManager.langMessage("region.mapAlreadyAdded").replace("{map}", mapName));
       return;
     }
 
@@ -64,7 +58,7 @@ public class PreparationConfig {
     plugin.getRegions().put(mapName, region);
 
     SendMessage.sendToPlayer(
-        sender, languageManager.getPluginMessage("region.mapSuccess").replace("{map}", mapName));
+        sender, LanguageManager.langMessage("region.mapSuccess").replace("{map}", mapName));
   }
 
   public void handleRemoveCommand(CommandSender sender) {
@@ -72,7 +66,7 @@ public class PreparationConfig {
     String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
     if (!config.getConfigurationSection("preparationTime.maps").getKeys(false).contains(mapName)) {
       SendMessage.sendToPlayer(
-          sender, languageManager.getPluginMessage("region.mapError").replace("{map}", mapName));
+          sender, LanguageManager.langMessage("region.mapError").replace("{map}", mapName));
       return;
     }
 
@@ -84,7 +78,7 @@ public class PreparationConfig {
     plugin.getRegions().remove(mapName);
 
     SendMessage.sendToPlayer(
-        sender, languageManager.getPluginMessage("region.mapDeleted").replace("{map}", mapName));
+        sender, LanguageManager.langMessage("region.mapDeleted").replace("{map}", mapName));
   }
 
   public void handleCoordinates(CommandSender sender, boolean isMax, int x, int y, int z) {
@@ -93,8 +87,7 @@ public class PreparationConfig {
     World world = PGM.get().getMatchManager().getMatch(sender).getWorld();
     if (!config.getConfigurationSection("preparationTime.maps").getKeys(false).contains(mapName)) {
       SendMessage.sendToPlayer(
-          sender,
-          languageManager.getPluginMessage("preparation.noRegion").replace("{map}", mapName));
+          sender, LanguageManager.langMessage("preparation.noRegion").replace("{map}", mapName));
       return;
     }
     String key = isMax ? "P2" : "P1";
@@ -107,8 +100,7 @@ public class PreparationConfig {
     String message = isMax ? "region.maxSet" : "region.minSet";
     SendMessage.sendToPlayer(
         sender,
-        languageManager
-            .getPluginMessage(message)
+        LanguageManager.langMessage(message)
             .replace("{map}", mapName)
             .replace("{x}", String.valueOf(x))
             .replace("{y}", String.valueOf(y))
@@ -128,11 +120,11 @@ public class PreparationConfig {
 
     if (!config.getConfigurationSection("preparationTime.maps").getKeys(false).contains(mapName)) {
       SendMessage.sendToPlayer(
-          sender, languageManager.getPluginMessage("region.mapError").replace("{map}", mapName));
+          sender, LanguageManager.langMessage("region.mapError").replace("{map}", mapName));
       return;
     }
     if (timer <= 0) {
-      SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.usage"));
+      SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
       return;
     }
 
@@ -146,12 +138,11 @@ public class PreparationConfig {
       region.setTimer(timer);
       SendMessage.sendToPlayer(
           sender,
-          languageManager
-              .getPluginMessage("region.timerSet")
+          LanguageManager.langMessage("region.timerSet")
               .replace("{map}", mapName)
               .replace("{timer}", SendMessage.formatTime(timer * 60)));
     } else {
-      SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.mapError"));
+      SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.mapError"));
     }
   }
 
@@ -159,11 +150,11 @@ public class PreparationConfig {
     FileConfiguration config = plugin.getConfig();
     String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
     if (!config.getConfigurationSection("preparationTime.maps").getKeys(false).contains(mapName)) {
-      SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.mapError"));
+      SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.mapError"));
       return;
     }
     if (haste <= 0) {
-      SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.usage"));
+      SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
       return;
     }
 
@@ -177,12 +168,11 @@ public class PreparationConfig {
       region.setHaste(haste);
       SendMessage.sendToPlayer(
           sender,
-          languageManager
-              .getPluginMessage("region.hasteSet")
+          LanguageManager.langMessage("region.hasteSet")
               .replace("{map}", mapName)
               .replace("{timer}", SendMessage.formatTime(haste * 60)));
     } else {
-      SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.regionNotFound"));
+      SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.regionNotFound"));
     }
   }
 
@@ -191,11 +181,11 @@ public class PreparationConfig {
     FileConfiguration config = plugin.getConfig();
     if (!config.contains("preparationTime.maps")
         || config.getConfigurationSection("preparationTime.maps").getKeys(false).isEmpty()) {
-      SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.mapsNotFound"));
+      SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.mapsNotFound"));
       return;
     }
 
-    SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.header"));
+    SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.header"));
     for (String mapName :
         config.getConfigurationSection("preparationTime.maps.").getKeys(false)) {
       String basePath = "preparationTime.maps." + mapName;

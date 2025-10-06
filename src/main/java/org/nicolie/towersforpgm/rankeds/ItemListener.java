@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -52,15 +53,13 @@ public class ItemListener implements Listener {
       return false;
     }
     String displayName = meta.getDisplayName();
-    return displayName.equals(
-        TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.item"));
+    return displayName.equals(LanguageManager.langMessage("ranked.item"));
   }
 
   public static ItemStack getQueueItem() {
     ItemStack queueItem = new ItemStack(Material.EYE_OF_ENDER);
     ItemMeta meta = queueItem.getItemMeta();
-    meta.setDisplayName(
-        TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.item"));
+    meta.setDisplayName(LanguageManager.langMessage("ranked.item"));
     queueItem.setItemMeta(meta);
     return queueItem;
   }

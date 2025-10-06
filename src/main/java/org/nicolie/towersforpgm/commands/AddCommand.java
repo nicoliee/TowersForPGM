@@ -22,41 +22,34 @@ public class AddCommand implements CommandExecutor {
   private final Captains captains;
   private final Teams teams;
   private final Picks pickInventory;
-  private final LanguageManager languageManager;
 
   public AddCommand(
-      AvailablePlayers availablePlayers,
-      Captains captains,
-      Teams teams,
-      LanguageManager languageManager,
-      Picks pickInventory) {
+      AvailablePlayers availablePlayers, Captains captains, Teams teams, Picks pickInventory) {
     this.availablePlayers = availablePlayers;
     this.captains = captains;
     this.teams = teams;
     this.pickInventory = pickInventory;
-    this.languageManager = languageManager;
   }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      SendMessage.sendToConsole(languageManager.getPluginMessage("errors.noPlayer"));
+      SendMessage.sendToConsole(LanguageManager.langMessage("errors.noPlayer"));
       return true;
     }
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     if (!Draft.isDraftActive()) {
-      matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("picks.noDraft")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.picks.noDraft")));
       return true;
     }
 
     if (args.length < 1) {
-      matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("add.usage")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.add.usage")));
       return true;
     }
 
     if (Queue.isRanked()) {
-      matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("ranked.notAllowed")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.notAllowed")));
       return true;
     }
 
@@ -69,7 +62,7 @@ public class AddCommand implements CommandExecutor {
     availablePlayers.addPlayer(playerName);
     pickInventory.updateAllInventories();
     SendMessage.broadcast(
-        languageManager.getConfigurableMessage("picks.add").replace("{player}", playerName));
+        LanguageManager.langMessage("draft.add.added").replace("{player}", playerName));
     PGM.get().getMatchManager().getMatch(sender).getMatch().playSound(Sounds.ALERT);
     return true;
   }
@@ -80,19 +73,19 @@ public class AddCommand implements CommandExecutor {
             && captains.getCaptain1Name().equalsIgnoreCase(playerName))
         || (captains.getCaptain2Name() != null
             && captains.getCaptain2Name().equalsIgnoreCase(playerName))) {
-      matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("add.captain")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.add.captain")));
       return true;
     }
 
     if (teams.isPlayerInAnyTeam(playerName)) {
       matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("captains.alreadyInTeam")));
+          Component.text(LanguageManager.langMessage("draft.captains.alreadyInTeam")));
       return true;
     }
 
     if (availablePlayers.getAllAvailablePlayers().contains(playerName)) {
       matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("captains.alreadyInDraft")));
+          Component.text(LanguageManager.langMessage("draft.captains.alreadyInDraft")));
       return true;
     }
     return false;

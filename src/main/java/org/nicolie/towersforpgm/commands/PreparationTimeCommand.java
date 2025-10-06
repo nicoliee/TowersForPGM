@@ -18,11 +18,8 @@ import tc.oc.pgm.api.player.MatchPlayer;
 
 public class PreparationTimeCommand implements CommandExecutor, TabCompleter {
   private final PreparationListener preparationListener;
-  private final LanguageManager languageManager;
 
-  public PreparationTimeCommand(
-      LanguageManager languageManager, PreparationListener preparationListener) {
-    this.languageManager = languageManager;
+  public PreparationTimeCommand(PreparationListener preparationListener) {
     this.preparationListener = preparationListener;
   }
 
@@ -31,7 +28,7 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter {
     Player player = (Player) sender;
     // Verificar que el comando lo ejecute un jugador
     if (!(sender instanceof Player)) {
-      SendMessage.sendToPlayer(player, languageManager.getPluginMessage("errors.noPlayer"));
+      SendMessage.sendToPlayer(player, LanguageManager.langMessage("errors.noPlayer"));
       return true;
     }
 
@@ -55,8 +52,7 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter {
         break;
 
       default:
-        matchPlayer.sendWarning(
-            Component.text(languageManager.getPluginMessage("preparation.usage")));
+        matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("preparation.usage")));
         return true;
     }
     return true;

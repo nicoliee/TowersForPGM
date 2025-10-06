@@ -14,17 +14,15 @@ import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
   private final TowersForPGM plugin;
-  private final LanguageManager languageManager;
 
-  public TowersForPGMCommand(TowersForPGM plugin, LanguageManager languageManager) {
-    this.languageManager = languageManager;
+  public TowersForPGMCommand(TowersForPGM plugin) {
     this.plugin = plugin;
   }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!sender.hasPermission("towers.admin")) {
-      sender.sendMessage(languageManager.getPluginMessage("errors.noPermission"));
+      sender.sendMessage(LanguageManager.langMessage("errors.noPermission"));
       return true;
     }
 
@@ -38,31 +36,31 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
     switch (argument) {
       case "setlanguage":
         if (args.length < 2) {
-          sender.sendMessage(languageManager.getPluginMessage("TowersForPGM.noLanguage"));
+          sender.sendMessage(LanguageManager.langMessage("TowersForPGM.noLanguage"));
           return true;
         }
         String language = args[1].toLowerCase();
         if (!language.equals("en") && !language.equals("es")) {
-          sender.sendMessage(languageManager.getPluginMessage("TowersForPGM.invalidLanguage"));
+          sender.sendMessage(LanguageManager.langMessage("TowersForPGM.invalidLanguage"));
           return true;
         }
-        languageManager.setLanguage(language);
-        sender.sendMessage(languageManager.getPluginMessage("TowersForPGM.languageSet"));
+        LanguageManager.setLanguage(language);
+        sender.sendMessage(LanguageManager.langMessage("TowersForPGM.languageSet"));
         return true;
 
       case "reloadmessages":
         File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        sender.sendMessage(languageManager.getPluginMessage("messages.reloadStart"));
+        sender.sendMessage(LanguageManager.langMessage("messages.reloadStart"));
 
         if (messagesFile.exists()) {
           if (!messagesFile.delete()) {
-            sender.sendMessage(languageManager.getPluginMessage("messages.reloadError"));
+            sender.sendMessage(LanguageManager.langMessage("messages.reloadError"));
             return true;
           }
         }
         plugin.saveResource("messages.yml", false);
-        languageManager.reloadMessages();
-        sender.sendMessage(languageManager.getPluginMessage("messages.reloadSuccess"));
+        LanguageManager.reload();
+        sender.sendMessage(LanguageManager.langMessage("messages.reloadSuccess"));
         return true;
       case "update":
         AutoUpdate update = new AutoUpdate(plugin);

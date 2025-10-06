@@ -1,0 +1,252 @@
+back: "§c§lBack to Main Menu"
+status:
+  enabled: "§aEnabled"
+  disabled: "§cDisabled"
+  none: "§cNone"
+error:
+  invalid_number: "§cInvalid number format!"
+main:
+  title: "§6§lTowers Configuration"
+  draft:
+    title: "§a§lDraft Configuration"
+    description: "§7Configure draft settings"
+    feature1: "§7- Minimum players"
+    feature2: "§7- Draft order"
+    feature3: "§7- Private matches"
+    feature4: "§7- Second pick balance"
+    feature5: "§7- Suggestions"
+    feature6: "§7- Timer"
+  preparation:
+    title: "§b§lPreparation Configuration"
+    description: "§7Configure preparation settings"
+    feature1: "§7- Toggle preparation"
+    feature2: "§7- Add/Remove regions"
+    feature3: "§7- Set coordinates"
+    feature4: "§7- Timer configuration"
+    feature5: "§7- Haste configuration"
+  refill:
+    title: "§e§lRefill Configuration"
+    description: "§7Configure refill settings"
+    feature1: "§7- Add refill locations"
+    feature2: "§7- Remove refill locations"
+    feature3: "§7- Reload refill system"
+  stats:
+    title: "§d§lStatistics Configuration"
+    description: "§7Configure statistics settings"
+    feature1: "§7- Default table"
+    feature2: "§7- Add/Remove tables"
+    feature3: "§7- Map-specific tables"
+    feature4: "§7- Temporary tables"
+  ranked:
+    title: "§6§lRanked Configuration"
+    description: "§7Configure ranked settings"
+    feature1: "§7- Match size"
+    feature2: "§7- Draft order"
+    feature3: "§7- Table management"
+    feature4: "§7- Allowed maps"
+    feature5: "§7- Matchmaking mode"
+  help:
+    title: "§f§lHelp"
+    description: "§7Get help information"
+    feature1: "§7for each configuration section"
+draft:
+  title: "§a§lDraft Configuration"
+  min_players:
+    title: "§e§lMinimum Players"
+    current: "§7Current: §a{value}"
+    lore1: "§7Click to change the minimum"
+    lore2: "§7number of players required for draft"
+    input: "§eEnter the minimum number of players for draft:"
+  order:
+    title: "§e§lDraft Order"
+    current: "§7Current: §a{value}"
+    lore1: "§7Click to change the"
+    lore2: "§7draft order pattern (A[AB]+)"
+    input: "§eEnter the draft order pattern (A[AB]+):"
+  private:
+    title: "§e§lPrivate Matches"
+    lore1: "§7This setting is map-specific"
+    lore2: "§7Configure in match context"
+    disabled: "§cPrivate matches are configured per map. Use the command interface for this setting."
+  second_pick:
+    title: "§e§lSecond Pick Balance"
+    current: "§7Current: {status}"
+    lore1: "§7Click to toggle the"
+    lore2: "§7second pick balance setting"
+  suggestions:
+    title: "§e§lDraft Suggestions"
+    current: "§7Current: {status}"
+    lore1: "§7Click to toggle the"
+    lore2: "§7draft suggestions setting"
+  timer:
+    title: "§e§lDraft Timer"
+    current: "§7Current: {status}"
+    lore1: "§7Click to toggle the"
+    lore2: "§7draft timer setting"
+stats:
+  title: "§d§lStats Configuration"
+  default:
+    title: "§e§lSet Default Table"
+    lore: "§7Click to set the default statistics table"
+    input: "§eEnter the name of the default table:"
+  add:
+    title: "§a§lAdd Table"
+    lore: "§7Click to add a new statistics table"
+    input: "§eEnter the name of the new table:"
+  remove:
+    title: "§c§lRemove Table"
+    lore: "§7Click to remove a statistics table"
+    input: "§eEnter the name of the table to remove:"
+  list:
+    title: "§e§lList Tables"
+    lore: "§7Click to view all available tables"
+    count: "§7Current tables: §a{count}"
+    item: "§7- §a{table}"
+  add_map:
+    title: "§e§lAdd Map Table"
+    lore: "§7Click to add a table for the current map"
+    input: "§eEnter the name of the table for this map:"
+  remove_map:
+    title: "§c§lRemove Map Table"
+    lore: "§7Click to remove the table from the current map"
+  add_temp:
+    title: "§e§lAdd Temporary Table"
+    lore: "§7Click to add a temporary table"
+    current: "§7Current: {table}"
+    input: "§eEnter the name of the temporary table:"
+  remove_temp:
+    title: "§c§lRemove Temporary Table"
+    lore: "§7Click to remove a temporary table"
+  none: "§cNone"
+refill:
+  title: "§e§lRefill Configuration"
+  add:
+    title: "§a§lAdd Refill Location"
+    lore1: "§7Click to add the current location"
+    lore2: "§7as a refill point for this map"
+  remove:
+    title: "§c§lRemove Refill Location"
+    lore1: "§7Click to remove the current location"
+    lore2: "§7from the refill points"
+  reload:
+    title: "§e§lTest/Reload Refill"
+    lore1: "§7Click to test and reload"
+    lore2: "§7the refill system for the current map"
+preparation:
+  title: "§b§lPreparation Configuration"
+  toggle:
+    title: "§e§lToggle Preparation"
+    current: "§7Status: {status}"
+    lore1: "§7Click to toggle the"
+    lore2: "§7preparation system on/off"
+  add:
+    title: "§a§lAdd Region"
+    lore1: "§7Click to add the current location"
+    lore2: "§7as a preparation region"
+  remove:
+    title: "§c§lRemove Region"
+    lore1: "§7Click to remove the current location"
+    lore2: "§7from the preparation regions"
+  max:
+    title: "§e§lSet Maximum Coordinates"
+    current: "§7Current: §a{coords}"
+    lore1: "§7Click to set maximum coordinates"
+    lore2: "§7for the preparation region"
+    lore3: "§7§oRequires manual coordinate input"
+    command1: "§cUse the command interface to set coordinates:"
+    command2: "§e/towers preparation max <x> <y> <z>"
+  min:
+    title: "§e§lSet Minimum Coordinates"
+    current: "§7Current: §a{coords}"
+    lore1: "§7Click to set minimum coordinates"
+    lore2: "§7for the preparation region"
+    lore3: "§7§oRequires manual coordinate input"
+    command1: "§cUse the command interface to set coordinates:"
+    command2: "§e/towers preparation min <x> <y> <z>"
+  timer:
+    title: "§e§lTimer Configuration"
+    current: "§7Current: §a{timer}"
+    lore1: "§7Click to configure the duration"
+    lore2: "§7of the preparation timer in minutes"
+    command1: "§cUse the command interface to set the timer:"
+    command2: "§e/towers preparation timer <minutes>"
+  haste:
+    title: "§e§lHaste Configuration"
+    current: "§7Current: §a{haste}"
+    lore1: "§7Click to configure the duration"
+    lore2: "§7of haste in minutes"
+    command1: "§cUse the command interface to set haste:"
+    command2: "§e/towers preparation haste <minutes>"
+  list:
+    title: "§e§lList Regions"
+    lore1: "§7Click to view all configured"
+    lore2: "§7preparation regions"
+help:
+  title: "§f§lHelp - Towers Configuration"
+  draft:
+    title: "§a§lDraft Help"
+    lore1: "§7Click to get help about"
+    lore2: "§7draft configuration options"
+  preparation:
+    title: "§b§lPreparation Help"
+    lore1: "§7Click to get help about"
+    lore2: "§7preparation configuration options"
+  refill:
+    title: "§e§lRefill Help"
+    lore1: "§7Click to get help about"
+    lore2: "§7refill configuration options"
+  stats:
+    title: "§d§lStatistics Help"
+    lore1: "§7Click to get help about"
+    lore2: "§7statistics configuration options"
+  general:
+    title: "§f§lGeneral Help"
+    lore1: "§7Click to get general help"
+    lore2: "§7about the plugin"
+ranked:
+  title: "§6§lRanked Configuration"
+  size:
+    title: "§e§lMatch Size"
+    current: "§7Current: §a{value}"
+    lore1: "§7Click to change the match size"
+    lore2: "§7for ranked (must be even and >= 4)"
+    input: "§eEnter the ranked match size:"
+  order:
+    title: "§e§lRanked Draft Order"
+    current: "§7Current: §a{value}"
+    lore1: "§7Click to change the pattern"
+    lore2: "§7of draft order for ranked (A[AB]+)"
+    input: "§eEnter the ranked draft order pattern (A[AB]+):"
+  tables:
+    title: "§e§lRanked Tables"
+    current: "§7Tables: §a{count}"
+    item: "§7- §a{table}"
+  default_table:
+    title: "§e§lDefault Table"
+    current: "§7Current: §a{table}"
+    lore1: "§7Click to change the"
+    lore2: "§7default table for ranked"
+    input: "§eEnter the name of the default table:"
+  maps:
+    title: "§e§lRanked Maps"
+    current: "§7Maps: §a{count}"
+    item: "§7- §a{map}"
+  matchmaking:
+    title: "§e§lAutomatic Matchmaking"
+    current: "§7Status: {status}"
+    lore1: "§7Click to toggle the"
+    lore2: "§7automatic matchmaking mode"
+  add_table:
+    title: "§a§lAdd Table"
+    lore: "§7Click to add a new ranked table"
+    input: "§eEnter the name of the new table:"
+  remove_table:
+    title: "§c§lRemove Table"
+    lore: "§7Click to remove a ranked table"
+    input: "§eEnter the name of the table to remove:"
+  add_map:
+    title: "§a§lAdd Current Map"
+    lore: "§7Click to add the current map to ranked"
+  remove_map:
+    title: "§c§lRemove Current Map"
+    lore: "§7Click to remove the current map from ranked"

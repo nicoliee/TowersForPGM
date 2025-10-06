@@ -21,7 +21,6 @@ import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.ItemListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class Events {
 
@@ -36,7 +35,6 @@ public class Events {
       Captains captains,
       Draft draft,
       Queue queue,
-      LanguageManager languageManager,
       Picks pickInventory,
       RefillManager refillManager,
       Teams teams,
@@ -44,20 +42,18 @@ public class Events {
     PluginManager pluginManager = plugin.getServer().getPluginManager();
 
     pluginManager.registerEvents(new CommandListener(captains), plugin);
-    pluginManager.registerEvents(new PreparationListener(languageManager), plugin);
+    pluginManager.registerEvents(new PreparationListener(), plugin);
     pluginManager.registerEvents(
-        new MatchLoadListener(refillManager, preparationListener, draft, languageManager), plugin);
+        new MatchLoadListener(refillManager, preparationListener, draft), plugin);
     pluginManager.registerEvents(new MatchAfterLoadListener(queue), plugin);
     pluginManager.registerEvents(
         new MatchStartListener(preparationListener, refillManager, captains), plugin);
     pluginManager.registerEvents(
-        new MatchFinishListener(plugin, preparationListener, refillManager, draft, languageManager),
-        plugin);
+        new MatchFinishListener(plugin, preparationListener, refillManager, draft), plugin);
     pluginManager.registerEvents(new ObserversKitApplyListener(pickInventory), plugin);
     pluginManager.registerEvents(
         new PlayerJoinListener(plugin, availablePlayers, teams, captains), plugin);
-    pluginManager.registerEvents(
-        new PlayerParticipationListener(teams, captains, languageManager), plugin);
+    pluginManager.registerEvents(new PlayerParticipationListener(teams, captains), plugin);
     pluginManager.registerEvents(new PlayerQuitListener(plugin, queue), plugin);
     pluginManager.registerEvents(new CompetitorScoreChangeListener(), plugin);
     pluginManager.registerEvents(new MatchStatsListener(), plugin);

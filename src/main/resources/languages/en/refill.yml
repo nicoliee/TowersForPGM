@@ -1,0 +1,6 @@
+mapFound: "§eRefill available in §2{map}§e."
+chestAlreadyExists: "§cChest already exists. §8[§2{coords}§8]"
+chestSet: "§aChest set. §8[§2{coords}§8]"
+chestDeleted: "§aChest deleted. §8[§2{coords}§8]"
+chestNotFound: "§cChest not found. §8[§2{coords}§8]"
+usage: "§cUsage: /refill <add|delete|test>"

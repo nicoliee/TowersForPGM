@@ -18,7 +18,6 @@ import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class Commands {
 
@@ -32,7 +31,6 @@ public class Commands {
       AvailablePlayers availablePlayers,
       Captains captains,
       Draft draft,
-      LanguageManager languageManager,
       Matchmaking matchmaking,
       Picks pickInventory,
       RefillManager refillManager,
@@ -40,25 +38,22 @@ public class Commands {
       PreparationListener preparationListener) {
     plugin
         .getCommand("add")
-        .setExecutor(
-            new AddCommand(availablePlayers, captains, teams, languageManager, pickInventory));
+        .setExecutor(new AddCommand(availablePlayers, captains, teams, pickInventory));
     plugin.getCommand("balance").setExecutor(new BalanceCommand(matchmaking));
-    plugin.getCommand("cancelMatch").setExecutor(new CancelMatchCommand(languageManager));
-    plugin.getCommand("captains").setExecutor(new CaptainsCommand(draft, languageManager));
+    plugin.getCommand("cancelMatch").setExecutor(new CancelMatchCommand());
+    plugin.getCommand("captains").setExecutor(new CaptainsCommand(draft));
     ;
     plugin
         .getCommand("pick")
-        .setExecutor(new PickCommand(
-            draft, captains, availablePlayers, teams, languageManager, pickInventory));
+        .setExecutor(new PickCommand(draft, captains, availablePlayers, teams, pickInventory));
     plugin
         .getCommand("preparationTime")
-        .setExecutor(new PreparationTimeCommand(languageManager, preparationListener));
-    plugin.getCommand("towers").setExecutor(new TowersCommand(languageManager));
-    plugin.getCommand("ready").setExecutor(new ReadyCommand(captains, languageManager));
+        .setExecutor(new PreparationTimeCommand(preparationListener));
+    plugin.getCommand("towers").setExecutor(new TowersCommand());
+    plugin.getCommand("ready").setExecutor(new ReadyCommand(captains));
     plugin
         .getCommand("remove")
-        .setExecutor(new RemoveCommand(
-            draft, teams, captains, availablePlayers, languageManager, pickInventory));
-    plugin.getCommand("towersForPGM").setExecutor(new TowersForPGMCommand(plugin, languageManager));
+        .setExecutor(new RemoveCommand(draft, teams, captains, availablePlayers, pickInventory));
+    plugin.getCommand("towersForPGM").setExecutor(new TowersForPGMCommand(plugin));
   }
 }

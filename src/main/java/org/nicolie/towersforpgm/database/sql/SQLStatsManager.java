@@ -109,7 +109,8 @@ public class SQLStatsManager {
         TowersForPGM.getInstance()
             .getLogger()
             .log(Level.SEVERE, "Error al actualizar estadísticas", e);
-        SendMessage.sendToDevelopers("§cError al actualizar estadísticas en la base de datos.");
+        SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+            "errors.database.updateStats"));
       }
     });
   }
@@ -188,8 +189,8 @@ public class SQLStatsManager {
             TowersForPGM.getInstance()
                 .getLogger()
                 .log(Level.SEVERE, "Error al obtener estadísticas del usuario", e);
-            SendMessage.sendToDevelopers(
-                "§cError al obtener estadísticas del usuario en la base de datos.");
+            SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+                "errors.database.getStats"));
             return null;
           }
         },

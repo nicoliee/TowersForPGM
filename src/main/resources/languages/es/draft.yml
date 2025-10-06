@@ -1,0 +1,79 @@
+notAllowed: "§cNo puedes hacer esto en un draft."
+add:
+  captain: "§cNo puedes añadir a un capitán."
+  added: "§a+ {player}"
+  usage: "§cUso: /add <nick>"
+
+remove:
+  captain: "§cNo puedes eliminar a un capitán."
+  notInDraft: "§cEl jugador no está en el draft."
+  removed: "§c- {player}"
+  usage: "§cUso: /remove <nick>"
+
+captains:
+  alreadyInDraft: "§cEl jugador ya está en el draft."
+  alreadyInTeam: "§cEl jugador ya está en un equipo."
+  bossbar: "{captain} está eligiendo. §bTiempo restante: §a{time}"
+  captainsHeader: "§m-----------§r §b§lCapitanes §f§m-----------"
+  choose: "{teamcolor}{captain} §fha elegido a {player}."
+  matchStarted: "§cLa partida ya ha comenzado."
+  notEnoughPlayers: "§cNo hay suficientes jugadores en la partida."
+  notInDraft: "§cEl jugador no está en el draft."
+  notOnline: "§cEl jugador no está conectado."
+  offline: "§cUno de los capitanes está desconectado."
+  ready: "§bUsa /ready para empezar la partida."
+  suggestions: "§7Sugerencias: {suggestions}"
+  teamsHeader: "§m-----------§r §b§lEquipos §f§m-----------"
+  timeRemaining: "§cTienes §4{time} §cpara elegir un jugador."
+  tip: "§bUsa la estrella para elegir a un jugador."
+  turn: "{teamcolor}{captain} §festá eligiendo ahora."
+  usage: "§cUso: /captains <nick1> <nick2>"
+
+picks:
+  noDraft: "§cNo hay un draft en curso."
+  usage: "§cUso: /pick <jugador>"
+  alreadyPicked: "§c{player} ya ha sido elegido."
+  notInList: "§c{player} no está disponible para elegir."
+  notTurn: "§cNo es tu turno de elegir."
+  notCaptain: "§cNo eres un capitán."
+
+config:
+  clickToPick: "§eHaz clic para elegir."
+  invalidOrder: "§c Orden inválido. Ejemplo de uso: ABBAAB"
+  itemLore: "§7Clic derecho para abrir el menú de draft."
+  orderSet: "§aOrden de elección establecido: §2{order}§a."
+  sizeSet: "§aTamaño de elección establecido: §2{size}§a."
+  inventoryName: "§4Jugadores disponibles [§2{size}§4]"
+
+balance:
+  usage: "§cUso: /balance <nick1> <nick2>"
+
+ready:
+  alreadyReady: "Ya has marcado como listo."
+  notAvailable: "Aún no puedes marcar como listo."
+  ready: "{teamcolor}{team} §festá listo."
+
+join:
+  notAllowed: "No puedes unirte a la partida."
+  redTeam: "Estás en el equipo rojo."
+  blueTeam: "Estás en el equipo azul."
+
+config:
+  suggestions: "§aSugerencias de draft activadas."
+  noSuggestions: "§cSugerencias de draft desactivadas."
+  suggestionsStatus: "§eLas sugerencias de draft están {status}."
+  timer: "§aTemporizador de draft activado."
+  noTimer: "§cTemporizador de draft desactivado."
+  timerStatus: "§eEl temporizador de draft está {status}."
+  secondTeamBalance: "§aEl segundo equipo obtendrá un jugador extra."
+  noSecondTeamBalance: "§cEl segundo equipo no obtendrá un jugador extra."
+  secondTeamBalanceStatus: "§eEl segundo equipo {status} un jugador extra."
+  sizeSet: "§aTamaño del draft establecido a §2{size}§a."
+  currentSize: "§eEl tamaño actual del draft es §6{size}§e."
+  orderSet: "§aOrden de elección establecido a §2{order}§a."
+  currentOrder: "§eEl orden actual de elección es §6{order}§e."
+  invalidOrder: "§cOrden inválido. Ejemplo de uso: ABBAAB"
+  enabled: "activadas"
+  disabled: "desactivadas"
+  gets: "obtiene"
+  doesNotGet: "no obtiene"

@@ -20,15 +20,14 @@ import org.nicolie.towersforpgm.utils.SendMessage;
 // Se implementa la funcionalidad de recarga de cofres en un intervalo de tiempo de 60 segundos
 
 public class RefillManager {
-  private final LanguageManager languageManager;
   private final TowersForPGM plugin = TowersForPGM.getInstance();
   private final Map<String, Map<Location, ItemStack[]>> chestContents = new HashMap<>();
   private final Map<String, BukkitRunnable> refillTasks = new HashMap<>();
 
   // Variable para almacenar el último tiempo de recarga
 
-  public RefillManager(LanguageManager languageManager) {
-    this.languageManager = languageManager;
+  public RefillManager() {
+    // Constructor sin parámetros
   }
 
   public void loadChests(String mapName, String worldName) {
@@ -42,7 +41,7 @@ public class RefillManager {
         // Enviar mensaje desde el hilo principal
         Bukkit.getScheduler().runTask(plugin, () -> {
           SendMessage.sendToAdmins(
-              languageManager.getPluginMessage("refill.mapFound").replace("{map}", mapName));
+              LanguageManager.langMessage("refill.mapFound").replace("{map}", mapName));
         });
       }
 

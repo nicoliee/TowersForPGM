@@ -23,19 +23,13 @@ public class Matchmaking {
   private final Utilities utilities;
   private final AvailablePlayers availablePlayers;
   private final Teams teams;
-  private final LanguageManager languageManager;
   private static boolean isMatchmakingActive = false;
 
   public Matchmaking(
-      AvailablePlayers availablePlayers,
-      Captains captains,
-      LanguageManager languageManager,
-      Teams teams,
-      Utilities utilities) {
+      AvailablePlayers availablePlayers, Captains captains, Teams teams, Utilities utilities) {
     this.captains = captains;
     this.availablePlayers = availablePlayers;
     this.teams = teams;
-    this.languageManager = languageManager;
     this.utilities = utilities;
   }
 
@@ -67,11 +61,11 @@ public class Matchmaking {
 
     // Mensajes iniciales
     match.playSound(Sounds.RAINDROPS);
-    match.sendMessage(Component.text(languageManager.getPluginMessage("captains.captainsHeader")));
+    match.sendMessage(Component.text(LanguageManager.langMessage("captains.captainsHeader")));
     match.sendMessage(Component.text("&4" + Bukkit.getPlayer(captain1).getName() + " &l&bvs. "
         + "&9" + Bukkit.getPlayer(captain2).getName()));
     match.sendMessage(Component.text("§m---------------------------------"));
-    match.sendMessage(Component.text(languageManager.getConfigurableMessage("picks.choosing")));
+    match.sendMessage(Component.text(LanguageManager.message("picks.choosing")));
 
     // Realizar balance de equipos
     balanceTeams(match);
@@ -339,7 +333,7 @@ public class Matchmaking {
     StringBuilder team1Display = utilities.buildLists(team1, "§4", false);
     StringBuilder team2Display = utilities.buildLists(team2, "§9", false);
 
-    SendMessage.broadcast(languageManager.getPluginMessage("captains.teamsHeader"));
+    SendMessage.broadcast(LanguageManager.langMessage("captains.teamsHeader"));
     SendMessage.broadcast(team1Display.toString());
     SendMessage.broadcast("&8[&4" + team1.size() + "&8] &l&bvs. " + "&8[&9" + team2.size() + "&8]");
     SendMessage.broadcast(team2Display.toString());
@@ -356,7 +350,7 @@ public class Matchmaking {
     captains.setReadyActive(true);
     captains.setMatchWithCaptains(true);
 
-    String readyMessage = languageManager.getPluginMessage("captains.ready");
+    String readyMessage = LanguageManager.langMessage("captains.ready");
     MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
     MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
     captain1.sendActionBar(Component.text(readyMessage));

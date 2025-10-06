@@ -1,0 +1,70 @@
+prefix: "§8[§6Ranked§8]§r "
+unavailable: "§cRankeds not available."
+notAllowed: "You cannot do that in a ranked match."
+forfeit: "{player}§r §chas requested to end the match."
+noForfeit: "You cannot forfeit right now."
+alreadyForfeited: "You have already requested to forfeit."
+sizeInvalid: "§cMust be an even number and greater than 3."
+usage: "§c/ranked <join|leave|list>"
+usageSize: "§c/ranked size <size>"
+queueHeader: "§a{current}/{max}"
+sizeSet: "§aQueue size set to §2{size}§a."
+matchInProgress: "§cThere is already a match in progress."
+alreadyInQueue: "You are already in the queue."
+notInQueue: "You are not in the queue."
+notRankedMap: "This map is not a ranked map."
+joinedQueue: "+ {player}§r [{size}/{max}]"
+leftQueue: "- {player}§r [{size}/{max}]"
+cancelled: "Countdown cancelled."
+countdown: "§3Starting in §b{time}§3."
+item: "§6§lJoin Ranked Queue"
+end-match: "§6Stats: §bCheck the #rankeds channel on §1§nDiscord."
+
+error:
+  getElo: "Error getting ELO for captains: "
+  getData: "Error getting ELO data."
+
+matchbot:
+  start: "Ranked Started - {table}"
+  finish: "Ranked Finished - {table}"
+  available: "Ranked Available"
+  hasTagged: "has tagged"
+  online: "Online"
+  tagNotAvailable: "§cYou cannot tag players while participating in a match."
+  tagCooldown: "§cYou must wait §4{time}§c before using this command again."
+  tagSent: "{name}§r §ahas tagged players on Discord."
+
+ranks:
+  bronze: "Bronze"
+  silver: "Silver"
+  gold: "Gold"
+  emerald: "Emerald"
+  diamond: "Diamond"
+
+config:
+  size:
+    current: "§eCurrent ranked match size: §6{size}§e."
+    set: "§aRanked match size set to: §2{size}§a."
+    invalid: "§cRanked match size must be between 2 and 12."
+    invalidFormat: "§cInvalid size format. Please enter a number between 2 and 12."
+  order:
+    current: "§eCurrent ranked match order: §6{order}§e."
+    set: "§aRanked match order set to: §2{order}§a."
+    invalid: "§cInvalid order. Example usage: ABBAAB"
+  matchmaking:
+    enabled: "§aRanked matchmaking enabled."
+    disabled: "§cRanked matchmaking disabled."
+    status: "§eRanked matchmaking is {status}."
+    statusEnabled: "enabled"
+    statusDisabled: "disabled"
+  table:
+    exists: "§cTable already exists."
+    added: "§aRanked table added."
+    notFound: "§cTable §4{table} §cnot found."
+    deleted: "§cRanked table deleted."
+    success: "§aDefault ranked table set to §2{table}§a."
+  map:
+    exists: "§cMap §4{map} §cis already a ranked map."
+    added: "§aMap §2{map} §aadded to ranked maps."
+    notFound: "§cMap §4{map} §cis not a ranked map."
+    deleted: "§aMap §2{map} §aremoved from ranked maps."

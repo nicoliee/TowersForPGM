@@ -24,17 +24,15 @@ import tc.oc.pgm.api.player.MatchPlayer;
 // drafts simultáneamente
 public class CaptainsCommand implements CommandExecutor, TabCompleter {
   private final Draft draft;
-  private final LanguageManager languageManager;
 
-  public CaptainsCommand(Draft draft, LanguageManager languageManager) {
+  public CaptainsCommand(Draft draft) {
     this.draft = draft;
-    this.languageManager = languageManager;
   }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
+      sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
@@ -42,39 +40,39 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
     // Verificar si la partida está en curso
     if (match.isRunning() || match.isFinished()) {
       matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("captains.matchStarted")));
+          Component.text(LanguageManager.langMessage("draft.captains.matchStarted")));
       return true;
     }
 
     // Verificar si los argumentos son suficientes
     if (args.length < 2) {
-      matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.usage")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.captains.usage")));
       return true;
     }
 
     // Verificar si hay suficientes jugadores en línea
     if (Bukkit.getOnlinePlayers().size() < 2) {
       matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("captains.notEnoughPlayers")));
+          Component.text(LanguageManager.langMessage("draft.captains.notEnoughPlayers")));
       return true;
     }
 
     // Evitar que los argumentos sean iguales (duplicados)
     if (args[0].equalsIgnoreCase(args[1])) {
-      matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.usage")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.captains.usage")));
       return true;
     }
 
     // Verificar si los capitanes están en línea
     if (Bukkit.getPlayer(args[0]) == null || Bukkit.getPlayer(args[1]) == null) {
-      matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("captains.offline")));
+      matchPlayer.sendWarning(
+          Component.text(LanguageManager.langMessage("draft.captains.offline")));
       return true;
     }
 
     // Verificar que no sea una ranked
     if (Queue.isRanked()) {
-      matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("ranked.notAllowed")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.notAllowed")));
       return true;
     }
 

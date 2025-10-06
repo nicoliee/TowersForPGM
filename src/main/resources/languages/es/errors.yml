@@ -1,0 +1,12 @@
+databaseDisabled: "§cLa base de datos está desactivada."
+invalidCoords: "§cCoordenadas inválidas: §4{x}, {y}, {z}§c."
+messageNotFound: "§cMensaje no encontrado para la clave: §4{key}§c."
+noPlayer: "§cEste comando solo puede ser ejecutado por un jugador."
+noPermission: "§cNo tienes permiso para ejecutar este comando."
+preparationTimeNotFound: "§cNo se encontró la sección 'preparationTime' en config.yml."
+regionError: "§cError al obtener la región: §4{region}§c."
+regionLoaded: "§aRegión cargada: §2{region}§a."
+
+database:
+  updateStats: "§cError al actualizar estadísticas en la base de datos."
+  getStats: "§cError al obtener estadísticas del usuario en la base de datos."

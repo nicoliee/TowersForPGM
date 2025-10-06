@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.match.event.MatchStatsEvent;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.api.setting.SettingKey;
@@ -18,7 +19,7 @@ public class MatchStatsListener implements Listener {
   @EventHandler
   public void onMatchStatsEvent(MatchStatsEvent event) {
     if (Queue.isRanked() && plugin.isMatchBotEnabled()) {
-      String messageEndMatch = plugin.getLanguageManager().getPluginMessage("ranked.end-match");
+      String messageEndMatch = LanguageManager.langMessage("ranked.end-match");
       org.bukkit.Bukkit.getScheduler()
           .runTaskLater(
               plugin,

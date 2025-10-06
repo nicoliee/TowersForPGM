@@ -1,0 +1,3 @@
+false: "§aThe map: §2{map} §ahas been set to public."
+true: "§aThe map: §2{map} §ahas been set to private."
+usage: "§cUsage: /privateMatch <on|off>"

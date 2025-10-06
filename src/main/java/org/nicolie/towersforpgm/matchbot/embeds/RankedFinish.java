@@ -14,6 +14,7 @@ import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.map.Gamemode;
 import tc.oc.pgm.api.map.MapInfo;
 import tc.oc.pgm.api.match.Match;
@@ -33,10 +34,7 @@ public class RankedFinish {
     String table = ConfigManager.getRankedDefaultTable();
     EmbedBuilder embed = new EmbedBuilder()
         .setColor(Color.RED)
-        .setTitle(TowersForPGM.getInstance()
-            .getLanguageManager()
-            .getPluginMessage("ranked.matchbot.finish")
-            .replace("{table}", table))
+        .setTitle(LanguageManager.langMessage("ranked.matchbot.finish").replace("{table}", table))
         .setTimestamp(Instant.now())
         .setAuthor(
             MessagesConfig.message("author.name"), null, MessagesConfig.message("author.icon_url"))

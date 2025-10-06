@@ -1,54 +1,17 @@
 package org.nicolie.towersforpgm.rankeds;
 
-import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public enum Rank {
-  BRONZE(
-      TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.bronze"),
-      "§7",
-      -100,
-      -1),
-  BRONZE_PLUS(
-      TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.bronze") + "+",
-      "§7",
-      0,
-      99),
-  SILVER(
-      TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.silver"),
-      "§8",
-      100,
-      199),
-  SILVER_PLUS(
-      TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.silver") + "+",
-      "§8",
-      200,
-      299),
-  GOLD(
-      TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.gold"),
-      "§6",
-      300,
-      399),
-  GOLD_PLUS(
-      TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.gold") + "+",
-      "§6",
-      400,
-      499),
-  EMERALD(
-      TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.emerald"),
-      "§2",
-      500,
-      599),
-  EMERALD_PLUS(
-      TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.emerald")
-          + "+",
-      "§2",
-      600,
-      699),
-  DIAMOND(
-      TowersForPGM.getInstance().getLanguageManager().getPluginMessage("ranked.ranks.diamond"),
-      "§9",
-      700,
-      Integer.MAX_VALUE);
+  BRONZE(LanguageManager.langMessage("ranked.ranks.bronze"), "§7", -100, -1),
+  BRONZE_PLUS(LanguageManager.langMessage("ranked.ranks.bronze") + "+", "§7", 0, 99),
+  SILVER(LanguageManager.langMessage("ranked.ranks.silver"), "§8", 100, 199),
+  SILVER_PLUS(LanguageManager.langMessage("ranked.ranks.silver") + "+", "§8", 200, 299),
+  GOLD(LanguageManager.langMessage("ranked.ranks.gold"), "§6", 300, 399),
+  GOLD_PLUS(LanguageManager.langMessage("ranked.ranks.gold") + "+", "§6", 400, 499),
+  EMERALD(LanguageManager.langMessage("ranked.ranks.emerald"), "§2", 500, 599),
+  EMERALD_PLUS(LanguageManager.langMessage("ranked.ranks.emerald") + "+", "§2", 600, 699),
+  DIAMOND(LanguageManager.langMessage("ranked.ranks.diamond"), "§9", 700, Integer.MAX_VALUE);
 
   private final String name;
   private final String color;

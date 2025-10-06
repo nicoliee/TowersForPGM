@@ -33,14 +33,15 @@ public class Queue {
   private final Matchmaking matchmaking;
   private static final List<UUID> queuePlayers = new java.util.ArrayList<>();
   private static boolean countdownActive = false;
-  public static final String RANKED_PREFIX = "§8[§6Ranked§8]§r ";
-  private final LanguageManager languageManager;
   private final Teams teams;
 
-  public Queue(Draft draft, Matchmaking matchmaking, LanguageManager languageManager, Teams teams) {
+  private String getRankedPrefix() {
+    return LanguageManager.langMessage("ranked.prefix");
+  }
+
+  public Queue(Draft draft, Matchmaking matchmaking, Teams teams) {
     this.draft = draft;
     this.matchmaking = matchmaking;
-    this.languageManager = languageManager;
     this.teams = teams;
   }
 
@@ -51,16 +52,14 @@ public class Queue {
     if (size < 4 || size % 2 != 0) {
       MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
       matchPlayer.sendWarning(
-          Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.sizeInvalid")));
+          Component.text(getRankedPrefix() + LanguageManager.langMessage("ranked.sizeInvalid")));
       return;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
     ConfigManager.setRankedSize(size);
     RankedPlayers.clearCaptainHistory();
-    String message = RANKED_PREFIX
-        + languageManager
-            .getPluginMessage("ranked.sizeSet")
-            .replace("{size}", String.valueOf(size));
+    String message = getRankedPrefix()
+        + LanguageManager.langMessage("ranked.sizeSet").replace("{size}", String.valueOf(size));
     match.sendMessage(Component.text(message));
     if (queuePlayers.size() >= ConfigManager.getRankedSize()) {
       startRanked(match);
@@ -77,10 +76,8 @@ public class Queue {
     Match match = MatchManager.getMatch();
     ConfigManager.setRankedSize(size);
     RankedPlayers.clearCaptainHistory();
-    String message = RANKED_PREFIX
-        + languageManager
-            .getPluginMessage("ranked.sizeSet")
-            .replace("{size}", String.valueOf(size));
+    String message = getRankedPrefix()
+        + LanguageManager.langMessage("ranked.sizeSet").replace("{size}", String.valueOf(size));
     match.sendMessage(Component.text(message));
     if (queuePlayers.size() >= ConfigManager.getRankedSize()) {
       startRanked(match);
@@ -94,25 +91,24 @@ public class Queue {
         || player.getMatch().isRunning()
         || teams.isPlayerInAnyTeam(player.getNameLegacy())) {
       player.sendWarning(Component.text(
-          RANKED_PREFIX + languageManager.getPluginMessage("ranked.matchInProgress")));
+          getRankedPrefix() + LanguageManager.langMessage("ranked.matchInProgress")));
       return;
     }
     if (queuePlayers.contains(playerUUID)) {
-      player.sendWarning(Component.text(
-          RANKED_PREFIX + languageManager.getPluginMessage("ranked.alreadyInQueue")));
+      player.sendWarning(
+          Component.text(getRankedPrefix() + LanguageManager.langMessage("ranked.alreadyInQueue")));
       return;
     }
     Match match = player.getMatch();
     String map = match.getMap().getName();
     if (!ConfigManager.getRankedMaps().contains(map)) {
-      player.sendWarning(Component.text(RANKED_PREFIX
-          + languageManager.getPluginMessage("ranked.notRankedMap").replace("{map}", map)));
+      player.sendWarning(Component.text(getRankedPrefix()
+          + LanguageManager.langMessage("ranked.notRankedMap").replace("{map}", map)));
       return;
     }
     queuePlayers.add(playerUUID);
-    Component message = Component.text(RANKED_PREFIX
-        + languageManager
-            .getPluginMessage("ranked.joinedQueue")
+    Component message = Component.text(getRankedPrefix()
+        + LanguageManager.langMessage("ranked.joinedQueue")
             .replace("{player}", player.getPrefixedName())
             .replace("{size}", String.valueOf(queuePlayers.size()))
             .replace("{max}", String.valueOf(ConfigManager.getRankedSize())));
@@ -122,34 +118,16 @@ public class Queue {
     }
   }
 
-  public void removePlayer(MatchPlayer player) {
+  public static void removePlayer(MatchPlayer player) {
     UUID playerUUID = player.getId();
     if (!queuePlayers.contains(playerUUID)) {
-      player.sendWarning(
-          Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.notInQueue")));
+      player.sendWarning(Component.text(LanguageManager.langMessage("ranked.prefix")
+          + LanguageManager.langMessage("ranked.notInQueue")));
       return;
     }
     queuePlayers.remove(playerUUID);
-    Component message = Component.text(RANKED_PREFIX
-        + languageManager
-            .getPluginMessage("ranked.leftQueue")
-            .replace("{player}", player.getPrefixedName())
-            .replace("{size}", String.valueOf(queuePlayers.size()))
-            .replace("{max}", String.valueOf(ConfigManager.getRankedSize())));
-    player.getMatch().sendMessage(message);
-  }
-
-  public static void removePlayer(MatchPlayer player, LanguageManager languageManager) {
-    UUID playerUUID = player.getId();
-    if (!queuePlayers.contains(playerUUID)) {
-      player.sendWarning(
-          Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.notInQueue")));
-      return;
-    }
-    queuePlayers.remove(playerUUID);
-    Component message = Component.text(RANKED_PREFIX
-        + languageManager
-            .getPluginMessage("ranked.leftQueue")
+    Component message = Component.text(LanguageManager.langMessage("ranked.prefix")
+        + LanguageManager.langMessage("ranked.leftQueue")
             .replace("{player}", player.getPrefixedName())
             .replace("{size}", String.valueOf(queuePlayers.size()))
             .replace("{max}", String.valueOf(ConfigManager.getRankedSize())));
@@ -180,13 +158,12 @@ public class Queue {
         if (queuePlayers.size() < ConfigManager.getRankedSize()) {
           this.cancel();
           countdownActive = false;
-          match.sendWarning(
-              Component.text(RANKED_PREFIX + languageManager.getPluginMessage("ranked.cancelled")));
+          match.sendWarning(Component.text(LanguageManager.langMessage("ranked.prefix")
+              + LanguageManager.langMessage("ranked.cancelled")));
           return;
         }
-        match.sendMessage(Component.text(RANKED_PREFIX
-            + languageManager
-                .getPluginMessage("ranked.countdown")
+        match.sendMessage(Component.text(LanguageManager.langMessage("ranked.prefix")
+            + LanguageManager.langMessage("ranked.countdown")
                 .replace("{time}", String.valueOf(countdown[0]))));
         match.playSound(Sounds.INVENTORY_CLICK);
         countdown[0]--;
@@ -237,8 +214,9 @@ public class Queue {
         .exceptionally(throwable -> {
           plugin
               .getLogger()
-              .severe("Error al obtener ELO para captains: " + throwable.getMessage());
-          match.sendWarning(Component.text(RANKED_PREFIX + "Error al obtener datos de ELO."));
+              .severe(LanguageManager.langMessage("ranked.error.getElo") + throwable.getMessage());
+          match.sendWarning(Component.text(LanguageManager.langMessage("ranked.prefix")
+              + LanguageManager.langMessage("ranked.error.getData")));
           return null;
         });
   }

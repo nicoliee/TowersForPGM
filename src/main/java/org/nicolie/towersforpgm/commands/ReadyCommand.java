@@ -5,7 +5,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
@@ -13,17 +12,15 @@ import tc.oc.pgm.api.player.MatchPlayer;
 
 public class ReadyCommand implements CommandExecutor {
   private final Captains captains;
-  private final LanguageManager languageManager;
 
-  public ReadyCommand(Captains captains, LanguageManager languageManager) {
+  public ReadyCommand(Captains captains) {
     this.captains = captains;
-    this.languageManager = languageManager;
   }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
+      sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
       return true;
     }
 
@@ -32,7 +29,7 @@ public class ReadyCommand implements CommandExecutor {
     // Comprobar si el draft está activo
     if (!captains.isReadyActive()) {
       matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("ready.notAvailable")));
+          Component.text(LanguageManager.langMessage("draft.ready.notAvailable")));
       return true;
     }
     int captainNumber = captains.getCaptainTeam(player.getUniqueId());
@@ -41,7 +38,7 @@ public class ReadyCommand implements CommandExecutor {
 
       if (alreadyReady) {
         matchPlayer.sendWarning(
-            Component.text(languageManager.getPluginMessage("ready.alreadyReady")));
+            Component.text(LanguageManager.langMessage("draft.ready.alreadyReady")));
         return true;
       }
       if (captainNumber == 1) {
@@ -51,8 +48,7 @@ public class ReadyCommand implements CommandExecutor {
       }
       matchPlayer.getMatch().sendMessage(Component.text(getReadyMessage(matchPlayer)));
     } else {
-      matchPlayer.sendWarning(
-          Component.text(languageManager.getConfigurableMessage("picks.notCaptain")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("picks.notCaptain")));
       return true;
     }
     return true;
@@ -61,9 +57,7 @@ public class ReadyCommand implements CommandExecutor {
   public static String getReadyMessage(MatchPlayer matchPlayer) {
     String teamColor = matchPlayer.getParty().getColor().toString();
     String teamName = matchPlayer.getParty().getNameLegacy();
-    return TowersForPGM.getInstance()
-        .getLanguageManager()
-        .getPluginMessage("ready.ready")
+    return LanguageManager.langMessage("draft.ready.ready")
         .replace("{teamcolor}", teamColor)
         .replace("{team}", teamName);
   }

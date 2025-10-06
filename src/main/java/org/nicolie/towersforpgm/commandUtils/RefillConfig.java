@@ -12,11 +12,9 @@ import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class RefillConfig {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
-  private final LanguageManager languageManager;
   private final RefillManager refillManager;
 
-  public RefillConfig(LanguageManager languageManager, RefillManager refillManager) {
-    this.languageManager = languageManager;
+  public RefillConfig(RefillManager refillManager) {
     this.refillManager = refillManager;
   }
 
@@ -28,8 +26,7 @@ public class RefillConfig {
     String coords = loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ();
     if (!(block.getState() instanceof Chest)) {
       SendMessage.sendToPlayer(
-          sender,
-          languageManager.getPluginMessage("refill.chestNotFound").replace("{coords}", coords));
+          sender, LanguageManager.langMessage("refill.chestNotFound").replace("{coords}", coords));
       return;
     }
 
@@ -39,9 +36,7 @@ public class RefillConfig {
       if (storedCoords.equals(coords)) {
         SendMessage.sendToPlayer(
             sender,
-            languageManager
-                .getPluginMessage("refill.chestAlreadyExists")
-                .replace("{coords}", coords));
+            LanguageManager.langMessage("refill.chestAlreadyExists").replace("{coords}", coords));
         return;
       }
     }
@@ -60,7 +55,7 @@ public class RefillConfig {
     // Agregar la nueva coordenada
     refillConfig.set("refill." + mapName + ".c" + i, coords);
     SendMessage.sendToPlayer(
-        sender, languageManager.getPluginMessage("refill.chestSet").replace("{coords}", coords));
+        sender, LanguageManager.langMessage("refill.chestSet").replace("{coords}", coords));
     plugin.saveRefillConfig();
     plugin.reloadRefillConfig();
   }
@@ -76,8 +71,7 @@ public class RefillConfig {
         plugin.saveRefillConfig();
         plugin.reloadRefillConfig();
         SendMessage.sendToPlayer(
-            sender,
-            languageManager.getPluginMessage("refill.chestDeleted").replace("{coords}", coords));
+            sender, LanguageManager.langMessage("refill.chestDeleted").replace("{coords}", coords));
         found = true;
         break;
       }
@@ -85,8 +79,7 @@ public class RefillConfig {
 
     if (!found) {
       SendMessage.sendToPlayer(
-          sender,
-          languageManager.getPluginMessage("refill.chestNotFound").replace("{coords}", coords));
+          sender, LanguageManager.langMessage("refill.chestNotFound").replace("{coords}", coords));
     }
   }
 

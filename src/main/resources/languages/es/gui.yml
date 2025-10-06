@@ -1,0 +1,252 @@
+back: "§c§lVolver al Menú Principal"
+status:
+  enabled: "§aActivado"
+  disabled: "§cDesactivado"
+  none: "§cNinguno"
+error:
+  invalid_number: "§c¡Formato de número inválido!"    
+main:
+  title: "§6§lTowers"
+  draft:
+    title: "§a§lDraft"
+    description: "§7Configurar ajustes de draft"
+    feature1: "§7- Mínimo de jugadores"
+    feature2: "§7- Orden de draft"
+    feature3: "§7- Partidas privadas"
+    feature4: "§7- Balance de segunda elección"
+    feature5: "§7- Sugerencias"
+    feature6: "§7- Temporizador"
+  preparation:
+    title: "§b§lPreparación"
+    description: "§7Configurar ajustes de preparación"
+    feature1: "§7- Alternar preparación"
+    feature2: "§7- Añadir/Quitar regiones"
+    feature3: "§7- Establecer coordenadas"
+    feature4: "§7- temporizador"
+    feature5: "§7- haste"
+  refill:
+    title: "§e§lRefill"
+    description: "§7Configurar ajustes de refill"
+    feature1: "§7- Añadir ubicaciones de refill"
+    feature2: "§7- Eliminar ubicaciones de refill"
+    feature3: "§7- Recargar sistema de refill"
+  stats:
+    title: "§d§lEstadísticas"
+    description: "§7Configurar ajustes de estadísticas"
+    feature1: "§7- Tabla predeterminada"
+    feature2: "§7- Añadir/Quitar tablas"
+    feature3: "§7- Tablas específicas de mapa"
+    feature4: "§7- Tablas temporales"
+  ranked:
+    title: "§6§lRanked"
+    description: "§7Configurar ajustes de ranked"
+    feature1: "§7- Tamaño de partida"
+    feature2: "§7- Orden de draft"
+    feature3: "§7- Gestión de tablas"
+    feature4: "§7- Mapas permitidos"
+    feature5: "§7- Modo de emparejamiento"
+  help:
+    title: "§f§lAyuda"
+    description: "§7Obtener información de ayuda"
+    feature1: "§7para cada sección de configuración"
+draft:
+  title: "§a§lDraft"
+  min_players:
+    title: "§e§lMínimo de Jugadores"
+    current: "§7Actual: §a{value}"
+    lore1: "§7Haz clic para cambiar el mínimo"
+    lore2: "§7de jugadores requeridos para el draft"
+    input: "§eIngresa el número mínimo de jugadores para el draft:"
+  order:
+    title: "§e§lOrden de Draft"
+    current: "§7Actual: §a{value}"
+    lore1: "§7Haz clic para cambiar el"
+    lore2: "§7patrón de orden de draft (A[AB]+)"
+    input: "§eIngresa el patrón de orden de draft (A[AB]+):"
+  private:
+    title: "§e§lPartidas Privadas"
+    lore1: "§7Esta específica del mapa"
+    lore2: "§7Configurar en contexto de partida"
+    disabled: "§cLas partidas privadas se configuran por mapa. Usa la interfaz de comandos para esta configuración."
+  second_pick:
+    title: "§e§lBalance de Segunda Elección"
+    current: "§7Actual: {status}"
+    lore1: "§7Haz clic para alternar la"
+    lore2: "§7balance de segunda elección"
+  suggestions:
+    title: "§e§lSugerencias de Draft"
+    current: "§7Actual: {status}"
+    lore1: "§7Haz clic para alternar la"
+    lore2: "§7sugerencias de draft"
+  timer:
+    title: "§e§lTemporizador de Draft"
+    current: "§7Actual: {status}"
+    lore1: "§7Haz clic para alternar la"
+    lore2: "§7 temporizador de draft"
+stats:
+  title: "§d§lEstadísticas"
+  default:
+    title: "§e§lEstablecer Tabla Predeterminada"
+    lore: "§7Haz clic para establecer la tabla de estadísticas predeterminada"
+    input: "§eIngresa el nombre de la tabla predeterminada:"
+  add:
+    title: "§a§lAñadir Tabla"
+    lore: "§7Haz clic para añadir una nueva tabla de estadísticas"
+    input: "§eIngresa el nombre de la nueva tabla:"
+  remove:
+    title: "§c§lQuitar Tabla"
+    lore: "§7Haz clic para quitar una tabla de estadísticas"
+    input: "§eIngresa el nombre de la tabla a quitar:"
+  list:
+    title: "§e§lListar Tablas"
+    lore: "§7Haz clic para ver todas las tablas disponibles"
+    count: "§7Tablas actuales: §a{count}"
+    item: "§7- §a{table}"
+  add_map:
+    title: "§e§lAñadir Tabla de Mapa"
+    lore: "§7Haz clic para añadir tabla para el mapa actual"
+    input: "§eIngresa el nombre de la tabla para este mapa:"
+  remove_map:
+    title: "§c§lQuitar Tabla de Mapa"
+    lore: "§7Haz clic para quitar tabla del mapa actual"
+  add_temp:
+    title: "§e§lAñadir Tabla Temporal"
+    lore: "§7Haz clic para añadir tabla temporal"
+    current: "§7Actual: {table}"
+    input: "§eIngresa el nombre de la tabla temporal:"
+  remove_temp:
+    title: "§c§lQuitar Tabla Temporal"
+    lore: "§7Haz clic para quitar tabla temporal"
+  none: "§cNinguna"
+refill:
+  title: "§e§lRefill"
+  add:
+    title: "§a§lAñadir Ubicación de Refill"
+    lore1: "§7Haz clic para añadir la ubicación actual"
+    lore2: "§7como punto de refill para este mapa"
+  remove:
+    title: "§c§lQuitar Ubicación de Refill"
+    lore1: "§7Haz clic para quitar la ubicación actual"
+    lore2: "§7de los puntos de refill"
+  reload:
+    title: "§e§lProbar/Recargar Refill"
+    lore1: "§7Haz clic para probar y recargar"
+    lore2: "§7el sistema de refill para el mapa actual"
+preparation:
+  title: "§b§lPreparación"
+  toggle:
+    title: "§e§lAlternar Preparación"
+    current: "§7Estado: {status}"
+    lore1: "§7Haz clic para alternar el"
+    lore2: "§7sistema de preparación encendido/apagado"
+  add:
+    title: "§a§lAñadir Región"
+    lore1: "§7Haz clic para añadir la ubicación actual"
+    lore2: "§7como región de preparación"
+  remove:
+    title: "§c§lQuitar Región"
+    lore1: "§7Haz clic para quitar la ubicación actual"
+    lore2: "§7de las regiones de preparación"
+  max:
+    title: "§e§lEstablecer Coordenadas Máximas"
+    current: "§7Actual: §a{coords}"
+    lore1: "§7Haz clic para establecer coordenadas máximas"
+    lore2: "§7para la región de preparación"
+    lore3: "§7§oRequiere entrada manual de coordenadas"
+    command1: "§cUsa la interfaz de comandos para establecer coordenadas:"
+    command2: "§e/towers preparation max <x> <y> <z>"
+  min:
+    title: "§e§lEstablecer Coordenadas Mínimas"
+    current: "§7Actual: §a{coords}"
+    lore1: "§7Haz clic para establecer coordenadas mínimas"
+    lore2: "§7para la región de preparación"
+    lore3: "§7§oRequiere entrada manual de coordenadas"
+    command1: "§cUsa la interfaz de comandos para establecer coordenadas:"
+    command2: "§e/towers preparation min <x> <y> <z>"
+  timer:
+    title: "§e§lTiempo de Preparacion"
+    current: "§7Actual: §a{timer}"
+    lore1: "§7Haz clic para configurar la duración"
+    lore2: "§7del temporizador de preparación en minutos"
+    command1: "§cUsa la interfaz de comandos para establecer temporizador:"
+    command2: "§e/towers preparation timer <minutos>"
+  haste:
+    title: "§e§lHaste"
+    current: "§7Actual: §a{haste}"
+    lore1: "§7Haz clic para configurar la duración"
+    lore2: "§7de haste en minutos"
+    command1: "§cUsa la interfaz de comandos para establecer haste:"
+    command2: "§e/towers preparation haste <minutos>"
+  list:
+    title: "§e§lListar Regiones"
+    lore1: "§7Haz clic para ver todas las regiones"
+    lore2: "§7de preparación configuradas"
+help:
+  title: "§f§lAyuda - Towers"
+  draft:
+    title: "§a§lAyuda de Draft"
+    lore1: "§7Haz clic para obtener ayuda sobre"
+    lore2: "§7las opciones de draft"
+  preparation:
+    title: "§b§lAyuda de Preparación"
+    lore1: "§7Haz clic para obtener ayuda sobre"
+    lore2: "§7las opciones de preparación"
+  refill:
+    title: "§e§lAyuda de Refill"
+    lore1: "§7Haz clic para obtener ayuda sobre"
+    lore2: "§7las opciones de refill"
+  stats:
+    title: "§d§lAyuda de Estadísticas"
+    lore1: "§7Haz clic para obtener ayuda sobre"
+    lore2: "§7las opciones de estadísticas"
+  general:
+    title: "§f§lAyuda General"
+    lore1: "§7Haz clic para obtener ayuda general"
+    lore2: "§7sobre el plugin"
+ranked:
+  title: "§6§lRanked"
+  size:
+    title: "§e§lTamaño de Partida"
+    current: "§7Actual: §a{value}"
+    lore1: "§7Haz clic para cambiar el tamaño"
+    lore2: "§7de partida ranked (debe ser par y >= 4)"
+    input: "§eIngresa el tamaño de partida ranked:"
+  order:
+    title: "§e§lOrden de Draft Ranked"
+    current: "§7Actual: §a{value}"
+    lore1: "§7Haz clic para cambiar el patrón"
+    lore2: "§7de orden de draft para ranked (A[AB]+)"
+    input: "§eIngresa el patrón de orden de draft ranked (A[AB]+):"
+  tables:
+    title: "§e§lTablas de Ranked"
+    current: "§7Tablas: §a{count}"
+    item: "§7- §a{table}"
+  default_table:
+    title: "§e§lTabla Predeterminada"
+    current: "§7Actual: §a{table}"
+    lore1: "§7Haz clic para cambiar la tabla"
+    lore2: "§7predeterminada para ranked"
+    input: "§eIngresa el nombre de la tabla predeterminada:"
+  maps:
+    title: "§e§lMapas de Ranked"
+    current: "§7Mapas: §a{count}"
+    item: "§7- §a{map}"
+  matchmaking:
+    title: "§e§lEmparejamiento Automático"
+    current: "§7Estado: {status}"
+    lore1: "§7Haz clic para alternar el modo"
+    lore2: "§7de emparejamiento automático"
+  add_table:
+    title: "§a§lAñadir Tabla"
+    lore: "§7Haz clic para añadir una nueva tabla de ranked"
+    input: "§eIngresa el nombre de la nueva tabla:"
+  remove_table:
+    title: "§c§lQuitar Tabla"
+    lore: "§7Haz clic para quitar una tabla de ranked"
+    input: "§eIngresa el nombre de la tabla a quitar:"
+  add_map:
+    title: "§a§lAñadir Mapa Actual"
+    lore: "§7Haz clic para añadir el mapa actual a ranked"
+  remove_map:
+    title: "§c§lQuitar Mapa Actual"
+    lore: "§7Haz clic para quitar el mapa actual de ranked"

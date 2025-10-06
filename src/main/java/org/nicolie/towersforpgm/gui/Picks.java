@@ -42,22 +42,15 @@ public class Picks implements Listener {
   private final Captains captains;
   private final AvailablePlayers availablePlayers;
   private final Teams teams;
-  private final LanguageManager languageManager;
 
   // Para saber qué inventario pertenece a qué capitán
   private final Map<UUID, Inventory> openInventories = new HashMap<>();
 
-  public Picks(
-      Draft draft,
-      Captains captains,
-      AvailablePlayers availablePlayers,
-      Teams teams,
-      LanguageManager languageManager) {
+  public Picks(Draft draft, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
     this.draft = draft;
     this.captains = captains;
     this.availablePlayers = availablePlayers;
     this.teams = teams;
-    this.languageManager = languageManager;
   }
 
   public void openInventory(Player player) {
@@ -84,8 +77,7 @@ public class Picks implements Listener {
       inv = Bukkit.createInventory(
           null,
           inventorySize,
-          languageManager
-              .getPluginMessage("draft.inventoryName")
+          LanguageManager.langMessage("draft.inventoryName")
               .replace("{size}", String.valueOf(totalPlayers)));
 
       // Cambiar el color de los cristales según las condiciones
@@ -149,8 +141,7 @@ public class Picks implements Listener {
       inv = Bukkit.createInventory(
           null,
           inventorySize,
-          languageManager
-              .getPluginMessage("draft.inventoryName")
+          LanguageManager.langMessage("draft.inventoryName")
               .replace("{size}", String.valueOf(totalPlayers)));
       columnsPerRow = 9;
 
@@ -210,26 +201,26 @@ public class Picks implements Listener {
     int elo = stats.getElo();
     if (elo != -9999) {
       Rank rank = Rank.getRankByElo(elo);
-      lore.add(languageManager.getPluginMessage("stats.elo") + ": " + rank.getPrefixedRank(true)
-          + " " + rank.getColor() + elo);
+      lore.add(LanguageManager.langMessage("stats.elo") + ": " + rank.getPrefixedRank(true) + " "
+          + rank.getColor() + elo);
       lore.add(" ");
     }
-    lore.add(languageManager.getPluginMessage("stats.kills") + ": §a" + stats.getKills());
-    lore.add(languageManager.getPluginMessage("stats.deaths") + ": §a" + stats.getDeaths());
-    lore.add(languageManager.getPluginMessage("stats.assists") + ": §a" + stats.getAssists());
-    lore.add(languageManager.getPluginMessage("stats.damageDone") + ": §a"
+    lore.add(LanguageManager.langMessage("stats.kills") + ": §a" + stats.getKills());
+    lore.add(LanguageManager.langMessage("stats.deaths") + ": §a" + stats.getDeaths());
+    lore.add(LanguageManager.langMessage("stats.assists") + ": §a" + stats.getAssists());
+    lore.add(LanguageManager.langMessage("stats.damageDone") + ": §a"
         + String.format(
             "%.1f", stats.getGames() > 0 ? stats.getDamageDone() / stats.getGames() : 0.0));
-    lore.add(languageManager.getPluginMessage("stats.damageTaken") + ": §a"
+    lore.add(LanguageManager.langMessage("stats.damageTaken") + ": §a"
         + String.format(
             "%.1f", stats.getGames() > 0 ? stats.getDamageTaken() / stats.getGames() : 0.0));
-    lore.add(languageManager.getPluginMessage("stats.points") + ": §a" + stats.getPoints());
-    lore.add(languageManager.getPluginMessage("stats.wins") + ": §a" + stats.getWins());
-    lore.add(languageManager.getPluginMessage("stats.games") + ": §a" + stats.getGames());
-    lore.add(languageManager.getPluginMessage("stats.winstreak") + ": §a" + stats.getWinstreak()
+    lore.add(LanguageManager.langMessage("stats.points") + ": §a" + stats.getPoints());
+    lore.add(LanguageManager.langMessage("stats.wins") + ": §a" + stats.getWins());
+    lore.add(LanguageManager.langMessage("stats.games") + ": §a" + stats.getGames());
+    lore.add(LanguageManager.langMessage("stats.winstreak") + ": §a" + stats.getWinstreak()
         + " §7(Max: §a" + stats.getMaxWinstreak() + "§7)");
     lore.add(" ");
-    lore.add(languageManager.getPluginMessage("draft.clickToPick"));
+    lore.add(LanguageManager.langMessage("draft.clickToPick"));
     meta.setLore(lore);
     skull.setItemMeta(meta);
   }
@@ -252,16 +243,12 @@ public class Picks implements Listener {
     }
 
     if (pickedPlayerString == null) {
-      return languageManager
-          .getConfigurableMessage("picks.notInList")
-          .replace("{player}", inputName);
+      return LanguageManager.message("picks.notInList").replace("{player}", inputName);
     }
 
     // Validar si el jugador ya fue elegido
     if (teams.isPlayerInAnyTeam(pickedPlayerString)) {
-      return languageManager
-          .getConfigurableMessage("picks.alreadyPicked")
-          .replace("{player}", pickedPlayerString);
+      return LanguageManager.message("picks.alreadyPicked").replace("{player}", pickedPlayerString);
     }
 
     return null; // No hay errores
@@ -289,8 +276,7 @@ public class Picks implements Listener {
     if (captainNumber == -1) {
       openInventories.remove(clickerId);
       clicker.closeInventory();
-      matchPlayer.sendWarning(
-          Component.text(languageManager.getConfigurableMessage("picks.notCaptain")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("picks.notCaptain")));
       return;
     }
 
@@ -298,8 +284,7 @@ public class Picks implements Listener {
         || (!captains.isCaptain1Turn() && captainNumber == 1)) {
       openInventories.remove(clickerId);
       clicker.closeInventory();
-      matchPlayer.sendWarning(
-          Component.text(languageManager.getConfigurableMessage("picks.notTurn")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("picks.notTurn")));
       return;
     }
 
@@ -360,7 +345,7 @@ public class Picks implements Listener {
     ItemStack specialItem = new ItemStack(Material.NETHER_STAR);
     ItemMeta meta = specialItem.getItemMeta();
     meta.setDisplayName("§6Draft Menu");
-    meta.setLore(Collections.singletonList(languageManager.getPluginMessage("draft.itemLore")));
+    meta.setLore(Collections.singletonList(LanguageManager.langMessage("draft.itemLore")));
     specialItem.setItemMeta(meta);
 
     player.getInventory().setItem(2, null);
@@ -409,7 +394,7 @@ public class Picks implements Listener {
             && "§6Draft Menu".equals(meta.getDisplayName())) {
           // Si el draft no está activo, mostrar mensaje
           if (!Draft.isDraftActive()) {
-            SendMessage.sendToPlayer(player, languageManager.getPluginMessage("picks.noDraft"));
+            SendMessage.sendToPlayer(player, LanguageManager.langMessage("picks.noDraft"));
             player.getInventory().remove(Material.NETHER_STAR);
             return;
           }

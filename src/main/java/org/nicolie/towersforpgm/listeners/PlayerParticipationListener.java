@@ -24,14 +24,11 @@ import tc.oc.pgm.join.JoinRequest;
 public class PlayerParticipationListener implements Listener {
   private final Teams teams;
   private final Captains captains;
-  private final LanguageManager languageManager;
   private final TowersForPGM plugin = TowersForPGM.getInstance();
 
-  public PlayerParticipationListener(
-      Teams teams, Captains captains, LanguageManager languageManager) {
+  public PlayerParticipationListener(Teams teams, Captains captains) {
     this.teams = teams;
     this.captains = captains;
-    this.languageManager = languageManager;
   }
 
   // Manejar el cambio de equipo con comando en teams
@@ -79,7 +76,7 @@ public class PlayerParticipationListener implements Listener {
       int captainNumber = captains.getCaptainTeam(playerUUID);
 
       if (teams.isPlayerInTeam(playerName, 1) || captainNumber == 1) {
-        event.cancel(Component.text(languageManager.getPluginMessage("join.redTeam")));
+        event.cancel(Component.text(LanguageManager.langMessage("draft.join.redTeam")));
         new BukkitRunnable() {
           @Override
           public void run() {
@@ -88,7 +85,7 @@ public class PlayerParticipationListener implements Listener {
         }.runTaskLater(plugin, 1);
         return;
       } else if (teams.isPlayerInTeam(playerName, 2) || captainNumber == 2) {
-        event.cancel(Component.text(languageManager.getPluginMessage("join.blueTeam")));
+        event.cancel(Component.text(LanguageManager.langMessage("draft.join.blueTeam")));
         new BukkitRunnable() {
           @Override
           public void run() {
@@ -99,7 +96,7 @@ public class PlayerParticipationListener implements Listener {
       }
 
       if (!isInAnyTeam && captainNumber == -1) {
-        event.cancel(Component.text(languageManager.getPluginMessage("join.notAllowed")));
+        event.cancel(Component.text(LanguageManager.langMessage("draft.join.notAllowed")));
         return;
       }
     }
@@ -119,7 +116,7 @@ public class PlayerParticipationListener implements Listener {
       return;
     }
     if (Queue.isRanked() && event.getMatch().isRunning()) {
-      event.cancel(Component.text(languageManager.getPluginMessage("ranked.notAllowed")));
+      event.cancel(Component.text(LanguageManager.langMessage("ranked.notAllowed")));
       return;
     }
   }

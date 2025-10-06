@@ -24,7 +24,6 @@ public class RemoveCommand implements CommandExecutor, TabCompleter {
   private final Draft draft;
   private final Teams teams;
   private final AvailablePlayers availablePlayers;
-  private final LanguageManager languageManager;
   private final Picks pickInventory;
 
   public RemoveCommand(
@@ -32,33 +31,30 @@ public class RemoveCommand implements CommandExecutor, TabCompleter {
       Teams teams,
       Captains captains,
       AvailablePlayers availablePlayers,
-      LanguageManager languageManager,
       Picks pickInventory) {
     this.draft = draft;
     this.teams = teams;
     this.availablePlayers = availablePlayers;
-    this.languageManager = languageManager;
     this.pickInventory = pickInventory;
   }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
+      sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
       return true;
     }
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     if (!Draft.isDraftActive()) {
-      matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("picks.noDraft")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.picks.noDraft")));
       return true;
     }
     if (args.length < 1) {
-      matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("remove.usage")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.remove.usage")));
       return true;
     }
     if (Queue.isRanked()) {
-      matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("ranked.notAllowed")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.notAllowed")));
       return true;
     }
     String playerName = args[0];
@@ -68,7 +64,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter {
     availablePlayers.removePlayer(playerName);
     pickInventory.updateAllInventories();
     String message =
-        languageManager.getConfigurableMessage("picks.remove").replace("{player}", playerName);
+        LanguageManager.langMessage("draft.remove.removed").replace("{player}", playerName);
     matchPlayer.getMatch().sendMessage(Component.text(message));
     matchPlayer.getMatch().playSound(Sounds.WARNING);
     if (availablePlayers.getAllAvailablePlayers().isEmpty()) {
@@ -101,12 +97,12 @@ public class RemoveCommand implements CommandExecutor, TabCompleter {
 
   private boolean isInvalidPlayer(String playerName, MatchPlayer sender) {
     if (!availablePlayers.getAllAvailablePlayers().contains(playerName)) {
-      sendErrorMessage(sender, "remove.notInDraft");
+      sendErrorMessage(sender, "draft.remove.notInDraft");
       return true;
     }
 
     if (teams.isPlayerInAnyTeam(playerName)) {
-      sendErrorMessage(sender, "captains.alreadyInTeam");
+      sendErrorMessage(sender, "draft.captains.alreadyInTeam");
       return true;
     }
 
@@ -114,6 +110,6 @@ public class RemoveCommand implements CommandExecutor, TabCompleter {
   }
 
   private void sendErrorMessage(MatchPlayer player, String messageKey) {
-    player.sendWarning(Component.text(languageManager.getPluginMessage(messageKey)));
+    player.sendWarning(Component.text(LanguageManager.langMessage(messageKey)));
   }
 }

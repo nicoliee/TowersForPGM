@@ -19,17 +19,12 @@ public class MatchLoadListener implements Listener {
   private final RefillManager refillManager;
   private final PreparationListener preparationListener;
   private final Draft draft;
-  private final LanguageManager languageManager;
 
   public MatchLoadListener(
-      RefillManager refillManager,
-      PreparationListener preparationListener,
-      Draft draft,
-      LanguageManager languageManager) {
+      RefillManager refillManager, PreparationListener preparationListener, Draft draft) {
     this.refillManager = refillManager;
     this.preparationListener = preparationListener;
     this.draft = draft;
-    this.languageManager = languageManager;
   }
 
   @EventHandler
@@ -47,12 +42,11 @@ public class MatchLoadListener implements Listener {
     if (preparationListener.isMapInConfig(map)
         && TowersForPGM.getInstance().isPreparationEnabled()) {
       SendMessage.sendToAdmins(
-          languageManager.getPluginMessage("preparation.isAvailable").replace("{map}", map));
+          LanguageManager.langMessage("preparation.isAvailable").replace("{map}", map));
     } else if (preparationListener.isMapInConfig(map)
         && !TowersForPGM.getInstance().isPreparationEnabled()) {
-      SendMessage.sendToAdmins(languageManager
-          .getPluginMessage("preparation.isAvailableButDisabled")
-          .replace("{map}", map));
+      SendMessage.sendToAdmins(
+          LanguageManager.langMessage("preparation.isAvailableButDisabled").replace("{map}", map));
     }
     plugin.getDisconnectedPlayers().clear();
     ForfeitCommand.forfeitedPlayers.clear();

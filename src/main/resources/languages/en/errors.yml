@@ -1,0 +1,12 @@
+databaseDisabled: "§cThe database is disabled."
+invalidCoords: "§cInvalid coordinates: §4{x}, {y}, {z}§c."
+messageNotFound: "§cMessage not found for the key: §4{key}§c."
+noPlayer: "§cThis command can only be executed by a player."
+noPermission: "§cYou don't have permission to execute this command."
+preparationTimeNotFound: "§cNo 'preparationTime' section found in config.yml."
+regionError: "§cError getting region: §4{region}§c."
+regionLoaded: "§aRegion loaded: §2{region}§a."
+
+database:
+  updateStats: "§cError updating statistics in the database."
+  getStats: "§cError getting user statistics from the database."

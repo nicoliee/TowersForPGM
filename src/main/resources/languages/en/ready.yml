@@ -1,0 +1,3 @@
+alreadyReady: "You are already marked as ready."
+notAvailable: "You cannot mark as ready yet."
+ready: "§8[§6{teamcolor}§8] {teamcolor}{team} §fis ready."

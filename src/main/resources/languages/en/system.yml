@@ -1,0 +1,19 @@
+prefix: "§8[§bTowersForPGM§8]"
+and: "and"
+or: "or"
+languageSet: "§8[§bTowersForPGM§8] §aLanguage changed to §2English§a."
+
+colors:
+  positive: "§a"
+  negative: "§c"
+  white: "§f"
+  arrow:
+    up: " §a>> "
+    down: " §c>> "
+noLanguage: "§8[§bTowersForPGM§8] §cYou must select a language."
+matchCancelled: "§cThe match has been cancelled by an administrator."
+
+reload:
+  start: "§8[§bTowersForPGM§8] §aReloading messages..."
+  success: "§8[§bTowersForPGM§8] §aMessages reloaded successfully."
+  error: "§8[§bTowersForPGM§8] §cError reloading messages."

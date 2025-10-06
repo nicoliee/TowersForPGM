@@ -29,7 +29,6 @@ import tc.oc.pgm.api.PGM;
 // preparación, los stats y los refill
 
 public class TowersCommand implements CommandExecutor, TabCompleter {
-  private final LanguageManager languageManager;
   private final DraftConfig draftConfig;
   private final StatsConfig statsConfig;
   private final PreparationConfig preparationConfig;
@@ -38,18 +37,17 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
   private final RefillManager refillManager;
   private static TowersConfigGUI configGUI;
 
-  public TowersCommand(LanguageManager languageManager) {
+  public TowersCommand() {
     this.refillManager = TowersForPGM.getInstance().getRefillManager();
-    this.languageManager = languageManager;
-    this.draftConfig = new DraftConfig(languageManager);
-    this.statsConfig = new StatsConfig(languageManager);
-    this.preparationConfig = new PreparationConfig(languageManager);
-    this.refillConfig = new RefillConfig(languageManager, refillManager);
-    this.rankedConfig = new RankedConfig(languageManager);
+    this.draftConfig = new DraftConfig();
+    this.statsConfig = new StatsConfig();
+    this.preparationConfig = new PreparationConfig();
+    this.refillConfig = new RefillConfig(refillManager);
+    this.rankedConfig = new RankedConfig();
 
     // Solo crear una instancia del GUI si no existe
     if (configGUI == null) {
-      configGUI = new TowersConfigGUI(languageManager);
+      configGUI = new TowersConfigGUI();
     }
   }
 
@@ -83,7 +81,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int size = Integer.parseInt(args[2]);
               draftConfig.setMinDraftOrder(sender, size);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("draft.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("draft.usage"));
               return true;
             }
             break;
@@ -152,7 +150,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int z = Integer.parseInt(args[4]);
               preparationConfig.handleCoordinates(sender, true, x, y, z);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
             }
             break;
           case "min":
@@ -166,7 +164,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int z = Integer.parseInt(args[4]);
               preparationConfig.handleCoordinates(sender, false, x, y, z);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
             }
             break;
           case "timer":
@@ -178,7 +176,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int timer = Integer.parseInt(args[2]);
               preparationConfig.handleTimerCommand(sender, timer);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
               return true;
             }
             break;
@@ -191,7 +189,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int haste = Integer.parseInt(args[2]);
               preparationConfig.handleHasteCommand(sender, haste);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, languageManager.getPluginMessage("region.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
               return true;
             }
             break;

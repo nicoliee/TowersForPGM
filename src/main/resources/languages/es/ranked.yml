@@ -1,0 +1,70 @@
+prefix: "§8[§6Ranked§8]§r "
+unavailable: "§cRankeds no disponibles."
+notAllowed: "No puedes hacer eso en una ranked."
+forfeit: "{player}§r §cha pedido acabar la partida."
+noForfeit: "No puedes rendirte ahora."
+alreadyForfeited: "Ya has solicitado rendirte."
+sizeInvalid: "§cDebe ser número par y mayor que 3."
+usage: "§c/ranked <join|leave|list>"
+usageSize: "§c/ranked size <size>"
+queueHeader: "§a{current}/{max}"
+sizeSet: "§aTamaño de queue establecido a §2{size}§a."
+matchInProgress: "§cYa hay una partida en curso."
+alreadyInQueue: "Ya estás en la cola."
+notInQueue: "No estás en la cola."
+notRankedMap: "Este mapa no es un mapa de ranked."
+joinedQueue: "+ {player}§r [{size}/{max}]"
+leftQueue: "- {player}§r [{size}/{max}]"
+cancelled: "Cuenta regresiva cancelada."
+countdown: "§3Iniciando en §b{time}§3."
+item: "§6§lEntrar a la Cola de Ranked"
+end-match: "§6Stats: §bRevisa el canal #rankeds en §1§nDiscord."
+
+error:
+  getElo: "Error al obtener ELO para captains: "
+  getData: "Error al obtener datos de ELO."
+
+matchbot:
+  start: "Ranked Iniciado - {table}"
+  finish: "Ranked Finalizado - {table}"
+  available: "Ranked Disponible"
+  hasTagged: "ha etiquetado"
+  online: "En línea"
+  tagNotAvailable: "§cNo puedes etiquetar jugadores mientras participas en una partida."
+  tagCooldown: "§cDebes esperar §4{time}§c antes de usar este comando nuevamente."
+  tagSent: "{name}§r §aha etiquetado jugadores en Discord."
+
+ranks:
+  bronze: "Bronce"
+  silver: "Plata"
+  gold: "Oro"
+  emerald: "Esmeralda"
+  diamond: "Diamante"
+
+config:
+  size:
+    current: "§eTamaño actual de ranked: §6{size}§e."
+    set: "§aTamaño de ranked establecido a: §2{size}§a."
+    invalid: "§cEl tamaño de ranked debe estar entre 2 y 12."
+    invalidFormat: "§cFormato inválido. Por favor ingresa un número entre 2 y 12."
+  order:
+    current: "§eOrden actual de ranked: §6{order}§e."
+    set: "§aOrden de ranked establecido a: §2{order}§a."
+    invalid: "§cOrden inválido. Ejemplo de uso: ABBAAB"
+  matchmaking:
+    enabled: "§aMatchmaking de ranked activado."
+    disabled: "§cMatchmaking de ranked desactivado."
+    status: "§eEl matchmaking de ranked está {status}."
+    statusEnabled: "activado"
+    statusDisabled: "desactivado"
+  table:
+    exists: "§cLa tabla ya existe."
+    added: "§aTabla de ranked agregada."
+    notFound: "§cLa tabla §4{table} §cno fue encontrada."
+    deleted: "§cTabla de ranked eliminada."
+    success: "§aTabla por defecto de ranked establecida a §2{table}§a."
+  map:
+    exists: "§cEl mapa §4{map} §cya es un mapa de ranked."
+    added: "§aMapa §2{map} §aagregado a los mapas de ranked."
+    notFound: "§cEl mapa §4{map} §cno es un mapa de ranked."
+    deleted: "§aMapa §2{map} §aeliminado de los mapas de ranked."

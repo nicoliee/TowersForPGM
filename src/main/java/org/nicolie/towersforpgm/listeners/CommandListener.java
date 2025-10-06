@@ -17,7 +17,7 @@ public class CommandListener implements Listener {
     this.captains = captains;
   }
 
-  //TODO: Messages in config
+  // TODO: Messages in config
   @EventHandler
   public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
     String command = event.getMessage();

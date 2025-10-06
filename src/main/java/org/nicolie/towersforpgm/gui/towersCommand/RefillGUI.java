@@ -23,13 +23,10 @@ public class RefillGUI implements Listener {
   private static final int RELOAD_SLOT = 15;
 
   private static boolean eventsRegistered = false;
-  private final LanguageManager languageManager;
   private final RefillConfig refillConfig;
   private final TowersConfigGUI mainGUI;
 
-  public RefillGUI(
-      LanguageManager languageManager, RefillConfig refillConfig, TowersConfigGUI mainGUI) {
-    this.languageManager = languageManager;
+  public RefillGUI(RefillConfig refillConfig, TowersConfigGUI mainGUI) {
     this.refillConfig = refillConfig;
     this.mainGUI = mainGUI;
 
@@ -42,7 +39,7 @@ public class RefillGUI implements Listener {
 
   public void openRefillMenu(Player player) {
     Inventory gui =
-        Bukkit.createInventory(null, 27, languageManager.getPluginMessage("gui.refill.title"));
+        Bukkit.createInventory(null, 27, LanguageManager.langMessage("gui.refill.title"));
 
     // Gray glass border
     ItemStack grayGlass = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 7);
@@ -57,20 +54,21 @@ public class RefillGUI implements Listener {
       }
     }
 
-    // Back button (red glass)
+    // ===== NAVIGATION =====
     ItemStack backItem = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 14);
     ItemMeta backMeta = backItem.getItemMeta();
-    backMeta.setDisplayName(languageManager.getPluginMessage("gui.back"));
+    backMeta.setDisplayName(LanguageManager.langMessage("gui.back"));
     backItem.setItemMeta(backMeta);
     gui.setItem(BACK_SLOT, backItem);
 
+    // ===== REFILL ACTIONS =====
     // Add refill location
     ItemStack addItem = new ItemStack(Material.CHEST);
     ItemMeta addMeta = addItem.getItemMeta();
-    addMeta.setDisplayName(languageManager.getPluginMessage("gui.refill.add.title"));
+    addMeta.setDisplayName(LanguageManager.langMessage("gui.refill.add.title"));
     List<String> addLore = new ArrayList<>();
-    addLore.add(languageManager.getPluginMessage("gui.refill.add.lore1"));
-    addLore.add(languageManager.getPluginMessage("gui.refill.add.lore2"));
+    addLore.add(LanguageManager.langMessage("gui.refill.add.lore1"));
+    addLore.add(LanguageManager.langMessage("gui.refill.add.lore2"));
     addMeta.setLore(addLore);
     addItem.setItemMeta(addMeta);
     gui.setItem(ADD_SLOT, addItem);
@@ -78,10 +76,10 @@ public class RefillGUI implements Listener {
     // Remove refill location
     ItemStack removeItem = new ItemStack(Material.BARRIER);
     ItemMeta removeMeta = removeItem.getItemMeta();
-    removeMeta.setDisplayName(languageManager.getPluginMessage("gui.refill.remove.title"));
+    removeMeta.setDisplayName(LanguageManager.langMessage("gui.refill.remove.title"));
     List<String> removeLore = new ArrayList<>();
-    removeLore.add(languageManager.getPluginMessage("gui.refill.remove.lore1"));
-    removeLore.add(languageManager.getPluginMessage("gui.refill.remove.lore2"));
+    removeLore.add(LanguageManager.langMessage("gui.refill.remove.lore1"));
+    removeLore.add(LanguageManager.langMessage("gui.refill.remove.lore2"));
     removeMeta.setLore(removeLore);
     removeItem.setItemMeta(removeMeta);
     gui.setItem(REMOVE_SLOT, removeItem);
@@ -89,10 +87,10 @@ public class RefillGUI implements Listener {
     // Test/Reload refill
     ItemStack reloadItem = new ItemStack(Material.REDSTONE);
     ItemMeta reloadMeta = reloadItem.getItemMeta();
-    reloadMeta.setDisplayName(languageManager.getPluginMessage("gui.refill.reload.title"));
+    reloadMeta.setDisplayName(LanguageManager.langMessage("gui.refill.reload.title"));
     List<String> reloadLore = new ArrayList<>();
-    reloadLore.add(languageManager.getPluginMessage("gui.refill.reload.lore1"));
-    reloadLore.add(languageManager.getPluginMessage("gui.refill.reload.lore2"));
+    reloadLore.add(LanguageManager.langMessage("gui.refill.reload.lore1"));
+    reloadLore.add(LanguageManager.langMessage("gui.refill.reload.lore2"));
     reloadMeta.setLore(reloadLore);
     reloadItem.setItemMeta(reloadMeta);
     gui.setItem(RELOAD_SLOT, reloadItem);
@@ -105,33 +103,37 @@ public class RefillGUI implements Listener {
     if (!(event.getWhoClicked() instanceof Player)) return;
     Player player = (Player) event.getWhoClicked();
 
-    if (event.getView().getTitle().equals(languageManager.getPluginMessage("gui.refill.title"))) {
+    if (event.getView().getTitle().equals(LanguageManager.langMessage("gui.refill.title"))) {
       event.setCancelled(true);
 
       ItemStack clicked = event.getCurrentItem();
       if (clicked == null || clicked.getType() == Material.AIR) return;
 
       switch (event.getSlot()) {
-        case BACK_SLOT: // Back button
+        case BACK_SLOT:
           mainGUI.openMainMenu(player);
           break;
-        case ADD_SLOT: // Add refill location
+
+        case ADD_SLOT:
           player.closeInventory();
-          String mapName = PGM.get().getMatchManager().getMatch(player).getMap().getName();
-          refillConfig.addRefillLocation(player, mapName, player.getLocation());
-          break;
-        case REMOVE_SLOT: // Remove refill location
-          player.closeInventory();
-          String mapName2 =
+          String addMapName =
               PGM.get().getMatchManager().getMatch(player).getMap().getName();
-          refillConfig.removeRefillLocation(player, mapName2, player.getLocation());
+          refillConfig.addRefillLocation(player, addMapName, player.getLocation());
           break;
-        case RELOAD_SLOT: // Test/Reload refill
+
+        case REMOVE_SLOT:
           player.closeInventory();
-          String mapName3 =
+          String removeMapName =
+              PGM.get().getMatchManager().getMatch(player).getMap().getName();
+          refillConfig.removeRefillLocation(player, removeMapName, player.getLocation());
+          break;
+
+        case RELOAD_SLOT:
+          player.closeInventory();
+          String reloadMapName =
               PGM.get().getMatchManager().getMatch(player).getMap().getName();
           String worldName = player.getWorld().getName();
-          refillConfig.testRefill(player, mapName3, worldName);
+          refillConfig.testRefill(player, reloadMapName, worldName);
           break;
       }
     }

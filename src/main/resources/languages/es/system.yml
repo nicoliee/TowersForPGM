@@ -1,0 +1,19 @@
+prefix: "§8[§bTowersForPGM§8]"
+and: "y"
+or: "o"
+languageSet: "§8[§bTowersForPGM§8] §aIdioma cambiado a §2español§a."
+
+colors:
+  positive: "§a"
+  negative: "§c"
+  white: "§f"
+  arrow:
+    up: " §a>> "
+    down: " §c>> "
+noLanguage: "§8[§bTowersForPGM§8] §cTienes que seleccionar un idioma."
+matchCancelled: "§cEl juego ha sido cancelado por el administrador."
+
+reload:
+  start: "§8[§bTowersForPGM§8] §aRecargando los mensajes..."
+  success: "§8[§bTowersForPGM§8] §aLos mensajes se han recargado correctamente."
+  error: "§8[§bTowersForPGM§8] §cError al recargar los mensajes."

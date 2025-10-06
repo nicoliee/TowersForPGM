@@ -13,7 +13,6 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedNotify;
-import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
@@ -24,11 +23,6 @@ import tc.oc.pgm.api.player.MatchPlayer;
 public class TagCommand implements CommandExecutor {
   private static long lastExecution = 0;
   private static final long COOLDOWN_MILLIS = 30 * 60 * 1000;
-  private final LanguageManager languageManager;
-
-  public TagCommand(LanguageManager languageManager) {
-    this.languageManager = languageManager;
-  }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -36,20 +30,20 @@ public class TagCommand implements CommandExecutor {
       return true;
     }
     if (!(sender instanceof Player)) {
-      SendMessage.sendToConsole(languageManager.getPluginMessage("errors.noPlayer"));
+      SendMessage.sendToConsole(LanguageManager.langMessage("errors.noPlayer"));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
     String map = match.getMap().getName();
     MatchPlayer player = match.getPlayer((Player) sender);
     if (!ConfigManager.getRankedMaps().contains(map)) {
-      player.sendWarning(Component.text(
-          Queue.RANKED_PREFIX + languageManager.getPluginMessage("ranked.notRankedMap")));
+      player.sendWarning(Component.text(LanguageManager.langMessage("ranked.prefix")
+          + LanguageManager.langMessage("ranked.notRankedMap")));
       return true;
     }
     if (player.isParticipating()) {
       player.sendWarning(
-          Component.text(languageManager.getPluginMessage("ranked.matchbot.tagNotAvailable")));
+          Component.text(LanguageManager.langMessage("ranked.matchbot.tagNotAvailable")));
       return true;
     }
     long now = System.currentTimeMillis();
@@ -59,7 +53,7 @@ public class TagCommand implements CommandExecutor {
       long sec = remaining % 60;
       String time = String.format("%d:%02d", min, sec);
       player.sendWarning(Component.text(
-          languageManager.getPluginMessage("ranked.matchbot.tagCooldown").replace("{time}", time)));
+          LanguageManager.langMessage("ranked.matchbot.tagCooldown").replace("{time}", time)));
       return true;
     }
     lastExecution = now;
@@ -81,10 +75,10 @@ public class TagCommand implements CommandExecutor {
           org.bukkit.Bukkit.getScheduler()
               .runTask(
                   TowersForPGM.getInstance(),
-                  () -> match.sendMessage(Component.text(Queue.RANKED_PREFIX
-                      + languageManager
-                          .getPluginMessage("ranked.matchbot.tagSent")
-                          .replace("{name}", player.getPrefixedName()))));
+                  () ->
+                      match.sendMessage(Component.text(LanguageManager.langMessage("ranked.prefix")
+                          + LanguageManager.langMessage("ranked.matchbot.tagSent")
+                              .replace("{name}", player.getPrefixedName()))));
         })
         .exceptionally(throwable -> {
           return null;

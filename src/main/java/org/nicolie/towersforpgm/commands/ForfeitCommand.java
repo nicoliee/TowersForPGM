@@ -20,11 +20,6 @@ import tc.oc.pgm.util.bukkit.Sounds;
 
 public class ForfeitCommand implements CommandExecutor {
   public static Set<UUID> forfeitedPlayers = new HashSet<>();
-  private final LanguageManager languageManager;
-
-  public ForfeitCommand(LanguageManager languageManager) {
-    this.languageManager = languageManager;
-  }
 
   // Pensado SOLAMENTE para 2 equipos
   // "red" y "blue"
@@ -32,21 +27,26 @@ public class ForfeitCommand implements CommandExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      SendMessage.sendToConsole(languageManager.getPluginMessage("errors.noPlayer"));
+      SendMessage.sendToConsole(LanguageManager.langMessage("errors.noPlayer"));
       return true;
     }
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     if (!Queue.isRanked() || matchPlayer.isObserving()) {
-      matchPlayer.sendWarning(Component.text(languageManager.getPluginMessage("ranked.noForfeit")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.noForfeit")));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
     Party team = matchPlayer.getParty();
     if (!forfeitedPlayers.add(matchPlayer.getId())) {
       matchPlayer.sendWarning(
-          Component.text(languageManager.getPluginMessage("ranked.alreadyForfeited")));
+          Component.text(LanguageManager.langMessage("ranked.alreadyForfeited")));
       return true;
     }
+
+    match.sendMessage(Component.text(LanguageManager.langMessage("ranked.prefix")
+        + LanguageManager.langMessage("ranked.forfeit")
+            .replace("{player}", matchPlayer.getPrefixedName())));
+    match.playSound(Sounds.ALERT);
 
     // Verifica si todos los jugadores del equipo se han rendido
     boolean allForfeited =
@@ -55,12 +55,6 @@ public class ForfeitCommand implements CommandExecutor {
     if (allForfeited) {
       Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "end " + winningTeam);
       forfeitedPlayers.clear();
-    } else {
-      match.sendMessage(Component.text(Queue.RANKED_PREFIX
-          + languageManager
-              .getPluginMessage("ranked.forfeit")
-              .replace("{player}", matchPlayer.getPrefixedName())));
-      match.playSound(Sounds.ALERT);
     }
     return true;
   }

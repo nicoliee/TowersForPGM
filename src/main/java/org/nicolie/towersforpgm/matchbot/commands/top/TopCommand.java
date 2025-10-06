@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.TopResult;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
@@ -21,16 +20,16 @@ import org.nicolie.towersforpgm.matchbot.enums.Stat;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TopCommand extends ListenerAdapter {
-  private static final LanguageManager lang = TowersForPGM.getInstance().getLanguageManager();
   public static final String NAME = "top";
-  private static final String DESC = lang.getPluginMessage("matchbot.top.description");
+  private static final String DESC = LanguageManager.langMessage("matchbot.top.description");
   private static final int PAGE_SIZE = 10;
-  private static final String OPT_STAT = lang.getPluginMessage("matchbot.top.stat");
-  private static final String DESC_STAT = lang.getPluginMessage("matchbot.top.desc-stat");
-  private static final String OPT_TABLE = lang.getPluginMessage("matchbot.top.table");
-  private static final String DESC_TABLE = lang.getPluginMessage("matchbot.top.desc-table");
-  private static final String OPT_PER_GAME = lang.getPluginMessage("matchbot.top.per-game");
-  private static final String DESC_PER_GAME = lang.getPluginMessage("matchbot.top.desc-per-game");
+  private static final String OPT_STAT = LanguageManager.langMessage("matchbot.top.stat");
+  private static final String DESC_STAT = LanguageManager.langMessage("matchbot.top.desc-stat");
+  private static final String OPT_TABLE = LanguageManager.langMessage("matchbot.top.table");
+  private static final String DESC_TABLE = LanguageManager.langMessage("matchbot.top.desc-table");
+  private static final String OPT_PER_GAME = LanguageManager.langMessage("matchbot.top.per-game");
+  private static final String DESC_PER_GAME =
+      LanguageManager.langMessage("matchbot.top.desc-per-game");
 
   public static void register() {
     JDA jda = DiscordBot.getJDA();
@@ -107,7 +106,7 @@ public class TopCommand extends ListenerAdapter {
     // Validar que la estadística soporte perGame si el usuario lo solicitó
     if (perGame && !stat.isStatPerGame()) {
       event
-          .reply(lang.getPluginMessage("matchbot.top.perGame-restriction")
+          .reply(LanguageManager.langMessage("matchbot.top.perGame-restriction")
               .replace("{stat}", stat.getDisplayName()))
           .setEphemeral(true)
           .queue();
@@ -155,7 +154,7 @@ public class TopCommand extends ListenerAdapter {
                 }
 
                 if (result.getData().isEmpty()) {
-                  hook.sendMessage(lang.getPluginMessage("matchbot.top.invalid-column")
+                  hook.sendMessage(LanguageManager.langMessage("matchbot.top.invalid-column")
                           .replace("{stat}", stat.getDisplayName())
                           .replace("{table}", table))
                       .setEphemeral(true)
@@ -182,7 +181,7 @@ public class TopCommand extends ListenerAdapter {
                                 result.getData().isEmpty() || result.getData().size() < PAGE_SIZE))
                     .queue();
               } catch (Exception e) {
-                hook.sendMessage(lang.getPluginMessage("matchbot.top.error")
+                hook.sendMessage(LanguageManager.langMessage("matchbot.top.error")
                         .replace("{error}", e.getMessage()))
                     .queue();
               }

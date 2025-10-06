@@ -22,12 +22,10 @@ import tc.oc.pgm.api.player.MatchPlayer;
 public class RankedCommand implements CommandExecutor, TabCompleter {
   private final Utilities utilities;
   private final Queue queue;
-  private final LanguageManager languageManager;
   private static Boolean RANKED_AVAILABLE = TowersForPGM.getInstance().getIsDatabaseActivated()
       || !ConfigManager.getRankedTables().isEmpty();
 
-  public RankedCommand(LanguageManager languageManager, Queue queue, Utilities utilities) {
-    this.languageManager = languageManager;
+  public RankedCommand(Queue queue, Utilities utilities) {
     this.utilities = utilities;
     this.queue = queue;
   }
@@ -38,7 +36,7 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
       return true;
     }
     if (args.length == 0) {
-      sender.sendMessage("§c/ranked <join|leave|list>");
+      sender.sendMessage(LanguageManager.langMessage("ranked.usage"));
       return true;
     }
 
@@ -46,7 +44,7 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
       PGM.get()
           .getMatchManager()
           .getPlayer((Player) sender)
-          .sendWarning(Component.text(languageManager.getPluginMessage("ranked.unavailable")));
+          .sendWarning(Component.text(LanguageManager.langMessage("ranked.unavailable")));
       return true;
     }
 
@@ -55,7 +53,7 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
       case "join":
       case "leave":
         if (!(sender instanceof Player)) {
-          sender.sendMessage(languageManager.getPluginMessage("errors.noPlayer"));
+          sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
           return true;
         }
         Match match = PGM.get().getMatchManager().getMatch(sender);
@@ -63,24 +61,27 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
         if (mainArg.equals("join")) {
           queue.addPlayer(player);
         } else {
-          queue.removePlayer(player);
+          Queue.removePlayer(player);
         }
         break;
       case "list":
+        String prefix = LanguageManager.langMessage("ranked.prefix");
+        String header = prefix
+            + LanguageManager.langMessage("ranked.queueHeader")
+                .replace("{current}", String.valueOf(Queue.getQueueSize()))
+                .replace("{max}", String.valueOf(ConfigManager.getRankedSize()));
+        List<String> queuePlayers = queue.getQueueList();
+
         if (sender instanceof Player) {
           Match matchList = PGM.get().getMatchManager().getMatch(sender);
           MatchPlayer playerList = matchList.getPlayer((Player) sender);
-          List<String> queuePlayers = queue.getQueueList();
-          playerList.sendMessage(Component.text(
-              "§8[§6Ranked§8] §a" + Queue.getQueueSize() + "/" + ConfigManager.getRankedSize()));
+          playerList.sendMessage(Component.text(header));
           if (!queuePlayers.isEmpty()) {
             StringBuilder playersList = utilities.buildLists(queuePlayers, "", false);
             playerList.sendMessage(Component.text(playersList.toString()));
           }
         } else {
-          List<String> queuePlayers = queue.getQueueList();
-          sender.sendMessage(
-              "§8[§6Ranked§8] §a" + Queue.getQueueSize() + "/" + ConfigManager.getRankedSize());
+          sender.sendMessage(header);
           if (!queuePlayers.isEmpty()) {
             StringBuilder playersList = utilities.buildLists(queuePlayers, "", false);
             sender.sendMessage(playersList.toString());
@@ -89,24 +90,24 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
         break;
       case "size":
         if (!sender.hasPermission("ranked.size")) {
-          sender.sendMessage(languageManager.getPluginMessage("errors.noPermission"));
+          sender.sendMessage(LanguageManager.langMessage("errors.noPermission"));
           return true;
         }
         if (args.length == 1) {
-          sender.sendMessage("§c/ranked size <size>");
+          sender.sendMessage(LanguageManager.langMessage("ranked.usageSize"));
           return true;
         }
         int size;
         try {
           size = Integer.parseInt(args[1]);
         } catch (NumberFormatException e) {
-          sender.sendMessage(languageManager.getPluginMessage("ranked.sizeInvalid"));
+          sender.sendMessage(LanguageManager.langMessage("ranked.sizeInvalid"));
           return true;
         }
         queue.setSize(sender, size);
         break;
       default:
-        sender.sendMessage("§c/ranked <join|leave|list>");
+        sender.sendMessage(LanguageManager.langMessage("ranked.usage"));
         break;
     }
     return true;

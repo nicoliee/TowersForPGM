@@ -188,7 +188,8 @@ public class SQLITEStatsManager {
         TowersForPGM.getInstance()
             .getLogger()
             .log(Level.SEVERE, "Error al actualizar estadísticas en SQLite", e);
-        SendMessage.sendToDevelopers("§cError al actualizar estadísticas en SQLite.");
+        SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+            "errors.database.updateStats"));
       }
     });
   }
@@ -269,8 +270,8 @@ public class SQLITEStatsManager {
             TowersForPGM.getInstance()
                 .getLogger()
                 .log(Level.SEVERE, "Error al obtener estadísticas del usuario en SQLite", e);
-            SendMessage.sendToDevelopers(
-                "§cError al obtener estadísticas del usuario en la base de datos SQLite.");
+            SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+                "errors.database.getStats"));
             return null;
           }
         },

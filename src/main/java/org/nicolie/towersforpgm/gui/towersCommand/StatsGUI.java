@@ -22,24 +22,21 @@ import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class StatsGUI implements Listener {
   private static final int BACK_SLOT = 0;
-  private static final int DEFAULT_TABLE_SLOT = 10;
-  private static final int ADD_TABLE_SLOT = 11;
-  private static final int REMOVE_TABLE_SLOT = 12;
-  private static final int LIST_TABLES_SLOT = 13;
+  private static final int DEFAULT_TABLE_SLOT = 9;
+  private static final int ADD_TABLE_SLOT = 10;
+  private static final int REMOVE_TABLE_SLOT = 11;
+  private static final int LIST_TABLES_SLOT = 12;
   private static final int ADD_MAP_TABLE_SLOT = 14;
   private static final int REMOVE_MAP_TABLE_SLOT = 15;
-  private static final int ADD_TEMP_TABLE_SLOT = 21;
-  private static final int REMOVE_TEMP_TABLE_SLOT = 23;
+  private static final int ADD_TEMP_TABLE_SLOT = 16;
+  private static final int REMOVE_TEMP_TABLE_SLOT = 17;
 
-  private final LanguageManager languageManager;
   private final StatsConfig statsConfig;
   private final TowersConfigGUI mainGUI;
   private final Map<UUID, String> waitingForInput = new HashMap<>();
   private boolean isRegistered = false;
 
-  public StatsGUI(
-      LanguageManager languageManager, StatsConfig statsConfig, TowersConfigGUI mainGUI) {
-    this.languageManager = languageManager;
+  public StatsGUI(StatsConfig statsConfig, TowersConfigGUI mainGUI) {
     this.statsConfig = statsConfig;
     this.mainGUI = mainGUI;
 
@@ -52,7 +49,7 @@ public class StatsGUI implements Listener {
 
   public void openStatsMenu(Player player) {
     Inventory gui =
-        Bukkit.createInventory(null, 45, languageManager.getPluginMessage("gui.stats.title"));
+        Bukkit.createInventory(null, 27, LanguageManager.langMessage("gui.stats.title"));
 
     // Gray glass border
     ItemStack grayGlass = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 7);
@@ -61,25 +58,26 @@ public class StatsGUI implements Listener {
     grayGlass.setItemMeta(grayMeta);
 
     // Fill border with gray glass
-    for (int i = 0; i < 45; i++) {
-      if (i < 9 || i > 35 || i % 9 == 0 || i % 9 == 8) {
+    for (int i = 0; i < 27; i++) {
+      if (i < 9 || i > 17 || i % 9 == 0 || i % 9 == 8) {
         gui.setItem(i, grayGlass);
       }
     }
 
-    // Back button (red glass)
+    // ===== NAVIGATION =====
     ItemStack backItem = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 14);
     ItemMeta backMeta = backItem.getItemMeta();
-    backMeta.setDisplayName(languageManager.getPluginMessage("gui.back"));
+    backMeta.setDisplayName(LanguageManager.langMessage("gui.back"));
     backItem.setItemMeta(backMeta);
     gui.setItem(BACK_SLOT, backItem);
 
+    // ===== GLOBAL TABLE MANAGEMENT =====
     // Set default table
     ItemStack defaultItem = new ItemStack(Material.EMERALD);
     ItemMeta defaultMeta = defaultItem.getItemMeta();
-    defaultMeta.setDisplayName(languageManager.getPluginMessage("gui.stats.default.title"));
+    defaultMeta.setDisplayName(LanguageManager.langMessage("gui.stats.default.title"));
     List<String> defaultLore = new ArrayList<>();
-    defaultLore.add(languageManager.getPluginMessage("gui.stats.default.lore"));
+    defaultLore.add(LanguageManager.langMessage("gui.stats.default.lore"));
     defaultMeta.setLore(defaultLore);
     defaultItem.setItemMeta(defaultMeta);
     gui.setItem(DEFAULT_TABLE_SLOT, defaultItem);
@@ -87,9 +85,9 @@ public class StatsGUI implements Listener {
     // Add table
     ItemStack addItem = new ItemStack(Material.EMERALD_BLOCK);
     ItemMeta addMeta = addItem.getItemMeta();
-    addMeta.setDisplayName(languageManager.getPluginMessage("gui.stats.add.title"));
+    addMeta.setDisplayName(LanguageManager.langMessage("gui.stats.add.title"));
     List<String> addLore = new ArrayList<>();
-    addLore.add(languageManager.getPluginMessage("gui.stats.add.lore"));
+    addLore.add(LanguageManager.langMessage("gui.stats.add.lore"));
     addMeta.setLore(addLore);
     addItem.setItemMeta(addMeta);
     gui.setItem(ADD_TABLE_SLOT, addItem);
@@ -97,9 +95,9 @@ public class StatsGUI implements Listener {
     // Remove table
     ItemStack removeItem = new ItemStack(Material.REDSTONE_BLOCK);
     ItemMeta removeMeta = removeItem.getItemMeta();
-    removeMeta.setDisplayName(languageManager.getPluginMessage("gui.stats.remove.title"));
+    removeMeta.setDisplayName(LanguageManager.langMessage("gui.stats.remove.title"));
     List<String> removeLore = new ArrayList<>();
-    removeLore.add(languageManager.getPluginMessage("gui.stats.remove.lore"));
+    removeLore.add(LanguageManager.langMessage("gui.stats.remove.lore"));
     removeMeta.setLore(removeLore);
     removeItem.setItemMeta(removeMeta);
     gui.setItem(REMOVE_TABLE_SLOT, removeItem);
@@ -107,27 +105,26 @@ public class StatsGUI implements Listener {
     // List tables
     ItemStack listItem = new ItemStack(Material.BOOK);
     ItemMeta listMeta = listItem.getItemMeta();
-    listMeta.setDisplayName(languageManager.getPluginMessage("gui.stats.list.title"));
+    listMeta.setDisplayName(LanguageManager.langMessage("gui.stats.list.title"));
     List<String> listLore = new ArrayList<>();
-    listLore.add(languageManager.getPluginMessage("gui.stats.list.lore"));
+    listLore.add(LanguageManager.langMessage("gui.stats.list.lore"));
     List<String> tables = ConfigManager.getTables();
-    listLore.add(languageManager
-        .getPluginMessage("gui.stats.list.count")
+    listLore.add(LanguageManager.langMessage("gui.stats.list.count")
         .replace("{count}", String.valueOf(tables.size())));
     for (String table : tables) {
-      listLore.add(
-          languageManager.getPluginMessage("gui.stats.list.item").replace("{table}", table));
+      listLore.add(LanguageManager.langMessage("gui.stats.list.item").replace("{table}", table));
     }
     listMeta.setLore(listLore);
     listItem.setItemMeta(listMeta);
     gui.setItem(LIST_TABLES_SLOT, listItem);
 
+    // ===== MAP-SPECIFIC TABLES =====
     // Add map-specific table
     ItemStack addMapItem = new ItemStack(Material.MAP);
     ItemMeta addMapMeta = addMapItem.getItemMeta();
-    addMapMeta.setDisplayName(languageManager.getPluginMessage("gui.stats.add_map.title"));
+    addMapMeta.setDisplayName(LanguageManager.langMessage("gui.stats.add_map.title"));
     List<String> addMapLore = new ArrayList<>();
-    addMapLore.add(languageManager.getPluginMessage("gui.stats.add_map.lore"));
+    addMapLore.add(LanguageManager.langMessage("gui.stats.add_map.lore"));
     addMapMeta.setLore(addMapLore);
     addMapItem.setItemMeta(addMapMeta);
     gui.setItem(ADD_MAP_TABLE_SLOT, addMapItem);
@@ -135,25 +132,25 @@ public class StatsGUI implements Listener {
     // Remove map-specific table
     ItemStack removeMapItem = new ItemStack(Material.BARRIER);
     ItemMeta removeMapMeta = removeMapItem.getItemMeta();
-    removeMapMeta.setDisplayName(languageManager.getPluginMessage("gui.stats.remove_map.title"));
+    removeMapMeta.setDisplayName(LanguageManager.langMessage("gui.stats.remove_map.title"));
     List<String> removeMapLore = new ArrayList<>();
-    removeMapLore.add(languageManager.getPluginMessage("gui.stats.remove_map.lore"));
+    removeMapLore.add(LanguageManager.langMessage("gui.stats.remove_map.lore"));
     removeMapMeta.setLore(removeMapLore);
     removeMapItem.setItemMeta(removeMapMeta);
     gui.setItem(REMOVE_MAP_TABLE_SLOT, removeMapItem);
 
+    // ===== TEMPORARY TABLES =====
     // Add temporary table
     ItemStack addTempItem = new ItemStack(Material.PAPER);
     ItemMeta addTempMeta = addTempItem.getItemMeta();
-    addTempMeta.setDisplayName(languageManager.getPluginMessage("gui.stats.add_temp.title"));
+    addTempMeta.setDisplayName(LanguageManager.langMessage("gui.stats.add_temp.title"));
     List<String> addTempLore = new ArrayList<>();
-    addTempLore.add(languageManager.getPluginMessage("gui.stats.add_temp.lore"));
+    addTempLore.add(LanguageManager.langMessage("gui.stats.add_temp.lore"));
     String tempTable = ConfigManager.getTempTable();
-    addTempLore.add(languageManager
-        .getPluginMessage("gui.stats.add_temp.current")
+    addTempLore.add(LanguageManager.langMessage("gui.stats.add_temp.current")
         .replace(
             "{table}",
-            tempTable != null ? tempTable : languageManager.getPluginMessage("gui.stats.none")));
+            tempTable != null ? tempTable : LanguageManager.langMessage("gui.stats.none")));
     addTempMeta.setLore(addTempLore);
     addTempItem.setItemMeta(addTempMeta);
     gui.setItem(ADD_TEMP_TABLE_SLOT, addTempItem);
@@ -161,9 +158,9 @@ public class StatsGUI implements Listener {
     // Remove temporary table
     ItemStack removeTempItem = new ItemStack(Material.REDSTONE);
     ItemMeta removeTempMeta = removeTempItem.getItemMeta();
-    removeTempMeta.setDisplayName(languageManager.getPluginMessage("gui.stats.remove_temp.title"));
+    removeTempMeta.setDisplayName(LanguageManager.langMessage("gui.stats.remove_temp.title"));
     List<String> removeTempLore = new ArrayList<>();
-    removeTempLore.add(languageManager.getPluginMessage("gui.stats.remove_temp.lore"));
+    removeTempLore.add(LanguageManager.langMessage("gui.stats.remove_temp.lore"));
     removeTempMeta.setLore(removeTempLore);
     removeTempItem.setItemMeta(removeTempMeta);
     gui.setItem(REMOVE_TEMP_TABLE_SLOT, removeTempItem);
@@ -176,7 +173,7 @@ public class StatsGUI implements Listener {
     if (!(event.getWhoClicked() instanceof Player)) return;
     Player player = (Player) event.getWhoClicked();
 
-    if (event.getView().getTitle().equals(languageManager.getPluginMessage("gui.stats.title"))) {
+    if (event.getView().getTitle().equals(LanguageManager.langMessage("gui.stats.title"))) {
       event.setCancelled(true);
 
       ItemStack clicked = event.getCurrentItem();
@@ -188,17 +185,17 @@ public class StatsGUI implements Listener {
           break;
         case DEFAULT_TABLE_SLOT: // Set default table
           player.closeInventory();
-          player.sendMessage(languageManager.getPluginMessage("gui.stats.default.input"));
+          player.sendMessage(LanguageManager.langMessage("gui.stats.default.input"));
           waitingForInput.put(player.getUniqueId(), "default");
           break;
         case ADD_TABLE_SLOT: // Add table
           player.closeInventory();
-          player.sendMessage(languageManager.getPluginMessage("gui.stats.add.input"));
+          player.sendMessage(LanguageManager.langMessage("gui.stats.add.input"));
           waitingForInput.put(player.getUniqueId(), "add");
           break;
         case REMOVE_TABLE_SLOT: // Remove table
           player.closeInventory();
-          player.sendMessage(languageManager.getPluginMessage("gui.stats.remove.input"));
+          player.sendMessage(LanguageManager.langMessage("gui.stats.remove.input"));
           waitingForInput.put(player.getUniqueId(), "remove");
           break;
         case LIST_TABLES_SLOT: // List tables
@@ -207,7 +204,7 @@ public class StatsGUI implements Listener {
           break;
         case ADD_MAP_TABLE_SLOT: // Add map table
           player.closeInventory();
-          player.sendMessage(languageManager.getPluginMessage("gui.stats.add_map.input"));
+          player.sendMessage(LanguageManager.langMessage("gui.stats.add_map.input"));
           waitingForInput.put(player.getUniqueId(), "addmap");
           break;
         case REMOVE_MAP_TABLE_SLOT: // Remove map table
@@ -216,7 +213,7 @@ public class StatsGUI implements Listener {
           break;
         case ADD_TEMP_TABLE_SLOT: // Add temporary table
           player.closeInventory();
-          player.sendMessage(languageManager.getPluginMessage("gui.stats.add_temp.input"));
+          player.sendMessage(LanguageManager.langMessage("gui.stats.add_temp.input"));
           waitingForInput.put(player.getUniqueId(), "addtemp");
           break;
         case REMOVE_TEMP_TABLE_SLOT: // Remove temporary table

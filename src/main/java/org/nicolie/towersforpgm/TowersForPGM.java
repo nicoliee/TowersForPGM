@@ -72,9 +72,6 @@ public final class TowersForPGM extends JavaPlugin {
   private File refillFile;
   private FileConfiguration refillConfig;
 
-  // Language
-  private LanguageManager languageManager; // Instancia del LanguageManager
-
   // MatchBot (opcional)
   private boolean isMatchBotEnabled = false; // Variable para verificar si MatchBot está habilitado
   private File matchBotFile;
@@ -92,14 +89,14 @@ public final class TowersForPGM extends JavaPlugin {
     ConfigManager.loadConfig();
     preparationEnabled = getConfig().getBoolean("preparationTime.enabled", false);
 
-    // Inicializar LanguageManager
-    languageManager = new LanguageManager(this);
+    // Inicializar LanguageManager (ahora es estático)
+    LanguageManager.initialize(this);
 
     // Inicializar el RefillManager
-    refillManager = new RefillManager(languageManager);
+    refillManager = new RefillManager();
 
     // Inicializar el TorneoListener
-    preparationListener = new PreparationListener(languageManager);
+    preparationListener = new PreparationListener();
 
     // Base de datos
     initializeDatabase();
@@ -115,27 +112,25 @@ public final class TowersForPGM extends JavaPlugin {
     availablePlayers = new AvailablePlayers();
     captains = new Captains();
     teams = new Teams();
-    utilities = new Utilities(availablePlayers, captains, languageManager);
-    draft = new Draft(captains, availablePlayers, teams, languageManager, utilities);
-    pickInventory = new Picks(draft, captains, availablePlayers, teams, languageManager);
+    utilities = new Utilities(availablePlayers, captains);
+    draft = new Draft(captains, availablePlayers, teams, utilities);
+    pickInventory = new Picks(draft, captains, availablePlayers, teams);
     getServer().getPluginManager().registerEvents(pickInventory, this);
 
     // Inicializar el matchmaking
-    Matchmaking matchmaking =
-        new Matchmaking(availablePlayers, captains, languageManager, teams, utilities);
+    Matchmaking matchmaking = new Matchmaking(availablePlayers, captains, teams, utilities);
 
     // Registrar Rankeds
-    Queue queue = new Queue(draft, matchmaking, languageManager, teams);
-    getCommand("ranked").setExecutor(new RankedCommand(languageManager, queue, utilities));
-    getCommand("forfeit").setExecutor(new ForfeitCommand(languageManager));
-    getCommand("tag").setExecutor(new TagCommand(languageManager));
+    Queue queue = new Queue(draft, matchmaking, teams);
+    getCommand("ranked").setExecutor(new RankedCommand(queue, utilities));
+    getCommand("forfeit").setExecutor(new ForfeitCommand());
+    getCommand("tag").setExecutor(new TagCommand());
     // Registrar comandos
     Commands commandManager = new Commands(this);
     commandManager.registerCommands(
         availablePlayers,
         captains,
         draft,
-        languageManager,
         matchmaking,
         pickInventory,
         refillManager,
@@ -149,7 +144,6 @@ public final class TowersForPGM extends JavaPlugin {
         captains,
         draft,
         queue,
-        languageManager,
         pickInventory,
         refillManager,
         teams,
@@ -192,10 +186,6 @@ public final class TowersForPGM extends JavaPlugin {
 
   public static TowersForPGM getInstance() {
     return instance;
-  }
-
-  public LanguageManager getLanguageManager() {
-    return languageManager;
   }
 
   public void updateInventories() {

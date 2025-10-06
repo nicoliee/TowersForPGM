@@ -33,7 +33,6 @@ import tc.oc.pgm.stats.StatsMatchModule;
 
 public class MatchFinishListener implements Listener {
   private final TowersForPGM plugin;
-  private final LanguageManager languageManager;
   private final PreparationListener preparationListener;
   private final RefillManager refillManager;
   private final Draft draft;
@@ -42,13 +41,11 @@ public class MatchFinishListener implements Listener {
       TowersForPGM plugin,
       PreparationListener preparationListener,
       RefillManager refillManager,
-      Draft draft,
-      LanguageManager languageManager) {
+      Draft draft) {
     this.plugin = plugin;
     this.preparationListener = preparationListener;
     this.refillManager = refillManager;
     this.draft = draft;
-    this.languageManager = languageManager;
   }
 
   @EventHandler
@@ -74,8 +71,7 @@ public class MatchFinishListener implements Listener {
         .getLogger()
         .info("[-] Stats cancelled for match-" + event.getMatch().getId() + ": " + mapName
             + ", stats not sent to database.");
-    SendMessage.sendToDevelopers(languageManager
-        .getPluginMessage("stats.consoleCancel")
+    SendMessage.sendToDevelopers(LanguageManager.langMessage("stats.consoleCancel")
         .replace("{id}", String.valueOf(event.getMatch().getId()))
         .replace("{map}", mapName)
         .replace("{size}", String.valueOf(event.getMatch().getParticipants().size())));
@@ -166,8 +162,7 @@ public class MatchFinishListener implements Listener {
               + ", stats on table " + table + ": " + playerStatsList.toString();
         }
         TowersForPGM.getInstance().getLogger().info(consoleMeString);
-        SendMessage.sendToDevelopers(languageManager
-            .getPluginMessage("stats.console")
+        SendMessage.sendToDevelopers(LanguageManager.langMessage("stats.console")
             .replace("{id}", (ranked ? "ranked-" : "") + event.getMatch().getId())
             .replace("{map}", map)
             .replace("{table}", table)

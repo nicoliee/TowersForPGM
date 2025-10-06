@@ -9,14 +9,12 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
-import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.enums.Stat;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class AutocompleteHandler extends ListenerAdapter {
-  private static final LanguageManager lang = TowersForPGM.getInstance().getLanguageManager();
   private static final Map<String, List<Command.Choice>> CHOICES_CACHE = new ConcurrentHashMap<>();
   private static final List<Command.Choice> EMPTY_CHOICES = List.of();
   private static final int MAX_CHOICES_WITHOUT_AUTOCOMPLETE = 25;
@@ -55,14 +53,14 @@ public class AutocompleteHandler extends ListenerAdapter {
       List<Command.Choice> statChoices = Stat.getAllStatNames().stream()
           .map(name -> new Command.Choice(name, name))
           .collect(Collectors.toUnmodifiableList());
-      CHOICES_CACHE.put(lang.getPluginMessage("matchbot.top.stat"), statChoices);
+      CHOICES_CACHE.put(LanguageManager.langMessage("matchbot.top.stat"), statChoices);
     }
 
     if (shouldUseAutocompleteForTables()) {
       List<Command.Choice> tableChoices = MatchBotConfig.getTables().stream()
           .map(name -> new Command.Choice(name, name))
           .collect(Collectors.toUnmodifiableList());
-      CHOICES_CACHE.put(lang.getPluginMessage("matchbot.top.table"), tableChoices);
+      CHOICES_CACHE.put(LanguageManager.langMessage("matchbot.top.table"), tableChoices);
     }
   }
 
@@ -76,7 +74,7 @@ public class AutocompleteHandler extends ListenerAdapter {
   }
 
   private List<Command.Choice> filterChoices(String optionName, String userInput) {
-    if (lang.getPluginMessage("matchbot.stats.player").equals(optionName)) {
+    if (LanguageManager.langMessage("matchbot.stats.player").equals(optionName)) {
       List<String> players =
           StatsManager.getAllUsernamesFiltered(userInput == null ? "" : userInput);
       return players.stream()

@@ -14,13 +14,10 @@ import tc.oc.pgm.util.bukkit.Sounds;
 public class Utilities {
   private final AvailablePlayers availablePlayers;
   private final Captains captains;
-  private final LanguageManager languageManager;
 
-  public Utilities(
-      AvailablePlayers availablePlayers, Captains captains, LanguageManager languageManager) {
+  public Utilities(AvailablePlayers availablePlayers, Captains captains) {
     this.availablePlayers = availablePlayers;
     this.captains = captains;
-    this.languageManager = languageManager;
   }
 
   public void suggestPicksForCaptains() {
@@ -57,8 +54,7 @@ public class Utilities {
     }
     StringBuilder suggestionsBuilder = buildLists(topPlayers, "§b", true);
     if (currentCaptain != null) {
-      String suggestions = languageManager
-          .getConfigurableMessage("captains.suggestions")
+      String suggestions = LanguageManager.langMessage("draft.captains.suggestions")
           .replace("{suggestions}", suggestionsBuilder.toString());
       currentCaptain.playSound(Sounds.RAINDROPS);
       currentCaptain.sendMessage(Component.text(suggestions));
@@ -100,9 +96,9 @@ public class Utilities {
       } else if (i == players.size() - 2) {
         suggestionsBuilder.append(" §8");
         if (useOr) {
-          suggestionsBuilder.append(languageManager.getPluginMessage("TowersForPGM.or"));
+          suggestionsBuilder.append(LanguageManager.langMessage("system.or"));
         } else {
-          suggestionsBuilder.append(languageManager.getPluginMessage("TowersForPGM.and"));
+          suggestionsBuilder.append(LanguageManager.langMessage("system.and"));
         }
         suggestionsBuilder.append(" §b");
       }
@@ -132,7 +128,7 @@ public class Utilities {
   private static BukkitRunnable readyReminderTask;
 
   public void readyReminder(int delay, int period) {
-    String readyMessage = languageManager.getPluginMessage("captains.ready");
+    String readyMessage = LanguageManager.langMessage("draft.captains.ready");
     MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
     MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
     captain1.sendActionBar(Component.text(readyMessage));

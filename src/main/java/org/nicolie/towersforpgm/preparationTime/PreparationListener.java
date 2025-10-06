@@ -32,16 +32,11 @@ import tc.oc.pgm.util.bukkit.Sounds;
 
 public class PreparationListener implements Listener {
   private final TowersForPGM plugin = TowersForPGM.getInstance(); // Instancia del plugin
-  private final LanguageManager languageManager; // Instancia del LanguageManager
   private Map<String, Long> protectionStartTimes =
       new HashMap<>(); // Mapa para almacenar el tiempo de inicio de la protección por nombre de
   // mundo
   private Map<String, BukkitTask> activeTimers =
       new HashMap<>(); // Mapa para almacenar temporizadores activos por nombre de mundo
-
-  public PreparationListener(LanguageManager languageManager) {
-    this.languageManager = languageManager;
-  }
 
   public boolean isMapInConfig(String mapName) {
     if (plugin.getRegions().containsKey(mapName)) {
@@ -64,8 +59,7 @@ public class PreparationListener implements Listener {
       // Comprobar si ya existe una configuración para el mundo
       if (plugin.getMatchConfig(worldName) != null) {
         // Si la configuración ya existe, no sobrescribir y dar un aviso
-        SendMessage.sendToPlayer(
-            player, languageManager.getPluginMessage("preparation.alreadyStarted"));
+        SendMessage.sendToPlayer(player, LanguageManager.langMessage("preparation.alreadyStarted"));
         return; // Salir del método para evitar sobreescribir la configuración
       }
 
@@ -86,7 +80,7 @@ public class PreparationListener implements Listener {
           player, timer, haste, region, match); // Iniciar el temporizador de protección
       protectionStartTimes.put(worldName, System.currentTimeMillis());
     } else {
-      SendMessage.sendToPlayer(player, languageManager.getPluginMessage("region.mapError"));
+      SendMessage.sendToPlayer(player, LanguageManager.langMessage("region.mapError"));
     }
   }
 
@@ -103,24 +97,22 @@ public class PreparationListener implements Listener {
         protectionStartTimes.remove(worldName); // Eliminar el tiempo de inicio de la protección
         Bukkit.getScheduler().runTask(plugin, () -> {
           // Enviar mensajes al mundo
-          SendMessage.sendToWorld(
-              worldName, languageManager.getConfigurableMessage("preparation.end"));
+          SendMessage.sendToWorld(worldName, LanguageManager.langMessage("preparation.end"));
         });
       });
     } else {
       // Si la configuración no existe, enviamos un mensaje sincrónicamente
-      SendMessage.sendToPlayer(player, languageManager.getPluginMessage("preparation.notStarted"));
+      SendMessage.sendToPlayer(player, LanguageManager.langMessage("preparation.notStarted"));
     }
   }
 
   private void startProtectionTimer(
       Player player, int timer, int haste, Region region, Match match) {
     String worldName = match.getWorld().getName(); // Obtener el nombre del mundo
-    Component message = Component.text(languageManager.getPluginMessage("preparation.actionBar"));
+    Component message = Component.text(LanguageManager.langMessage("preparation.actionBar"));
     SendMessage.sendToWorld(
         worldName,
-        languageManager
-            .getConfigurableMessage("preparation.timeRemaining")
+        LanguageManager.langMessage("preparation.timeRemaining")
             .replace("{time}", SendMessage.formatTime(timer)));
     match.playSound(Sounds.INVENTORY_CLICK);
 
@@ -146,8 +138,7 @@ public class PreparationListener implements Listener {
             // Si el tiempo restante son 30, 10, 5, 4, 3, 2, 1 segundos
             SendMessage.sendToWorld(
                 worldName,
-                languageManager
-                    .getConfigurableMessage("preparation.timeRemaining")
+                LanguageManager.langMessage("preparation.timeRemaining")
                     .replace("{time}", SendMessage.formatTime(timeRemaining)));
           }
 
@@ -227,8 +218,7 @@ public class PreparationListener implements Listener {
         Player player = event.getPlayer();
         // Cancela el evento si la ubicación está dentro de la región
         event.setCancelled(true);
-        Component message =
-            Component.text(languageManager.getPluginMessage("preparation.blockPlace"));
+        Component message = Component.text(LanguageManager.langMessage("preparation.blockPlace"));
         PGM.get().getMatchManager().getPlayer(player).sendWarning(message);
       }
     }
@@ -249,8 +239,7 @@ public class PreparationListener implements Listener {
         // Cancela el evento si la ubicación está dentro de la región
         Player player = event.getPlayer();
         event.setCancelled(true);
-        Component message =
-            Component.text(languageManager.getPluginMessage("preparation.blockBreak"));
+        Component message = Component.text(LanguageManager.langMessage("preparation.blockBreak"));
         PGM.get().getMatchManager().getPlayer(player).sendWarning(message);
       }
     }

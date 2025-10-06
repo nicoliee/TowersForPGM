@@ -14,8 +14,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.draft.events.DraftEndEvent;
-import org.nicolie.towersforpgm.draft.events.DraftStartEvent;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
@@ -31,7 +29,6 @@ public class Draft {
   private final Captains captains;
   private final AvailablePlayers availablePlayers;
   private final Teams teams;
-  private final LanguageManager languageManager;
   private final Utilities utilities;
   private static boolean isDraftActive = false;
   private BukkitRunnable draftTimer;
@@ -46,15 +43,10 @@ public class Draft {
   private boolean firstCaptainTurn; // Indica quién fue el primer capitán en pickear
 
   public Draft(
-      Captains captains,
-      AvailablePlayers availablePlayers,
-      Teams teams,
-      LanguageManager languageManager,
-      Utilities utilities) {
+      Captains captains, AvailablePlayers availablePlayers, Teams teams, Utilities utilities) {
     this.teams = teams;
     this.captains = captains;
     this.availablePlayers = availablePlayers;
-    this.languageManager = languageManager;
     this.utilities = utilities;
   }
 
@@ -114,7 +106,7 @@ public class Draft {
 
     match.playSound(Sounds.RAINDROPS);
     match.sendMessage(
-        Component.text((languageManager.getPluginMessage("captains.captainsHeader"))));
+        Component.text((LanguageManager.langMessage("draft.captains.captainsHeader"))));
     match.sendMessage(Component.text(("&4" + Bukkit.getPlayer(captain1).getName() + " &l&bvs. "
         + "&9" + Bukkit.getPlayer(captain2).getName())));
     match.sendMessage(Component.text("§m---------------------------------"));
@@ -122,14 +114,11 @@ public class Draft {
     String teamColor = captains.isCaptain1Turn() ? "&4" : "&9";
     UUID captainUUID = captains.isCaptain1Turn() ? captains.getCaptain1() : captains.getCaptain2();
     String captainName = Bukkit.getPlayer(captainUUID).getName();
-    match.sendMessage(Component.text(languageManager
-        .getConfigurableMessage("captains.turn")
+    match.sendMessage(Component.text(LanguageManager.langMessage("draft.captains.turn")
         .replace("{teamcolor}", teamColor)
         .replace("{captain}", captainName)));
     plugin.giveitem(match.getWorld());
     startDraftTimer();
-
-    Bukkit.getPluginManager().callEvent(new DraftStartEvent());
   }
 
   public void startDraftTimer() {
@@ -141,8 +130,7 @@ public class Draft {
       String currentCaptainName =
           captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name();
       String currentCaptainColor = captains.isCaptain1Turn() ? "§4" : "§9";
-      String bossbarMessage = languageManager
-          .getPluginMessage("captains.bossbar")
+      String bossbarMessage = LanguageManager.langMessage("draft.captains.bossbar")
           .replace("{captain}", currentCaptainColor + currentCaptainName);
 
       pickTimerBar = BossBar.bossBar(
@@ -171,12 +159,11 @@ public class Draft {
       currentCaptainName = captains.isCaptain1Turn() ? "Red" : "Blue";
     }
     String currentCaptainColor = captains.isCaptain1Turn() ? "§4" : "§9";
-    String bossbarMessage = languageManager
-        .getPluginMessage("captains.bossbar")
+    String bossbarMessage = LanguageManager.langMessage("draft.captains.bossbar")
         .replace("{captain}", currentCaptainColor + currentCaptainName);
     if (currentCaptain != null) {
       currentCaptain.sendActionBar(
-          Component.text(languageManager.getPluginMessage("captains.tip")));
+          Component.text(LanguageManager.langMessage("draft.captains.tip")));
     }
     draftTimer = new BukkitRunnable() {
       @Override
@@ -208,8 +195,7 @@ public class Draft {
           if (currentCaptain != null) {
             SendMessage.sendToPlayer(
                 currentCaptain.getBukkit(),
-                languageManager
-                    .getConfigurableMessage("captains.timeRemaining")
+                LanguageManager.langMessage("draft.captains.timeRemaining")
                     .replace("{time}", SendMessage.formatTime(timeLeft[0])));
           }
         }
@@ -245,8 +231,7 @@ public class Draft {
     teams.assignTeam(player, teamNumber);
     plugin.giveItem(player);
 
-    SendMessage.broadcast(languageManager
-        .getConfigurableMessage("captains.choose")
+    SendMessage.broadcast(LanguageManager.langMessage("draft.captains.choose")
         .replace("{teamcolor}", teamColor)
         .replace("{captain}", captainName)
         .replace("{player}", exactUsername));
@@ -277,8 +262,7 @@ public class Draft {
             teams.assignTeam(pl, teamToAssign);
             plugin.giveItem(pl);
 
-            SendMessage.broadcast(languageManager
-                .getConfigurableMessage("captains.choose")
+            SendMessage.broadcast(LanguageManager.langMessage("draft.captains.choose")
                 .replace("{teamcolor}", teamToAssign == 1 ? "§4" : "§9")
                 .replace(
                     "{captain}",
@@ -324,8 +308,7 @@ public class Draft {
         // Si un capitán debe pickear seguido enviar un mensaje
         if ((shouldBeCaptain1Turn == captains.isCaptain1Turn())
             || (!shouldBeCaptain1Turn == !captains.isCaptain1Turn())) {
-          String message = languageManager
-              .getConfigurableMessage("captains.turn")
+          String message = LanguageManager.message("captains.turn")
               .replace("{teamcolor}", captains.isCaptain1Turn() ? "&4" : "&9")
               .replace(
                   "{captain}",
@@ -368,7 +351,7 @@ public class Draft {
     int team2Size = team2Names.size();
     int teamsize = Math.max(team1Size, team2Size);
 
-    SendMessage.broadcast(languageManager.getPluginMessage("captains.teamsHeader"));
+    SendMessage.broadcast(LanguageManager.langMessage("captains.teamsHeader"));
     SendMessage.broadcast(team1.toString());
     SendMessage.broadcast("&8[&4" + team1Size + "&8] &l&bvs. " + "&8[&9" + team2Size + "&8]");
     SendMessage.broadcast(team2.toString());
@@ -386,8 +369,6 @@ public class Draft {
     MatchManager.getMatch()
         .needModule(StartMatchModule.class)
         .forceStartCountdown(Duration.ofSeconds(90), Duration.ZERO);
-
-    Bukkit.getPluginManager().callEvent(new DraftEndEvent());
   }
 
   public void cleanLists() {

@@ -22,13 +22,12 @@ import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TowersConfigGUI implements Listener {
-  private static final int DRAFT_SLOT = 10;
-  private static final int PREPARATION_SLOT = 11;
-  private static final int RANKED_SLOT = 12;
-  private static final int REFILL_SLOT = 13;
-  private static final int STATS_SLOT = 14;
+  private static final int DRAFT_SLOT = 11;
+  private static final int PREPARATION_SLOT = 12;
+  private static final int RANKED_SLOT = 13;
+  private static final int REFILL_SLOT = 14;
+  private static final int STATS_SLOT = 15;
   private static boolean eventsRegistered = false;
-  private final LanguageManager languageManager;
   private final DraftConfig draftConfig;
   private final StatsConfig statsConfig;
   private final PreparationConfig preparationConfig;
@@ -42,14 +41,13 @@ public class TowersConfigGUI implements Listener {
   private RefillGUI refillGUI;
   private RankedGUI rankedGUI;
 
-  public TowersConfigGUI(LanguageManager languageManager) {
-    this.languageManager = languageManager;
+  public TowersConfigGUI() {
     this.refillManager = TowersForPGM.getInstance().getRefillManager();
-    this.draftConfig = new DraftConfig(languageManager);
-    this.statsConfig = new StatsConfig(languageManager);
-    this.preparationConfig = new PreparationConfig(languageManager);
-    this.refillConfig = new RefillConfig(languageManager, refillManager);
-    this.rankedConfig = new RankedConfig(languageManager);
+    this.draftConfig = new DraftConfig();
+    this.statsConfig = new StatsConfig();
+    this.preparationConfig = new PreparationConfig();
+    this.refillConfig = new RefillConfig(refillManager);
+    this.rankedConfig = new RankedConfig();
 
     // Registrar eventos solo una vez para esta clase
     if (!eventsRegistered) {
@@ -59,8 +57,7 @@ public class TowersConfigGUI implements Listener {
   }
 
   public void openMainMenu(Player player) {
-    Inventory gui =
-        Bukkit.createInventory(null, 27, languageManager.getPluginMessage("gui.main.title"));
+    Inventory gui = Bukkit.createInventory(null, 27, LanguageManager.langMessage("gui.main.title"));
 
     // Gray glass border
     ItemStack grayGlass = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 7);
@@ -78,68 +75,68 @@ public class TowersConfigGUI implements Listener {
     // Draft Configuration
     ItemStack draftItem = new ItemStack(Material.PAPER);
     ItemMeta draftMeta = draftItem.getItemMeta();
-    draftMeta.setDisplayName(languageManager.getPluginMessage("gui.main.draft.title"));
+    draftMeta.setDisplayName(LanguageManager.langMessage("gui.main.draft.title"));
     List<String> draftLore = new ArrayList<>();
-    draftLore.add(languageManager.getPluginMessage("gui.main.draft.description"));
-    draftLore.add(languageManager.getPluginMessage("gui.main.draft.feature1"));
-    draftLore.add(languageManager.getPluginMessage("gui.main.draft.feature2"));
-    draftLore.add(languageManager.getPluginMessage("gui.main.draft.feature3"));
-    draftLore.add(languageManager.getPluginMessage("gui.main.draft.feature4"));
-    draftLore.add(languageManager.getPluginMessage("gui.main.draft.feature5"));
-    draftLore.add(languageManager.getPluginMessage("gui.main.draft.feature6"));
+    draftLore.add(LanguageManager.langMessage("gui.main.draft.description"));
+    draftLore.add(LanguageManager.langMessage("gui.main.draft.feature1"));
+    draftLore.add(LanguageManager.langMessage("gui.main.draft.feature2"));
+    draftLore.add(LanguageManager.langMessage("gui.main.draft.feature3"));
+    draftLore.add(LanguageManager.langMessage("gui.main.draft.feature4"));
+    draftLore.add(LanguageManager.langMessage("gui.main.draft.feature5"));
+    draftLore.add(LanguageManager.langMessage("gui.main.draft.feature6"));
     draftMeta.setLore(draftLore);
     draftItem.setItemMeta(draftMeta);
 
     // Preparation Configuration
     ItemStack prepItem = new ItemStack(Material.WATCH);
     ItemMeta prepMeta = prepItem.getItemMeta();
-    prepMeta.setDisplayName(languageManager.getPluginMessage("gui.main.preparation.title"));
+    prepMeta.setDisplayName(LanguageManager.langMessage("gui.main.preparation.title"));
     List<String> prepLore = new ArrayList<>();
-    prepLore.add(languageManager.getPluginMessage("gui.main.preparation.description"));
-    prepLore.add(languageManager.getPluginMessage("gui.main.preparation.feature1"));
-    prepLore.add(languageManager.getPluginMessage("gui.main.preparation.feature2"));
-    prepLore.add(languageManager.getPluginMessage("gui.main.preparation.feature3"));
-    prepLore.add(languageManager.getPluginMessage("gui.main.preparation.feature4"));
-    prepLore.add(languageManager.getPluginMessage("gui.main.preparation.feature5"));
+    prepLore.add(LanguageManager.langMessage("gui.main.preparation.description"));
+    prepLore.add(LanguageManager.langMessage("gui.main.preparation.feature1"));
+    prepLore.add(LanguageManager.langMessage("gui.main.preparation.feature2"));
+    prepLore.add(LanguageManager.langMessage("gui.main.preparation.feature3"));
+    prepLore.add(LanguageManager.langMessage("gui.main.preparation.feature4"));
+    prepLore.add(LanguageManager.langMessage("gui.main.preparation.feature5"));
     prepMeta.setLore(prepLore);
     prepItem.setItemMeta(prepMeta);
 
     // Refill Configuration
     ItemStack refillItem = new ItemStack(Material.CHEST);
     ItemMeta refillMeta = refillItem.getItemMeta();
-    refillMeta.setDisplayName(languageManager.getPluginMessage("gui.main.refill.title"));
+    refillMeta.setDisplayName(LanguageManager.langMessage("gui.main.refill.title"));
     List<String> refillLore = new ArrayList<>();
-    refillLore.add(languageManager.getPluginMessage("gui.main.refill.description"));
-    refillLore.add(languageManager.getPluginMessage("gui.main.refill.feature1"));
-    refillLore.add(languageManager.getPluginMessage("gui.main.refill.feature2"));
-    refillLore.add(languageManager.getPluginMessage("gui.main.refill.feature3"));
+    refillLore.add(LanguageManager.langMessage("gui.main.refill.description"));
+    refillLore.add(LanguageManager.langMessage("gui.main.refill.feature1"));
+    refillLore.add(LanguageManager.langMessage("gui.main.refill.feature2"));
+    refillLore.add(LanguageManager.langMessage("gui.main.refill.feature3"));
     refillMeta.setLore(refillLore);
     refillItem.setItemMeta(refillMeta);
 
     // Stats Configuration
     ItemStack statsItem = new ItemStack(Material.BOOK);
     ItemMeta statsMeta = statsItem.getItemMeta();
-    statsMeta.setDisplayName(languageManager.getPluginMessage("gui.main.stats.title"));
+    statsMeta.setDisplayName(LanguageManager.langMessage("gui.main.stats.title"));
     List<String> statsLore = new ArrayList<>();
-    statsLore.add(languageManager.getPluginMessage("gui.main.stats.description"));
-    statsLore.add(languageManager.getPluginMessage("gui.main.stats.feature1"));
-    statsLore.add(languageManager.getPluginMessage("gui.main.stats.feature2"));
-    statsLore.add(languageManager.getPluginMessage("gui.main.stats.feature3"));
-    statsLore.add(languageManager.getPluginMessage("gui.main.stats.feature4"));
+    statsLore.add(LanguageManager.langMessage("gui.main.stats.description"));
+    statsLore.add(LanguageManager.langMessage("gui.main.stats.feature1"));
+    statsLore.add(LanguageManager.langMessage("gui.main.stats.feature2"));
+    statsLore.add(LanguageManager.langMessage("gui.main.stats.feature3"));
+    statsLore.add(LanguageManager.langMessage("gui.main.stats.feature4"));
     statsMeta.setLore(statsLore);
     statsItem.setItemMeta(statsMeta);
 
     // Ranked Configuration
     ItemStack rankedItem = new ItemStack(Material.NETHER_STAR);
     ItemMeta rankedMeta = rankedItem.getItemMeta();
-    rankedMeta.setDisplayName(languageManager.getPluginMessage("gui.main.ranked.title"));
+    rankedMeta.setDisplayName(LanguageManager.langMessage("gui.main.ranked.title"));
     List<String> rankedLore = new ArrayList<>();
-    rankedLore.add(languageManager.getPluginMessage("gui.main.ranked.description"));
-    rankedLore.add(languageManager.getPluginMessage("gui.main.ranked.feature1"));
-    rankedLore.add(languageManager.getPluginMessage("gui.main.ranked.feature2"));
-    rankedLore.add(languageManager.getPluginMessage("gui.main.ranked.feature3"));
-    rankedLore.add(languageManager.getPluginMessage("gui.main.ranked.feature4"));
-    rankedLore.add(languageManager.getPluginMessage("gui.main.ranked.feature5"));
+    rankedLore.add(LanguageManager.langMessage("gui.main.ranked.description"));
+    rankedLore.add(LanguageManager.langMessage("gui.main.ranked.feature1"));
+    rankedLore.add(LanguageManager.langMessage("gui.main.ranked.feature2"));
+    rankedLore.add(LanguageManager.langMessage("gui.main.ranked.feature3"));
+    rankedLore.add(LanguageManager.langMessage("gui.main.ranked.feature4"));
+    rankedLore.add(LanguageManager.langMessage("gui.main.ranked.feature5"));
     rankedMeta.setLore(rankedLore);
     rankedItem.setItemMeta(rankedMeta);
 
@@ -157,7 +154,7 @@ public class TowersConfigGUI implements Listener {
     if (!(event.getWhoClicked() instanceof Player)) return;
     Player player = (Player) event.getWhoClicked();
 
-    if (event.getView().getTitle().equals(languageManager.getPluginMessage("gui.main.title"))) {
+    if (event.getView().getTitle().equals(LanguageManager.langMessage("gui.main.title"))) {
       event.setCancelled(true);
 
       ItemStack clicked = event.getCurrentItem();
@@ -190,35 +187,35 @@ public class TowersConfigGUI implements Listener {
 
   private void openDraftMenu(Player player) {
     if (draftGUI == null) {
-      draftGUI = new DraftGUI(languageManager, draftConfig, this);
+      draftGUI = new DraftGUI(draftConfig, this);
     }
     draftGUI.openDraftMenu(player);
   }
 
   private void openPreparationMenu(Player player) {
     if (preparationGUI == null) {
-      preparationGUI = new PreparationGUI(languageManager, preparationConfig, this);
+      preparationGUI = new PreparationGUI(preparationConfig, this);
     }
     preparationGUI.openPreparationMenu(player);
   }
 
   private void openRefillMenu(Player player) {
     if (refillGUI == null) {
-      refillGUI = new RefillGUI(languageManager, refillConfig, this);
+      refillGUI = new RefillGUI(refillConfig, this);
     }
     refillGUI.openRefillMenu(player);
   }
 
   private void openRankedMenu(Player player) {
     if (rankedGUI == null) {
-      rankedGUI = new RankedGUI(languageManager, rankedConfig, this);
+      rankedGUI = new RankedGUI(rankedConfig, this);
     }
     rankedGUI.openRankedMenu(player);
   }
 
   private void openStatsMenu(Player player) {
     if (statsGUI == null) {
-      statsGUI = new StatsGUI(languageManager, statsConfig, this);
+      statsGUI = new StatsGUI(statsConfig, this);
     }
     statsGUI.openStatsMenu(player);
   }

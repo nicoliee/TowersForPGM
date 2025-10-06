@@ -4,90 +4,110 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import org.bukkit.ChatColor;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.nicolie.towersforpgm.TowersForPGM;
 
 public class LanguageManager {
-  private YamlConfiguration messagesConfig; // Configuración de mensajes
-  public YamlConfiguration languageConfig; // Configuración de idioma
-  public String language; // Idioma actual
-  private TowersForPGM plugin; // Instancia del plugin
+  private static final String[] SUPPORTED_LANGUAGES = {"en", "es"};
+  private static final String[] LANGUAGE_FILES = {
+    "system.yml", "errors.yml", "draft.yml", "stats.yml", "ranked.yml",
+    "preparation.yml", "refill.yml", "region.yml", "ready.yml", "join.yml",
+    "privatematch.yml", "matchbot.yml", "gui.yml"
+  };
 
-  public LanguageManager(TowersForPGM plugin) {
-    this.plugin = plugin;
-    this.language = plugin.getConfig().getString("language", "en"); // Idioma por defecto
-    loadLanguage();
+  private static TowersForPGM plugin;
+  private static String currentLanguage;
+  private static final Map<String, Map<String, Object>> languageCache = new HashMap<>();
+  private static YamlConfiguration messagesConfig;
+
+  public static void initialize(TowersForPGM pluginInstance) {
+    plugin = pluginInstance;
+    currentLanguage = plugin.getConfig().getString("language", "es");
+    loadAllLanguages();
     loadMessages();
   }
 
-  // Cargar mensajes desde language.yml
-  private void loadLanguage() {
-    InputStream languageStream = plugin.getResource("language.yml");
-    if (languageStream == null) {
-      plugin.getLogger().warning("No se pudo cargar el archivo de idioma.");
-      return;
-    }
-    languageConfig = YamlConfiguration.loadConfiguration(
-        new InputStreamReader(languageStream, StandardCharsets.UTF_8));
+  public static void reload() {
+    currentLanguage = plugin.getConfig().getString("language", "es");
+    loadAllLanguages();
+    loadMessages();
   }
 
-  // Cargar mensajes desde messages.yml
-  private void loadMessages() {
-    File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-    if (!messagesFile.exists()) {
-      plugin.saveResource("messages.yml", false);
-    }
-    messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+  public static String langMessage(String key) {
+    Map<String, Object> langData = languageCache.get(currentLanguage);
+    if (langData == null) return key;
+
+    Object value = langData.get(key);
+    return value != null ? ChatColor.translateAlternateColorCodes('&', value.toString()) : key;
   }
 
-  // Recargar mensajes desde messages.yml
-  public void reloadMessages() {
+  public static String message(String key) {
+    if (messagesConfig != null) {
+      String msg = messagesConfig.getString(key);
+      if (msg != null) return ChatColor.translateAlternateColorCodes('&', msg);
+    }
+    return key;
+  }
+
+  public static void setLanguage(String language) {
+    if (languageCache.containsKey(language)) {
+      currentLanguage = language;
+      plugin.getConfig().set("language", language);
+      plugin.saveConfig();
+    }
+  }
+
+  public static String getCurrentLanguage() {
+    return currentLanguage;
+  }
+
+  private static void loadAllLanguages() {
+    languageCache.clear();
+    for (String lang : SUPPORTED_LANGUAGES) {
+      loadLanguage(lang);
+    }
+  }
+
+  private static void loadLanguage(String language) {
+    Map<String, Object> data = new HashMap<>();
+
+    for (String file : LANGUAGE_FILES) {
+      InputStream stream = plugin.getResource("languages/" + language + "/" + file);
+      if (stream == null) continue;
+
+      try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(reader);
+        flatten(config, file.replace(".yml", ""), data);
+      } catch (Exception e) {
+        plugin.getLogger().warning("Failed to load " + language + "/" + file);
+      }
+    }
+
+    languageCache.put(language, data);
+  }
+
+  private static void flatten(
+      ConfigurationSection section, String prefix, Map<String, Object> target) {
+    for (String key : section.getKeys(false)) {
+      String fullKey = prefix + "." + key;
+      Object value = section.get(key);
+
+      if (value instanceof ConfigurationSection) {
+        flatten((ConfigurationSection) value, fullKey, target);
+      } else {
+        target.put(fullKey, value);
+      }
+    }
+  }
+
+  private static void loadMessages() {
     File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
     if (messagesFile.exists()) {
       messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
-    } else {
-      plugin.saveResource("messages.yml", false);
-      messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
     }
-  }
-
-  // Obtener el idioma global del servidor desde config.yml
-  private String getServerLanguage() {
-    return plugin.getConfig().getString("language", "es"); // Por defecto en español
-  }
-
-  // Establecer el idioma global del servidor
-  public void setLanguage(String language) {
-    plugin.getConfig().set("language", language);
-    plugin.saveConfig();
-    loadLanguage();
-  }
-
-  // Obtener el mensaje desde language.yml en el idioma seleccionado con la clave dada
-  public String getPluginMessage(String key) {
-    String language = getServerLanguage(); // Obtener el idioma global del servidor
-    String message = languageConfig.getString("messages." + language + "." + key);
-
-    // Verificar si el mensaje es null y retornar un mensaje por defecto o de error
-    if (message == null) {
-      return key;
-    }
-    return ChatColor.translateAlternateColorCodes('&', message);
-  }
-
-  // Obtener el mensaje configurable desde messages.yml con la clave dada
-  public String getConfigurableMessage(String key) {
-    String message = getMessagesConfig().getString(key);
-    if (message == null) {
-      return key;
-    }
-    return ChatColor.translateAlternateColorCodes('&', message);
-  }
-
-  // Método para obtener el archivo de configuración de mensajes
-  public FileConfiguration getMessagesConfig() {
-    return messagesConfig;
   }
 }
