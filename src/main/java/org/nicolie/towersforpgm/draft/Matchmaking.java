@@ -8,9 +8,9 @@ import java.util.Random;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.nicolie.towersforpgm.MatchManager;
 import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
@@ -62,8 +62,8 @@ public class Matchmaking {
     // Mensajes iniciales
     match.playSound(Sounds.RAINDROPS);
     match.sendMessage(Component.text(LanguageManager.langMessage("captains.captainsHeader")));
-    match.sendMessage(Component.text("&4" + Bukkit.getPlayer(captain1).getName() + " &l&bvs. "
-        + "&9" + Bukkit.getPlayer(captain2).getName()));
+    match.sendMessage(Component.text("§4" + Bukkit.getPlayer(captain1).getName() + " §l§bvs. "
+        + "§9" + Bukkit.getPlayer(captain2).getName()));
     match.sendMessage(Component.text("§m---------------------------------"));
     match.sendMessage(Component.text(LanguageManager.message("picks.choosing")));
 
@@ -73,6 +73,11 @@ public class Matchmaking {
 
   private void balanceTeams(Match match) {
     List<String> allPlayers = new ArrayList<>(availablePlayers.getAllAvailablePlayers());
+
+    String captain1Name = captains.getCaptain1Name();
+    String captain2Name = captains.getCaptain2Name();
+    allPlayers.remove(captain1Name);
+    allPlayers.remove(captain2Name);
 
     List<PlayerRating> playerRatings = new ArrayList<>();
     for (String playerName : allPlayers) {
@@ -86,22 +91,25 @@ public class Matchmaking {
     List<String> team1 = new ArrayList<>();
     List<String> team2 = new ArrayList<>();
 
-    team1.add(captains.getCaptain1Name());
-    team2.add(captains.getCaptain2Name());
+    team1.add(captain1Name);
+    team2.add(captain2Name);
     team1.addAll(partition.team1);
     team2.addAll(partition.team2);
 
     // Registrar equipos
     for (String player : team1) {
       teams.addPlayerToTeam(player, 1);
+      if (Bukkit.getPlayer(player) != null) {
+        teams.assignTeam(Bukkit.getPlayer(player), 1);
+      }
     }
     for (String player : team2) {
       teams.addPlayerToTeam(player, 2);
+      if (Bukkit.getPlayer(player) != null) {
+        teams.assignTeam(Bukkit.getPlayer(player), 2);
+      }
     }
-
-    // Asignar jugadores a equipos en PGM
-    assignPlayersToTeams();
-
+    availablePlayers.clear();
     // Mostrar equipos
     displayTeams(team1, team2);
 
@@ -110,36 +118,86 @@ public class Matchmaking {
   }
 
   private int calculateRating(Stats stats) {
+    // Si no hay estadísticas, 0
     if (stats == null) return 0;
 
-    int rating = (stats.getElo() == -9999) ? 0 : stats.getElo();
+    // Base: usar elo si existe, si no 0
+    double base = (stats.getElo() == -9999) ? 0 : stats.getElo();
 
-    // KDA
-    if (stats.getDeaths() > 0) {
-      double kda = (stats.getKills() + stats.getAssists()) / (double) stats.getDeaths();
-      rating += (int) (kda * 10);
+    // Convertir a tasas por juego (evitan sesgos por número de partidas)
+    double games = Math.max(1, stats.getGames());
+    double killsPerGame = stats.getKills() / games;
+    double deathsPerGame = stats.getDeaths() / games;
+    double assistsPerGame = stats.getAssists() / games;
+    double pointsPerGame = stats.getPoints() / games;
+    double damageDonePerGame = stats.getDamageDone() / games;
+    double damageTakenPerGame = stats.getDamageTaken() / games;
+
+    // Ratios útiles
+    double winRate = stats.getGames() > 0 ? (stats.getWins() / (double) stats.getGames()) : 0.0;
+
+    // Inferir rol del jugador: atacante, defensor o híbrido
+    // Heurística simple:
+    // - Si tiene muchos puntos por partida -> atacante
+    // - Si tiene mucho daño tomado y pocas muertes relativas -> defensor (sobrevive y aguanta)
+    // - Si tiene balance entre ambos -> híbrido
+    double attackScore = pointsPerGame * 1.5 + damageDonePerGame * 0.2 + killsPerGame * 0.8;
+    double defendScore = damageTakenPerGame * 0.6
+        + (1.0 / Math.max(0.1, deathsPerGame)) * 0.5
+        + (stats.getWins() * 1.0 / games) * 1.0;
+
+    String inferredRole;
+    if (attackScore > defendScore * 1.15) {
+      inferredRole = "ATTACKER";
+    } else if (defendScore > attackScore * 1.15) {
+      inferredRole = "DEFENDER";
+    } else {
+      inferredRole = "HYBRID";
     }
 
-    // Win rate
-    if (stats.getGames() > 0) {
-      double winRate = stats.getWins() / (double) stats.getGames();
-      rating += (int) (winRate * 100);
+    // Pesos por rol. Ajustar para favorecer la intención del rol:
+    // - Attacker: puntos, kills, winrate
+    // - Defender: supervivencia, damageTaken (soporte), assists
+    // - Hybrid: balance entre kills/assists y points
+    double score = 0.0;
+    switch (inferredRole) {
+      case "ATTACKER":
+        score += pointsPerGame * 4.0; // puntos son muy importantes
+        score += killsPerGame * 3.0;
+        score += assistsPerGame * 1.5;
+        score += winRate * 40.0;
+        score += damageDonePerGame * 0.1;
+        // penalizar muertes altas
+        score -= deathsPerGame * 1.5;
+        break;
+      case "DEFENDER":
+        score += damageTakenPerGame * 0.8; // aguantar daño es relevante
+        score += assistsPerGame * 2.0;
+        score += (1.0 / Math.max(0.1, deathsPerGame)) * 2.0; // sobrevivir más suma
+        score += winRate * 30.0;
+        score += killsPerGame * 1.0;
+        break;
+      default: // HYBRID
+        score += pointsPerGame * 2.5;
+        score += killsPerGame * 2.0;
+        score += assistsPerGame * 1.8;
+        score += winRate * 35.0;
+        score += (damageDonePerGame + damageTakenPerGame) * 0.15;
+        score -= deathsPerGame * 1.0;
+        break;
     }
 
-    // Puntos
-    if (stats.getPoints() > 0) {
-      rating += stats.getPoints() / 10;
-    }
+    // Normalizar y combinar con base Elo
+    // Normalizar score a una escala aproximada: dividir por un factor y convertir a entero
+    double normalized = score;
 
-    // Ratio de daño
-    if (stats.getGames() > 0 && stats.getDamageDone() > 0 && stats.getDamageTaken() > 0) {
-      double avgDamageDone = stats.getDamageDone() / (double) stats.getGames();
-      double avgDamageTaken = stats.getDamageTaken() / (double) stats.getGames();
-      double damageRatio = avgDamageDone / avgDamageTaken;
-      rating += (int) (damageRatio * 10);
-    }
+    // Combinar: dar 60% al elo/base y 40% al score normalizado
+    double combined = base * 0.6 + normalized * 0.4;
 
-    return rating;
+    // Asegurar límites razonables
+    int finalRating = (int) Math.round(Math.max(0, combined));
+
+    return finalRating;
   }
 
   private TeamPartition findBestPartition(List<PlayerRating> players) {
@@ -314,28 +372,13 @@ public class Matchmaking {
     }
   }
 
-  private void assignPlayersToTeams() {
-    int maxTeamSize = Math.max(teams.getAllTeam(1).size(), teams.getAllTeam(2).size());
-    teams.setTeamsSize(maxTeamSize);
-
-    for (MatchPlayer mp : availablePlayers.getAvailablePlayers()) {
-      String playerName = mp.getBukkit().getName();
-      if (teams.isPlayerInTeam(playerName, 1)) {
-        teams.assignTeam(mp.getBukkit(), 1);
-      } else if (teams.isPlayerInTeam(playerName, 2)) {
-        teams.assignTeam(mp.getBukkit(), 2);
-      }
-    }
-    availablePlayers.clear();
-  }
-
   private void displayTeams(List<String> team1, List<String> team2) {
     StringBuilder team1Display = utilities.buildLists(team1, "§4", false);
     StringBuilder team2Display = utilities.buildLists(team2, "§9", false);
 
-    SendMessage.broadcast(LanguageManager.langMessage("captains.teamsHeader"));
+    SendMessage.broadcast(LanguageManager.langMessage("draft.captains.teamsHeader"));
     SendMessage.broadcast(team1Display.toString());
-    SendMessage.broadcast("&8[&4" + team1.size() + "&8] &l&bvs. " + "&8[&9" + team2.size() + "&8]");
+    SendMessage.broadcast("§8[§4" + team1.size() + "§8] §l§bvs. §8[§9" + team2.size() + "§8]");
     SendMessage.broadcast(team2Display.toString());
     SendMessage.broadcast("§m------------------------------");
   }
@@ -353,8 +396,12 @@ public class Matchmaking {
     String readyMessage = LanguageManager.langMessage("captains.ready");
     MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
     MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
-    captain1.sendActionBar(Component.text(readyMessage));
-    captain2.sendActionBar(Component.text(readyMessage));
+    if (captain1 != null) {
+      captain1.sendActionBar(Component.text(readyMessage));
+    }
+    if (captain2 != null) {
+      captain2.sendActionBar(Component.text(readyMessage));
+    }
 
     Match currentMatch = MatchManager.getMatch();
     if (currentMatch != null) {

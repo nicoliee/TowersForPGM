@@ -48,7 +48,6 @@ public class AutocompleteHandler extends ListenerAdapter {
   }
 
   private static void initializeChoices() {
-    // Solo cachear si vamos a usar autocompletado
     if (shouldUseAutocompleteForStats()) {
       List<Command.Choice> statChoices = Stat.getAllStatNames().stream()
           .map(name -> new Command.Choice(name, name))

@@ -12,8 +12,8 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PicksGUI;
 import org.nicolie.towersforpgm.draft.Teams;
-import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
@@ -24,14 +24,14 @@ public class RemoveCommand implements CommandExecutor, TabCompleter {
   private final Draft draft;
   private final Teams teams;
   private final AvailablePlayers availablePlayers;
-  private final Picks pickInventory;
+  private final PicksGUI pickInventory;
 
   public RemoveCommand(
       Draft draft,
       Teams teams,
       Captains captains,
       AvailablePlayers availablePlayers,
-      Picks pickInventory) {
+      PicksGUI pickInventory) {
     this.draft = draft;
     this.teams = teams;
     this.availablePlayers = availablePlayers;
@@ -63,8 +63,7 @@ public class RemoveCommand implements CommandExecutor, TabCompleter {
     }
     availablePlayers.removePlayer(playerName);
     pickInventory.updateAllInventories();
-    String message =
-        LanguageManager.langMessage("draft.remove.removed").replace("{player}", playerName);
+    String message = LanguageManager.message("picks.remove").replace("{player}", playerName);
     matchPlayer.getMatch().sendMessage(Component.text(message));
     matchPlayer.getMatch().playSound(Sounds.WARNING);
     if (availablePlayers.getAllAvailablePlayers().isEmpty()) {

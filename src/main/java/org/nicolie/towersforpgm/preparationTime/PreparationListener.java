@@ -97,7 +97,7 @@ public class PreparationListener implements Listener {
         protectionStartTimes.remove(worldName); // Eliminar el tiempo de inicio de la protección
         Bukkit.getScheduler().runTask(plugin, () -> {
           // Enviar mensajes al mundo
-          SendMessage.sendToWorld(worldName, LanguageManager.langMessage("preparation.end"));
+          SendMessage.sendToWorld(worldName, LanguageManager.message("preparation.end"));
         });
       });
     } else {
@@ -112,7 +112,7 @@ public class PreparationListener implements Listener {
     Component message = Component.text(LanguageManager.langMessage("preparation.actionBar"));
     SendMessage.sendToWorld(
         worldName,
-        LanguageManager.langMessage("preparation.timeRemaining")
+        LanguageManager.message("preparation.timeRemaining")
             .replace("{time}", SendMessage.formatTime(timer)));
     match.playSound(Sounds.INVENTORY_CLICK);
 
@@ -138,7 +138,7 @@ public class PreparationListener implements Listener {
             // Si el tiempo restante son 30, 10, 5, 4, 3, 2, 1 segundos
             SendMessage.sendToWorld(
                 worldName,
-                LanguageManager.langMessage("preparation.timeRemaining")
+                LanguageManager.message("preparation.timeRemaining")
                     .replace("{time}", SendMessage.formatTime(timeRemaining)));
           }
 

@@ -9,7 +9,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.update.AutoUpdate;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
@@ -36,35 +35,31 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
     switch (argument) {
       case "setlanguage":
         if (args.length < 2) {
-          sender.sendMessage(LanguageManager.langMessage("TowersForPGM.noLanguage"));
+          sender.sendMessage(LanguageManager.langMessage("system.noLanguage"));
           return true;
         }
         String language = args[1].toLowerCase();
-        if (!language.equals("en") && !language.equals("es")) {
-          sender.sendMessage(LanguageManager.langMessage("TowersForPGM.invalidLanguage"));
+        if (!LanguageManager.getSupportedLanguages().contains(language)) {
+          sender.sendMessage(LanguageManager.langMessage("system.invalidLanguage"));
           return true;
         }
         LanguageManager.setLanguage(language);
-        sender.sendMessage(LanguageManager.langMessage("TowersForPGM.languageSet"));
+        sender.sendMessage(LanguageManager.langMessage("system.languageSet"));
         return true;
 
       case "reloadmessages":
         File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        sender.sendMessage(LanguageManager.langMessage("messages.reloadStart"));
+        sender.sendMessage(LanguageManager.langMessage("system.reload.start"));
 
         if (messagesFile.exists()) {
           if (!messagesFile.delete()) {
-            sender.sendMessage(LanguageManager.langMessage("messages.reloadError"));
+            sender.sendMessage(LanguageManager.langMessage("system.reload.error"));
             return true;
           }
         }
         plugin.saveResource("messages.yml", false);
         LanguageManager.reload();
-        sender.sendMessage(LanguageManager.langMessage("messages.reloadSuccess"));
-        return true;
-      case "update":
-        AutoUpdate update = new AutoUpdate(plugin);
-        update.checkForUpdates();
+        sender.sendMessage(LanguageManager.langMessage("system.reload.success"));
         return true;
       default:
         sender.sendMessage(
@@ -78,7 +73,7 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
       CommandSender sender, Command command, String alias, String[] args) {
     if (args.length == 1) {
       // Lista de opciones posibles
-      List<String> options = Arrays.asList("setlanguage", "reloadmessages", "update");
+      List<String> options = Arrays.asList("setlanguage", "reloadmessages");
 
       // Filtrar las opciones que comienzan con el texto ingresado por el usuario
       String input = args[0].toLowerCase();
@@ -93,7 +88,7 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
 
     if (args.length == 2 && args[0].equalsIgnoreCase("setlanguage")) {
       // Lista de idiomas disponibles
-      List<String> languages = Arrays.asList("en", "es");
+      List<String> languages = LanguageManager.getSupportedLanguages();
 
       // Filtrar las opciones que comienzan con el texto ingresado por el usuario
       String input = args[1].toLowerCase();

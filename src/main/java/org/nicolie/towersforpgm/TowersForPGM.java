@@ -21,9 +21,9 @@ import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Matchmaking;
+import org.nicolie.towersforpgm.draft.PicksGUI;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.draft.Utilities;
-import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
 import org.nicolie.towersforpgm.matchbot.commands.stats.StatsCommand;
@@ -34,8 +34,9 @@ import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.preparationTime.Region;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
-import org.nicolie.towersforpgm.update.AutoUpdate;
+import org.nicolie.towersforpgm.utils.Commands;
 import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.utils.Events;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.player.MatchPlayer;
 
@@ -64,7 +65,7 @@ public final class TowersForPGM extends JavaPlugin {
   private Captains captains;
   private Draft draft;
   private Teams teams;
-  private Picks pickInventory;
+  private PicksGUI pickInventory;
   private Utilities utilities;
 
   // Refill
@@ -114,7 +115,7 @@ public final class TowersForPGM extends JavaPlugin {
     teams = new Teams();
     utilities = new Utilities(availablePlayers, captains);
     draft = new Draft(captains, availablePlayers, teams, utilities);
-    pickInventory = new Picks(draft, captains, availablePlayers, teams);
+    pickInventory = new PicksGUI(draft, captains, availablePlayers, teams);
     getServer().getPluginManager().registerEvents(pickInventory, this);
 
     // Inicializar el matchmaking
@@ -164,12 +165,6 @@ public final class TowersForPGM extends JavaPlugin {
         TopPaginationListener.register();
         AutocompleteHandler.register();
       }
-    }
-
-    // Verificar actualizaciones
-    AutoUpdate updateChecker = new AutoUpdate(this);
-    if (getConfig().getBoolean("autoupdate", false)) {
-      updateChecker.checkForUpdates();
     }
   }
 

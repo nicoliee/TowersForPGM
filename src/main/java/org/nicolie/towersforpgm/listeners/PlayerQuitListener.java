@@ -28,14 +28,14 @@ public class PlayerQuitListener implements Listener {
     Match match = PGM.get().getMatchManager().getMatch(player);
     MatchPlayer matchPlayer = match.getPlayer(player);
     if (matchPlayer != null) {
-      Queue.removePlayer(matchPlayer);
+      queue.removePlayer(matchPlayer);
     }
     Boolean isOnTeam = match.getPlayer(player).isParticipating();
     if (isOnTeam) {
       plugin.addDisconnectedPlayer(player.getName(), matchPlayer);
     }
     if (queue.getQueuePlayers().contains(uuid)) {
-      Queue.removePlayer(matchPlayer);
+      queue.removePlayer(matchPlayer);
     }
   }
 }

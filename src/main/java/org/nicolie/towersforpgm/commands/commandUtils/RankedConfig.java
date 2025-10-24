@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.commandUtils;
+package org.nicolie.towersforpgm.commands.commandUtils;
 
 import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.database.TableManager;
@@ -10,27 +10,65 @@ import tc.oc.pgm.api.match.Match;
 
 public class RankedConfig {
 
-  public void size(CommandSender sender, String size) {
+  public void minSize(CommandSender sender, String size) {
     if (size == null || size.isEmpty()) {
-      String message = LanguageManager.langMessage("ranked.config.size.current")
-          .replace("{size}", String.valueOf(ConfigManager.getRankedSize()));
+      String message = LanguageManager.langMessage("ranked.config.minSize.current")
+          .replace("{size}", String.valueOf(ConfigManager.getRankedMinSize()));
       SendMessage.sendToPlayer(sender, message);
       return;
     }
 
     try {
       int newSize = Integer.parseInt(size);
-      if (newSize < 2 || newSize > 12) {
-        SendMessage.sendToPlayer(sender, LanguageManager.langMessage("ranked.config.size.invalid"));
+      if (newSize < 2 || newSize % 2 != 0) {
+        SendMessage.sendToPlayer(
+            sender, LanguageManager.langMessage("ranked.config.minSize.invalid"));
         return;
       }
-      ConfigManager.setRankedSize(newSize);
-      String message = LanguageManager.langMessage("ranked.config.size.set")
+      int maxSize = ConfigManager.getRankedMaxSize();
+      if (maxSize > 0 && newSize > maxSize) {
+        SendMessage.sendToPlayer(
+            sender, LanguageManager.langMessage("ranked.config.minSize.greaterThanMax"));
+        return;
+      }
+      ConfigManager.setRankedMinSize(newSize);
+      String message = LanguageManager.langMessage("ranked.config.minSize.set")
           .replace("{size}", String.valueOf(newSize));
       SendMessage.sendToPlayer(sender, message);
     } catch (NumberFormatException e) {
       SendMessage.sendToPlayer(
-          sender, LanguageManager.langMessage("ranked.config.size.invalidFormat"));
+          sender, LanguageManager.langMessage("ranked.config.minSize.invalidFormat"));
+    }
+  }
+
+  public void maxSize(CommandSender sender, String size) {
+    if (size == null || size.isEmpty()) {
+      String message = LanguageManager.langMessage("ranked.config.maxSize.current")
+          .replace("{size}", String.valueOf(ConfigManager.getRankedMaxSize()));
+      SendMessage.sendToPlayer(sender, message);
+      return;
+    }
+
+    try {
+      int newSize = Integer.parseInt(size);
+      if (newSize < 2 || newSize % 2 != 0) {
+        SendMessage.sendToPlayer(
+            sender, LanguageManager.langMessage("ranked.config.maxSize.invalid"));
+        return;
+      }
+      int minSize = ConfigManager.getRankedMinSize();
+      if (minSize > 0 && newSize < minSize) {
+        SendMessage.sendToPlayer(
+            sender, LanguageManager.langMessage("ranked.config.maxSize.lessThanMin"));
+        return;
+      }
+      ConfigManager.setRankedMaxSize(newSize);
+      String message = LanguageManager.langMessage("ranked.config.maxSize.set")
+          .replace("{size}", String.valueOf(newSize));
+      SendMessage.sendToPlayer(sender, message);
+    } catch (NumberFormatException e) {
+      SendMessage.sendToPlayer(
+          sender, LanguageManager.langMessage("ranked.config.maxSize.invalidFormat"));
     }
   }
 

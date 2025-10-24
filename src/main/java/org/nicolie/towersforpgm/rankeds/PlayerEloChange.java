@@ -1,11 +1,9 @@
 package org.nicolie.towersforpgm.rankeds;
 
-import java.time.Duration;
 import java.util.UUID;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import org.nicolie.towersforpgm.TowersForPGM;
-import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
@@ -51,14 +49,13 @@ public class PlayerEloChange {
   }
 
   public void sendMessage() {
-    Duration durationSeconds = PGM.get().getConfiguration().showStatsAfter();
-    long delayTicks = (durationSeconds.getSeconds() * 20L) + 1L;
     org.bukkit.Bukkit.getScheduler()
         .runTaskLater(
             TowersForPGM.getInstance(),
             () -> {
-              UUID uuid = org.bukkit.Bukkit.getPlayerExact(username).getUniqueId();
-              if (uuid == null) return;
+              org.bukkit.entity.Player bukkitPlayer = org.bukkit.Bukkit.getPlayerExact(username);
+              if (bukkitPlayer == null) return;
+              UUID uuid = bukkitPlayer.getUniqueId();
               MatchPlayer player = tc.oc.pgm.api.PGM.get().getMatchManager().getPlayer(uuid);
               int previousElo = newElo - eloChange;
               Rank previousRank = Rank.getRankByElo(previousElo);
@@ -88,6 +85,6 @@ public class PlayerEloChange {
               }
               player.sendMessage(Component.text(message));
             },
-            delayTicks);
+            1L);
   }
 }

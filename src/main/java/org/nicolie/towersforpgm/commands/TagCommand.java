@@ -46,6 +46,15 @@ public class TagCommand implements CommandExecutor {
           Component.text(LanguageManager.langMessage("ranked.matchbot.tagNotAvailable")));
       return true;
     }
+
+    // Solo permitir tag si no hay suficientes jugadores online para el mínimo
+    int onlinePlayers = match.getPlayers().size();
+    int minSize = ConfigManager.getRankedMinSize();
+    if (onlinePlayers >= minSize) {
+      player.sendWarning(Component.text(LanguageManager.langMessage("ranked.prefix")
+          + LanguageManager.langMessage("ranked.matchbot.tagNotNeeded")));
+      return true;
+    }
     long now = System.currentTimeMillis();
     if (now - lastExecution < COOLDOWN_MILLIS) {
       long remaining = (COOLDOWN_MILLIS - (now - lastExecution)) / 1000;

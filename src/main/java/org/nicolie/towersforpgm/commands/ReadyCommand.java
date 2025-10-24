@@ -48,7 +48,8 @@ public class ReadyCommand implements CommandExecutor {
       }
       matchPlayer.getMatch().sendMessage(Component.text(getReadyMessage(matchPlayer)));
     } else {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("picks.notCaptain")));
+      matchPlayer.sendWarning(
+          Component.text(LanguageManager.langMessage("draft.picks.notCaptain")));
       return true;
     }
     return true;

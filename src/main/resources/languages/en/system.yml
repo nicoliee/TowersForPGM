@@ -11,6 +11,7 @@ colors:
     up: " §a>> "
     down: " §c>> "
 noLanguage: "§8[§bTowersForPGM§8] §cYou must select a language."
+invalidLanguage: "§8[§bTowersForPGM§8] §cInvalid language selected."
 matchCancelled: "§cThe match has been cancelled by an administrator."
 
 reload:

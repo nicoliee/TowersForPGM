@@ -1,8 +1,6 @@
 # Configuración general del plugin
-autoupdate: false  # Actualización automática del plugin
 language: es      # Idioma del plugin (es = Español | en = Inglés)
 
-# Configuración de la base de datos
 database:
   enabled: false  # (true = MySQL | false = SQLite)
   # Configuración de MySQL
@@ -12,11 +10,14 @@ database:
   user: "root" 
   password: "password" 
   tables:         # Tablas disponibles en la base de datos
-    - Amistoso
-    - TorneoT1
+    # <Tabla>:
+      # - <Mapa>
+      # - <Mapa1>
+    Amistoso:
+    RankedT1:
+      - Mini Towers:TE
   defaultTable: Amistoso  # Tabla por defecto
 
-# Configuración del sistema de draft (selección de jugadores)
 draft:
   suggestions: true    # Los capitanes recibirán sugerencias de jugadores para elegir
   timer: true         # Los capitanes tendrán un tiempo límite para elegir
@@ -24,30 +25,37 @@ draft:
   order: "ABBAAB"     # Orden de elección: A = Primer Capitán, B = Segundo Capitán
   minOrder: 8              # Número mínimo de jugadores para aplicar el orden
 
-# Configuración de Rankeds (Es necesario tener una base de Datos)
 rankeds:
-  size: 8          # Número de jugadores
-  order: "ABBAAB"  # Orden de elección para rankeds
-  matchmaking: false # Si es true, los equipos se balancearán automáticamente, si es false, los capitanes elegirán a los jugadores
+  size:
+    min: 4
+    max: 6
+  matchmaking: false # (true = equipos automaticos | false = capitanes automaticos)
+  order: "ABBAAB"  # Orden de elección: A = Primer Capitán, B = Segundo Capitán (SI MATCHMAKING = FALSE)
   tables:              # Tablas disponibles para rankeds
+    # - <Tabla>
+    # - <Tabla1>
     - RankedT1
   defaultTable: RankedT1  # Tabla por defecto para rankeds
   maps: # Lista de mapas disponibles para rankeds
+    # - <Mapa>
+    # - <Mapa1>
     - Mini Towers:TE
 
-# Configuración de estadísticas por mapa
-stats:
-  maps:
-    Mini Towers:TE:   # Nombre del mapa
-      privateMatch: true  # Si es true, no se podrá entrar antes del torneo
-      table: TorneoT1    # Tabla donde se guardarán las estadísticas
-
-# Configuración del tiempo de preparación
 preparationTime:
   enabled: true
   maps:
-    Mini Towers:TE:   # Nombre del mapa
-      P1: -9, 0, -16  # Coordenada mínima de la región protegida
-      P2: 37, 45, 20  # Coordenada máxima de la región protegida
-      Timer: 4        # Tiempo de preparación en minutos
-      Haste: 3        # Tiempo de haste en minutos
+    # <Mapa>:
+      # P1: <x1>, <y1>, <z1>  # Coordenada mínima de la región protegida
+      # P2: <x2>, <y2>, <z2>  # Coordenada máxima de la región protegida
+      # Timer: <tiempo>        # Tiempo de preparación en minutos
+      # Haste: <tiempo>        # Tiempo de haste en minutos
+    Mini Towers:TE:
+      P1: -9, 0, -16
+      P2: 37, 45, 20
+      Timer: 4
+      Haste: 3
+
+privateMatch: # Mapas que al cargar nadie podrá entrar.
+  # - <Mapa1>
+  # - <Mapa2>
+  - Mini Towers:TE

@@ -8,7 +8,8 @@ import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 
 public class StatsEmbed {
-  public static EmbedBuilder create(String table, String username, Stats stats) {
+  public static EmbedBuilder create(String table, String user, Stats stats) {
+    String username = stats != null && stats.getUsername() != null ? stats.getUsername() : user;
     boolean isRankedTable = ConfigManager.getRankedTables().contains(table);
 
     EmbedBuilder embed = new EmbedBuilder();

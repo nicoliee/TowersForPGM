@@ -11,6 +11,7 @@ colors:
     up: " §a>> "
     down: " §c>> "
 noLanguage: "§8[§bTowersForPGM§8] §cTienes que seleccionar un idioma."
+invalidLanguage: "§8[§bTowersForPGM§8] §cIdioma inválido seleccionado."
 matchCancelled: "§cEl juego ha sido cancelado por el administrador."
 
 reload:

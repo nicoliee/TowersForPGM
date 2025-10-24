@@ -8,8 +8,8 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.PicksGUI;
 import org.nicolie.towersforpgm.draft.Teams;
-import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
@@ -21,10 +21,10 @@ public class AddCommand implements CommandExecutor {
   private final AvailablePlayers availablePlayers;
   private final Captains captains;
   private final Teams teams;
-  private final Picks pickInventory;
+  private final PicksGUI pickInventory;
 
   public AddCommand(
-      AvailablePlayers availablePlayers, Captains captains, Teams teams, Picks pickInventory) {
+      AvailablePlayers availablePlayers, Captains captains, Teams teams, PicksGUI pickInventory) {
     this.availablePlayers = availablePlayers;
     this.captains = captains;
     this.teams = teams;
@@ -61,8 +61,7 @@ public class AddCommand implements CommandExecutor {
 
     availablePlayers.addPlayer(playerName);
     pickInventory.updateAllInventories();
-    SendMessage.broadcast(
-        LanguageManager.langMessage("draft.add.added").replace("{player}", playerName));
+    SendMessage.broadcast(LanguageManager.message("picks.add").replace("{player}", playerName));
     PGM.get().getMatchManager().getMatch(sender).getMatch().playSound(Sounds.ALERT);
     return true;
   }

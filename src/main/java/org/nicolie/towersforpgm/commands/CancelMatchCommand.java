@@ -4,7 +4,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.nicolie.towersforpgm.commandUtils.StatsConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 

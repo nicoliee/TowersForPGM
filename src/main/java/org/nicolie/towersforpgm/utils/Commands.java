@@ -1,5 +1,6 @@
-package org.nicolie.towersforpgm;
+package org.nicolie.towersforpgm.utils;
 
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.AddCommand;
 import org.nicolie.towersforpgm.commands.BalanceCommand;
 import org.nicolie.towersforpgm.commands.CancelMatchCommand;
@@ -14,8 +15,8 @@ import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Matchmaking;
+import org.nicolie.towersforpgm.draft.PicksGUI;
 import org.nicolie.towersforpgm.draft.Teams;
-import org.nicolie.towersforpgm.gui.Picks;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
 
@@ -32,7 +33,7 @@ public class Commands {
       Captains captains,
       Draft draft,
       Matchmaking matchmaking,
-      Picks pickInventory,
+      PicksGUI pickInventory,
       RefillManager refillManager,
       Teams teams,
       PreparationListener preparationListener) {

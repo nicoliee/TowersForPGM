@@ -28,7 +28,7 @@ public class RankedNotify {
             MessagesConfig.message("author.name"), null, MessagesConfig.message("author.icon_url"))
         .setDescription(sender.getName()
             + LanguageManager.langMessage("ranked.matchbot.hasTagged")
-            + rankedRole + ">")
+            + "<@&" + rankedRole + ">")
         .addField(
             "🗺️ " + MessagesConfig.message("embeds.start.map"), match.getMap().getName(), false);
 

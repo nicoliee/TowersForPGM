@@ -10,3 +10,4 @@ regionLoaded: "§aRegion loaded: §2{region}§a."
 database:
   updateStats: "§cError updating statistics in the database."
   getStats: "§cError getting user statistics from the database."
+  connectionClosed: "§cThe connection pool is closed or unavailable. Please contact an administrator."

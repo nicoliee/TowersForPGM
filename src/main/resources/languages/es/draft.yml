@@ -1,13 +1,11 @@
 notAllowed: "§cNo puedes hacer esto en un draft."
 add:
   captain: "§cNo puedes añadir a un capitán."
-  added: "§a+ {player}"
   usage: "§cUso: /add <nick>"
 
 remove:
   captain: "§cNo puedes eliminar a un capitán."
   notInDraft: "§cEl jugador no está en el draft."
-  removed: "§c- {player}"
   usage: "§cUso: /remove <nick>"
 
 captains:
@@ -15,7 +13,6 @@ captains:
   alreadyInTeam: "§cEl jugador ya está en un equipo."
   bossbar: "{captain} está eligiendo. §bTiempo restante: §a{time}"
   captainsHeader: "§m-----------§r §b§lCapitanes §f§m-----------"
-  choose: "{teamcolor}{captain} §fha elegido a {player}."
   matchStarted: "§cLa partida ya ha comenzado."
   notEnoughPlayers: "§cNo hay suficientes jugadores en la partida."
   notInDraft: "§cEl jugador no está en el draft."
@@ -59,6 +56,7 @@ join:
   blueTeam: "Estás en el equipo azul."
 
 config:
+  clickToPick: "§eHaz clic para elegir."
   suggestions: "§aSugerencias de draft activadas."
   noSuggestions: "§cSugerencias de draft desactivadas."
   suggestionsStatus: "§eLas sugerencias de draft están {status}."

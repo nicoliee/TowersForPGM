@@ -54,7 +54,7 @@ public class Utilities {
     }
     StringBuilder suggestionsBuilder = buildLists(topPlayers, "§b", true);
     if (currentCaptain != null) {
-      String suggestions = LanguageManager.langMessage("draft.captains.suggestions")
+      String suggestions = LanguageManager.message("captains.suggestions")
           .replace("{suggestions}", suggestionsBuilder.toString());
       currentCaptain.playSound(Sounds.RAINDROPS);
       currentCaptain.sendMessage(Component.text(suggestions));
@@ -131,8 +131,12 @@ public class Utilities {
     String readyMessage = LanguageManager.langMessage("draft.captains.ready");
     MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
     MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
-    captain1.sendActionBar(Component.text(readyMessage));
-    captain2.sendActionBar(Component.text(readyMessage));
+    if (captain1 != null) {
+      captain1.sendActionBar(Component.text(readyMessage));
+    }
+    if (captain2 != null) {
+      captain2.sendActionBar(Component.text(readyMessage));
+    }
     readyReminderTask = new BukkitRunnable() {
       @Override
       public void run() {
@@ -140,13 +144,15 @@ public class Utilities {
           this.cancel();
           return;
         }
-        if (!captains.isReady1()) {
-          captain1.sendMessage(Component.text(readyMessage));
-          captain1.playSound(Sounds.DIRECT_MESSAGE);
+        MatchPlayer currentCaptain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
+        MatchPlayer currentCaptain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
+        if (!captains.isReady1() && currentCaptain1 != null) {
+          currentCaptain1.sendMessage(Component.text(readyMessage));
+          currentCaptain1.playSound(Sounds.DIRECT_MESSAGE);
         }
-        if (!captains.isReady2()) {
-          captain2.sendMessage(Component.text(readyMessage));
-          captain2.playSound(Sounds.DIRECT_MESSAGE);
+        if (!captains.isReady2() && currentCaptain2 != null) {
+          currentCaptain2.sendMessage(Component.text(readyMessage));
+          currentCaptain2.playSound(Sounds.DIRECT_MESSAGE);
         }
       }
     };

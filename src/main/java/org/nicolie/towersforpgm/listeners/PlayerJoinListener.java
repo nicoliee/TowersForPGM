@@ -32,13 +32,10 @@ public class PlayerJoinListener implements Listener {
   public void onPlayerJoin(PlayerJoinEvent event) {
     Player player = event.getPlayer();
     String username = player.getName();
-    // Si el draft está activo
     if (Draft.isDraftActive()) {
       MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
       Draft.showBossBarToPlayer(matchPlayer);
-      // Si el jugador está en getAvailableOfflinePlayers, pasarlo a getAvailablePlayers
       availablePlayers.handleReconnect(player);
-      // Si el jugador está en algún equipo, añadirlo a la lista de jugadores desconectados
       if (teams.isPlayerInAnyTeam(username)) {
         teams.handleReconnect(player);
       }
@@ -49,15 +46,11 @@ public class PlayerJoinListener implements Listener {
       }
     }
 
-    // Verificamos si el jugador está en team1
     if (teams.isPlayerInTeam(player.getName(), 1)
         || (captains.getCaptain1() != null
             && captains.getCaptain1().equals(player.getUniqueId()))) {
       teams.assignTeam(player, 1);
-    }
-
-    // Verificamos si el jugador está en team2
-    else if (teams.isPlayerInTeam(player.getName(), 2)
+    } else if (teams.isPlayerInTeam(player.getName(), 2)
         || (captains.getCaptain2() != null
             && captains.getCaptain2().equals(player.getUniqueId()))) {
       teams.assignTeam(player, 2);

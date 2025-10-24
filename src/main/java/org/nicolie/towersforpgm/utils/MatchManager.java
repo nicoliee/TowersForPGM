@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm;
+package org.nicolie.towersforpgm.utils;
 
 import tc.oc.pgm.api.match.Match;
 

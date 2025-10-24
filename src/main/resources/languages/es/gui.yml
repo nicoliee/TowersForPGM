@@ -205,12 +205,18 @@ help:
     lore2: "§7sobre el plugin"
 ranked:
   title: "§6§lRanked"
-  size:
-    title: "§e§lTamaño de Partida"
+  minSize:
+    title: "§e§lTamaño Mínimo de Partida"
     current: "§7Actual: §a{value}"
     lore1: "§7Haz clic para cambiar el tamaño"
-    lore2: "§7de partida ranked (debe ser par y >= 4)"
-    input: "§eIngresa el tamaño de partida ranked:"
+    lore2: "§7mínimo de partida ranked (debe ser par)"
+    input: "§eIngresa el tamaño mínimo de partida ranked:"
+  maxSize:
+    title: "§e§lTamaño Máximo de Partida"
+    current: "§7Actual: §a{value}"
+    lore1: "§7Haz clic para cambiar el tamaño"
+    lore2: "§7máximo de partida ranked (debe ser par)"
+    input: "§eIngresa el tamaño máximo de partida ranked:"
   order:
     title: "§e§lOrden de Draft Ranked"
     current: "§7Actual: §a{value}"

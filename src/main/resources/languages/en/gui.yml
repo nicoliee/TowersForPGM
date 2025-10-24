@@ -205,12 +205,18 @@ help:
     lore2: "§7about the plugin"
 ranked:
   title: "§6§lRanked Configuration"
-  size:
-    title: "§e§lMatch Size"
+  minSize:
+    title: "§e§lMinimum Match Size"
     current: "§7Current: §a{value}"
-    lore1: "§7Click to change the match size"
-    lore2: "§7for ranked (must be even and >= 4)"
-    input: "§eEnter the ranked match size:"
+    lore1: "§7Click to change the minimum"
+    lore2: "§7match size for ranked (must be even)"
+    input: "§eEnter the ranked minimum match size:"
+  maxSize:
+    title: "§e§lMaximum Match Size"
+    current: "§7Current: §a{value}"
+    lore1: "§7Click to change the maximum"
+    lore2: "§7match size for ranked (must be even)"
+    input: "§eEnter the ranked maximum match size:"
   order:
     title: "§e§lRanked Draft Order"
     current: "§7Current: §a{value}"

@@ -10,13 +10,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.commandUtils.DraftConfig;
-import org.nicolie.towersforpgm.commandUtils.HelpConfig;
-import org.nicolie.towersforpgm.commandUtils.PreparationConfig;
-import org.nicolie.towersforpgm.commandUtils.RankedConfig;
-import org.nicolie.towersforpgm.commandUtils.RefillConfig;
-import org.nicolie.towersforpgm.commandUtils.StatsConfig;
-import org.nicolie.towersforpgm.gui.towersCommand.TowersConfigGUI;
+import org.nicolie.towersforpgm.commands.commandUtils.DraftConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.HelpConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.PreparationConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.RankedConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.RefillConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
+import org.nicolie.towersforpgm.commands.gui.TowersConfigGUI;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
@@ -203,13 +203,18 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
       case "ranked":
         if (args.length == 1) {
           sender.sendMessage(
-              "§c/towers ranked <size|order|matchmaking|addmap|removemap|addtable|removetable>");
+              "§c/towers ranked <minsize|maxsize|order|matchmaking|addmap|removemap|addtable|removetable>");
           return true;
         }
         switch (args[1].toLowerCase()) {
-          case "size":
-            String sizeArg = args.length >= 3 ? args[2] : null;
-            rankedConfig.size(sender, sizeArg);
+          case "minsize":
+            String minSizeArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.minSize(sender, minSizeArg);
+            return true;
+
+          case "maxsize":
+            String maxSizeArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.maxSize(sender, maxSizeArg);
             return true;
 
           case "order":
@@ -421,7 +426,14 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
       case "ranked":
         if (args.length == 2) {
           List<String> options = Arrays.asList(
-              "size", "order", "addmap", "removemap", "addtable", "removetable", "matchmaking");
+              "minsize",
+              "maxsize",
+              "order",
+              "addmap",
+              "removemap",
+              "addtable",
+              "removetable",
+              "matchmaking");
           return filterPrefix(options, args[1]);
         }
       case "refill":

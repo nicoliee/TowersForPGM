@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.gui.towersCommand;
+package org.nicolie.towersforpgm.commands.gui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,15 +16,16 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.commandUtils.RankedConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.RankedConfig;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class RankedGUI implements Listener {
   private static final int BACK_SLOT = 0;
-  private static final int SIZE_SLOT = 10;
-  private static final int ORDER_SLOT = 11;
-  private static final int MATCHMAKING_SLOT = 12;
+  private static final int MIN_SIZE_SLOT = 10;
+  private static final int MAX_SIZE_SLOT = 11;
+  private static final int ORDER_SLOT = 12;
+  private static final int MATCHMAKING_SLOT = 13;
   private static final int DEFAULT_TABLE_SLOT = 14;
   private static final int ADD_TABLE_SLOT = 15;
   private static final int REMOVE_TABLE_SLOT = 16;
@@ -74,19 +75,33 @@ public class RankedGUI implements Listener {
     gui.setItem(BACK_SLOT, backItem);
 
     // ===== BASIC CONFIGURATION =====
-    // Ranked Size
-    ItemStack sizeItem = new ItemStack(Material.GOLD_NUGGET);
-    ItemMeta sizeMeta = sizeItem.getItemMeta();
-    sizeMeta.setDisplayName(LanguageManager.langMessage("gui.ranked.size.title"));
-    List<String> sizeLore = new ArrayList<>();
-    sizeLore.add(LanguageManager.langMessage("gui.ranked.size.current")
-        .replace("{value}", String.valueOf(ConfigManager.getRankedSize())));
-    sizeLore.add("§7");
-    sizeLore.add(LanguageManager.langMessage("gui.ranked.size.lore1"));
-    sizeLore.add(LanguageManager.langMessage("gui.ranked.size.lore2"));
-    sizeMeta.setLore(sizeLore);
-    sizeItem.setItemMeta(sizeMeta);
-    gui.setItem(SIZE_SLOT, sizeItem);
+    // Ranked Min Size
+    ItemStack minSizeItem = new ItemStack(Material.GOLD_NUGGET);
+    ItemMeta minSizeMeta = minSizeItem.getItemMeta();
+    minSizeMeta.setDisplayName(LanguageManager.langMessage("gui.ranked.minSize.title"));
+    List<String> minSizeLore = new ArrayList<>();
+    minSizeLore.add(LanguageManager.langMessage("gui.ranked.minSize.current")
+        .replace("{value}", String.valueOf(ConfigManager.getRankedMinSize())));
+    minSizeLore.add("§7");
+    minSizeLore.add(LanguageManager.langMessage("gui.ranked.minSize.lore1"));
+    minSizeLore.add(LanguageManager.langMessage("gui.ranked.minSize.lore2"));
+    minSizeMeta.setLore(minSizeLore);
+    minSizeItem.setItemMeta(minSizeMeta);
+    gui.setItem(MIN_SIZE_SLOT, minSizeItem);
+
+    // Ranked Max Size
+    ItemStack maxSizeItem = new ItemStack(Material.DIAMOND);
+    ItemMeta maxSizeMeta = maxSizeItem.getItemMeta();
+    maxSizeMeta.setDisplayName(LanguageManager.langMessage("gui.ranked.maxSize.title"));
+    List<String> maxSizeLore = new ArrayList<>();
+    maxSizeLore.add(LanguageManager.langMessage("gui.ranked.maxSize.current")
+        .replace("{value}", String.valueOf(ConfigManager.getRankedMaxSize())));
+    maxSizeLore.add("§7");
+    maxSizeLore.add(LanguageManager.langMessage("gui.ranked.maxSize.lore1"));
+    maxSizeLore.add(LanguageManager.langMessage("gui.ranked.maxSize.lore2"));
+    maxSizeMeta.setLore(maxSizeLore);
+    maxSizeItem.setItemMeta(maxSizeMeta);
+    gui.setItem(MAX_SIZE_SLOT, maxSizeItem);
 
     // Ranked Order
     ItemStack orderItem = new ItemStack(Material.PAPER);
@@ -123,7 +138,7 @@ public class RankedGUI implements Listener {
 
     // ===== TABLE MANAGEMENT =====
     // Default Table
-    ItemStack defaultTableItem = new ItemStack(Material.DIAMOND);
+    ItemStack defaultTableItem = new ItemStack(Material.ENCHANTED_BOOK);
     ItemMeta defaultTableMeta = defaultTableItem.getItemMeta();
     defaultTableMeta.setDisplayName(LanguageManager.langMessage("gui.ranked.default_table.title"));
     List<String> defaultTableLore = new ArrayList<>();
@@ -236,10 +251,15 @@ public class RankedGUI implements Listener {
         case BACK_SLOT: // Back to main menu
           mainGUI.openMainMenu(player);
           break;
-        case SIZE_SLOT: // Ranked Size
+        case MIN_SIZE_SLOT: // Ranked Min Size
           player.closeInventory();
-          player.sendMessage(LanguageManager.langMessage("gui.ranked.size.input"));
-          waitingForInput.put(player.getUniqueId(), "size");
+          player.sendMessage(LanguageManager.langMessage("gui.ranked.minSize.input"));
+          waitingForInput.put(player.getUniqueId(), "min_size");
+          break;
+        case MAX_SIZE_SLOT: // Ranked Max Size
+          player.closeInventory();
+          player.sendMessage(LanguageManager.langMessage("gui.ranked.maxSize.input"));
+          waitingForInput.put(player.getUniqueId(), "max_size");
           break;
         case ORDER_SLOT: // Ranked Order
           player.closeInventory();
@@ -293,8 +313,11 @@ public class RankedGUI implements Listener {
 
       Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
         switch (inputType) {
-          case "size":
-            rankedConfig.size(player, input);
+          case "min_size":
+            rankedConfig.minSize(player, input);
+            break;
+          case "max_size":
+            rankedConfig.maxSize(player, input);
             break;
           case "order":
             rankedConfig.draftOrder(player, input);

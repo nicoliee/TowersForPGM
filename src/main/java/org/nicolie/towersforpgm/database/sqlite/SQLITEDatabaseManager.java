@@ -61,7 +61,6 @@ public class SQLITEDatabaseManager {
         conn.createStatement().execute("PRAGMA wal_autocheckpoint = 1000");
       }
 
-      plugin.getLogger().info("Conectado a SQLite con HikariCP en: " + databasePath);
     } catch (Exception e) {
       plugin.getLogger().severe("Error al conectar con la base de datos SQLite: " + e.getMessage());
       e.printStackTrace();

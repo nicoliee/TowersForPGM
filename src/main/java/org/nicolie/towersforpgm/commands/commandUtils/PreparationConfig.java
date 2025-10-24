@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.commandUtils;
+package org.nicolie.towersforpgm.commands.commandUtils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;

@@ -16,10 +16,7 @@ import tc.oc.pgm.events.PlayerParticipationStopEvent;
 import tc.oc.pgm.events.PlayerPartyChangeEvent;
 import tc.oc.pgm.join.JoinRequest;
 
-// El plugin espera que los nombres de los teams sean "red" y "blue", por lo que no se pueden
-// cambiar dinámicamente
-// en el futuro se podría agregar un comando para cambiar los nombres de los teams, pero por ahora
-// no es necesario.
+// El plugin espera que los nombres de los teams sean "red" y "blue"
 
 public class PlayerParticipationListener implements Listener {
   private final Teams teams;

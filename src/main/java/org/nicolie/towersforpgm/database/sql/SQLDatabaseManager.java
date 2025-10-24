@@ -35,42 +35,68 @@ public class SQLDatabaseManager {
 
       HikariConfig config = new HikariConfig();
       config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + name
-          + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
+          + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&socketTimeout=30000");
       config.setUsername(user);
       config.setPassword(password);
-      config.setMaximumPoolSize(10);
+      config.setMaximumPoolSize(16);
       config.setMinimumIdle(2);
-      config.setIdleTimeout(30000);
+      config.setIdleTimeout(60000);
       config.setMaxLifetime(1800000);
-      config.setConnectionTimeout(10000);
+      config.setConnectionTimeout(35000);
       config.addDataSourceProperty("cachePrepStmts", "true");
       config.addDataSourceProperty("prepStmtCacheSize", "250");
       config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+      config.addDataSourceProperty("useServerPrepStmts", "true");
+      config.addDataSourceProperty("useLocalSessionState", "true");
+      config.addDataSourceProperty("rewriteBatchedStatements", "true");
+      config.addDataSourceProperty("cacheResultSetMetadata", "true");
+      config.addDataSourceProperty("cacheServerConfiguration", "true");
+      config.addDataSourceProperty("elideSetAutoCommits", "true");
+      config.addDataSourceProperty("maintainTimeStats", "false");
+      config.addDataSourceProperty("tcpKeepAlive", "true");
+      config.setValidationTimeout(5000);
+      config.setConnectionTestQuery("SELECT 1");
+      config.setLeakDetectionThreshold(15000);
 
       dataSource = new HikariDataSource(config);
-      plugin.getLogger().info("Conectado a MySQL con HikariCP.");
     } catch (Exception e) {
       plugin.getLogger().severe("Error al conectar con la base de datos: " + e.getMessage());
       e.printStackTrace();
     }
   }
 
+  /** Obtiene una conexión del pool. Si el pool está cerrado, intenta reconectar de forma segura. */
   public Connection getConnection() throws SQLException {
     if (dataSource == null || dataSource.isClosed()) {
-      plugin.getLogger().warning("El pool de conexiones está cerrado. Reconectando...");
-      connect();
+      synchronized (this) {
+        if (dataSource == null || dataSource.isClosed()) {
+          plugin.getLogger().warning("El pool de conexiones está cerrado. Reconectando...");
+          connect();
+        }
+      }
+    }
+    if (dataSource == null) {
+      throw new SQLException("No se pudo establecer conexión con la base de datos");
     }
     Connection connection = dataSource.getConnection();
-    if (!connection.isValid(2)) {
+    if (connection == null || !connection.isValid(2)) {
+      if (connection != null) connection.close();
       throw new SQLException("La conexión obtenida no es válida.");
     }
     return connection;
   }
 
+  /** Cierra el pool de conexiones y limpia la referencia. */
   public void disconnect() {
     if (dataSource != null && !dataSource.isClosed()) {
       dataSource.close();
+      dataSource = null;
       plugin.getLogger().info("Conexión de MySQL cerrada.");
     }
+  }
+
+  /** Verifica si el pool de conexiones está activo. */
+  public boolean isConnected() {
+    return dataSource != null && !dataSource.isClosed();
   }
 }

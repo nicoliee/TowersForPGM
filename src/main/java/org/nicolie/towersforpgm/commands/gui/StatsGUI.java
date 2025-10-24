@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.gui.towersCommand;
+package org.nicolie.towersforpgm.commands.gui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,9 +16,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.commandUtils.StatsConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.utils.MatchManager;
 
 public class StatsGUI implements Listener {
   private static final int BACK_SLOT = 0;
@@ -111,8 +112,15 @@ public class StatsGUI implements Listener {
     List<String> tables = ConfigManager.getTables();
     listLore.add(LanguageManager.langMessage("gui.stats.list.count")
         .replace("{count}", String.valueOf(tables.size())));
+    String currentTable =
+        ConfigManager.getActiveTable(MatchManager.getMatch().getMap().getName());
     for (String table : tables) {
-      listLore.add(LanguageManager.langMessage("gui.stats.list.item").replace("{table}", table));
+      String displayTable = table;
+      if (currentTable != null && currentTable.equals(table)) {
+        displayTable = "§e" + table + "§7";
+      }
+      listLore.add(
+          LanguageManager.langMessage("gui.stats.list.item").replace("{table}", displayTable));
     }
     listMeta.setLore(listLore);
     listItem.setItemMeta(listMeta);
@@ -146,7 +154,7 @@ public class StatsGUI implements Listener {
     addTempMeta.setDisplayName(LanguageManager.langMessage("gui.stats.add_temp.title"));
     List<String> addTempLore = new ArrayList<>();
     addTempLore.add(LanguageManager.langMessage("gui.stats.add_temp.lore"));
-    String tempTable = ConfigManager.getTempTable();
+    String tempTable = ConfigManager.getTemp();
     addTempLore.add(LanguageManager.langMessage("gui.stats.add_temp.current")
         .replace(
             "{table}",

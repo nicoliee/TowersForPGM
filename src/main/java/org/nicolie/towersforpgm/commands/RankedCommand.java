@@ -61,15 +61,20 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
         if (mainArg.equals("join")) {
           queue.addPlayer(player);
         } else {
-          Queue.removePlayer(player);
+          queue.removePlayer(player);
         }
         break;
       case "list":
         String prefix = LanguageManager.langMessage("ranked.prefix");
+        Match listMatch = sender instanceof Player
+            ? PGM.get().getMatchManager().getMatch(sender)
+            : PGM.get().getMatchManager().getMatches().next();
+        int targetSize = queue.getTargetSize(listMatch);
+
         String header = prefix
             + LanguageManager.langMessage("ranked.queueHeader")
                 .replace("{current}", String.valueOf(Queue.getQueueSize()))
-                .replace("{max}", String.valueOf(ConfigManager.getRankedSize()));
+                .replace("{target}", String.valueOf(targetSize));
         List<String> queuePlayers = queue.getQueueList();
 
         if (sender instanceof Player) {
@@ -88,24 +93,6 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
           }
         }
         break;
-      case "size":
-        if (!sender.hasPermission("ranked.size")) {
-          sender.sendMessage(LanguageManager.langMessage("errors.noPermission"));
-          return true;
-        }
-        if (args.length == 1) {
-          sender.sendMessage(LanguageManager.langMessage("ranked.usageSize"));
-          return true;
-        }
-        int size;
-        try {
-          size = Integer.parseInt(args[1]);
-        } catch (NumberFormatException e) {
-          sender.sendMessage(LanguageManager.langMessage("ranked.sizeInvalid"));
-          return true;
-        }
-        queue.setSize(sender, size);
-        break;
       default:
         sender.sendMessage(LanguageManager.langMessage("ranked.usage"));
         break;
@@ -117,7 +104,7 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
   public List<String> onTabComplete(
       CommandSender sender, Command command, String alias, String[] args) {
     if (args.length == 1) {
-      List<String> options = Arrays.asList("join", "leave", "list", "size");
+      List<String> options = Arrays.asList("join", "leave", "list");
       return options.stream()
           .filter(option -> option.startsWith(args[0].toLowerCase()))
           .collect(Collectors.toList());

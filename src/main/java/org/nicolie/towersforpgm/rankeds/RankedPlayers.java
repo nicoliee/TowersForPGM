@@ -43,6 +43,13 @@ public class RankedPlayers {
               .collect(Collectors.toList()));
     }
 
+    boolean hasNewPlayer =
+        players.stream().map(e -> e.getKey().getId()).anyMatch(id -> !captainCount.containsKey(id));
+
+    if (hasNewPlayer) {
+      clearCaptainHistory();
+    }
+
     // Ordenar por ELO descendente
     players.sort((a, b) -> b.getValue() - a.getValue());
 

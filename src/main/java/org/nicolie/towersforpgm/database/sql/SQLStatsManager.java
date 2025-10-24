@@ -12,18 +12,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-import org.bukkit.Bukkit;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.database.Top;
 import org.nicolie.towersforpgm.database.TopResult;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
+import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class SQLStatsManager {
 
-  // Executor dedicado para consultas SQL asíncronas
   private static final ExecutorService SQL_EXECUTOR = Executors.newFixedThreadPool(8, r -> {
     Thread t = new Thread(r);
     t.setName("TowersForPGM-SQL-Async");
@@ -31,7 +30,6 @@ public class SQLStatsManager {
     return t;
   });
 
-  // Llamar a este método al apagar el plugin para liberar recursos
   public static void shutdownSqlExecutor() {
     SQL_EXECUTOR.shutdown();
   }
@@ -63,67 +61,76 @@ public class SQLStatsManager {
     String rankedSql =
         "UPDATE " + table + " SET elo = ?, lastElo = ?, maxElo = ? WHERE username = ?";
 
-    Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
-      try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
-          PreparedStatement stmt = conn.prepareStatement(sql)) {
+    java.util.logging.Logger logger = TowersForPGM.getInstance().getLogger();
+    java.util.concurrent.CompletableFuture.runAsync(
+        () -> {
+          long startTime = System.currentTimeMillis();
 
-        conn.setAutoCommit(false); // Deshabilita autocommit para mejorar rendimiento
-        stmt.setQueryTimeout(10); // segundos
-        int batchSize = 0;
-        for (Stats playerStat : playerStatsList) {
-          stmt.setString(1, playerStat.getUsername());
-          stmt.setInt(2, playerStat.getKills());
-          stmt.setInt(3, playerStat.getDeaths());
-          stmt.setInt(4, playerStat.getAssists());
-          stmt.setDouble(5, playerStat.getDamageDone());
-          stmt.setDouble(6, playerStat.getDamageTaken());
-          stmt.setInt(7, playerStat.getPoints());
-          stmt.setInt(8, playerStat.getWins());
-          stmt.setInt(9, playerStat.getGames());
-          stmt.setInt(10, playerStat.getWinstreak());
-          stmt.addBatch();
-          batchSize++;
-          if (batchSize % 100 == 0) {
-            stmt.executeBatch();
+          SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
+          if (dbManager == null || !dbManager.isConnected()) {
+            String errorMessage = LanguageManager.langMessage("errors.database.connectionClosed");
+            logger.log(Level.SEVERE, errorMessage);
+            SendMessage.sendToDevelopers(errorMessage);
+            return;
           }
-        }
-        stmt.executeBatch(); // Ejecuta los datos restantes
-        conn.commit(); // Confirma los cambios
+          try (Connection conn = dbManager.getConnection();
+              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-        // Si se recibe un PlayerEloChange, actualiza elo, lastElo y maxElo en la base de datos
-        if (eloChange != null && !eloChange.isEmpty()) {
-          try (PreparedStatement rankedStmt = conn.prepareStatement(rankedSql)) {
-            for (PlayerEloChange change : eloChange) {
-              rankedStmt.setInt(1, change.getNewElo());
-              rankedStmt.setInt(2, change.getCurrentElo());
-              rankedStmt.setInt(3, change.getMaxElo());
-              rankedStmt.setString(4, change.getUsername());
-              rankedStmt.addBatch();
+            conn.setAutoCommit(false);
+            stmt.setQueryTimeout(30);
+            int batchSize = 0;
+            for (Stats playerStat : playerStatsList) {
+              stmt.setString(1, playerStat.getUsername());
+              stmt.setInt(2, playerStat.getKills());
+              stmt.setInt(3, playerStat.getDeaths());
+              stmt.setInt(4, playerStat.getAssists());
+              stmt.setDouble(5, playerStat.getDamageDone());
+              stmt.setDouble(6, playerStat.getDamageTaken());
+              stmt.setInt(7, playerStat.getPoints());
+              stmt.setInt(8, playerStat.getWins());
+              stmt.setInt(9, playerStat.getGames());
+              stmt.setInt(10, playerStat.getWinstreak());
+              stmt.addBatch();
+              batchSize++;
+              if (batchSize % 100 == 0) {
+                stmt.executeBatch();
+              }
             }
-            rankedStmt.executeBatch();
+            stmt.executeBatch();
             conn.commit();
-          }
-        }
 
-      } catch (SQLException e) {
-        TowersForPGM.getInstance()
-            .getLogger()
-            .log(Level.SEVERE, "Error al actualizar estadísticas", e);
-        SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
-            "errors.database.updateStats"));
-      }
-    });
+            if (eloChange != null && !eloChange.isEmpty()) {
+              try (PreparedStatement rankedStmt = conn.prepareStatement(rankedSql)) {
+                for (PlayerEloChange change : eloChange) {
+                  rankedStmt.setInt(1, change.getNewElo());
+                  rankedStmt.setInt(2, change.getCurrentElo());
+                  rankedStmt.setInt(3, change.getMaxElo());
+                  rankedStmt.setString(4, change.getUsername());
+                  rankedStmt.addBatch();
+                }
+                rankedStmt.executeBatch();
+                conn.commit();
+              }
+            }
+
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            logger.info("[SQLStatsManager] updateStats completed for table: " + table + " with "
+                + playerStatsList.size() + " players in " + duration + "ms");
+            logger.info("[SQLStatsManager] SQL: " + sql);
+
+          } catch (SQLException e) {
+            String errorMessage = LanguageManager.langMessage("errors.database.updateStats");
+            logger.log(Level.SEVERE, String.format(errorMessage), e);
+            SendMessage.sendToDevelopers(errorMessage);
+          }
+        },
+        SQL_EXECUTOR);
   }
 
   public static CompletableFuture<Stats> getStats(String table, String username) {
     // Validación básica de parámetros
     if (table == null || table.isEmpty() || username == null || username.isEmpty()) {
-      TowersForPGM.getInstance()
-          .getLogger()
-          .log(
-              Level.WARNING,
-              "[StatsManager] Parámetros inválidos getStats: table=" + table + ", username="
-                  + username);
       return CompletableFuture.completedFuture(null);
     }
 
@@ -132,9 +139,6 @@ public class SQLStatsManager {
         org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table)
             || MatchBotConfig.getTables().contains(table);
     if (!validTable) {
-      TowersForPGM.getInstance()
-          .getLogger()
-          .log(Level.WARNING, "[StatsManager] Tabla no registrada en config getStats: " + table);
       return CompletableFuture.completedFuture(null);
     }
 
@@ -186,11 +190,10 @@ public class SQLStatsManager {
               }
             }
           } catch (SQLException e) {
-            TowersForPGM.getInstance()
-                .getLogger()
-                .log(Level.SEVERE, "Error al obtener estadísticas del usuario", e);
-            SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
-                "errors.database.getStats"));
+            TowersForPGM.getInstance();
+            String errorMessage = LanguageManager.langMessage("errors.database.getStats");
+            TowersForPGM.getInstance().getLogger().log(Level.SEVERE, errorMessage, e);
+            SendMessage.sendToDevelopers(errorMessage);
             return null;
           }
         },
@@ -225,7 +228,14 @@ public class SQLStatsManager {
         () -> {
           List<Top> topList = new ArrayList<>();
           int totalRecords = 0;
-          try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
+          SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
+          if (dbManager == null || !dbManager.isConnected()) {
+            String errorMessage = LanguageManager.langMessage("errors.database.connectionClosed");
+            TowersForPGM.getInstance().getLogger().log(Level.SEVERE, errorMessage);
+            SendMessage.sendToDevelopers(errorMessage);
+            return new TopResult(new ArrayList<>(), 0);
+          }
+          try (Connection conn = dbManager.getConnection();
               PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, limit);
@@ -298,7 +308,14 @@ public class SQLStatsManager {
         () -> {
           List<Top> list = new ArrayList<>();
           int total = knownTotal != null ? knownTotal : 0;
-          try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
+          SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
+          if (dbManager == null || !dbManager.isConnected()) {
+            String errorMessage = LanguageManager.langMessage("errors.database.connectionClosed");
+            TowersForPGM.getInstance().getLogger().log(Level.SEVERE, errorMessage);
+            SendMessage.sendToDevelopers(errorMessage);
+            return new TopResult(new ArrayList<>(), 0);
+          }
+          try (Connection conn = dbManager.getConnection();
               PreparedStatement stmt = conn.prepareStatement(sql)) {
             int idx = 1;
             if (anchorValue != null) {
@@ -353,12 +370,14 @@ public class SQLStatsManager {
 
     return CompletableFuture.supplyAsync(
         () -> {
+          long startTime = System.currentTimeMillis();
+          java.util.logging.Logger logger = TowersForPGM.getInstance().getLogger();
           try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
               PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (int i = 0; i < usernames.size(); i++) {
               stmt.setString(i + 1, usernames.get(i));
             }
-            stmt.setQueryTimeout(10); // segundos
+            stmt.setQueryTimeout(30); // segundos
             try (ResultSet rs = stmt.executeQuery()) {
               List<org.nicolie.towersforpgm.rankeds.PlayerEloChange> result =
                   new java.util.ArrayList<>();
@@ -390,12 +409,32 @@ public class SQLStatsManager {
                   }
                 }
               }
+
+              long endTime = System.currentTimeMillis();
+              long duration = endTime - startTime;
+              logger.info("[SQLStatsManager] getEloForUsernames completed for table: " + table
+                  + " with " + usernames.size() + " in " + duration + "ms");
+
               return orderedResult;
+            } catch (SQLException e) {
+              long endTime = System.currentTimeMillis();
+              long duration = endTime - startTime;
+              logger.warning("[SQLStatsManager] getEloForUsernames failed for table: " + table
+                  + " with " + usernames.size() + " after " + duration + "ms");
+
+              SendMessage.sendToDevelopers(
+                  org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+                      "errors.database.getEloForUsernames"));
+              return Collections.emptyList();
             }
           } catch (SQLException e) {
-            TowersForPGM.getInstance()
-                .getLogger()
-                .log(Level.SEVERE, "Error al obtener el elo de los usuarios", e);
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            logger.warning("[SQLStatsManager] getEloForUsernames failed for table: " + table
+                + " with " + usernames.size() + " after " + duration + "ms");
+
+            SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+                "errors.database.getEloForUsernames"));
             return Collections.emptyList();
           }
         },
@@ -428,7 +467,7 @@ public class SQLStatsManager {
 
     try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
         PreparedStatement stmt = conn.prepareStatement(sqlBuilder.toString())) {
-      stmt.setQueryTimeout(10); // segundos
+      stmt.setQueryTimeout(5); // segundos
 
       // Establecer el parámetro para cada tabla en la consulta UNION
       String filterPattern = filter + "%";

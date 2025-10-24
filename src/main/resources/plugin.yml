@@ -21,9 +21,6 @@ commands:
     usage: /captains <nick1> <nick2>
     aliases: [capitanes]
     permission: towers.captains
-  elo:
-    description: Muestra el ELO de un jugador.
-    usage: /elo <jugador>
   forfeit:
     description: Rindete para terminar la partida.
     aliases: [ff]

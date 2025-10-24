@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.gui.towersCommand;
+package org.nicolie.towersforpgm.commands.gui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +13,11 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.commandUtils.DraftConfig;
-import org.nicolie.towersforpgm.commandUtils.PreparationConfig;
-import org.nicolie.towersforpgm.commandUtils.RankedConfig;
-import org.nicolie.towersforpgm.commandUtils.RefillConfig;
-import org.nicolie.towersforpgm.commandUtils.StatsConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.DraftConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.PreparationConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.RankedConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.RefillConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 

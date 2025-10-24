@@ -3,7 +3,7 @@ package org.nicolie.towersforpgm.draft;
 import java.util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.MatchManager;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;

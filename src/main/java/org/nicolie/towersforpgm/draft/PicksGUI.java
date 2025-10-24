@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.gui;
+package org.nicolie.towersforpgm.draft;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,17 +26,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.Stats;
-import org.nicolie.towersforpgm.draft.AvailablePlayers;
-import org.nicolie.towersforpgm.draft.Captains;
-import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 
-public class Picks implements Listener {
+public class PicksGUI implements Listener {
 
   private final Draft draft;
   private final Captains captains;
@@ -46,7 +42,7 @@ public class Picks implements Listener {
   // Para saber qué inventario pertenece a qué capitán
   private final Map<UUID, Inventory> openInventories = new HashMap<>();
 
-  public Picks(Draft draft, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
+  public PicksGUI(Draft draft, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
     this.draft = draft;
     this.captains = captains;
     this.availablePlayers = availablePlayers;
@@ -77,10 +73,10 @@ public class Picks implements Listener {
       inv = Bukkit.createInventory(
           null,
           inventorySize,
-          LanguageManager.langMessage("draft.inventoryName")
+          LanguageManager.langMessage("draft.config.inventoryName")
               .replace("{size}", String.valueOf(totalPlayers)));
 
-      // Cambiar el color de los cristales según las condiciones
+      // Cambiar el color e los cristales según las condiciones
       for (int i = 0; i < inventorySize; i++) {
         if (i < 9 || i >= inventorySize - 9 || i % 9 == 0 || i % 9 == 8) {
           ItemStack glassPane =
@@ -141,7 +137,7 @@ public class Picks implements Listener {
       inv = Bukkit.createInventory(
           null,
           inventorySize,
-          LanguageManager.langMessage("draft.inventoryName")
+          LanguageManager.langMessage("draft.config.inventoryName")
               .replace("{size}", String.valueOf(totalPlayers)));
       columnsPerRow = 9;
 
@@ -220,13 +216,12 @@ public class Picks implements Listener {
     lore.add(LanguageManager.langMessage("stats.winstreak") + ": §a" + stats.getWinstreak()
         + " §7(Max: §a" + stats.getMaxWinstreak() + "§7)");
     lore.add(" ");
-    lore.add(LanguageManager.langMessage("draft.clickToPick"));
+    lore.add(LanguageManager.langMessage("draft.config.clickToPick"));
     meta.setLore(lore);
     skull.setItemMeta(meta);
   }
 
   private String validatePlayerToPick(String inputName, UUID clickerId) {
-    // Validar si el jugador seleccionado está en la lista de disponibles
     MatchPlayer pickedPlayer = availablePlayers.getAvailablePlayers().stream()
         .filter(p -> p.getNameLegacy().equalsIgnoreCase(inputName))
         .findFirst()
@@ -243,15 +238,15 @@ public class Picks implements Listener {
     }
 
     if (pickedPlayerString == null) {
-      return LanguageManager.message("picks.notInList").replace("{player}", inputName);
+      return LanguageManager.langMessage("draft.picks.notInList").replace("{player}", inputName);
     }
 
-    // Validar si el jugador ya fue elegido
     if (teams.isPlayerInAnyTeam(pickedPlayerString)) {
-      return LanguageManager.message("picks.alreadyPicked").replace("{player}", pickedPlayerString);
+      return LanguageManager.langMessage("draft.picks.alreadyPicked")
+          .replace("{player}", pickedPlayerString);
     }
 
-    return null; // No hay errores
+    return null;
   }
 
   @EventHandler
@@ -264,7 +259,7 @@ public class Picks implements Listener {
     Inventory inv = openInventories.get(clickerId);
     if (!event.getInventory().equals(inv)) return;
 
-    event.setCancelled(true); // Para que no puedan mover items
+    event.setCancelled(true);
 
     ItemStack clicked = event.getCurrentItem();
     if (clicked == null || clicked.getType() != Material.SKULL_ITEM) return;
@@ -276,7 +271,8 @@ public class Picks implements Listener {
     if (captainNumber == -1) {
       openInventories.remove(clickerId);
       clicker.closeInventory();
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("picks.notCaptain")));
+      matchPlayer.sendWarning(
+          Component.text(LanguageManager.langMessage("draft.picks.notCaptain")));
       return;
     }
 
@@ -284,7 +280,7 @@ public class Picks implements Listener {
         || (!captains.isCaptain1Turn() && captainNumber == 1)) {
       openInventories.remove(clickerId);
       clicker.closeInventory();
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("picks.notTurn")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.picks.notTurn")));
       return;
     }
 

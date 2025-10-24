@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.commandUtils;
+package org.nicolie.towersforpgm.commands.commandUtils;
 
 import java.util.List;
 import org.bukkit.command.CommandSender;
@@ -6,6 +6,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
 
@@ -65,7 +66,17 @@ public class StatsConfig {
       SendMessage.sendToPlayer(sender, LanguageManager.langMessage("stats.config.tables.noTables"));
       return;
     }
-    String tablesList = String.join(", ", tables);
+    String active =
+        ConfigManager.getActiveTable(MatchManager.getMatch().getMap().getName());
+    List<String> display = new java.util.ArrayList<>();
+    for (String t : tables) {
+      if (active != null && active.equals(t)) {
+        display.add("§e" + t + "§r");
+      } else {
+        display.add(t);
+      }
+    }
+    String tablesList = String.join(", ", display);
     SendMessage.sendToPlayer(
         sender,
         LanguageManager.langMessage("stats.config.tables.list").replace("{list}", tablesList));
@@ -79,7 +90,7 @@ public class StatsConfig {
           LanguageManager.langMessage("stats.config.tables.notFound").replace("{table}", table));
       return;
     }
-    ConfigManager.addMapTable(mapName, table);
+    ConfigManager.addMap(mapName, table);
     SendMessage.sendToPlayer(
         sender,
         LanguageManager.langMessage("stats.config.maps.added")
@@ -95,23 +106,23 @@ public class StatsConfig {
           LanguageManager.langMessage("stats.config.maps.notExists").replace("{map}", mapName));
       return;
     }
-    ConfigManager.removeMapTable(mapName);
+    ConfigManager.removeMap(mapName);
     SendMessage.sendToPlayer(
         sender, LanguageManager.langMessage("stats.config.maps.deleted").replace("{map}", mapName));
   }
 
   public void addTempTable(CommandSender sender, String table) {
-    ConfigManager.addTempTable(table);
+    ConfigManager.addTemp(table);
     SendMessage.sendToPlayer(
         sender, LanguageManager.langMessage("stats.config.temp.added").replace("{table}", table));
   }
 
   public void removeTempTable(CommandSender sender) {
-    if (ConfigManager.getTempTable() == null) {
+    if (ConfigManager.getTemp() == null) {
       SendMessage.sendToPlayer(sender, LanguageManager.langMessage("stats.config.temp.notExists"));
       return;
     }
-    ConfigManager.removeTempTable();
+    ConfigManager.removeTemp();
     SendMessage.sendToPlayer(sender, LanguageManager.langMessage("stats.config.temp.removed"));
   }
 }

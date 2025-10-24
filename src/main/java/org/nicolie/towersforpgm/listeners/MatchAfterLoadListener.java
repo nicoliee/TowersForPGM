@@ -28,7 +28,7 @@ public class MatchAfterLoadListener implements Listener {
     if (ConfigManager.getRankedMaps().contains(match.getMap().getName())) {
       ItemListener.giveItemToPlayers(match);
     }
-    if (Queue.getQueueSize() >= ConfigManager.getRankedSize()) {
+    if (Queue.getQueueSize() >= ConfigManager.getRankedMinSize()) {
       queue.startRanked(match);
     }
   }

@@ -78,7 +78,6 @@ public class Elo {
         int maxElo = playerElo.getMaxElo();
         changes.add(new PlayerEloChange(username, currentElo, newElo, individualEloChange, maxElo));
       });
-
       return changes;
     });
   }

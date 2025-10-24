@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.gui.towersCommand;
+package org.nicolie.towersforpgm.commands.gui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.commandUtils.DraftConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.DraftConfig;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 

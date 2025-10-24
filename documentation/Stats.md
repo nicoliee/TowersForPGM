@@ -34,14 +34,21 @@
 
 ```yaml
 database:
-  enabled: false        # true=MySQL | false=SQLite
-  host: "localhost"     # MySQL host
-  port: 3306           # MySQL port  
-  name: "torneodb"     # Database name
-  user: "root"         # MySQL user
-  password: "password" # MySQL password
-  tables: [Amistoso, TorneoT1]  # Available tables
-  defaultTable: Amistoso        # Default table
+  enabled: false  # (true = MySQL | false = SQLite)
+  # MySQL Configuration
+  host: "localhost"
+  port: 3306
+  name: "torneodb"
+  user: "root" 
+  password: "password" 
+  tables:
+    # <Tabla>:
+      # - <Mapa>
+      # - <Mapa1>
+    Amistoso:
+    RankedT1:
+      - Mini Towers:TE
+  defaultTable: Amistoso
 ```
 
 ---

@@ -35,7 +35,7 @@ public class CommandListener implements Listener {
         String context = ranked ? " en una ranked." : " en un draft.";
         player.sendWarning(Component.text("No puedes hacer esto" + context));
       }
-    } else if (command.toLowerCase().toLowerCase().equals("/team force") && ranked) {
+    } else if (command.toLowerCase().toLowerCase().equals("/team") && ranked) {
       if (command.endsWith(" -f")) {
         String commandWithoutFlag = command.replaceAll(" -f", "");
         event.setMessage(commandWithoutFlag);

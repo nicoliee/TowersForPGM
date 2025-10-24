@@ -12,6 +12,8 @@ public class ConfigManager {
   private static String defaultTable;
   private static String tempTable;
   private static Map<String, String> MapTables = new HashMap<>();
+
+  // --- Configuración de partidas privadas ---
   private static Map<String, Boolean> MapPrivateMatch = new HashMap<>();
 
   // --- Configuración del draft ---
@@ -22,7 +24,8 @@ public class ConfigManager {
   private static int minOrder;
 
   // --- Configuración de rankeds ---
-  private static int rankedSize;
+  private static int rankedMinSize;
+  private static int rankedMaxSize;
   private static String rankedOrder;
   private static List<String> rankedTables;
   private static String rankedDefaultTable;
@@ -32,18 +35,41 @@ public class ConfigManager {
   public static void loadConfig() {
     TowersForPGM plugin = TowersForPGM.getInstance();
     plugin.reloadConfig();
+    MapTables.clear();
+    MapPrivateMatch.clear();
 
-    // Cargar y almacenar en memoria
-    Tables = plugin.getConfig().getStringList("database.tables");
+    if (plugin.getConfig().contains("database.tables")
+        && plugin.getConfig().getConfigurationSection("database.tables") != null) {
+      Tables = new ArrayList<>(
+          plugin.getConfig().getConfigurationSection("database.tables").getKeys(false));
+
+      // Cargar mapas y sus tablas desde database.tables
+      for (String table :
+          plugin.getConfig().getConfigurationSection("database.tables").getKeys(false)) {
+        List<String> maps = plugin.getConfig().getStringList("database.tables." + table);
+        if (maps != null) {
+          for (String map : maps) {
+            if (map != null && !map.isEmpty()) {
+              MapTables.put(map, table);
+            }
+          }
+        }
+      }
+    } else {
+      Tables = new ArrayList<>();
+    }
+
     defaultTable = plugin.getConfig().getString("database.defaultTable");
 
-    // Cargar mapas y sus tablas
-    MapTables.clear();
-    if (plugin.getConfig().contains("stats.maps")) {
-      for (String map : plugin.getConfig().getConfigurationSection("stats.maps").getKeys(false)) {
-        MapTables.put(map, plugin.getConfig().getString("stats.maps." + map + ".table"));
-        MapPrivateMatch.put(
-            map, plugin.getConfig().getBoolean("stats.maps." + map + ".privateMatch", false));
+    // Cargar mapas de privateMatch (lista dentro de database)
+    if (plugin.getConfig().contains("database.privateMatch")) {
+      List<String> privateMaps = plugin.getConfig().getStringList("database.privateMatch");
+      if (privateMaps != null) {
+        for (String map : privateMaps) {
+          if (map != null && !map.isEmpty()) {
+            MapPrivateMatch.put(map, true);
+          }
+        }
       }
     }
 
@@ -55,7 +81,8 @@ public class ConfigManager {
     minOrder = plugin.getConfig().getInt("draft.minOrder", 0);
 
     // Cargar configuraciones de rankeds
-    rankedSize = plugin.getConfig().getInt("rankeds.size", 0);
+    rankedMinSize = plugin.getConfig().getInt("rankeds.size.min", 4);
+    rankedMaxSize = plugin.getConfig().getInt("rankeds.size.max", 8);
     rankedOrder = plugin.getConfig().getString("rankeds.order", "");
     rankedTables = plugin.getConfig().getStringList("rankeds.tables");
     rankedDefaultTable = plugin.getConfig().getString("rankeds.defaultTable", "");
@@ -84,13 +111,14 @@ public class ConfigManager {
   // Agregar una tabla a la lista de tablas
   public static void addTable(String tableName) {
     TowersForPGM plugin = TowersForPGM.getInstance();
+    if (Tables == null) {
+      Tables = new ArrayList<>();
+    }
 
-    // Clonar la lista para asegurarnos de que es modificable
-    Tables = new ArrayList<>(Tables);
-
+    // Añadir la tabla en memoria y crear la sección database.tables.<tableName> como lista vacía
     if (!Tables.contains(tableName)) {
       Tables.add(tableName);
-      plugin.getConfig().set("database.tables", Tables);
+      plugin.getConfig().set("database.tables." + tableName, new ArrayList<String>());
       plugin.saveConfig();
     }
   }
@@ -98,13 +126,14 @@ public class ConfigManager {
   // Eliminar una tabla de la lista de tablas
   public static void removeTable(String tableName) {
     TowersForPGM plugin = TowersForPGM.getInstance();
-
-    // Clonar la lista para asegurarnos de que es modificable
-    Tables = new ArrayList<>(Tables);
+    if (Tables == null) {
+      return;
+    }
 
     if (Tables.contains(tableName)) {
       Tables.remove(tableName);
-      plugin.getConfig().set("database.tables", Tables);
+      // Eliminar la sección correspondiente en config
+      plugin.getConfig().set("database.tables." + tableName, null);
       plugin.saveConfig();
     }
   }
@@ -148,32 +177,48 @@ public class ConfigManager {
   }
 
   // Agregar una tabla a un mapa
-  public static void addMapTable(String mapName, String tableName) {
+  public static void addMap(String mapName, String tableName) {
     TowersForPGM plugin = TowersForPGM.getInstance();
     MapTables.put(mapName, tableName);
-    plugin.getConfig().set("stats.maps." + mapName + ".table", tableName);
-    plugin.saveConfig();
-  }
 
-  // Eliminar una tabla de un mapa
-  public static void removeMapTable(String mapName) {
-    TowersForPGM plugin = TowersForPGM.getInstance();
-    if (MapTables.containsKey(mapName)) {
-      MapTables.remove(mapName);
-      plugin.getConfig().set("stats.maps." + mapName + ".table", null);
+    // Añadir el mapa a la lista de la tabla en database.tables.<tableName>
+    List<String> maps = plugin.getConfig().getStringList("database.tables." + tableName);
+    if (maps == null) {
+      maps = new ArrayList<>();
+    }
+    if (!maps.contains(mapName)) {
+      maps.add(mapName);
+      plugin.getConfig().set("database.tables." + tableName, maps);
       plugin.saveConfig();
     }
   }
 
-  public static void addTempTable(String tableName) {
+  // Eliminar una tabla de un mapa
+  public static void removeMap(String mapName) {
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    if (MapTables.containsKey(mapName)) {
+      String tableName = MapTables.get(mapName);
+      MapTables.remove(mapName);
+
+      // Eliminar el mapa de la lista de la tabla en database.tables.<tableName>
+      List<String> maps = plugin.getConfig().getStringList("database.tables." + tableName);
+      if (maps != null && maps.contains(mapName)) {
+        maps.remove(mapName);
+        plugin.getConfig().set("database.tables." + tableName, maps);
+        plugin.saveConfig();
+      }
+    }
+  }
+
+  public static void addTemp(String tableName) {
     tempTable = tableName;
   }
 
-  public static void removeTempTable() {
+  public static void removeTemp() {
     tempTable = null;
   }
 
-  public static String getTempTable() {
+  public static String getTemp() {
     return tempTable;
   }
 
@@ -186,7 +231,24 @@ public class ConfigManager {
   public static void setPrivateMatch(String mapName, boolean privateMatch) {
     TowersForPGM plugin = TowersForPGM.getInstance();
     MapPrivateMatch.put(mapName, privateMatch);
-    plugin.getConfig().set("stats.maps." + mapName + ".privateMatch", privateMatch);
+
+    // Modificar la lista database.privateMatch
+    List<String> privateMaps = plugin.getConfig().getStringList("database.privateMatch");
+    if (privateMaps == null) {
+      privateMaps = new ArrayList<>();
+    }
+
+    if (privateMatch) {
+      // Añadir el mapa a privateMatch si no está
+      if (!privateMaps.contains(mapName)) {
+        privateMaps.add(mapName);
+      }
+    } else {
+      // Eliminar el mapa de privateMatch si está
+      privateMaps.remove(mapName);
+    }
+
+    plugin.getConfig().set("database.privateMatch", privateMaps);
     plugin.saveConfig();
   }
 
@@ -258,15 +320,38 @@ public class ConfigManager {
   }
 
   // --- Configuraciones de rankeds ---
-  public static int getRankedSize() {
-    return rankedSize;
+  public static int getRankedMinSize() {
+    return rankedMinSize;
   }
 
-  public static void setRankedSize(int rankedSize) {
+  public static void setRankedMinSize(int rankedMinSize) {
     TowersForPGM plugin = TowersForPGM.getInstance();
-    ConfigManager.rankedSize = rankedSize;
-    plugin.getConfig().set("rankeds.size", rankedSize);
+    ConfigManager.rankedMinSize = rankedMinSize;
+    plugin.getConfig().set("rankeds.size.min", rankedMinSize);
     plugin.saveConfig();
+  }
+
+  public static int getRankedMaxSize() {
+    return rankedMaxSize;
+  }
+
+  public static void setRankedMaxSize(int rankedMaxSize) {
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    ConfigManager.rankedMaxSize = rankedMaxSize;
+    plugin.getConfig().set("rankeds.size.max", rankedMaxSize);
+    plugin.saveConfig();
+  }
+
+  // Backwards compatibility: getRankedSize returns max size
+  @Deprecated
+  public static int getRankedSize() {
+    return rankedMaxSize;
+  }
+
+  // Backwards compatibility: setRankedSize sets max size
+  @Deprecated
+  public static void setRankedSize(int size) {
+    setRankedMaxSize(size);
   }
 
   public static String getRankedOrder() {
@@ -336,5 +421,9 @@ public class ConfigManager {
     ConfigManager.rankedMatchmaking = rankedMatchmaking;
     plugin.getConfig().set("rankeds.matchmaking", rankedMatchmaking);
     plugin.saveConfig();
+  }
+
+  public static boolean isRankedTable(String tableName) {
+    return rankedTables.contains(tableName);
   }
 }

@@ -6,19 +6,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import me.tbg.match.bot.configs.DiscordBot;
 import me.tbg.match.bot.configs.MessagesConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.Stats;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Rank;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
-import tc.oc.pgm.api.map.Gamemode;
-import tc.oc.pgm.api.map.MapInfo;
 import tc.oc.pgm.api.match.Match;
-import tc.oc.pgm.api.party.Competitor;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.score.ScoreMatchModule;
 import tc.oc.pgm.stats.PlayerStats;
@@ -26,12 +21,7 @@ import tc.oc.pgm.stats.StatsMatchModule;
 
 public class RankedFinish {
   public static EmbedBuilder create(
-      Match match,
-      MapInfo map,
-      List<Stats> winnerStats,
-      List<Stats> loserStats,
-      List<PlayerEloChange> eloChange) {
-    String table = ConfigManager.getRankedDefaultTable();
+      MatchInfo matchInfo, String table, Map<String, List<Stats>> playerStats) {
     EmbedBuilder embed = new EmbedBuilder()
         .setColor(Color.RED)
         .setTitle(LanguageManager.langMessage("ranked.matchbot.finish").replace("{table}", table))
@@ -40,44 +30,27 @@ public class RankedFinish {
             MessagesConfig.message("author.name"), null, MessagesConfig.message("author.icon_url"))
         .setDescription(MessagesConfig.message("embeds.finish.description")
             .replace("<timestamp>", "<t:" + Instant.now().getEpochSecond() + ":f>"))
-        .addField("🗺️ " + MessagesConfig.message("embeds.finish.map"), map.getName(), true)
+        .addField("🗺️ " + MessagesConfig.message("embeds.finish.map"), matchInfo.getMap(), true)
         .addField(
             "⏱️ " + MessagesConfig.message("embeds.finish.duration"),
-            DiscordBot.parseDuration(match.getDuration()),
+            matchInfo.getDuration(),
             true);
 
-    if (match.getMap().getGamemodes().contains(Gamemode.SCOREBOX)) {
-      StringBuilder scores = new StringBuilder();
-      for (Map.Entry<Competitor, Double> entry :
-          match.getModule(ScoreMatchModule.class).getScores().entrySet()) {
-        boolean isWinner = match.getWinners().contains(entry.getKey());
-        Competitor team = entry.getKey();
-        int score = (int) Math.round(entry.getValue());
-        scores.append("**").append(team.getDefaultName()).append(":** ").append(score);
-        if (isWinner) {
-          scores.append(" 🏆");
-        }
-        scores.append("\n");
-      }
-      embed.addField(
-          "🏆 " + MessagesConfig.message("embeds.finish.score"), scores.toString(), true);
+    if (matchInfo.hasScorebox()) {
+      embed.addField(matchInfo.getScoresFieldTitle(), matchInfo.getScoresText(), true);
     }
 
     addTeamStatsFields(
-        embed, "🏆", MessagesConfig.message("embeds.finish.winner"), winnerStats, eloChange);
+        embed, "🏆", MessagesConfig.message("embeds.finish.winner"), playerStats.get("winners"));
     embed.addField(" ", " ", false);
     addTeamStatsFields(
-        embed, "⚔️", MessagesConfig.message("embeds.finish.loser"), loserStats, eloChange);
+        embed, "⚔️", MessagesConfig.message("embeds.finish.loser"), playerStats.get("losers"));
 
     return embed;
   }
 
   private static void addTeamStatsFields(
-      EmbedBuilder embed,
-      String titleEmoji,
-      String teamName,
-      List<Stats> statsList,
-      List<PlayerEloChange> eloChange) {
+      EmbedBuilder embed, String titleEmoji, String teamName, List<Stats> statsList) {
     final int MAX_FIELD_LENGTH = 1024;
     StringBuilder chunk = new StringBuilder();
     boolean isFirstField = true;
@@ -133,8 +106,7 @@ public class RankedFinish {
     }
   }
 
-  public static Map<String, List<Stats>> getPlayerStats(
-      Match match, List<MatchPlayer> allPlayers, List<PlayerEloChange> eloChange) {
+  public static Map<String, List<Stats>> getPlayerStats(Match match, List<MatchPlayer> allPlayers) {
     ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);
     StatsMatchModule statsModule = match.getModule(StatsMatchModule.class);
 
@@ -160,14 +132,6 @@ public class RankedFinish {
       if (disconnected.contains(displayName)) {
         displayName = "~~" + displayName + "~~";
       }
-      PlayerEloChange change = eloChange != null
-          ? eloChange.stream()
-              .filter(e -> e.getUsername().equalsIgnoreCase(player.getNameLegacy()))
-              .findFirst()
-              .orElse(null)
-          : null;
-      int elo = change != null ? change.getNewElo() : 0;
-      int lastElo = change != null ? change.getCurrentElo() : 0;
       Stats stats = new Stats(
           displayName,
           playerStats != null ? playerStats.getKills() : 0,
@@ -185,8 +149,8 @@ public class RankedFinish {
           0, // games (not used)
           0, // winstreak (not used)
           0, // maxWinstreak (not used)
-          elo,
-          lastElo,
+          0, // elo (will be added by addElo if needed)
+          0, // lastElo (will be added by addElo if needed)
           0); // maxElo (not used)
       if (isWinner) {
         winnerStats.add(stats);
@@ -198,5 +162,54 @@ public class RankedFinish {
     statsMap.put("winners", winnerStats);
     statsMap.put("losers", loserStats);
     return statsMap;
+  }
+
+  public static Map<String, List<Stats>> addElo(
+      Map<String, List<Stats>> statsMap, List<PlayerEloChange> eloChange) {
+    if (eloChange == null) return statsMap;
+
+    Map<String, List<Stats>> updatedStatsMap = new HashMap<>();
+
+    for (Map.Entry<String, List<Stats>> entry : statsMap.entrySet()) {
+      List<Stats> statsList = entry.getValue();
+      List<Stats> updatedStatsList = new ArrayList<>();
+
+      for (Stats stats : statsList) {
+        // Remover los tildes del nombre para la comparación
+        String originalName = stats.getUsername().replace("~~", "");
+        PlayerEloChange change = eloChange.stream()
+            .filter(e -> e.getUsername().equalsIgnoreCase(originalName))
+            .findFirst()
+            .orElse(null);
+
+        if (change != null) {
+          // Crear nuevo objeto Stats con los valores de elo actualizados
+          Stats updatedStats = new Stats(
+              stats.getUsername(),
+              stats.getKills(),
+              stats.getDeaths(),
+              stats.getAssists(),
+              stats.getDamageDone(),
+              stats.getDamageTaken(),
+              stats.getBowAccuracy(),
+              stats.getPoints(),
+              stats.getWins(),
+              stats.getGames(),
+              stats.getWinstreak(),
+              stats.getMaxWinstreak(),
+              change.getNewElo(),
+              change.getCurrentElo(),
+              stats.getMaxElo());
+          updatedStatsList.add(updatedStats);
+        } else {
+          // Mantener el objeto original si no hay cambio de elo
+          updatedStatsList.add(stats);
+        }
+      }
+
+      updatedStatsMap.put(entry.getKey(), updatedStatsList);
+    }
+
+    return updatedStatsMap;
   }
 }

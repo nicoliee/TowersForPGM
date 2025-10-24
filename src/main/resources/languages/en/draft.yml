@@ -14,7 +14,6 @@ captains:
   alreadyInTeam: "§cThe player is already in a team."
   bossbar: "{captain} is choosing. §bTime remaining: §a{time}"
   captainsHeader: "§m-----------§r §b§lCaptains §f§m-----------"
-  choose: "{teamcolor}{captain} §fhas chosen {player}."
   matchStarted: "§cThe game has already started."
   notEnoughPlayers: "§cThere are not enough players in the game."
   notInDraft: "§cThe player is not in the draft."
