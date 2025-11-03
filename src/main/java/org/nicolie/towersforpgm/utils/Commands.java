@@ -8,6 +8,7 @@ import org.nicolie.towersforpgm.commands.CaptainsCommand;
 import org.nicolie.towersforpgm.commands.PickCommand;
 import org.nicolie.towersforpgm.commands.PreparationTimeCommand;
 import org.nicolie.towersforpgm.commands.ReadyCommand;
+import org.nicolie.towersforpgm.commands.RegisterCommand;
 import org.nicolie.towersforpgm.commands.RemoveCommand;
 import org.nicolie.towersforpgm.commands.TowersCommand;
 import org.nicolie.towersforpgm.commands.TowersForPGMCommand;
@@ -52,6 +53,7 @@ public class Commands {
         .setExecutor(new PreparationTimeCommand(preparationListener));
     plugin.getCommand("towers").setExecutor(new TowersCommand());
     plugin.getCommand("ready").setExecutor(new ReadyCommand(captains));
+    plugin.getCommand("register").setExecutor(new RegisterCommand());
     plugin
         .getCommand("remove")
         .setExecutor(new RemoveCommand(draft, teams, captains, availablePlayers, pickInventory));

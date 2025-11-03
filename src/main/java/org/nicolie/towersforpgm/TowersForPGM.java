@@ -15,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.commands.RankedCommand;
 import org.nicolie.towersforpgm.commands.TagCommand;
+import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.database.sql.SQLDatabaseManager;
 import org.nicolie.towersforpgm.database.sqlite.SQLITEDatabaseManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
@@ -105,6 +106,8 @@ public final class TowersForPGM extends JavaPlugin {
     // Crear tablas al inicio si hay alguna conexión de base de datos disponible
     if (database) {
       createTablesOnStartup();
+      // Inicializar tabla de cuentas vinculadas Discord-Minecraft
+      org.nicolie.towersforpgm.database.TableManager.createDCAccountsTable();
     } else {
       getLogger().warning("No database connections available!");
     }
@@ -164,6 +167,8 @@ public final class TowersForPGM extends JavaPlugin {
         TopCommand.register();
         TopPaginationListener.register();
         AutocompleteHandler.register();
+        // Registrar comando de vinculación Discord-Minecraft
+        org.nicolie.towersforpgm.matchbot.commands.register.RegisterCommand.register();
       }
     }
   }
@@ -311,6 +316,7 @@ public final class TowersForPGM extends JavaPlugin {
     ConfigManager.getTables().forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
     ConfigManager.getRankedTables()
         .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
+    TableManager.createDCAccountsTable();
   }
 
   // Método para inicializar la base de datos

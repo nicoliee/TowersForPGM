@@ -84,6 +84,7 @@ public class SQLITEStatsManager {
             + ") VALUES (" + placeholders + ")";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+          int batchSize = 0;
           for (Stats stat : playerStatsList) {
 
             // Leer valores actuales si existen
@@ -178,9 +179,19 @@ public class SQLITEStatsManager {
             }
 
             stmt.addBatch();
+            batchSize++;
+
+            // Ejecutar en batches de 50 jugadores
+            if (batchSize % 50 == 0) {
+              stmt.executeBatch();
+              conn.commit();
+            }
           }
 
-          stmt.executeBatch();
+          // Ejecutar el último batch si quedan elementos
+          if (batchSize % 50 != 0) {
+            stmt.executeBatch();
+          }
         }
 
         conn.commit();

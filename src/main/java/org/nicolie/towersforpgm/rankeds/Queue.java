@@ -171,7 +171,7 @@ public class Queue {
                 return;
               }
 
-              if (queuePlayers.size() < minSize) {
+              if ((queuePlayers.size() < minSize) || match.isRunning()) {
                 taskRef[0].cancel();
                 countdownActive = false;
                 match.sendWarning(Component.text(

@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 
 public class SQLTableManager {
@@ -88,6 +89,36 @@ public class SQLTableManager {
         TowersForPGM.getInstance()
             .getLogger()
             .log(Level.SEVERE, "Error conectando a la base de datos", e);
+      }
+    });
+  }
+
+  public static void createDCAccountsTable() {
+    if (!MatchBotConfig.isRankedEnabled()) {
+      return;
+    }
+
+    Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
+      try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
+        String acc_table = MatchBotConfig.getAccountsTable();
+        String createTableSQL =
+            "CREATE TABLE IF NOT EXISTS " + acc_table + " (" + "uuid VARCHAR(36) PRIMARY KEY, "
+                + "discordId VARCHAR(32) NOT NULL UNIQUE, "
+                + "registeredAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+                + "INDEX idx_discordId (discordId)"
+                + ")";
+
+        try (PreparedStatement stmt = conn.prepareStatement(createTableSQL)) {
+          stmt.executeUpdate();
+          TowersForPGM.getInstance()
+              .getLogger()
+              .info("Tabla " + acc_table + " creada exitosamente");
+        }
+
+      } catch (SQLException e) {
+        TowersForPGM.getInstance()
+            .getLogger()
+            .log(Level.SEVERE, "Error creando tabla " + MatchBotConfig.getAccountsTable(), e);
       }
     });
   }

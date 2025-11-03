@@ -4,3 +4,9 @@ tables:
   - RankedT1
 discordChannel: "" # Canal de Discord donde se enviarán los mensajes
 rankedRoleId: "" # ID del rol a tagear cunado se use /tag
+ranked:
+  enabled: false
+  table: "DCAccounts" # Tabla donde se guardan los IDS de Discord vinculados con UUIDs de Minecraft
+  queueID: "" # ID de la cola de ranked en el MatchBot
+  team1: "" # ID del equipo 1 en la cola de ranked
+  team2: "" # ID del equipo 2 en la cola de ranked

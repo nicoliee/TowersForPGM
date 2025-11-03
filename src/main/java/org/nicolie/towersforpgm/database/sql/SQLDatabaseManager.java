@@ -38,10 +38,11 @@ public class SQLDatabaseManager {
           + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&socketTimeout=30000");
       config.setUsername(user);
       config.setPassword(password);
-      config.setMaximumPoolSize(16);
-      config.setMinimumIdle(2);
-      config.setIdleTimeout(60000);
-      config.setMaxLifetime(1800000);
+      // Para servidores pequeños-medianos (< 50 jugadores concurrentes)
+      config.setMaximumPoolSize(6); // Reducir de 16
+      config.setMinimumIdle(1); // Reducir de 2
+      config.setIdleTimeout(300000); // 5 minutos
+      config.setMaxLifetime(900000); // 15 minutos
       config.setConnectionTimeout(35000);
       config.addDataSourceProperty("cachePrepStmts", "true");
       config.addDataSourceProperty("prepStmtCacheSize", "250");

@@ -38,6 +38,9 @@ commands:
   ready:
     description: Marca como listo a un jugador.
     usage: /ready
+  register:
+    description: Genera un código para vincular tu cuenta de Discord.
+    usage: /register
   remove:
     description: Eliminar un jugador del Draft.
     usage: /remove <nick>

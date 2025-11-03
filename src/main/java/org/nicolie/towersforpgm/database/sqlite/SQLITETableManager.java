@@ -6,6 +6,7 @@ import java.sql.Statement;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 
 public class SQLITETableManager {
@@ -42,6 +43,41 @@ public class SQLITETableManager {
         TowersForPGM.getInstance()
             .getLogger()
             .log(Level.SEVERE, "Error creando tabla '" + tableName + "' en SQLite", e);
+      }
+    });
+  }
+
+  /** Crea la tabla para vincular cuentas Discord-Minecraft */
+  public static void createDCAccountsTable() {
+    // Solo crear si el sistema ranked está habilitado
+    if (!MatchBotConfig.isRankedEnabled()) {
+      return;
+    }
+
+    Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
+      try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
+          Statement stmt = conn.createStatement()) {
+
+        String acc_table = MatchBotConfig.getAccountsTable();
+        String createTableSQL =
+            "CREATE TABLE IF NOT EXISTS " + acc_table + " (" + "uuid TEXT PRIMARY KEY, "
+                + "discordId TEXT NOT NULL UNIQUE, "
+                + "registeredAt DATETIME DEFAULT CURRENT_TIMESTAMP"
+                + ")";
+
+        stmt.executeUpdate(createTableSQL);
+
+        // Crear índice para discordId
+        String createIndexSQL =
+            "CREATE INDEX IF NOT EXISTS idx_discordId ON " + acc_table + " (discordId)";
+        stmt.executeUpdate(createIndexSQL);
+
+        TowersForPGM.getInstance().getLogger().info("Tabla " + acc_table + " creada exitosamente");
+
+      } catch (SQLException e) {
+        TowersForPGM.getInstance()
+            .getLogger()
+            .log(Level.SEVERE, "Error creando tabla " + MatchBotConfig.getAccountsTable(), e);
       }
     });
   }
