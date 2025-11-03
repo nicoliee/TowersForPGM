@@ -30,6 +30,8 @@ import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
 import org.nicolie.towersforpgm.matchbot.commands.stats.StatsCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopPaginationListener;
+import org.nicolie.towersforpgm.matchbot.rankeds.QueueJoinListener;
+import org.nicolie.towersforpgm.matchbot.rankeds.QueueLeaveListener;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.preparationTime.Region;
@@ -81,33 +83,19 @@ public final class TowersForPGM extends JavaPlugin {
 
   @Override
   public void onEnable() {
-    // Guardar la instancia de la clase principal
     instance = this;
-
-    // Guardar la configuración por defecto
     saveDefaultConfig();
     loadRegions();
     loadRefillConfig();
     ConfigManager.loadConfig();
     preparationEnabled = getConfig().getBoolean("preparationTime.enabled", false);
-
-    // Inicializar LanguageManager (ahora es estático)
     LanguageManager.initialize(this);
-
-    // Inicializar el RefillManager
     refillManager = new RefillManager();
-
-    // Inicializar el TorneoListener
     preparationListener = new PreparationListener();
-
-    // Base de datos
     initializeDatabase();
 
-    // Crear tablas al inicio si hay alguna conexión de base de datos disponible
     if (database) {
       createTablesOnStartup();
-      // Inicializar tabla de cuentas vinculadas Discord-Minecraft
-      org.nicolie.towersforpgm.database.TableManager.createDCAccountsTable();
     } else {
       getLogger().warning("No database connections available!");
     }
@@ -158,17 +146,19 @@ public final class TowersForPGM extends JavaPlugin {
       getLogger().info("MatchBot plugin found, initializing MatchBot integration.");
       isMatchBotEnabled = true;
 
-      // Cargar configuración de MatchBot
       loadMatchBotConfig();
 
       if (database) {
-
+        TableManager.createDCAccountsTable();
         StatsCommand.register();
         TopCommand.register();
         TopPaginationListener.register();
         AutocompleteHandler.register();
         // Registrar comando de vinculación Discord-Minecraft
         org.nicolie.towersforpgm.matchbot.commands.register.RegisterCommand.register();
+        // Registrar listener del queue de voz
+        QueueJoinListener.register();
+        QueueLeaveListener.register();
       }
     }
   }
@@ -316,7 +306,6 @@ public final class TowersForPGM extends JavaPlugin {
     ConfigManager.getTables().forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
     ConfigManager.getRankedTables()
         .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
-    TableManager.createDCAccountsTable();
   }
 
   // Método para inicializar la base de datos

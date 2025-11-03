@@ -1,7 +1,11 @@
 package org.nicolie.towersforpgm.matchbot.commands.register;
 
+import java.awt.Color;
+import java.time.Instant;
 import java.util.UUID;
 import me.tbg.match.bot.configs.DiscordBot;
+import me.tbg.match.bot.configs.MessagesConfig;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -11,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.DiscordManager;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.RegisterCodeManager;
 
@@ -38,8 +43,7 @@ public class RegisterCommand extends ListenerAdapter {
   public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
     if (!event.getName().equals(NAME)) return;
 
-    // Verificar si el sistema ranked está habilitado
-    if (!isRankedSystemEnabled()) {
+    if (!MatchBotConfig.isRankedEnabled()) {
       event
           .reply("❌ " + LanguageManager.langMessage("matchbot.register.system-disabled"))
           .setEphemeral(true)
@@ -56,7 +60,6 @@ public class RegisterCommand extends ListenerAdapter {
     String code = codeOption.getAsString().trim();
     String discordId = event.getUser().getId();
 
-    // Validar formato del código (6 dígitos)
     if (!code.matches("\\d{6}")) {
       event
           .reply("❌ " + LanguageManager.langMessage("matchbot.register.invalid-code-format"))
@@ -66,7 +69,6 @@ public class RegisterCommand extends ListenerAdapter {
     }
 
     event.deferReply(true).queue(hook -> {
-      // Verificar si la cuenta de Discord ya está vinculada
       DiscordManager.getMinecraftUuid(discordId)
           .thenAccept(linkedUuid -> {
             if (linkedUuid != null) {
@@ -76,7 +78,6 @@ public class RegisterCommand extends ListenerAdapter {
               return;
             }
 
-            // Validar y consumir el código
             UUID playerUuid = RegisterCodeManager.validateAndConsumeCode(code);
             if (playerUuid == null) {
               hook.editOriginal(
@@ -85,7 +86,6 @@ public class RegisterCommand extends ListenerAdapter {
               return;
             }
 
-            // Verificar si la cuenta de Minecraft ya está vinculada
             DiscordManager.getDiscordId(playerUuid)
                 .thenAccept(existingDiscordId -> {
                   if (existingDiscordId != null) {
@@ -96,30 +96,42 @@ public class RegisterCommand extends ListenerAdapter {
                     return;
                   }
 
-                  // Registrar la vinculación
                   DiscordManager.registerDCAccount(playerUuid, discordId)
                       .thenAccept(success -> {
                         if (success) {
-                          // Obtener el nombre del jugador para el mensaje
                           OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerUuid);
                           String playerName =
                               offlinePlayer.getName() != null ? offlinePlayer.getName() : "Jugador";
 
-                          hook.editOriginal("✅ "
-                                  + LanguageManager.langMessage("matchbot.register.success") + "\n"
-                                  + "**"
-                                  + LanguageManager.langMessage("matchbot.register.minecraft-label")
-                                  + "** " + playerName + "\n" + "**"
-                                  + LanguageManager.langMessage("matchbot.register.discord-label")
-                                  + "** <@" + discordId + ">")
-                              .queue();
+                          String registeredRoleId = MatchBotConfig.getRegisteredRoleId();
+                          if (registeredRoleId != null && !registeredRoleId.isEmpty()) {
+                            event
+                                .getGuild()
+                                .addRoleToMember(
+                                    event.getUser(), event.getGuild().getRoleById(registeredRoleId))
+                                .queue();
+                          }
 
-                          // Log en consola
-                          TowersForPGM.getInstance()
-                              .getLogger()
-                              .info("Cuenta vinculada: " + playerName + " (" + playerUuid + ") <-> "
-                                  + event.getUser().getAsTag() + " (" + discordId + ")");
-
+                          EmbedBuilder embed = new EmbedBuilder()
+                              .setColor(Color.GREEN)
+                              .setTitle(
+                                  "✅ " + LanguageManager.langMessage("matchbot.register.success"))
+                              .setTimestamp(Instant.now())
+                              .setThumbnail(
+                                  "https://mc-heads.net/avatar/" + playerName.toLowerCase())
+                              .setAuthor(
+                                  MessagesConfig.message("author.name"),
+                                  null,
+                                  MessagesConfig.message("author.icon_url"))
+                              .addField(
+                                  LanguageManager.langMessage("matchbot.register.minecraft-label"),
+                                  playerName,
+                                  true)
+                              .addField(
+                                  LanguageManager.langMessage("matchbot.register.discord-label"),
+                                  "<@" + discordId + ">",
+                                  true);
+                          hook.editOriginalEmbeds(embed.build()).queue();
                         } else {
                           hook.editOriginal("❌ "
                                   + LanguageManager.langMessage("matchbot.register.link-error"))
@@ -156,14 +168,5 @@ public class RegisterCommand extends ListenerAdapter {
             return null;
           });
     });
-  }
-
-  /** Verifica si el sistema ranked está habilitado en matchbot.yml */
-  private boolean isRankedSystemEnabled() {
-    if (!TowersForPGM.getInstance().isMatchBotEnabled()) {
-      return false;
-    }
-
-    return TowersForPGM.getInstance().getMatchBotConfig().getBoolean("ranked.enabled", false);
   }
 }

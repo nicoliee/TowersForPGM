@@ -17,6 +17,7 @@ joinedQueue: "+ {player}§r [{size}/{target}]"
 leftQueue: "- {player}§r [{size}/{target}]"
 cancelled: "Cuenta regresiva cancelada."
 countdown: "§3Iniciando en §b{time}§3."
+waitingFor: "§eEsperando a §6{player}§e."
 item: "§6§lEntrar a la Cola de Ranked"
 end-match: "§6Stats: §bRevisa el canal #rankeds en §1§nDiscord."
 

@@ -23,6 +23,7 @@ import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedStart;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.MatchPhase;
@@ -37,6 +38,7 @@ public class Queue {
   private static final java.util.Map<
           String, java.util.concurrent.CompletableFuture<java.util.List<PlayerEloChange>>>
       eloCache = new java.util.concurrent.ConcurrentHashMap<>();
+  private static Queue instance;
 
   private final TowersForPGM plugin = TowersForPGM.getInstance();
   private final Draft draft;
@@ -47,6 +49,7 @@ public class Queue {
     this.draft = draft;
     this.matchmaking = matchmaking;
     this.teams = teams;
+    instance = this;
   }
 
   private String getRankedPrefix() {
@@ -69,6 +72,19 @@ public class Queue {
 
   private int getCountdownTime(Match match) {
     int minSize = ConfigManager.getRankedMinSize();
+    int maxSize = ConfigManager.getRankedMaxSize();
+
+    // Check if there are disconnected players in queue
+    List<String> disconnectedPlayers = getDisconnectedPlayersInQueue();
+    if (!disconnectedPlayers.isEmpty()) {
+      return 30; // 30 seconds if there are disconnected players
+    }
+
+    // Check if queue is full
+    if (queuePlayers.size() >= maxSize) {
+      return 5; // 5 seconds if queue is full
+    }
+
     return (match.getPlayers().size() == minSize || match.getPlayers().size() == minSize + 1)
         ? 5
         : 15;
@@ -101,20 +117,7 @@ public class Queue {
 
     queuePlayers.add(playerUUID);
 
-    int targetSize = getValidRankedSize(match);
-    Component message = Component.text(getRankedPrefix()
-        + LanguageManager.langMessage("ranked.joinedQueue")
-            .replace("{player}", player.getPrefixedName())
-            .replace("{size}", String.valueOf(queuePlayers.size()))
-            .replace(
-                "{target}",
-                String.valueOf(targetSize > 0 ? targetSize : ConfigManager.getRankedMinSize())));
-
-    match.sendMessage(message);
-
-    if (queuePlayers.size() >= ConfigManager.getRankedMinSize()) {
-      startRanked(match);
-    }
+    sendQueueMessage(match, player.getPrefixedName(), false);
   }
 
   public void removePlayer(MatchPlayer player) {
@@ -128,17 +131,8 @@ public class Queue {
 
     queuePlayers.remove(playerUUID);
     Match match = player.getMatch();
-    int targetSize = getValidRankedSize(match);
 
-    Component message = Component.text(getRankedPrefix()
-        + LanguageManager.langMessage("ranked.leftQueue")
-            .replace("{player}", player.getPrefixedName())
-            .replace("{size}", String.valueOf(queuePlayers.size()))
-            .replace(
-                "{target}",
-                String.valueOf(targetSize > 0 ? targetSize : ConfigManager.getRankedMinSize())));
-
-    match.sendMessage(message);
+    sendQueueMessage(match, player.getPrefixedName(), true);
   }
 
   public void startRanked(Match match) {
@@ -160,6 +154,7 @@ public class Queue {
             plugin,
             () -> {
               int timeLeft = countdown.get();
+              List<String> disconnectedPlayers = getDisconnectedPlayersInQueue();
 
               if (timeLeft <= 0) {
                 String table = ConfigManager.getRankedDefaultTable();
@@ -179,16 +174,35 @@ public class Queue {
                 return;
               }
 
-              if (queuePlayers.size() >= maxSize) {
-                countdown.set(Math.min(timeLeft, 5));
-                timeLeft = countdown.get();
+              // Dynamic timer adjustment based on player connection status
+
+              // If disconnected players exist, show waiting message and use 30 seconds
+              if (!disconnectedPlayers.isEmpty()) {
+                String waitingPlayers =
+                    String.join(", ", disconnectedPlayers); // Show all disconnected players
+                if (timeLeft > 30) {
+                  countdown.set(30);
+                  timeLeft = 30;
+                }
+                match.sendMessage(Component.text(getRankedPrefix()
+                    + LanguageManager.langMessage("ranked.waitingFor")
+                        .replace("{player}", waitingPlayers)));
+              } else {
+                // No disconnected players, adjust timer based on queue status
+                if (queuePlayers.size() >= maxSize && timeLeft > 5) {
+                  countdown.set(5);
+                  timeLeft = 5;
+                } else if (queuePlayers.size() < maxSize && timeLeft > 15 && timeLeft <= 30) {
+                  countdown.set(15);
+                  timeLeft = 15;
+                }
+
+                match.sendMessage(Component.text(getRankedPrefix()
+                    + LanguageManager.langMessage("ranked.countdown")
+                        .replace("{time}", String.valueOf(timeLeft))));
               }
 
-              match.sendMessage(Component.text(getRankedPrefix()
-                  + LanguageManager.langMessage("ranked.countdown")
-                      .replace("{time}", String.valueOf(timeLeft))));
               match.playSound(Sounds.INVENTORY_CLICK);
-
               countdown.decrementAndGet();
             },
             0L,
@@ -324,11 +338,97 @@ public class Queue {
     return offline != null ? offline.getUniqueId() : null;
   }
 
+  private List<String> getDisconnectedPlayersInQueue() {
+    List<String> disconnectedPlayers = new ArrayList<>();
+    for (UUID uuid : queuePlayers) {
+      MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
+      if (player == null) {
+        // Player is not online, get their username from OfflinePlayer
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+        if (offlinePlayer.getName() != null) {
+          disconnectedPlayers.add(offlinePlayer.getName());
+        }
+      }
+    }
+    return disconnectedPlayers;
+  }
+
+  private void sendQueueMessage(Match match, String playerName, boolean isLeave) {
+    int targetSize = getValidRankedSize(match);
+    String messageKey = isLeave ? "ranked.leftQueue" : "ranked.joinedQueue";
+
+    Component message = Component.text(getRankedPrefix()
+        + LanguageManager.langMessage(messageKey)
+            .replace("{player}", playerName)
+            .replace("{size}", String.valueOf(queuePlayers.size()))
+            .replace(
+                "{target}",
+                String.valueOf(targetSize > 0 ? targetSize : ConfigManager.getRankedMinSize())));
+
+    match.sendMessage(message);
+
+    if (!isLeave && queuePlayers.size() >= ConfigManager.getRankedMinSize()) {
+      startRanked(match);
+    }
+  }
+
+  public void addPlayer(UUID playerUUID, Match match) {
+    if (playerUUID == null) {
+      return;
+    }
+
+    if (match == null) {
+      match = MatchManager.getMatch();
+    }
+
+    OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerUUID);
+    if (offlinePlayer.getName() == null) {
+      return;
+    }
+
+    if (queuePlayers.contains(playerUUID)) {
+      return;
+    }
+
+    queuePlayers.add(playerUUID);
+
+    String playerName = offlinePlayer.getName();
+    sendQueueMessage(match, playerName, false);
+  }
+
+  public void removePlayer(UUID playerUUID, Match match) {
+    if (playerUUID == null) {
+      return;
+    }
+
+    if (match == null) {
+      match = MatchManager.getMatch();
+    }
+
+    OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerUUID);
+    if (offlinePlayer.getName() == null) {
+      return;
+    }
+
+    if (!queuePlayers.contains(playerUUID)) {
+      return;
+    }
+
+    queuePlayers.remove(playerUUID);
+    String playerName = offlinePlayer.getName();
+
+    sendQueueMessage(match, playerName, true);
+  }
+
   public static Boolean isRanked() {
     return ranked;
   }
 
   public static void setRanked(Boolean value) {
     ranked = value;
+  }
+
+  public static Queue getQueue() {
+    return instance;
   }
 }

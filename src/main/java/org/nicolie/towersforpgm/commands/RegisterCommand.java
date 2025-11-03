@@ -31,23 +31,18 @@ public class RegisterCommand implements CommandExecutor {
 
     // Verificar si el sistema de ranked está habilitado
     if (!MatchBotConfig.isRankedEnabled()) {
-      matchPlayer.sendMessage(
-          Component.text(LanguageManager.langMessage("matchbot.register.system-disabled"))
-              .color(NamedTextColor.RED));
+      matchPlayer.sendWarning(
+          Component.text(LanguageManager.langMessage("matchbot.register.system-disabled")));
       return true;
     }
 
     // Verificar si la cuenta ya está vinculada
     DiscordManager.getDiscordId(player.getUniqueId()).thenAccept(discordId -> {
       if (discordId != null) {
-        Component message = Component.text(
-                LanguageManager.langMessage("matchbot.register.already-linked")
-                    .replace("{discord_id}", discordId))
-            .color(NamedTextColor.YELLOW)
-            .append(
-                Component.text(discordId).color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
-
-        matchPlayer.sendMessage(message);
+        Component message =
+            Component.text(LanguageManager.langMessage("matchbot.register.already-linked")
+                .replace("{discord_id}", discordId));
+        matchPlayer.sendWarning(message);
         return;
       }
 
@@ -55,20 +50,27 @@ public class RegisterCommand implements CommandExecutor {
       if (RegisterCodeManager.hasActiveCode(player.getUniqueId())) {
         String existingCode = RegisterCodeManager.getActiveCode(player.getUniqueId());
 
+        Component hoverText = Component.text(
+                LanguageManager.langMessage("matchbot.register.click-copy-tooltip"))
+            .color(NamedTextColor.AQUA)
+            .decorate(TextDecoration.BOLD)
+            .append(Component.text("\n"
+                    + LanguageManager.langMessage("matchbot.register.use-code-discord")
+                        .replace("{code}", existingCode))
+                .color(NamedTextColor.YELLOW))
+            .append(
+                Component.text("\n" + LanguageManager.langMessage("matchbot.register.code-expires"))
+                    .color(NamedTextColor.GRAY)
+                    .decorate(TextDecoration.ITALIC));
+
         Component message = Component.text(
-                LanguageManager.langMessage("matchbot.register.active-code-exists")
-                    .replace("{code}", existingCode))
+                LanguageManager.langMessage("matchbot.register.active-code-exists"))
             .color(NamedTextColor.YELLOW)
             .append(Component.text("[" + existingCode + "]")
                 .color(NamedTextColor.GOLD)
                 .decorate(TextDecoration.BOLD)
                 .clickEvent(ClickEvent.copyToClipboard(existingCode))
-                .hoverEvent(Component.text(
-                    LanguageManager.langMessage("matchbot.register.click-copy-tooltip"))))
-            .append(Component.text("\n"
-                    + LanguageManager.langMessage("matchbot.register.use-code-discord")
-                        .replace("{code}", existingCode))
-                .color(NamedTextColor.GRAY));
+                .hoverEvent(hoverText));
 
         matchPlayer.sendMessage(message);
         return;
@@ -80,7 +82,19 @@ public class RegisterCommand implements CommandExecutor {
       // Almacenar código temporalmente (10 minutos)
       RegisterCodeManager.storeCode(player.getUniqueId(), code);
 
-      // Enviar mensaje al jugador con el código clickeable
+      Component hoverText = Component.text(
+              LanguageManager.langMessage("matchbot.register.click-copy-tooltip"))
+          .color(NamedTextColor.AQUA)
+          .decorate(TextDecoration.BOLD)
+          .append(Component.text("\n"
+                  + LanguageManager.langMessage("matchbot.register.use-code-discord")
+                      .replace("{code}", code))
+              .color(NamedTextColor.YELLOW))
+          .append(
+              Component.text("\n" + LanguageManager.langMessage("matchbot.register.code-expires"))
+                  .color(NamedTextColor.GRAY)
+                  .decorate(TextDecoration.ITALIC));
+
       Component message = Component.text(
               LanguageManager.langMessage("matchbot.register.code-generated") + " ")
           .color(NamedTextColor.GREEN)
@@ -91,15 +105,7 @@ public class RegisterCommand implements CommandExecutor {
               .color(NamedTextColor.GOLD)
               .decorate(TextDecoration.BOLD)
               .clickEvent(ClickEvent.copyToClipboard(code))
-              .hoverEvent(Component.text(
-                  LanguageManager.langMessage("matchbot.register.click-copy-tooltip"))))
-          .append(Component.text("\n"
-                  + LanguageManager.langMessage("matchbot.register.use-code-discord")
-                      .replace("{code}", code))
-              .color(NamedTextColor.GRAY))
-          .append(
-              Component.text("\n" + LanguageManager.langMessage("matchbot.register.code-expires"))
-                  .color(NamedTextColor.GRAY));
+              .hoverEvent(hoverText));
 
       matchPlayer.sendMessage(message);
     });

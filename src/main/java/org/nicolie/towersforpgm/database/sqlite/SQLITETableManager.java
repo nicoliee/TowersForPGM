@@ -51,9 +51,9 @@ public class SQLITETableManager {
   public static void createDCAccountsTable() {
     // Solo crear si el sistema ranked está habilitado
     if (!MatchBotConfig.isRankedEnabled()) {
+      System.out.println("[SQLite] Ranked system not enabled, skipping DCAccounts table creation.");
       return;
     }
-
     Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
       try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
           Statement stmt = conn.createStatement()) {

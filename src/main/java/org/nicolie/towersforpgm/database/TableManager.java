@@ -39,15 +39,19 @@ public class TableManager {
       plugin.getLogger().warning("Base de datos no activada, no se puede crear tabla DCAccounts");
       return;
     }
+    System.out.println("Attempting to create DCAccounts table...");
 
     if (!MatchBotConfig.isRankedEnabled()) {
+      System.out.println("Ranked system not enabled, skipping DCAccounts table creation.");
       return;
     }
     String dbType = plugin.getCurrentDatabaseType();
     try {
       if ("MySQL".equals(dbType)) {
+        System.out.println("Creating DCAccounts table in MySQL database...");
         SQLTableManager.createDCAccountsTable();
       } else if ("SQLite".equals(dbType)) {
+        System.out.println("Creating DCAccounts table in SQLite database...");
         SQLITETableManager.createDCAccountsTable();
       } else {
         plugin

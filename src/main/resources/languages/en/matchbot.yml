@@ -21,7 +21,7 @@ register:
   description: "Generate a code to link your Discord account with Minecraft."
   system-disabled: "The registration system is not available."
   already-linked: "Your account is already linked with Discord ID: {discord_id}"
-  active-code-exists: "You already have an active code: {code}"
+  active-code-exists: "You already have an active code: "
   use-code-discord: "Use this code in Discord with /register {code}"
   code-generated: "Registration code generated!"
   click-to-copy: "Click to copy:"

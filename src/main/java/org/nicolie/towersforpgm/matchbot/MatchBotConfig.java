@@ -11,13 +11,22 @@ public class MatchBotConfig {
   private static String rankedRoleId;
   private static String accountsTable;
   private static boolean rankedEnabled;
+  private static String registeredRoleId;
+  private static String queueID;
+  private static String team1ID;
+  private static String team2ID;
 
   public static void loadConfig(FileConfiguration config) {
     tables = config.getStringList("tables");
     discordChannel = config.getString("discordChannel", "");
     rankedRoleId = config.getString("rankedRoleId", "");
-    accountsTable = config.getString("ranked.table", "DCAccounts");
     rankedEnabled = config.getBoolean("ranked.enabled", false);
+    accountsTable = config.getString("ranked.table", "DCAccounts");
+    registeredRoleId = config.getString("ranked.registeredRoleId", "");
+    queueID = config.getString("ranked.queueID", "");
+    team1ID = config.getString("ranked.team1ID", "");
+    team2ID = config.getString("ranked.team2ID", "");
+
     BotConfig.addBlacklist(ConfigManager.getRankedMaps());
   }
 
@@ -39,5 +48,21 @@ public class MatchBotConfig {
 
   public static boolean isRankedEnabled() {
     return rankedEnabled;
+  }
+
+  public static String getRegisteredRoleId() {
+    return registeredRoleId;
+  }
+
+  public static String getQueueID() {
+    return queueID;
+  }
+
+  public static String getTeam1ID() {
+    return team1ID;
+  }
+
+  public static String getTeam2ID() {
+    return team2ID;
   }
 }

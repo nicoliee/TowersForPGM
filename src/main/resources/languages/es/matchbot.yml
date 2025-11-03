@@ -20,8 +20,8 @@ top:
 register:
   description: "Genera un código para vincular tu cuenta de Discord con Minecraft."
   system-disabled: "El sistema de registro no está disponible."
-  already-linked: "Tu cuenta ya está vinculada con Discord ID: {discord_id}"
-  active-code-exists: "Ya tienes un código activo: {code}"
+  already-linked: "Tu cuenta ya está vinculada con Discord."
+  active-code-exists: "Ya tienes un código activo: "
   use-code-discord: "Usa este código en Discord con /register {code}"
   code-generated: "¡Código de registro generado!"
   click-to-copy: "Haz click para copiar:"

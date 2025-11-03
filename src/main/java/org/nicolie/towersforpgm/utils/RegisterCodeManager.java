@@ -3,7 +3,6 @@ package org.nicolie.towersforpgm.utils;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import org.nicolie.towersforpgm.TowersForPGM;
 
 public class RegisterCodeManager {
 
@@ -14,10 +13,6 @@ public class RegisterCodeManager {
   public static void storeCode(UUID playerUuid, String code) {
     activeCodes.put(playerUuid, code);
     codeExpiry.put(playerUuid, System.currentTimeMillis() + (CODE_EXPIRY_MINUTES * 60 * 1000));
-
-    TowersForPGM.getInstance()
-        .getLogger()
-        .info("Código de registro generado para " + playerUuid + ": " + code);
   }
 
   public static UUID validateAndConsumeCode(String code) {
@@ -33,10 +28,6 @@ public class RegisterCodeManager {
           // Código válido, consumirlo
           activeCodes.remove(playerUuid);
           codeExpiry.remove(playerUuid);
-
-          TowersForPGM.getInstance()
-              .getLogger()
-              .info("Código de registro consumido para " + playerUuid + ": " + code);
 
           return playerUuid;
         }

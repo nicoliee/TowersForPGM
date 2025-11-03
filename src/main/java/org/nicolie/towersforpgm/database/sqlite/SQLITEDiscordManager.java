@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,15 +25,7 @@ public class SQLITEDiscordManager {
     SQL_EXECUTOR.shutdown();
   }
 
-  /**
-   * Registra una nueva vinculación entre cuenta de Minecraft y Discord
-   *
-   * @param playerUuid UUID del jugador de Minecraft
-   * @param discordId ID del usuario de Discord
-   * @return CompletableFuture<Boolean> - true si se registró exitosamente
-   */
-  public static CompletableFuture<Boolean> registerDCAccount(
-      java.util.UUID playerUuid, String discordId) {
+  public static CompletableFuture<Boolean> registerDCAccount(UUID playerUuid, String discordId) {
     return CompletableFuture.supplyAsync(
         () -> {
           String acc_table = MatchBotConfig.getAccountsTable();
@@ -85,13 +78,7 @@ public class SQLITEDiscordManager {
         SQL_EXECUTOR);
   }
 
-  /**
-   * Busca el Discord ID asociado a un UUID de Minecraft
-   *
-   * @param playerUuid UUID del jugador
-   * @return CompletableFuture<String> - Discord ID o null si no encontrado
-   */
-  public static CompletableFuture<String> getDiscordId(java.util.UUID playerUuid) {
+  public static CompletableFuture<String> getDiscordId(UUID playerUuid) {
     return CompletableFuture.supplyAsync(
         () -> {
           String acc_table = MatchBotConfig.getAccountsTable();
@@ -119,13 +106,7 @@ public class SQLITEDiscordManager {
         SQL_EXECUTOR);
   }
 
-  /**
-   * Busca el UUID de Minecraft asociado a un Discord ID
-   *
-   * @param discordId ID del usuario de Discord
-   * @return CompletableFuture<java.util.UUID> - UUID del jugador o null si no encontrado
-   */
-  public static CompletableFuture<java.util.UUID> getMinecraftUuid(String discordId) {
+  public static CompletableFuture<UUID> getMinecraftUuid(String discordId) {
     return CompletableFuture.supplyAsync(
         () -> {
           String acc_table = MatchBotConfig.getAccountsTable();
