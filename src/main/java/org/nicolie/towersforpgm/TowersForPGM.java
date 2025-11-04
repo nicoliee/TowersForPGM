@@ -31,8 +31,8 @@ import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
 import org.nicolie.towersforpgm.matchbot.commands.stats.StatsCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopPaginationListener;
-import org.nicolie.towersforpgm.matchbot.listeners.MatchFinishListener;
-import org.nicolie.towersforpgm.matchbot.listeners.Ranked;
+import org.nicolie.towersforpgm.matchbot.listeners.RankedFinishListener;
+import org.nicolie.towersforpgm.matchbot.listeners.RankedListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.QueueJoinListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.QueueLeaveListener;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
@@ -163,8 +163,8 @@ public final class TowersForPGM extends JavaPlugin {
         QueueJoinListener.register();
         QueueLeaveListener.register();
         // Registrar listeners de gestión de canales de voz para ranked
-        getServer().getPluginManager().registerEvents(new Ranked(), this);
-        getServer().getPluginManager().registerEvents(new MatchFinishListener(), this);
+        getServer().getPluginManager().registerEvents(new RankedListener(), this);
+        getServer().getPluginManager().registerEvents(new RankedFinishListener(), this);
       }
     }
   }

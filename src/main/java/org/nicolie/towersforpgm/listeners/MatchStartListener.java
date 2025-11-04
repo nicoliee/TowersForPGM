@@ -27,14 +27,15 @@ public class MatchStartListener implements Listener {
   @EventHandler
   public void onMatchStart(MatchStartEvent event) {
     String worldName = event.getMatch().getWorld().getName();
-    if (captains.isReadyActive()) {
-      Utilities.cancelReadyReminder();
-      captains.resetReady();
-    }
+
+    Utilities.cancelReadyReminder();
+    captains.resetReady();
+
     refillManager.startRefillTask(worldName);
     if (plugin.isPreparationEnabled()) {
       preparationListener.startProtection(null, event.getMatch());
     }
+
     Queue.sendRankedStartEmbed(event);
   }
 }

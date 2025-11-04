@@ -8,6 +8,7 @@ ranked:
   enabled: false
   table: "DCAccounts" # Tabla donde se guardan los IDS de Discord vinculados con UUIDs de Minecraft
   registeredRoleId: "1420549772804362240" # ID del rol que indica que un usuario está registrado en el sistema de ranked
+  inactiveID: "" # ID del voice channel para jugadores inactivos
   queueID: "" # ID de la cola de ranked en el MatchBot
   team1ID: "" # ID del equipo 1 en la cola de ranked
   team2ID: "" # ID del equipo 2 en la cola de ranked

@@ -12,6 +12,7 @@ public class MatchBotConfig {
   private static String accountsTable;
   private static boolean rankedEnabled;
   private static String registeredRoleId;
+  private static String inactiveID;
   private static String queueID;
   private static String team1ID;
   private static String team2ID;
@@ -23,10 +24,10 @@ public class MatchBotConfig {
     rankedEnabled = config.getBoolean("ranked.enabled", false);
     accountsTable = config.getString("ranked.table", "DCAccounts");
     registeredRoleId = config.getString("ranked.registeredRoleId", "");
+    inactiveID = config.getString("ranked.inactiveID", "");
     queueID = config.getString("ranked.queueID", "");
     team1ID = config.getString("ranked.team1ID", "");
     team2ID = config.getString("ranked.team2ID", "");
-
     BotConfig.addBlacklist(ConfigManager.getRankedMaps());
   }
 
@@ -52,6 +53,10 @@ public class MatchBotConfig {
 
   public static String getRegisteredRoleId() {
     return registeredRoleId;
+  }
+
+  public static String getInactiveID() {
+    return inactiveID;
   }
 
   public static String getQueueID() {
