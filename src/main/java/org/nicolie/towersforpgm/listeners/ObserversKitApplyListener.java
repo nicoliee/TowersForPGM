@@ -6,7 +6,6 @@ import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.PicksGUI;
-import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.ItemListener;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import tc.oc.pgm.api.match.Match;
@@ -36,7 +35,7 @@ public class ObserversKitApplyListener implements Listener {
               1L); // 1 tick después
     }
 
-    if (ConfigManager.getRankedMaps().contains(map) && !MatchBotConfig.isRankedEnabled()) {
+    if (ConfigManager.getRankedMaps().contains(map)) {
       ItemListener.giveItem(player);
     }
   }

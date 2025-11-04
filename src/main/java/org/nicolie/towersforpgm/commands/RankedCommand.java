@@ -12,6 +12,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Utilities;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
@@ -56,6 +57,7 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
           sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
           return true;
         }
+        if (MatchBotConfig.isRankedEnabled()) return true;
         Match match = PGM.get().getMatchManager().getMatch(sender);
         MatchPlayer player = match.getPlayer((Player) sender);
         if (mainArg.equals("join")) {

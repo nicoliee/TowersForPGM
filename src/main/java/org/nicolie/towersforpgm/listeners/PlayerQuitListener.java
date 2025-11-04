@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
@@ -22,19 +23,19 @@ public class PlayerQuitListener implements Listener {
 
   @EventHandler
   public void onPlayerQuit(PlayerQuitEvent event) {
-    // Si el jugador está en un equipo añadirlo a una lista de jugadores que se han desconectado
     Player player = event.getPlayer();
     UUID uuid = player.getUniqueId();
     Match match = PGM.get().getMatchManager().getMatch(player);
     MatchPlayer matchPlayer = match.getPlayer(player);
-    if (matchPlayer != null) {
-      queue.removePlayer(matchPlayer);
-    }
     Boolean isOnTeam = match.getPlayer(player).isParticipating();
     if (isOnTeam) {
       plugin.addDisconnectedPlayer(player.getName(), matchPlayer);
     }
-    if (queue.getQueuePlayers().contains(uuid)) {
+
+    boolean isPlayerInQueue = queue.getQueuePlayers().contains(uuid);
+    boolean isRankedEnabled = MatchBotConfig.isRankedEnabled();
+
+    if (isPlayerInQueue && !isRankedEnabled) {
       queue.removePlayer(matchPlayer);
     }
   }

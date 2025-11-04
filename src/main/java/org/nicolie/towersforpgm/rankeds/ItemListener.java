@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
@@ -66,6 +67,7 @@ public class ItemListener implements Listener {
 
   public static void giveItem(MatchPlayer player) {
     if (!RANKED_AVAILABLE) return;
+    if (MatchBotConfig.isRankedEnabled()) return;
     player.getBukkit().getInventory().setItem(4, getQueueItem());
   }
 

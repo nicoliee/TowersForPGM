@@ -14,7 +14,7 @@ import tc.oc.pgm.api.match.event.MatchFinishEvent;
 
 public class RankedFinishListener implements Listener {
   private static final Boolean RANKED_ENABLED = MatchBotConfig.isRankedEnabled();
-  private static  final String INACTIVE_ID = MatchBotConfig.getInactiveID();
+  private static final String INACTIVE_ID = MatchBotConfig.getInactiveID();
   private static final String CHANNEL1_ID = MatchBotConfig.getTeam1ID();
   private static final String CHANNEL2_ID = MatchBotConfig.getTeam2ID();
   private static final String GUILD_ID = BotConfig.getServerId();
@@ -51,7 +51,7 @@ public class RankedFinishListener implements Listener {
     VoiceChannel channel2 = guild.getVoiceChannelById(CHANNEL2_ID);
 
     var membersToMove = new java.util.ArrayList<Member>();
-    
+
     if (channel1 != null) {
       membersToMove.addAll(channel1.getMembers());
     }
@@ -63,7 +63,7 @@ public class RankedFinishListener implements Listener {
       var moveActions = membersToMove.stream()
           .map(member -> guild.moveVoiceMember(member, inactiveChannel))
           .toList();
-      
+
       net.dv8tion.jda.api.requests.RestAction.allOf(moveActions).queue();
     }
   }

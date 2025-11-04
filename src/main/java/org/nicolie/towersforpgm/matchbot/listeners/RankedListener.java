@@ -41,15 +41,15 @@ public class RankedListener implements Listener {
     if (guild == null) return;
 
     // Obtener todos los DiscordPlayers de manera asíncrona
-    var discordPlayerFutures = uuids.stream()
-        .map(DiscordManager::getDiscordPlayer)
-        .toList();
+    var discordPlayerFutures =
+        uuids.stream().map(DiscordManager::getDiscordPlayer).toList();
 
     // Cuando todos los DiscordPlayers estén listos, procesarlos en lote
     java.util.concurrent.CompletableFuture.allOf(
-        discordPlayerFutures.toArray(new java.util.concurrent.CompletableFuture[0]))
+            discordPlayerFutures.toArray(new java.util.concurrent.CompletableFuture[0]))
         .thenRun(() -> {
-          var moveActions = new java.util.ArrayList<net.dv8tion.jda.api.requests.RestAction<Void>>();
+          var moveActions =
+              new java.util.ArrayList<net.dv8tion.jda.api.requests.RestAction<Void>>();
 
           for (var future : discordPlayerFutures) {
             try {
