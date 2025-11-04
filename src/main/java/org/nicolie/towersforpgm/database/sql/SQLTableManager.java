@@ -74,12 +74,21 @@ public class SQLTableManager {
         if (isRanked) allColumns.addAll(RANKED_COLUMNS);
         allColumns.addAll(CALCULATED_COLUMNS);
 
+        // Crear índices individuales
         for (String column : allColumns) {
           String idxName = "idx_" + column;
           if (!existingIndexes.contains(idxName)) {
             statements.add(
                 "CREATE INDEX IF NOT EXISTS " + idxName + " ON " + tableName + " (" + column + ")");
           }
+        }
+
+        // Crear índices compuestos optimizados para consultas getTop
+        String compositeIdxName = "idx_composite_order";
+        if (!existingIndexes.contains(compositeIdxName)) {
+          // Índice compuesto para ORDER BY column DESC, username ASC (para paginación keyset)
+          statements.add("CREATE INDEX IF NOT EXISTS " + compositeIdxName + " ON " + tableName
+              + " (kills DESC, username ASC, deaths DESC, assists DESC, points DESC, wins DESC)");
         }
 
         // 6. Ejecutar solo las operaciones necesarias

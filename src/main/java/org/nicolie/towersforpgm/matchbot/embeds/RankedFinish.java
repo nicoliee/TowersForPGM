@@ -9,7 +9,7 @@ import java.util.Map;
 import me.tbg.match.bot.configs.MessagesConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.database.Stats;
+import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.LanguageManager;

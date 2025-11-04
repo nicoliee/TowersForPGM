@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import org.nicolie.towersforpgm.database.StatsManager;
-import org.nicolie.towersforpgm.database.TopResult;
+import org.nicolie.towersforpgm.database.models.top.TopResult;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.cache.TopLRUCache;
 import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;

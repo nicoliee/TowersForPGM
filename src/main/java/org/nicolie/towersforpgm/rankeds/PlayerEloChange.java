@@ -4,6 +4,7 @@ import java.util.UUID;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import org.nicolie.towersforpgm.TowersForPGM;
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
@@ -49,6 +50,8 @@ public class PlayerEloChange {
   }
 
   public void sendMessage() {
+    java.time.Duration showAfter = PGM.get().getConfiguration().showStatsAfter();
+    long delay = Math.max(0L, (showAfter.toMillis() + 49L) / 50L) + 1L;
     org.bukkit.Bukkit.getScheduler()
         .runTaskLater(
             TowersForPGM.getInstance(),
@@ -85,6 +88,6 @@ public class PlayerEloChange {
               }
               player.sendMessage(Component.text(message));
             },
-            1L);
+            delay);
   }
 }

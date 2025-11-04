@@ -20,7 +20,6 @@ public class SQLITEDatabaseManager {
 
       String databasePath = "plugins/TowersForPGM/database.db";
 
-      // Crear directorio si no existe
       File dbFile = new File(databasePath);
       File parentDir = dbFile.getParentFile();
       if (parentDir != null && !parentDir.exists()) {
@@ -30,25 +29,18 @@ public class SQLITEDatabaseManager {
       HikariConfig config = new HikariConfig();
       config.setJdbcUrl("jdbc:sqlite:" + databasePath);
 
-      // Configuración optimizada para SQLite
-      config.setMaximumPoolSize(5); // Aumentar pool size para SQLite con WAL
+      config.setMaximumPoolSize(5);
       config.setMinimumIdle(1);
-      config.setIdleTimeout(60000); // 1 minuto
-      config.setMaxLifetime(300000); // 5 minutos
-      config.setConnectionTimeout(30000); // 30 segundos
-      config.setLeakDetectionThreshold(60000); // Detectar conexiones que no se liberan
-
-      // Configuración específica para SQLite
+      config.setIdleTimeout(60000);
+      config.setMaxLifetime(300000);
+      config.setConnectionTimeout(30000);
+      config.setLeakDetectionThreshold(60000);
       config.setConnectionTestQuery("SELECT 1");
       config.setValidationTimeout(5000);
       config.setInitializationFailTimeout(10000);
 
-      // No establecer configuraciones específicas de SQLite aquí para evitar el error de batch
-      // Las configuraciones se aplicarán mediante PRAGMA después de crear la conexión
-
       dataSource = new HikariDataSource(config);
 
-      // Configurar SQLite al conectar - usar conexión directa para evitar recursión
       try (Connection conn = dataSource.getConnection()) {
         conn.createStatement().execute("PRAGMA foreign_keys = ON");
         conn.createStatement().execute("PRAGMA journal_mode = WAL");

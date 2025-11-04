@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.database.models.discordPlayer.DiscordPlayer;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 
 public class SQLDiscordManager {
@@ -79,7 +80,7 @@ public class SQLDiscordManager {
         SQL_EXECUTOR);
   }
 
-  public static CompletableFuture<String> getDiscordId(UUID playerUuid) {
+  public static CompletableFuture<DiscordPlayer> getDiscordId(UUID playerUuid) {
     return CompletableFuture.supplyAsync(
         () -> {
           String acc_table = MatchBotConfig.getAccountsTable();
@@ -91,7 +92,8 @@ public class SQLDiscordManager {
 
               try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                  return rs.getString("discordId");
+                  String discordId = rs.getString("discordId");
+                  return new DiscordPlayer(playerUuid, discordId);
                 }
               }
             }
@@ -105,7 +107,7 @@ public class SQLDiscordManager {
         SQL_EXECUTOR);
   }
 
-  public static CompletableFuture<UUID> getMinecraftUuid(String discordId) {
+  public static CompletableFuture<DiscordPlayer> getMinecraftUuid(String discordId) {
     return CompletableFuture.supplyAsync(
         () -> {
           String acc_table = MatchBotConfig.getAccountsTable();
@@ -117,7 +119,8 @@ public class SQLDiscordManager {
 
               try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                  return java.util.UUID.fromString(rs.getString("uuid"));
+                  UUID playerUuid = java.util.UUID.fromString(rs.getString("uuid"));
+                  return new DiscordPlayer(playerUuid, discordId);
                 }
               }
             }

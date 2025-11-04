@@ -33,10 +33,10 @@ public class QueueJoinListener extends ListenerAdapter {
       String discordId = event.getMember().getId();
 
       // Obtener el UUID de Minecraft asociado
-      DiscordManager.getMinecraftUuid(discordId)
-          .thenAccept(minecraftUuid -> {
-            if (minecraftUuid != null) {
-              Queue.getQueue().addPlayer(minecraftUuid, null);
+      DiscordManager.getDiscordPlayer(discordId)
+          .thenAccept(discordPlayer -> {
+            if (discordPlayer != null) {
+              Queue.getQueue().addPlayer(discordPlayer.getPlayerUuid(), null);
             }
           })
           .exceptionally(throwable -> {

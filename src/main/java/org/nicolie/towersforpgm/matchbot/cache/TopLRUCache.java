@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import org.nicolie.towersforpgm.database.Top;
+import org.nicolie.towersforpgm.database.models.top.Top;
 
 /**
  * Caché LRU para páginas del top. Clave: table|column|page|limit|perGame TTL de entradas: 15s.

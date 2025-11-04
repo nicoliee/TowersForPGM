@@ -37,11 +37,11 @@ public class RegisterCommand implements CommandExecutor {
     }
 
     // Verificar si la cuenta ya está vinculada
-    DiscordManager.getDiscordId(player.getUniqueId()).thenAccept(discordId -> {
-      if (discordId != null) {
+    DiscordManager.getDiscordPlayer(player.getUniqueId()).thenAccept(discordPlayer -> {
+      if (discordPlayer != null) {
         Component message =
             Component.text(LanguageManager.langMessage("matchbot.register.already-linked")
-                .replace("{discord_id}", discordId));
+                .replace("{discord_id}", discordPlayer.getDiscordId()));
         matchPlayer.sendWarning(message);
         return;
       }

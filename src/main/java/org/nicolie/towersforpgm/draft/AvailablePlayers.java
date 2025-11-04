@@ -8,7 +8,7 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.database.Stats;
+import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.MatchManager;

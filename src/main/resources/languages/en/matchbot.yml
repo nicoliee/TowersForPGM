@@ -19,6 +19,8 @@ top:
   error: "There was an error retrieving the top. {error}"
 register:
   description: "Generate a code to link your Discord account with Minecraft."
+  code-option-description: "6-digit code obtained in Minecraft with /register"
+  code-required-error: "You must provide a code."
   system-disabled: "The registration system is not available."
   already-linked: "Your account is already linked with Discord ID: {discord_id}"
   active-code-exists: "You already have an active code: "

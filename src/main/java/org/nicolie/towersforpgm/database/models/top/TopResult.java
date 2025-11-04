@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.database;
+package org.nicolie.towersforpgm.database.models.top;
 
 import java.util.List;
 

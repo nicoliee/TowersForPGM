@@ -32,10 +32,10 @@ public class QueueLeaveListener extends ListenerAdapter {
       String discordId = event.getMember().getId();
 
       // Obtener el UUID de Minecraft asociado
-      DiscordManager.getMinecraftUuid(discordId)
-          .thenAccept(minecraftUuid -> {
-            if (minecraftUuid != null) {
-              Queue.getQueue().removePlayer(minecraftUuid, null);
+      DiscordManager.getDiscordPlayer(discordId)
+          .thenAccept(discordPlayer -> {
+            if (discordPlayer != null) {
+              Queue.getQueue().removePlayer(discordPlayer.getPlayerUuid(), null);
             }
           })
           .exceptionally(throwable -> {

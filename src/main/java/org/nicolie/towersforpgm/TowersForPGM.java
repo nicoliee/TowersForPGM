@@ -15,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.commands.RankedCommand;
 import org.nicolie.towersforpgm.commands.TagCommand;
+import org.nicolie.towersforpgm.database.DiscordManager;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.database.sql.SQLDatabaseManager;
 import org.nicolie.towersforpgm.database.sqlite.SQLITEDatabaseManager;
@@ -30,6 +31,8 @@ import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
 import org.nicolie.towersforpgm.matchbot.commands.stats.StatsCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopPaginationListener;
+import org.nicolie.towersforpgm.matchbot.listeners.MatchFinishListener;
+import org.nicolie.towersforpgm.matchbot.listeners.Ranked;
 import org.nicolie.towersforpgm.matchbot.rankeds.QueueJoinListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.QueueLeaveListener;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
@@ -159,6 +162,9 @@ public final class TowersForPGM extends JavaPlugin {
         // Registrar listener del queue de voz
         QueueJoinListener.register();
         QueueLeaveListener.register();
+        // Registrar listeners de gestión de canales de voz para ranked
+        getServer().getPluginManager().registerEvents(new Ranked(), this);
+        getServer().getPluginManager().registerEvents(new MatchFinishListener(), this);
       }
     }
   }
@@ -172,6 +178,7 @@ public final class TowersForPGM extends JavaPlugin {
     if (sqliteDatabaseManager != null) {
       sqliteDatabaseManager.disconnect();
     }
+    DiscordManager.shutdownDiscordExecutor();
   }
 
   public static TowersForPGM getInstance() {

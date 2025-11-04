@@ -4,8 +4,8 @@ import java.text.DecimalFormat;
 import java.time.Instant;
 import java.util.List;
 import net.dv8tion.jda.api.EmbedBuilder;
-import org.nicolie.towersforpgm.database.Top; // new Top model from StatsManager
-import org.nicolie.towersforpgm.database.TopResult;
+import org.nicolie.towersforpgm.database.models.top.Top;
+import org.nicolie.towersforpgm.database.models.top.TopResult;
 import org.nicolie.towersforpgm.matchbot.enums.Stat;
 import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.ConfigManager;

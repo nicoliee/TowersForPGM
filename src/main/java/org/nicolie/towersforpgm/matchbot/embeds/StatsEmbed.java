@@ -3,7 +3,7 @@ package org.nicolie.towersforpgm.matchbot.embeds;
 import java.util.logging.Level;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.database.Stats;
+import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 

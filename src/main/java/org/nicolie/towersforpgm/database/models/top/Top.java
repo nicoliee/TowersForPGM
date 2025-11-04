@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.database;
+package org.nicolie.towersforpgm.database.models.top;
 
 public class Top {
   private final String username;

@@ -13,6 +13,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.draft.events.DraftEndEvent;
+import org.nicolie.towersforpgm.draft.events.DraftStartEvent;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.MatchManager;
@@ -117,6 +119,12 @@ public class Draft {
         .replace("{teamcolor}", teamColor)
         .replace("{captain}", captainName)));
     plugin.giveitem(match.getWorld());
+
+    // Disparar evento de inicio de draft
+    DraftStartEvent draftStartEvent =
+        new DraftStartEvent(captain1, captain2, players, match, randomizeOrder);
+    Bukkit.getPluginManager().callEvent(draftStartEvent);
+
     startDraftTimer();
   }
 
@@ -365,6 +373,13 @@ public class Draft {
     utilities.readyReminder(5, 20);
 
     removeBossbar();
+
+    // Disparar evento de fin de draft
+    Set<String> team1Set = teams.getAllTeam(1);
+    Set<String> team2Set = teams.getAllTeam(2);
+    DraftEndEvent draftEndEvent = new DraftEndEvent(team1Set, team2Set, MatchManager.getMatch());
+    Bukkit.getPluginManager().callEvent(draftEndEvent);
+
     MatchManager.getMatch()
         .needModule(StartMatchModule.class)
         .forceStartCountdown(Duration.ofSeconds(90), Duration.ZERO);

@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.database;
+package org.nicolie.towersforpgm.database.models;
 
 public class Stats {
   private String username;

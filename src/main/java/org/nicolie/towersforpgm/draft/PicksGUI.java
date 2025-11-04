@@ -25,7 +25,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.database.Stats;
+import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;

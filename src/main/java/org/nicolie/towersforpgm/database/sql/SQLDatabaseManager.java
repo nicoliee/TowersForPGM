@@ -35,29 +35,25 @@ public class SQLDatabaseManager {
 
       HikariConfig config = new HikariConfig();
       config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + name
-          + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&socketTimeout=30000");
+          + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
       config.setUsername(user);
       config.setPassword(password);
-      // Para servidores pequeños-medianos (< 50 jugadores concurrentes)
-      config.setMaximumPoolSize(6); // Reducir de 16
-      config.setMinimumIdle(1); // Reducir de 2
-      config.setIdleTimeout(300000); // 5 minutos
-      config.setMaxLifetime(900000); // 15 minutos
-      config.setConnectionTimeout(35000);
+
+      config.setMaximumPoolSize(10);
+      config.setMinimumIdle(2);
+
+      config.setIdleTimeout(300000);
+      config.setMaxLifetime(900000);
+      config.setConnectionTimeout(5000);
+      config.setValidationTimeout(2000);
+
+      config.setConnectionTestQuery("SELECT 1");
+
       config.addDataSourceProperty("cachePrepStmts", "true");
       config.addDataSourceProperty("prepStmtCacheSize", "250");
       config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
       config.addDataSourceProperty("useServerPrepStmts", "true");
-      config.addDataSourceProperty("useLocalSessionState", "true");
       config.addDataSourceProperty("rewriteBatchedStatements", "true");
-      config.addDataSourceProperty("cacheResultSetMetadata", "true");
-      config.addDataSourceProperty("cacheServerConfiguration", "true");
-      config.addDataSourceProperty("elideSetAutoCommits", "true");
-      config.addDataSourceProperty("maintainTimeStats", "false");
-      config.addDataSourceProperty("tcpKeepAlive", "true");
-      config.setValidationTimeout(5000);
-      config.setConnectionTestQuery("SELECT 1");
-      config.setLeakDetectionThreshold(15000);
 
       dataSource = new HikariDataSource(config);
     } catch (Exception e) {
@@ -66,7 +62,6 @@ public class SQLDatabaseManager {
     }
   }
 
-  /** Obtiene una conexión del pool. Si el pool está cerrado, intenta reconectar de forma segura. */
   public Connection getConnection() throws SQLException {
     if (dataSource == null || dataSource.isClosed()) {
       synchronized (this) {
@@ -79,15 +74,9 @@ public class SQLDatabaseManager {
     if (dataSource == null) {
       throw new SQLException("No se pudo establecer conexión con la base de datos");
     }
-    Connection connection = dataSource.getConnection();
-    if (connection == null || !connection.isValid(2)) {
-      if (connection != null) connection.close();
-      throw new SQLException("La conexión obtenida no es válida.");
-    }
-    return connection;
+    return dataSource.getConnection();
   }
 
-  /** Cierra el pool de conexiones y limpia la referencia. */
   public void disconnect() {
     if (dataSource != null && !dataSource.isClosed()) {
       dataSource.close();
@@ -96,7 +85,6 @@ public class SQLDatabaseManager {
     }
   }
 
-  /** Verifica si el pool de conexiones está activo. */
   public boolean isConnected() {
     return dataSource != null && !dataSource.isClosed();
   }

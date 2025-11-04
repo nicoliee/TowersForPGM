@@ -8,7 +8,9 @@ import java.util.Random;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.nicolie.towersforpgm.database.Stats;
+import org.nicolie.towersforpgm.database.models.Stats;
+import org.nicolie.towersforpgm.draft.events.MatchmakingEndEvent;
+import org.nicolie.towersforpgm.draft.events.MatchmakingStartEvent;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
@@ -67,6 +69,11 @@ public class Matchmaking {
     match.sendMessage(Component.text("§m---------------------------------"));
     match.sendMessage(Component.text(LanguageManager.message("picks.choosing")));
 
+    // Disparar evento de inicio de matchmaking
+    MatchmakingStartEvent matchmakingStartEvent =
+        new MatchmakingStartEvent(captain1, captain2, players, match);
+    Bukkit.getPluginManager().callEvent(matchmakingStartEvent);
+
     // Realizar balance de equipos
     balanceTeams(match);
   }
@@ -112,6 +119,10 @@ public class Matchmaking {
     availablePlayers.clear();
     // Mostrar equipos
     displayTeams(team1, team2);
+
+    // Disparar evento de fin de matchmaking
+    MatchmakingEndEvent matchmakingEndEvent = new MatchmakingEndEvent(team1, team2, match);
+    Bukkit.getPluginManager().callEvent(matchmakingEndEvent);
 
     // Iniciar countdown y preparar ready
     prepareMatchStart(match);
