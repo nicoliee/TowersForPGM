@@ -19,8 +19,8 @@ public class MatchBotConfig {
 
   public static void loadConfig(FileConfiguration config) {
     tables = config.getStringList("tables");
-    discordChannel = config.getString("discordChannel", "");
-    rankedRoleId = config.getString("rankedRoleId", "");
+    discordChannel = config.getString("ranked.discordChannel", "");
+    rankedRoleId = config.getString("ranked.rankedRoleId", "");
     rankedEnabled = config.getBoolean("ranked.enabled", false);
     accountsTable = config.getString("ranked.table", "DCAccounts");
     registeredRoleId = config.getString("ranked.registeredRoleId", "");

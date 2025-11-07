@@ -24,6 +24,7 @@ public class ConfigManager {
   private static int minOrder;
 
   // --- Configuración de rankeds ---
+  private static int disconnectTime;
   private static int rankedMinSize;
   private static int rankedMaxSize;
   private static String rankedOrder;
@@ -62,8 +63,8 @@ public class ConfigManager {
     defaultTable = plugin.getConfig().getString("database.defaultTable");
 
     // Cargar mapas de privateMatch (lista dentro de database)
-    if (plugin.getConfig().contains("database.privateMatch")) {
-      List<String> privateMaps = plugin.getConfig().getStringList("database.privateMatch");
+    if (plugin.getConfig().contains("privateMatch")) {
+      List<String> privateMaps = plugin.getConfig().getStringList("privateMatch");
       if (privateMaps != null) {
         for (String map : privateMaps) {
           if (map != null && !map.isEmpty()) {
@@ -81,6 +82,7 @@ public class ConfigManager {
     minOrder = plugin.getConfig().getInt("draft.minOrder", 0);
 
     // Cargar configuraciones de rankeds
+    disconnectTime = plugin.getConfig().getInt("rankeds.disconnectTime", 60);
     rankedMinSize = plugin.getConfig().getInt("rankeds.size.min", 4);
     rankedMaxSize = plugin.getConfig().getInt("rankeds.size.max", 8);
     rankedOrder = plugin.getConfig().getString("rankeds.order", "");
@@ -320,6 +322,17 @@ public class ConfigManager {
   }
 
   // --- Configuraciones de rankeds ---
+  public static int getDisconnectTime() {
+    return disconnectTime;
+  }
+
+  public static void setDisconnectTime(int disconnectTime) {
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    ConfigManager.disconnectTime = disconnectTime;
+    plugin.getConfig().set("rankeds.disconnectTime", disconnectTime);
+    plugin.saveConfig();
+  }
+
   public static int getRankedMinSize() {
     return rankedMinSize;
   }
@@ -340,18 +353,6 @@ public class ConfigManager {
     ConfigManager.rankedMaxSize = rankedMaxSize;
     plugin.getConfig().set("rankeds.size.max", rankedMaxSize);
     plugin.saveConfig();
-  }
-
-  // Backwards compatibility: getRankedSize returns max size
-  @Deprecated
-  public static int getRankedSize() {
-    return rankedMaxSize;
-  }
-
-  // Backwards compatibility: setRankedSize sets max size
-  @Deprecated
-  public static void setRankedSize(int size) {
-    setRankedMaxSize(size);
   }
 
   public static String getRankedOrder() {

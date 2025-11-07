@@ -69,6 +69,42 @@ public class StatsManager {
         SQL_EXECUTOR);
   }
 
+  /**
+   * Apply a sanction: increment games for a single username and update their ELO only. Does not
+   * modify other stats or other users.
+   */
+  public static void applySanction(
+      String table, String username, int gamesToAdd, PlayerEloChange eloChange) {
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    if (!plugin.getIsDatabaseActivated()) {
+      plugin
+          .getLogger()
+          .warning("Base de datos no activada, no se puede aplicar sanción en tabla: " + table);
+      return;
+    }
+
+    String dbType = plugin.getCurrentDatabaseType();
+    CompletableFuture.runAsync(
+        () -> {
+          try {
+            if ("MySQL".equals(dbType)) {
+              org.nicolie.towersforpgm.database.sql.SQLStatsManager.applySanction(
+                  table, username, gamesToAdd, eloChange);
+            } else if ("SQLite".equals(dbType)) {
+              org.nicolie.towersforpgm.database.sqlite.SQLITEStatsManager.applySanction(
+                  table, username, gamesToAdd, eloChange);
+            } else {
+              plugin
+                  .getLogger()
+                  .warning("Tipo de base de datos desconocido para sanción: " + dbType);
+            }
+          } catch (Exception e) {
+            plugin.getLogger().severe("Error aplicando sanción: " + e.getMessage());
+          }
+        },
+        SQL_EXECUTOR);
+  }
+
   public static CompletableFuture<Stats> getStats(String table, String username) {
     TowersForPGM plugin = TowersForPGM.getInstance();
     if (!plugin.getIsDatabaseActivated()) {

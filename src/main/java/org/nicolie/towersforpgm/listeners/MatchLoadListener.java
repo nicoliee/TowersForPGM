@@ -6,6 +6,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
+import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.ConfigManager;
@@ -65,5 +66,6 @@ public class MatchLoadListener implements Listener {
     ForfeitCommand.forfeitedPlayers.clear();
     plugin.setStatsCancel(false);
     ConfigManager.removeTemp();
+    DisconnectManager.clearAll();
   }
 }

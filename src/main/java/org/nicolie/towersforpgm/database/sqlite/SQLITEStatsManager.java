@@ -499,4 +499,72 @@ public class SQLITEStatsManager {
 
     return new java.util.ArrayList<>(usernameSet);
   }
+
+  public static void applySanction(
+      String table,
+      String username,
+      int gamesToAdd,
+      org.nicolie.towersforpgm.rankeds.PlayerEloChange elo) {
+    if (table == null || table.isEmpty() || username == null || username.isEmpty()) return;
+    if (!ConfigManager.getTables().contains(table)) return;
+
+    try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
+      conn.setAutoCommit(false);
+
+      int currentGames = 0;
+      int currentElo = 0;
+      int currentMaxElo = 0;
+      boolean exists = false;
+      try (PreparedStatement sel = conn.prepareStatement(
+          "SELECT games, elo, maxElo FROM " + table + " WHERE username = ?")) {
+        sel.setString(1, username);
+        try (ResultSet rs = sel.executeQuery()) {
+          if (rs.next()) {
+            exists = true;
+            currentGames = rs.getInt("games");
+            currentElo = rs.getInt("elo");
+            currentMaxElo = rs.getInt("maxElo");
+          }
+        }
+      }
+
+      int newGames = currentGames + Math.max(0, gamesToAdd);
+      int newElo = (elo != null) ? elo.getNewElo() : currentElo;
+      int lastElo = (elo != null) ? elo.getCurrentElo() : currentElo;
+      int maxElo = Math.max(
+          currentMaxElo, (elo != null) ? Math.max(elo.getMaxElo(), newElo) : currentMaxElo);
+
+      String sql;
+      if (exists) {
+        sql = "UPDATE " + table
+            + " SET games = ?, elo = ?, lastElo = ?, maxElo = ? WHERE username = ?";
+      } else {
+        sql = "INSERT INTO " + table
+            + " (username, games, elo, lastElo, maxElo) VALUES (?, ?, ?, ?, ?)";
+      }
+
+      try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        if (exists) {
+          stmt.setInt(1, newGames);
+          stmt.setInt(2, newElo);
+          stmt.setInt(3, lastElo);
+          stmt.setInt(4, maxElo);
+          stmt.setString(5, username);
+        } else {
+          stmt.setString(1, username);
+          stmt.setInt(2, newGames);
+          stmt.setInt(3, newElo);
+          stmt.setInt(4, lastElo);
+          stmt.setInt(5, maxElo);
+        }
+        stmt.executeUpdate();
+      }
+
+      conn.commit();
+    } catch (SQLException e) {
+      TowersForPGM.getInstance()
+          .getLogger()
+          .warning("Error applying sanction (SQLite): " + e.getMessage());
+    }
+  }
 }

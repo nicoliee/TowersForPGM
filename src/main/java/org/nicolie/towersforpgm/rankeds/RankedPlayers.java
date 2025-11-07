@@ -12,14 +12,24 @@ public class RankedPlayers {
   private final UUID captain1;
   private final UUID captain2;
   private final List<MatchPlayer> remainingPlayers;
+  private final boolean is2v2;
+  private final boolean lowerEloFirstPick;
   private static final int MAX_HISTORY = 4;
   private static final List<UUID> captainHistory = new LinkedList<>();
   private static final Map<UUID, Integer> captainCount = new HashMap<>();
+  private static final List<UUID> lastQueuePlayers = new LinkedList<>();
 
-  public RankedPlayers(UUID captain1, UUID captain2, List<MatchPlayer> remainingPlayers) {
+  public RankedPlayers(
+      UUID captain1,
+      UUID captain2,
+      List<MatchPlayer> remainingPlayers,
+      boolean is2v2,
+      boolean lowerEloFirstPick) {
     this.captain1 = captain1;
     this.captain2 = captain2;
     this.remainingPlayers = new LinkedList<>(remainingPlayers);
+    this.is2v2 = is2v2;
+    this.lowerEloFirstPick = lowerEloFirstPick;
     updateHistory(captain1);
     updateHistory(captain2);
   }
@@ -34,20 +44,54 @@ public class RankedPlayers {
   }
 
   public static RankedPlayers selectCaptains(List<Map.Entry<MatchPlayer, Integer>> players) {
+    // Detectar si hay jugadores que no estuvieron en la queue anterior
+    List<UUID> currentQueuePlayers =
+        players.stream().map(e -> e.getKey().getId()).collect(Collectors.toList());
+
+    boolean hasNewPlayer =
+        currentQueuePlayers.stream().anyMatch(id -> !lastQueuePlayers.contains(id));
+
+    if (hasNewPlayer) {
+      clearCaptainHistory();
+    }
+
+    // Actualizar la última queue
+    lastQueuePlayers.clear();
+    lastQueuePlayers.addAll(currentQueuePlayers);
+
+    // Caso especial: 2vs2 (exactamente 4 jugadores)
+    if (players.size() == 4) {
+      // Ordenar por ELO descendente
+      players.sort((a, b) -> b.getValue() - a.getValue());
+
+      // Seleccionar los 2 con más ELO
+      MatchPlayer higherElo = players.get(0).getKey();
+      MatchPlayer lowerElo = players.get(1).getKey();
+
+      // 80% de probabilidad de que el jugador con menos ELO sea first pick
+      java.util.Random random = new java.util.Random();
+      boolean lowerEloFirstPick = random.nextInt(100) < 80;
+
+      UUID captain1 = lowerEloFirstPick ? lowerElo.getId() : higherElo.getId();
+      UUID captain2 = lowerEloFirstPick ? higherElo.getId() : lowerElo.getId();
+
+      // Jugadores restantes
+      List<MatchPlayer> remaining =
+          players.subList(2, 4).stream().map(Map.Entry::getKey).collect(Collectors.toList());
+
+      return new RankedPlayers(captain1, captain2, remaining, true, lowerEloFirstPick);
+    }
+
+    // Caso normal: más de 4 jugadores
     if (players.size() < 4) {
       return new RankedPlayers(
           players.get(0).getKey().getId(),
           players.get(1).getKey().getId(),
           players.subList(2, players.size()).stream()
               .map(Map.Entry::getKey)
-              .collect(Collectors.toList()));
-    }
-
-    boolean hasNewPlayer =
-        players.stream().map(e -> e.getKey().getId()).anyMatch(id -> !captainCount.containsKey(id));
-
-    if (hasNewPlayer) {
-      clearCaptainHistory();
+              .collect(Collectors.toList()),
+          false,
+          false);
     }
 
     // Ordenar por ELO descendente
@@ -111,7 +155,7 @@ public class RankedPlayers {
         .filter(p -> !p.equals(cap1[0]) && !p.equals(cap2[0]))
         .collect(Collectors.toList());
 
-    return new RankedPlayers(uuid1, uuid2, remaining);
+    return new RankedPlayers(uuid1, uuid2, remaining, false, false);
   }
 
   public static void clearCaptainHistory() {
@@ -129,5 +173,13 @@ public class RankedPlayers {
 
   public List<MatchPlayer> getRemainingPlayers() {
     return remainingPlayers;
+  }
+
+  public boolean is2v2() {
+    return is2v2;
+  }
+
+  public boolean isLowerEloFirstPick() {
+    return lowerEloFirstPick;
   }
 }

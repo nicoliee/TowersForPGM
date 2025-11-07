@@ -34,13 +34,8 @@ picks:
   notTurn: "§cNo es tu turno de elegir."
   notCaptain: "§cNo eres un capitán."
 
-config:
-  clickToPick: "§eHaz clic para elegir."
-  invalidOrder: "§c Orden inválido. Ejemplo de uso: ABBAAB"
-  itemLore: "§7Clic derecho para abrir el menú de draft."
-  orderSet: "§aOrden de elección establecido: §2{order}§a."
-  sizeSet: "§aTamaño de elección establecido: §2{size}§a."
-  inventoryName: "§4Jugadores disponibles [§2{size}§4]"
+# Alias de nivel raíz para compatibilidad con código que busca "draft.itemLore"
+itemLore: "§7Clic derecho para abrir el menú de draft."
 
 balance:
   usage: "§cUso: /balance <nick1> <nick2>"
@@ -71,6 +66,8 @@ config:
   orderSet: "§aOrden de elección establecido a §2{order}§a."
   currentOrder: "§eEl orden actual de elección es §6{order}§e."
   invalidOrder: "§cOrden inválido. Ejemplo de uso: ABBAAB"
+  itemLore: "§7Clic derecho para abrir el menú de draft."
+  inventoryName: "§4Jugadores disponibles [§2{size}§4]"
   enabled: "activadas"
   disabled: "desactivadas"
   gets: "obtiene"

@@ -28,8 +28,10 @@ public class MatchStartListener implements Listener {
   public void onMatchStart(MatchStartEvent event) {
     String worldName = event.getMatch().getWorld().getName();
 
-    Utilities.cancelReadyReminder();
-    captains.resetReady();
+    if (captains.isReadyActive()) {
+      Utilities.cancelReadyReminder();
+      captains.resetReady();
+    }
 
     refillManager.startRefillTask(worldName);
     if (plugin.isPreparationEnabled()) {

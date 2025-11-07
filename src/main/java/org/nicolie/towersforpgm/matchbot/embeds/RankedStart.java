@@ -27,7 +27,10 @@ public class RankedStart {
         .setDescription(me.tbg.match.bot.configs.MessagesConfig.message("embeds.start.description")
             .replace(
                 "<timestamp>",
-                "<t:" + DiscordBot.getMatchStartTimestamp(Long.parseLong(match.getId())) + ":f>"))
+                "<t:" + DiscordBot.getMatchStartTimestamp(Long.parseLong(match.getId()))
+                    + ":f>, <t:"
+                    + DiscordBot.getMatchStartTimestamp(Long.parseLong(match.getId()))
+                    + ":R>"))
         .addField(
             "🗺️ " + me.tbg.match.bot.configs.MessagesConfig.message("embeds.start.map"),
             match.getMap().getName(),

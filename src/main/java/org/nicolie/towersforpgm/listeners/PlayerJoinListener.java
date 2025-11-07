@@ -9,6 +9,7 @@ import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -58,6 +59,18 @@ public class PlayerJoinListener implements Listener {
 
     if (plugin.getDisconnectedPlayers().get(player.getName()) != null) {
       plugin.getDisconnectedPlayers().remove(player.getName());
+      // Cancel any pending sanction timer
+      DisconnectManager.cancelDisconnectTimer(player.getUniqueId());
+
+      // Notify match that player reconnected in time
+      Match match = PGM.get().getMatchManager().getMatch(player);
+      if (match != null && !match.isFinished()) {
+        String msg = org.nicolie.towersforpgm.utils.LanguageManager.langMessage("ranked.prefix")
+            + org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+                    "ranked.disconnect.reconnected")
+                .replace("{player}", player.getName());
+        match.sendMessage(net.kyori.adventure.text.Component.text(msg));
+      }
     }
   }
 }

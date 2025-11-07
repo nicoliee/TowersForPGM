@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.matchbot.rankeds;
+package org.nicolie.towersforpgm.matchbot.rankeds.listeners;
 
 import me.tbg.match.bot.configs.DiscordBot;
 import net.dv8tion.jda.api.JDA;
@@ -8,12 +8,12 @@ import org.nicolie.towersforpgm.database.DiscordManager;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.Queue;
 
-public class QueueJoinListener extends ListenerAdapter {
+public class QueueLeaveListener extends ListenerAdapter {
 
   public static void register() {
     JDA jda = DiscordBot.getJDA();
     if (jda != null) {
-      jda.addEventListener(new QueueJoinListener());
+      jda.addEventListener(new QueueLeaveListener());
     }
   }
 
@@ -26,9 +26,8 @@ public class QueueJoinListener extends ListenerAdapter {
       return;
     }
 
-    // Verificar si el usuario se unió al canal de queue
-    if (event.getChannelJoined() != null
-        && event.getChannelJoined().getId().equals(queueChannelId)) {
+    // Verificar si el usuario salió del canal de queue
+    if (event.getChannelLeft() != null && event.getChannelLeft().getId().equals(queueChannelId)) {
 
       String discordId = event.getMember().getId();
 
@@ -36,7 +35,7 @@ public class QueueJoinListener extends ListenerAdapter {
       DiscordManager.getDiscordPlayer(discordId)
           .thenAccept(discordPlayer -> {
             if (discordPlayer != null) {
-              Queue.getQueue().addPlayer(discordPlayer.getPlayerUuid(), null);
+              Queue.getQueue().removePlayer(discordPlayer.getPlayerUuid(), null);
             }
           })
           .exceptionally(throwable -> {

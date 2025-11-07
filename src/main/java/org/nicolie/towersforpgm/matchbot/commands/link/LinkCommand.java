@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.matchbot.commands.register;
+package org.nicolie.towersforpgm.matchbot.commands.link;
 
 import java.awt.Color;
 import java.time.Instant;
@@ -19,15 +19,15 @@ import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.RegisterCodeManager;
 
-public class RegisterCommand extends ListenerAdapter {
+public class LinkCommand extends ListenerAdapter {
 
-  public static final String NAME = "register";
+  public static final String NAME = "link";
   private static final String OPTION_CODE = "code";
 
   public static void register() {
     JDA jda = DiscordBot.getJDA();
     if (jda != null) {
-      jda.addEventListener(new RegisterCommand());
+      jda.addEventListener(new LinkCommand());
 
       jda.upsertCommand(NAME, LanguageManager.langMessage("matchbot.register.description"))
           .addOption(
@@ -75,28 +75,13 @@ public class RegisterCommand extends ListenerAdapter {
       DiscordManager.getDiscordPlayer(discordId)
           .thenAccept(linkedPlayer -> {
             if (linkedPlayer != null) {
-              // Ya está vinculado, verificar si necesita cambiar apodo
               OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(linkedPlayer.getPlayerUuid());
               String playerName =
                   offlinePlayer.getName() != null ? offlinePlayer.getName() : "Jugador";
               String currentNickname = event.getMember().getNickname();
 
-              // Si el apodo actual es diferente al nick de MC, cambiarlo
               if (currentNickname == null || !currentNickname.equals(playerName)) {
-                try {
-                  event
-                      .getGuild()
-                      .modifyNickname(event.getMember(), playerName)
-                      .queue(result -> {}, error -> TowersForPGM.getInstance()
-                          .getLogger()
-                          .warning("No se pudo actualizar el apodo de "
-                              + event.getUser().getName() + " a " + playerName + ": "
-                              + error.getMessage()));
-                } catch (Exception e) {
-                  TowersForPGM.getInstance()
-                      .getLogger()
-                      .warning("Error al intentar actualizar apodo: " + e.getMessage());
-                }
+                updateNicknameIfNeeded(event, playerName, true);
               }
 
               hook.editOriginal("❌ "
@@ -116,24 +101,14 @@ public class RegisterCommand extends ListenerAdapter {
             DiscordManager.getDiscordPlayer(playerUuid)
                 .thenAccept(existingPlayer -> {
                   if (existingPlayer != null) {
-                    // Si la cuenta de MC ya está vinculada a ESTA cuenta de Discord, actualizar
-                    // apodo
                     if (existingPlayer.getDiscordId().equals(discordId)) {
                       OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerUuid);
                       String playerName =
                           offlinePlayer.getName() != null ? offlinePlayer.getName() : "Jugador";
                       String currentNickname = event.getMember().getNickname();
 
-                      if (currentNickname == null
-                          || !currentNickname.equals(playerName)
-                          || !playerName.equals("Jugador")) {
-                        try {
-                          event
-                              .getGuild()
-                              .modifyNickname(event.getMember(), playerName)
-                              .queue();
-                        } catch (Exception e) {
-                        }
+                      if (currentNickname == null || !currentNickname.equals(playerName)) {
+                        updateNicknameIfNeeded(event, playerName, true);
                       }
                     }
 
@@ -160,21 +135,7 @@ public class RegisterCommand extends ListenerAdapter {
                                 .queue();
                           }
 
-                          // Cambiar apodo de Discord al nick de Minecraft
-                          try {
-                            event
-                                .getGuild()
-                                .modifyNickname(event.getMember(), playerName)
-                                .queue(result -> {}, error -> TowersForPGM.getInstance()
-                                    .getLogger()
-                                    .warning("No se pudo cambiar el apodo de "
-                                        + event.getUser().getName() + " a " + playerName + ": "
-                                        + error.getMessage()));
-                          } catch (Exception e) {
-                            TowersForPGM.getInstance()
-                                .getLogger()
-                                .warning("Error al intentar cambiar apodo: " + e.getMessage());
-                          }
+                          updateNicknameIfNeeded(event, playerName, false);
 
                           EmbedBuilder embed = new EmbedBuilder()
                               .setColor(Color.GREEN)
@@ -232,5 +193,35 @@ public class RegisterCommand extends ListenerAdapter {
             return null;
           });
     });
+  }
+
+  private void updateNicknameIfNeeded(
+      SlashCommandInteractionEvent event, String playerName, boolean skipIfPlaceholder) {
+    try {
+      net.dv8tion.jda.api.entities.Guild guild = event.getGuild();
+      net.dv8tion.jda.api.entities.Member member = event.getMember();
+      if (guild == null || member == null) return;
+
+      if (playerName == null || playerName.isEmpty()) return;
+      if (skipIfPlaceholder && "Jugador".equals(playerName)) return;
+
+      String currentNickname = member.getNickname();
+      if (playerName.equals(currentNickname)) return;
+
+      guild
+          .modifyNickname(member, playerName)
+          .queue(result -> {}, error -> TowersForPGM.getInstance()
+              .getLogger()
+              .warning("No se pudo cambiar el apodo de "
+                  + event.getUser().getName()
+                  + " a "
+                  + playerName
+                  + ": "
+                  + error.getMessage()));
+    } catch (Exception e) {
+      TowersForPGM.getInstance()
+          .getLogger()
+          .warning("Error al intentar cambiar apodo: " + e.getMessage());
+    }
   }
 }

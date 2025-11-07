@@ -2,13 +2,17 @@ tables:
   - Amistoso
   - TorneoT1
   - RankedT1
-discordChannel: "" # Canal de Discord donde se enviarán los mensajes
-rankedRoleId: "" # ID del rol a tagear cunado se use /tag
+
 ranked:
-  enabled: false
+  discordChannel: "" # Canal de Discord donde se enviarán los mensajes
+  rankedRoleId: "" # ID del rol a tagear cunado se use /tag
+
+## Configuración de rankeds con voice chat
+  enabled: false 
   table: "DCAccounts" # Tabla donde se guardan los IDS de Discord vinculados con UUIDs de Minecraft
-  registeredRoleId: "1420549772804362240" # ID del rol que indica que un usuario está registrado en el sistema de ranked
-  inactiveID: "" # ID del voice channel para jugadores inactivos
-  queueID: "" # ID de la cola de ranked en el MatchBot
-  team1ID: "" # ID del equipo 1 en la cola de ranked
-  team2ID: "" # ID del equipo 2 en la cola de ranked
+## IDs de los canales de voz de Discord y rol para rankeds.
+  registeredRoleId: ""
+  inactiveID: ""
+  queueID: ""
+  team1ID: ""
+  team2ID: ""

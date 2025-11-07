@@ -443,4 +443,43 @@ public class SQLStatsManager {
 
     return new java.util.ArrayList<>(usernameSet);
   }
+
+  public static void applySanction(
+      String table,
+      String username,
+      int gamesToAdd,
+      org.nicolie.towersforpgm.rankeds.PlayerEloChange elo) {
+    if (table == null || table.isEmpty() || username == null || username.isEmpty()) return;
+    if (!org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table)) return;
+
+    String upsertSql = "INSERT INTO " + table
+        + " (username, games, elo, lastElo, maxElo) VALUES (?, ?, ?, ?, ?) "
+        + "ON DUPLICATE KEY UPDATE games = games + VALUES(games), elo = ?, lastElo = ?, maxElo = GREATEST(maxElo, VALUES(maxElo))";
+
+    SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
+    if (dbManager == null || !dbManager.isConnected()) {
+      return;
+    }
+
+    try (Connection conn = dbManager.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(upsertSql)) {
+      int newElo = (elo != null) ? elo.getNewElo() : 0;
+      int lastElo = (elo != null) ? elo.getCurrentElo() : 0;
+      int maxElo = (elo != null) ? Math.max(elo.getMaxElo(), newElo) : 0;
+
+      stmt.setString(1, username);
+      stmt.setInt(2, Math.max(0, gamesToAdd));
+      stmt.setInt(3, newElo);
+      stmt.setInt(4, lastElo);
+      stmt.setInt(5, maxElo);
+      stmt.setInt(6, newElo);
+      stmt.setInt(7, lastElo);
+      stmt.executeUpdate();
+    } catch (SQLException e) {
+      // log quietly; sanction is best-effort
+      TowersForPGM.getInstance()
+          .getLogger()
+          .warning("Error applying sanction (MySQL): " + e.getMessage());
+    }
+  }
 }

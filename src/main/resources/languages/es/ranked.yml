@@ -4,6 +4,10 @@ notAllowed: "No puedes hacer eso en una ranked."
 forfeit: "{player}§r §cha pedido acabar la partida."
 noForfeit: "No puedes rendirte ahora."
 alreadyForfeited: "Ya has solicitado rendirte."
+disconnect:
+  notice: "{player} se desconectó y no volvió a tiempo. Su equipo puede usar /ff para cancelar la partida."
+  countdown: "{player} debe reconectarse en {time}."
+  reconnected: "{player} se reconectó a tiempo. La partida continúa."
 sizeInvalid: "§cDebe ser número par y mayor que 3."
 usage: "§c/ranked <join|leave|list>"
 usageSize: "§c/ranked size <size>"
@@ -19,7 +23,10 @@ cancelled: "Cuenta regresiva cancelada."
 countdown: "§3Iniciando en §b{time}§3."
 waitingFor: "§eEsperando a §6{player}§e."
 item: "§6§lEntrar a la Cola de Ranked"
+queue:
+  joining: "Entrando a Queue..."
 end-match: "§6Stats: §bRevisa el canal #rankeds en §1§nDiscord."
+forfeitSanctionApplied: "{player} fue sancionado: -{elo} ELO y +2 partidas. No se sumarán estadísticas al resto."
 
 error:
   getElo: "Error al obtener ELO para captains: "
@@ -28,6 +35,7 @@ error:
 matchbot:
   start: "Ranked Iniciado - {table}"
   finish: "Ranked Finalizado - {table}"
+  cancelled: "Ranked Cancelado - {table}"
   available: "Ranked Disponible"
   hasTagged: " ha etiquetado a "
   online: "En línea"

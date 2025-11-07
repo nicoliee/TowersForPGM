@@ -20,7 +20,7 @@ import org.nicolie.towersforpgm.draft.Matchmaking;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedStart;
-import org.nicolie.towersforpgm.matchbot.listeners.RankedListener;
+import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.MatchManager;
@@ -93,6 +93,11 @@ public class Queue {
     }
 
     if (queuePlayers.contains(playerUUID)) return;
+
+    String map = match.getMap().getName();
+    if (!ConfigManager.getRankedMaps().contains(map)) {
+      return;
+    }
 
     queuePlayers.add(playerUUID);
     sendQueueMessage(match, playerName, false);
@@ -264,9 +269,14 @@ public class Queue {
             matchmaking.startMatchmaking(
                 pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers(), match);
           } else {
+            boolean randomizeOrder = !pair.is2v2();
             draft.setCustomOrderPattern(ConfigManager.getRankedOrder(), 0);
             draft.startDraft(
-                pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers(), match, true);
+                pair.getCaptain1(),
+                pair.getCaptain2(),
+                pair.getRemainingPlayers(),
+                match,
+                randomizeOrder);
           }
         })
         .exceptionally(throwable -> {

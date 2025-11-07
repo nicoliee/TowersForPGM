@@ -1,6 +1,10 @@
 package org.nicolie.towersforpgm.rankeds;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
+import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
@@ -23,6 +28,10 @@ public class ItemListener implements Listener {
   private static final Boolean RANKED_AVAILABLE =
       TowersForPGM.getInstance().getIsDatabaseActivated()
           || !ConfigManager.getRankedTables().isEmpty();
+
+  // Cooldown to avoid spamming the bot with repeated queue join requests
+  private static final long QUEUE_COOLDOWN_MS = 10_000L; // 10 seconds
+  private static final Map<UUID, Long> queueCooldowns = new ConcurrentHashMap<>();
 
   public ItemListener(Queue queue) {
     this.queue = queue;
@@ -42,6 +51,23 @@ public class ItemListener implements Listener {
     event.setCancelled(true);
     Match match = PGM.get().getMatchManager().getMatch(event.getPlayer());
     MatchPlayer player = match.getPlayer(event.getPlayer());
+
+    if (MatchBotConfig.isRankedEnabled()) {
+      // Throttle requests per player
+      UUID uuid = player.getId();
+      long now = System.currentTimeMillis();
+      long last = queueCooldowns.getOrDefault(uuid, 0L);
+      if (now - last >= QUEUE_COOLDOWN_MS) {
+        queueCooldowns.put(uuid, now);
+        // Inform the player and trigger the Discord move
+        player.sendMessage(Component.text(LanguageManager.langMessage("ranked.prefix")
+            + LanguageManager.langMessage("ranked.queue.joining")));
+        RankedListener.movePlayerToQueue(uuid);
+      }
+      return;
+    }
+
+    // Default behavior when bot is disabled: add to internal queue
     queue.addPlayer(player);
   }
 
@@ -67,12 +93,27 @@ public class ItemListener implements Listener {
 
   public static void giveItem(MatchPlayer player) {
     if (!RANKED_AVAILABLE) return;
-    if (MatchBotConfig.isRankedEnabled()) return;
+    if (MatchBotConfig.isRankedEnabled()) {
+      // Give the item only after the match has finished
+      Match match = player.getMatch();
+      if (match != null && match.isFinished()) {
+        player.getBukkit().getInventory().setItem(4, getQueueItem());
+      }
+      return;
+    }
+    // Bot disabled: current behavior
     player.getBukkit().getInventory().setItem(4, getQueueItem());
   }
 
   public static void giveItem(Player player) {
     if (!RANKED_AVAILABLE) return;
+    if (MatchBotConfig.isRankedEnabled()) {
+      Match match = PGM.get().getMatchManager().getMatch(player);
+      if (match != null && match.isFinished()) {
+        player.getInventory().setItem(4, getQueueItem());
+      }
+      return;
+    }
     player.getInventory().setItem(4, getQueueItem());
   }
 

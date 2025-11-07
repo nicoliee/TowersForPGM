@@ -29,7 +29,10 @@ public class RankedFinish {
         .setAuthor(
             MessagesConfig.message("author.name"), null, MessagesConfig.message("author.icon_url"))
         .setDescription(MessagesConfig.message("embeds.finish.description")
-            .replace("<timestamp>", "<t:" + Instant.now().getEpochSecond() + ":f>"))
+            .replace(
+                "<timestamp>",
+                "<t:" + Instant.now().getEpochSecond() + ":f>, <t:"
+                    + Instant.now().getEpochSecond() + ":R>"))
         .addField("🗺️ " + MessagesConfig.message("embeds.finish.map"), matchInfo.getMap(), true)
         .addField(
             "⏱️ " + MessagesConfig.message("embeds.finish.duration"),

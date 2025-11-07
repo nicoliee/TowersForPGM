@@ -35,6 +35,9 @@ picks:
   notTurn: "§cIt's not your turn to pick."
   notCaptain: "§cYou are not a captain."
 
+# Root-level alias to support code that requests "draft.itemLore"
+itemLore: "§7Right-click to open the draft menu."
+
 config:
   clickToPick: "§eClick to pick."
   invalidOrder: "§c Invalid order. Example usage: ABBAAB"

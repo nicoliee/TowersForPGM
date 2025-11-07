@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.matchbot.listeners;
+package org.nicolie.towersforpgm.matchbot.rankeds.listeners;
 
 import java.util.UUID;
 import me.tbg.match.bot.configs.BotConfig;
@@ -21,6 +21,7 @@ import org.nicolie.towersforpgm.utils.ConfigManager;
 
 public class RankedListener implements Listener {
 
+  private static final String QUEUE_ID = MatchBotConfig.getQueueID();
   private static final String CHANNEL1_ID = MatchBotConfig.getTeam1ID();
   private static final String CHANNEL2_ID = MatchBotConfig.getTeam2ID();
   private static final String INACTIVE_ID = MatchBotConfig.getInactiveID();
@@ -101,6 +102,36 @@ public class RankedListener implements Listener {
           if (currentChannel == null) return;
 
           guild.moveVoiceMember(member, inactiveChannel).queue();
+        })
+        .exceptionally(ex -> null);
+  }
+
+  public static void movePlayerToQueue(UUID minecraftUUID) {
+    if (!RANKED_ENABLED) return;
+
+    JDA jda = DiscordBot.getJDA();
+    if (jda == null) return;
+
+    Guild guild = getBotGuild(jda);
+    if (guild == null) return;
+
+    if (QUEUE_ID == null || QUEUE_ID.isEmpty()) return;
+
+    VoiceChannel queueChannel = jda.getVoiceChannelById(QUEUE_ID);
+    if (queueChannel == null) return;
+
+    DiscordManager.getDiscordPlayer(minecraftUUID)
+        .thenAccept(discordPlayer -> {
+          if (discordPlayer == null) return;
+
+          String discordId = discordPlayer.getDiscordId();
+          Member member = guild.getMemberById(discordId);
+          if (member == null || member.getVoiceState() == null) return;
+
+          var currentChannel = member.getVoiceState().getChannel();
+          if (currentChannel == null) return;
+
+          guild.moveVoiceMember(member, queueChannel).queue();
         })
         .exceptionally(ex -> null);
   }

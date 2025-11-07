@@ -31,10 +31,10 @@ import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
 import org.nicolie.towersforpgm.matchbot.commands.stats.StatsCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopPaginationListener;
-import org.nicolie.towersforpgm.matchbot.listeners.RankedFinishListener;
-import org.nicolie.towersforpgm.matchbot.listeners.RankedListener;
-import org.nicolie.towersforpgm.matchbot.rankeds.QueueJoinListener;
-import org.nicolie.towersforpgm.matchbot.rankeds.QueueLeaveListener;
+import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueJoinListener;
+import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueLeaveListener;
+import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedFinishListener;
+import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.preparationTime.MatchConfig;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.preparationTime.Region;
@@ -158,7 +158,7 @@ public final class TowersForPGM extends JavaPlugin {
         TopPaginationListener.register();
         AutocompleteHandler.register();
         // Registrar comando de vinculación Discord-Minecraft
-        org.nicolie.towersforpgm.matchbot.commands.register.RegisterCommand.register();
+        org.nicolie.towersforpgm.matchbot.commands.link.LinkCommand.register();
         // Registrar listener del queue de voz
         QueueJoinListener.register();
         QueueLeaveListener.register();

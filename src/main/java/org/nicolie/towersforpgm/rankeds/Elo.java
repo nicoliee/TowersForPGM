@@ -10,7 +10,6 @@ import org.nicolie.towersforpgm.utils.ConfigManager;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class Elo {
-  private static final int K_FACTOR = 32;
 
   public static CompletableFuture<List<PlayerEloChange>> addWin(
       List<MatchPlayer> winners, List<MatchPlayer> losers) {
@@ -33,8 +32,6 @@ public class Elo {
 
       Map<String, PlayerEloChange> eloMap =
           eloList.stream().collect(Collectors.toMap(PlayerEloChange::getUsername, e -> e));
-      Map<String, Integer> currentEloMap = eloMap.entrySet().stream()
-          .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getCurrentElo()));
 
       if (losers.isEmpty()) {
         winners.forEach(player -> {
@@ -48,36 +45,36 @@ public class Elo {
         return changes;
       }
 
-      double winnersAvgElo = calculateTeamAverageElo(winners, currentEloMap);
-      double losersAvgElo = calculateTeamAverageElo(losers, currentEloMap);
-
-      winners.forEach(winner -> {
+      // Winners: base on rank.getEloWin() with random +/- 1..3
+      for (MatchPlayer winner : winners) {
         String username = winner.getNameLegacy();
         PlayerEloChange playerElo =
             eloMap.getOrDefault(username, new PlayerEloChange(username, 0, 0, 0, 0));
         int currentElo = playerElo.getCurrentElo();
-
-        int individualEloChange =
-            calculateIndividualEloChange(currentElo, winnersAvgElo, losersAvgElo, true);
-
+        Rank rank = Rank.getRankByElo(currentElo);
+        int base = rank.getEloWin();
+        int jitter = randomJitter();
+        int individualEloChange = base + jitter;
         int newElo = currentElo + individualEloChange;
         int maxElo = Math.max(newElo, playerElo.getMaxElo());
         changes.add(new PlayerEloChange(username, currentElo, newElo, individualEloChange, maxElo));
-      });
+      }
 
-      losers.forEach(loser -> {
+      // Losers: base on rank.getEloLose() (negative) with random +/- 1..3
+      for (MatchPlayer loser : losers) {
         String username = loser.getNameLegacy();
         PlayerEloChange playerElo =
             eloMap.getOrDefault(username, new PlayerEloChange(username, 0, 0, 0, 0));
         int currentElo = playerElo.getCurrentElo();
-
-        int individualEloChange =
-            calculateIndividualEloChange(currentElo, losersAvgElo, winnersAvgElo, false);
-
+        Rank rank = Rank.getRankByElo(currentElo);
+        int base = rank.getEloLose(); // negative
+        int jitter = randomJitter();
+        int individualEloChange = base + jitter; // stays around base (still negative)
         int newElo = Math.max(-100, currentElo + individualEloChange);
         int maxElo = playerElo.getMaxElo();
         changes.add(new PlayerEloChange(username, currentElo, newElo, individualEloChange, maxElo));
-      });
+      }
+
       return changes;
     });
   }
@@ -107,6 +104,31 @@ public class Elo {
     });
   }
 
+  public static CompletableFuture<PlayerEloChange> doubleLossPenalty(
+      String sanctionedUsername, List<MatchPlayer> sanctionedTeam, List<MatchPlayer> opponent) {
+    String table = ConfigManager.getRankedDefaultTable();
+    if (table == null || table.isEmpty()) {
+      CompletableFuture<PlayerEloChange> f = new CompletableFuture<>();
+      f.complete(new PlayerEloChange(sanctionedUsername, 0, 0, 0, 0));
+      return f;
+    }
+
+    List<String> usernames = java.util.Collections.singletonList(sanctionedUsername);
+    return StatsManager.getEloForUsernames(table, usernames).thenApply(eloList -> {
+      PlayerEloChange base = eloList.stream()
+          .filter(e -> e.getUsername().equals(sanctionedUsername))
+          .findFirst()
+          .orElse(new PlayerEloChange(sanctionedUsername, 0, 0, 0, 0));
+      int current = base.getCurrentElo();
+      Rank rank = Rank.getRankByElo(current);
+      int baseLose = rank.getEloLose(); // negative
+      int jitter = randomJitter();
+      int penalty = (baseLose + jitter) * 2; // double the loss
+      int newElo = Math.max(-100, current + penalty);
+      return new PlayerEloChange(sanctionedUsername, current, newElo, penalty, base.getMaxElo());
+    });
+  }
+
   public static class EloOrderResult {
     private final List<PlayerEloChange> sortedPlayers;
     private final int averageElo;
@@ -125,52 +147,10 @@ public class Elo {
     }
   }
 
-  private static double calculateTeamAverageElo(
-      List<MatchPlayer> team, Map<String, Integer> eloMap) {
-    if (team.isEmpty()) return 0.0;
-
-    double totalElo = 0.0;
-    for (MatchPlayer player : team) {
-      totalElo += eloMap.getOrDefault(player.getNameLegacy(), 0);
-    }
-    return totalElo / team.size();
-  }
-
-  private static int calculateIndividualEloChange(
-      int playerElo, double teamAvgElo, double opponentAvgElo, boolean isWinner) {
-    double playerExpectedScore = 1.0 / (1.0 + Math.pow(10.0, (opponentAvgElo - playerElo) / 400.0));
-    double actualScore = isWinner ? 1.0 : 0.0;
-
-    int baseEloChange = (int) Math.round(K_FACTOR * (actualScore - playerExpectedScore));
-
-    double skillDifference = playerElo - teamAvgElo;
-    double individualScalingFactor;
-
-    if (isWinner) {
-      individualScalingFactor = 1.0 - (skillDifference / 800.0);
-      individualScalingFactor = Math.max(0.7, Math.min(1.3, individualScalingFactor));
-    } else {
-      individualScalingFactor = 1.0 + (skillDifference / 800.0);
-      individualScalingFactor = Math.max(0.7, Math.min(1.3, individualScalingFactor));
-    }
-
-    double teamStrengthDifference = teamAvgElo - opponentAvgElo;
-    double teamBalanceScalingFactor;
-
-    if (isWinner) {
-      teamBalanceScalingFactor = 1.0 - (teamStrengthDifference / 600.0);
-      teamBalanceScalingFactor = Math.max(0.5, Math.min(1.5, teamBalanceScalingFactor));
-    } else {
-      teamBalanceScalingFactor = 1.0 + (teamStrengthDifference / 600.0);
-      teamBalanceScalingFactor = Math.max(0.5, Math.min(1.5, teamBalanceScalingFactor));
-    }
-
-    double combinedScalingFactor = individualScalingFactor * teamBalanceScalingFactor;
-    int scaledEloChange = (int) Math.round(baseEloChange * combinedScalingFactor);
-
-    int minChange = isWinner ? 3 : -45;
-    int maxChange = isWinner ? 45 : -3;
-
-    return Math.max(minChange, Math.min(maxChange, scaledEloChange));
+  public static int randomJitter() {
+    // +/- 1..3
+    int magnitude = java.util.concurrent.ThreadLocalRandom.current().nextInt(1, 4);
+    boolean positive = java.util.concurrent.ThreadLocalRandom.current().nextBoolean();
+    return positive ? magnitude : -magnitude;
   }
 }

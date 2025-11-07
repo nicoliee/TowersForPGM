@@ -4,6 +4,10 @@ notAllowed: "You cannot do that in a ranked match."
 forfeit: "{player}§r §chas requested to end the match."
 noForfeit: "You cannot forfeit right now."
 alreadyForfeited: "You have already requested to forfeit."
+disconnect:
+  notice: "{player} disconnected and did not return in time. Their team may use /ff to cancel the match."
+  countdown: "{player} must reconnect in {time}."
+  reconnected: "{player} reconnected in time. Match continues."
 sizeInvalid: "§cMust be an even number and greater than 3."
 usage: "§c/ranked <join|leave|list>"
 usageSize: "§c/ranked size <size>"
@@ -19,7 +23,10 @@ cancelled: "Countdown cancelled."
 countdown: "§3Starting in §b{time}§3."
 waitingFor: "§eWaiting for §6{player}§e."
 item: "§6§lJoin Ranked Queue"
+queue:
+  joining: "Entering Queue..."
 end-match: "§6Stats: §bCheck the #rankeds channel on §1§nDiscord."
+forfeitSanctionApplied: "{player} was sanctioned: -{elo} ELO and +2 games. No stats will be recorded for others."
 
 error:
   getElo: "Error getting ELO for captains: "
@@ -28,6 +35,7 @@ error:
 matchbot:
   start: "Ranked Started - {table}"
   finish: "Ranked Finished - {table}"
+  cancelled: "Ranked Cancelled - {table}"
   available: "Ranked Available"
   hasTagged: "has tagged"
   online: "Online"

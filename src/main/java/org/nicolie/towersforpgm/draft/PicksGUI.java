@@ -390,7 +390,7 @@ public class PicksGUI implements Listener {
             && "§6Draft Menu".equals(meta.getDisplayName())) {
           // Si el draft no está activo, mostrar mensaje
           if (!Draft.isDraftActive()) {
-            SendMessage.sendToPlayer(player, LanguageManager.langMessage("picks.noDraft"));
+            SendMessage.sendToPlayer(player, LanguageManager.langMessage("draft.picks.noDraft"));
             player.getInventory().remove(Material.NETHER_STAR);
             return;
           }

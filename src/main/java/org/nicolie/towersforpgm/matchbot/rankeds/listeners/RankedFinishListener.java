@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.matchbot.listeners;
+package org.nicolie.towersforpgm.matchbot.rankeds.listeners;
 
 import me.tbg.match.bot.configs.BotConfig;
 import me.tbg.match.bot.configs.DiscordBot;
