@@ -135,6 +135,21 @@ public class LinkCommand extends ListenerAdapter {
                                 .queue();
                           }
 
+                          // También asignar rango BRONZE si está configurado
+                          String bronzeRoleId =
+                              org.nicolie.towersforpgm.rankeds.Rank.BRONZE.getRoleID();
+                          if (bronzeRoleId != null && !bronzeRoleId.isEmpty()) {
+                            try {
+                              event
+                                  .getGuild()
+                                  .addRoleToMember(
+                                      event.getUser(), event.getGuild().getRoleById(bronzeRoleId))
+                                  .queue();
+                            } catch (Exception ignored) {
+                              // Ignorar fallos al asignar rol para no romper el flujo de registro
+                            }
+                          }
+
                           updateNicknameIfNeeded(event, playerName, false);
 
                           EmbedBuilder embed = new EmbedBuilder()

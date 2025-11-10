@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.rankeds;
 
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public enum Rank {
@@ -70,5 +71,28 @@ public enum Rank {
 
   public int getEloLose() {
     return eloLose;
+  }
+
+  public String getRoleID() {
+    if (!MatchBotConfig.isRankedEnabled()) return null;
+
+    switch (this) {
+      case BRONZE:
+      case BRONZE_PLUS:
+        return MatchBotConfig.getBronzeRoleId();
+      case SILVER:
+      case SILVER_PLUS:
+        return MatchBotConfig.getSilverRoleId();
+      case GOLD:
+      case GOLD_PLUS:
+        return MatchBotConfig.getGoldRoleId();
+      case EMERALD:
+      case EMERALD_PLUS:
+        return MatchBotConfig.getEmeraldRoleId();
+      case DIAMOND:
+        return MatchBotConfig.getDiamondRoleId();
+      default:
+        return null;
+    }
   }
 }

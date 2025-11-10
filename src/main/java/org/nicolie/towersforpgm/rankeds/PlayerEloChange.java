@@ -4,6 +4,8 @@ import java.util.UUID;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.database.DiscordManager;
+import org.nicolie.towersforpgm.matchbot.rankeds.RoleManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
@@ -89,5 +91,27 @@ public class PlayerEloChange {
               player.sendMessage(Component.text(message));
             },
             delay);
+  }
+
+  public void applyDiscordRoleChange() {
+    org.bukkit.entity.Player bukkitPlayer = org.bukkit.Bukkit.getPlayerExact(username);
+    if (bukkitPlayer == null) return;
+    UUID uuid = bukkitPlayer.getUniqueId();
+
+    int previousElo = newElo - eloChange;
+    Rank previousRank = Rank.getRankByElo(previousElo);
+    Rank newRank = Rank.getRankByElo(newElo);
+
+    String targetRole = newRank.getRoleID();
+    if (targetRole == null) return;
+
+    DiscordManager.getDiscordPlayer(uuid).thenAccept(discordPlayer -> {
+      if (discordPlayer == null) return;
+      String discordId = discordPlayer.getDiscordId();
+      if (discordId == null || discordId.isEmpty()) return;
+
+      // Si el rango es el mismo que el que ya posee en Discord, RoleManager se encargará
+      RoleManager.changeRole(discordId, previousRank, newRank);
+    });
   }
 }

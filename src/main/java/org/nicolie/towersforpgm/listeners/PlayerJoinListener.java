@@ -10,6 +10,7 @@ import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.rankeds.DisconnectManager;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -62,9 +63,9 @@ public class PlayerJoinListener implements Listener {
       // Cancel any pending sanction timer
       DisconnectManager.cancelDisconnectTimer(player.getUniqueId());
 
-      // Notify match that player reconnected in time
+      // Notify match that player reconnected in time, but only if ranked is active
       Match match = PGM.get().getMatchManager().getMatch(player);
-      if (match != null && !match.isFinished()) {
+      if (match != null && !match.isFinished() && Queue.isRanked()) {
         String msg = org.nicolie.towersforpgm.utils.LanguageManager.langMessage("ranked.prefix")
             + org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
                     "ranked.disconnect.reconnected")

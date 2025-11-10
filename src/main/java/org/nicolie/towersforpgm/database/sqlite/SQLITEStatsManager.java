@@ -304,6 +304,12 @@ public class SQLITEStatsManager {
       }
 
     } catch (SQLException e) {
+      // Si la columna no existe, retornar resultado vacío en lugar de error
+      if (e.getMessage() != null
+          && (e.getMessage().contains("no such column")
+              || e.getMessage().contains("Unknown column"))) {
+        return new TopResult(new ArrayList<>(), 0);
+      }
     }
     return new TopResult(topList, totalRecords);
   }
@@ -380,6 +386,12 @@ public class SQLITEStatsManager {
         }
       }
     } catch (SQLException e) {
+      // Si la columna no existe, retornar resultado vacío en lugar de error
+      if (e.getMessage() != null
+          && (e.getMessage().contains("no such column")
+              || e.getMessage().contains("Unknown column"))) {
+        return new TopResult(new ArrayList<>(), 0);
+      }
       TowersForPGM.getInstance()
           .getLogger()
           .log(Level.SEVERE, "Error obteniendo top con keyset pagination", e);

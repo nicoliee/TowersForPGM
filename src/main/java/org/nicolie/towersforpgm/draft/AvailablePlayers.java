@@ -8,6 +8,7 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.database.models.MMR;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.ConfigManager;
@@ -181,68 +182,7 @@ public class AvailablePlayers {
 
     for (String playerName : getAllAvailablePlayers()) {
       Stats stats = getStatsForPlayer(playerName);
-
-      int kills = stats.getKills();
-      int deaths = stats.getDeaths();
-      int assists = stats.getAssists();
-      double damageDone = stats.getDamageDone();
-      double damageTaken = stats.getDamageTaken();
-      int points = stats.getPoints();
-      int wins = stats.getWins();
-      int games = stats.getGames();
-
-      // Promedios de estadísticas generales
-      double maxKills = 350.0;
-      double maxDeaths = 250.0;
-      double maxAssists = 100.0;
-      double maxPointsPerGame = 5.0;
-
-      // Calcular métricas por partida
-      double killsPerGame = games == 0 ? 0.0 : kills / (double) games;
-      double deathsPerGame = games == 0 ? 0.0 : deaths / (double) games;
-      double assistsPerGame = games == 0 ? 0.0 : assists / (double) games;
-      double damageDonePerGame = games == 0 ? 0.0 : damageDone / (double) games;
-      double damageTakenPerGame = games == 0 ? 0.0 : damageTaken / (double) games;
-      double pointsPerGame = games == 0 ? 0.0 : points / (double) games;
-      double winRate = games == 0 ? 0.0 : wins / (double) games;
-
-      // Inicializar el rating
-      double rating = 0;
-
-      // Ajuste para kills por juego
-      rating += (killsPerGame / maxKills) * 3;
-
-      // Penalización para muertes por juego
-      rating -= (deathsPerGame / maxDeaths) * 2;
-
-      // Ajuste para asistencias por juego
-      rating += (assistsPerGame / maxAssists) * 1.5;
-
-      // Ajuste por daño hecho vs recibido
-      if (damageTakenPerGame > 0) {
-        double damageRatio = (damageDonePerGame - damageTakenPerGame) / damageTakenPerGame;
-        rating += damageRatio * 1.5;
-      }
-
-      // Ajuste para puntos por juego
-      rating += (pointsPerGame / maxPointsPerGame) * 4;
-
-      // Ajuste para win rate (escalado si menos de 10 partidas)
-      if (games >= 10) {
-        rating += winRate * 5;
-      } else {
-        rating += winRate * 5 * (games / 10.0);
-      }
-
-      // Bonus por consistencia si ha jugado más de 15 partidas
-      if (games >= 12) {
-        double kdaStability = 1.0
-            - (Math.abs(killsPerGame - deathsPerGame) + Math.abs(assistsPerGame - killsPerGame))
-                / maxKills;
-        rating += kdaStability * 1.5;
-      }
-
-      // Añadir a la lista
+      double rating = MMR.compute(stats);
       playersWithRating.add(new AbstractMap.SimpleEntry<>(playerName, rating));
     }
 

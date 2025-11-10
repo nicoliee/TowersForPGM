@@ -16,3 +16,10 @@ ranked:
   queueID: ""
   team1ID: ""
   team2ID: ""
+
+roles:
+  bronzeRoleId: ""
+  silverRoleId: ""
+  goldRoleId: ""
+  emeraldRoleId: ""
+  diamondRoleId: ""

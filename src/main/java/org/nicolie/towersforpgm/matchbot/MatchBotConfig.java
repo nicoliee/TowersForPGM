@@ -16,6 +16,11 @@ public class MatchBotConfig {
   private static String queueID;
   private static String team1ID;
   private static String team2ID;
+  private static String bronzeRoleId;
+  private static String silverRoleId;
+  private static String goldRoleId;
+  private static String emeraldRoleId;
+  private static String diamondRoleId;
 
   public static void loadConfig(FileConfiguration config) {
     tables = config.getStringList("tables");
@@ -28,6 +33,11 @@ public class MatchBotConfig {
     queueID = config.getString("ranked.queueID", "");
     team1ID = config.getString("ranked.team1ID", "");
     team2ID = config.getString("ranked.team2ID", "");
+    bronzeRoleId = config.getString("roles.bronzeRoleId", "");
+    silverRoleId = config.getString("roles.silverRoleId", "");
+    goldRoleId = config.getString("roles.goldRoleId", "");
+    emeraldRoleId = config.getString("roles.emeraldRoleId", "");
+    diamondRoleId = config.getString("roles.diamondRoleId", "");
     BotConfig.addBlacklist(ConfigManager.getRankedMaps());
   }
 
@@ -69,5 +79,25 @@ public class MatchBotConfig {
 
   public static String getTeam2ID() {
     return team2ID;
+  }
+
+  public static String getBronzeRoleId() {
+    return bronzeRoleId;
+  }
+
+  public static String getSilverRoleId() {
+    return silverRoleId;
+  }
+
+  public static String getGoldRoleId() {
+    return goldRoleId;
+  }
+
+  public static String getEmeraldRoleId() {
+    return emeraldRoleId;
+  }
+
+  public static String getDiamondRoleId() {
+    return diamondRoleId;
   }
 }

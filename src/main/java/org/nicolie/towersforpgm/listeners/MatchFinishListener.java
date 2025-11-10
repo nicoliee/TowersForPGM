@@ -135,6 +135,7 @@ public class MatchFinishListener implements Listener {
           Elo.addWin(winners, losers).thenAccept(eloChanges -> {
             for (PlayerEloChange eloChange : eloChanges) {
               eloChange.sendMessage();
+              eloChange.applyDiscordRoleChange();
             }
 
             if (TowersForPGM.getInstance().isMatchBotEnabled()) {

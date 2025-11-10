@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.nicolie.towersforpgm.database.models.MMR;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.draft.events.MatchmakingEndEvent;
 import org.nicolie.towersforpgm.draft.events.MatchmakingStartEvent;
@@ -129,86 +130,7 @@ public class Matchmaking {
   }
 
   private int calculateRating(Stats stats) {
-    // Si no hay estadísticas, 0
-    if (stats == null) return 0;
-
-    // Base: usar elo si existe, si no 0
-    double base = (stats.getElo() == -9999) ? 0 : stats.getElo();
-
-    // Convertir a tasas por juego (evitan sesgos por número de partidas)
-    double games = Math.max(1, stats.getGames());
-    double killsPerGame = stats.getKills() / games;
-    double deathsPerGame = stats.getDeaths() / games;
-    double assistsPerGame = stats.getAssists() / games;
-    double pointsPerGame = stats.getPoints() / games;
-    double damageDonePerGame = stats.getDamageDone() / games;
-    double damageTakenPerGame = stats.getDamageTaken() / games;
-
-    // Ratios útiles
-    double winRate = stats.getGames() > 0 ? (stats.getWins() / (double) stats.getGames()) : 0.0;
-
-    // Inferir rol del jugador: atacante, defensor o híbrido
-    // Heurística simple:
-    // - Si tiene muchos puntos por partida -> atacante
-    // - Si tiene mucho daño tomado y pocas muertes relativas -> defensor (sobrevive y aguanta)
-    // - Si tiene balance entre ambos -> híbrido
-    double attackScore = pointsPerGame * 1.5 + damageDonePerGame * 0.2 + killsPerGame * 0.8;
-    double defendScore = damageTakenPerGame * 0.6
-        + (1.0 / Math.max(0.1, deathsPerGame)) * 0.5
-        + (stats.getWins() * 1.0 / games) * 1.0;
-
-    String inferredRole;
-    if (attackScore > defendScore * 1.15) {
-      inferredRole = "ATTACKER";
-    } else if (defendScore > attackScore * 1.15) {
-      inferredRole = "DEFENDER";
-    } else {
-      inferredRole = "HYBRID";
-    }
-
-    // Pesos por rol. Ajustar para favorecer la intención del rol:
-    // - Attacker: puntos, kills, winrate
-    // - Defender: supervivencia, damageTaken (soporte), assists
-    // - Hybrid: balance entre kills/assists y points
-    double score = 0.0;
-    switch (inferredRole) {
-      case "ATTACKER":
-        score += pointsPerGame * 4.0; // puntos son muy importantes
-        score += killsPerGame * 3.0;
-        score += assistsPerGame * 1.5;
-        score += winRate * 40.0;
-        score += damageDonePerGame * 0.1;
-        // penalizar muertes altas
-        score -= deathsPerGame * 1.5;
-        break;
-      case "DEFENDER":
-        score += damageTakenPerGame * 0.8; // aguantar daño es relevante
-        score += assistsPerGame * 2.0;
-        score += (1.0 / Math.max(0.1, deathsPerGame)) * 2.0; // sobrevivir más suma
-        score += winRate * 30.0;
-        score += killsPerGame * 1.0;
-        break;
-      default: // HYBRID
-        score += pointsPerGame * 2.5;
-        score += killsPerGame * 2.0;
-        score += assistsPerGame * 1.8;
-        score += winRate * 35.0;
-        score += (damageDonePerGame + damageTakenPerGame) * 0.15;
-        score -= deathsPerGame * 1.0;
-        break;
-    }
-
-    // Normalizar y combinar con base Elo
-    // Normalizar score a una escala aproximada: dividir por un factor y convertir a entero
-    double normalized = score;
-
-    // Combinar: dar 60% al elo/base y 40% al score normalizado
-    double combined = base * 0.6 + normalized * 0.4;
-
-    // Asegurar límites razonables
-    int finalRating = (int) Math.round(Math.max(0, combined));
-
-    return finalRating;
+    return MMR.computeInt(stats);
   }
 
   private TeamPartition findBestPartition(List<PlayerRating> players) {

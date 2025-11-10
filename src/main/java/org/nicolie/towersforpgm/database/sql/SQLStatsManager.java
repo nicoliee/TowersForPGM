@@ -239,6 +239,10 @@ public class SQLStatsManager {
       }
 
     } catch (SQLException e) {
+      // Si la columna no existe, retornar resultado vacío en lugar de error
+      if (e.getMessage() != null && e.getMessage().contains("Unknown column")) {
+        return new TopResult(new ArrayList<>(), 0);
+      }
       TowersForPGM.getInstance().getLogger().log(Level.SEVERE, "Error en getTop optimizado", e);
     }
     return new TopResult(topList, totalRecords);
@@ -321,6 +325,10 @@ public class SQLStatsManager {
         }
       }
     } catch (SQLException e) {
+      // Si la columna no existe, retornar resultado vacío en lugar de error
+      if (e.getMessage() != null && e.getMessage().contains("Unknown column")) {
+        return new TopResult(new ArrayList<>(), 0);
+      }
       TowersForPGM.getInstance()
           .getLogger()
           .log(Level.SEVERE, "Error obteniendo top con keyset pagination", e);
