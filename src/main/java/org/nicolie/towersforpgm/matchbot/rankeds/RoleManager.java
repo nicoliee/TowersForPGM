@@ -22,35 +22,32 @@ public class RoleManager {
     Guild guild = jda.getGuildById(serverID);
     if (guild == null) return;
 
-    guild
-        .retrieveMemberById(discordId)
-        .queue(
-            member -> {
-              if (member == null) return;
+    guild.retrieveMemberById(discordId).queue(member -> {
+      if (member == null) return;
 
-              Role newRole = guild.getRoleById(newRoleId);
-              if (newRole == null) return;
+      Role newRole = guild.getRoleById(newRoleId);
+      if (newRole == null) return;
 
-              if (member.getRoles().contains(newRole)) return;
+      if (member.getRoles().contains(newRole)) return;
 
-              String[] allRoleIds = new String[] {
-                MatchBotConfig.getBronzeRoleId(),
-                MatchBotConfig.getSilverRoleId(),
-                MatchBotConfig.getGoldRoleId(),
-                MatchBotConfig.getEmeraldRoleId(),
-                MatchBotConfig.getDiamondRoleId()
-              };
+      String[] allRoleIds = new String[] {
+        MatchBotConfig.getBronzeRoleId(),
+        MatchBotConfig.getSilverRoleId(),
+        MatchBotConfig.getGoldRoleId(),
+        MatchBotConfig.getEmeraldRoleId(),
+        MatchBotConfig.getDiamondRoleId()
+      };
 
-              for (String rid : allRoleIds) {
-                if (rid == null || rid.isEmpty()) continue;
-                Role r = guild.getRoleById(rid);
-                if (r == null) continue;
-                if (member.getRoles().contains(r)) {
-                  guild.removeRoleFromMember(member, r).queue(null, error -> {});
-                }
-              }
+      for (String rid : allRoleIds) {
+        if (rid == null || rid.isEmpty()) continue;
+        Role r = guild.getRoleById(rid);
+        if (r == null) continue;
+        if (member.getRoles().contains(r)) {
+          guild.removeRoleFromMember(member, r).queue(null, error -> {});
+        }
+      }
 
-              guild.addRoleToMember(member, newRole).queue(null, error -> {});
-            });
+      guild.addRoleToMember(member, newRole).queue(null, error -> {});
+    });
   }
 }

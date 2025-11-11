@@ -153,12 +153,32 @@ public final class TowersForPGM extends JavaPlugin {
 
       if (database) {
         TableManager.createDCAccountsTable();
-        StatsCommand.register();
-        TopCommand.register();
-        TopPaginationListener.register();
-        AutocompleteHandler.register();
-        // Registrar comando de vinculación Discord-Minecraft
-        org.nicolie.towersforpgm.matchbot.commands.link.LinkCommand.register();
+
+        // Registrar comandos condicionalmente según configuración
+        if (MatchBotConfig.isStatsCommandEnabled()) {
+          StatsCommand.register();
+        }
+
+        if (MatchBotConfig.isTopCommandEnabled()) {
+          TopCommand.register();
+          TopPaginationListener.register();
+        }
+
+        if (MatchBotConfig.isHistoryCommandEnabled()) {
+          org.nicolie.towersforpgm.matchbot.commands.history.HistoryCommand.register();
+        }
+
+        if (MatchBotConfig.isLinkCommandEnabled()) {
+          org.nicolie.towersforpgm.matchbot.commands.link.LinkCommand.register();
+        }
+
+        // AutocompleteHandler siempre se registra si algún comando está habilitado
+        if (MatchBotConfig.isStatsCommandEnabled()
+            || MatchBotConfig.isTopCommandEnabled()
+            || MatchBotConfig.isHistoryCommandEnabled()) {
+          AutocompleteHandler.register();
+        }
+
         // Registrar listener del queue de voz
         QueueJoinListener.register();
         QueueLeaveListener.register();
@@ -178,7 +198,10 @@ public final class TowersForPGM extends JavaPlugin {
     if (sqliteDatabaseManager != null) {
       sqliteDatabaseManager.disconnect();
     }
-    DiscordManager.shutdownDiscordExecutor();
+    // Solo apagar el executor de Discord si MatchBot está habilitado
+    if (isMatchBotEnabled && database) {
+      DiscordManager.shutdownDiscordExecutor();
+    }
   }
 
   public static TowersForPGM getInstance() {
@@ -313,6 +336,8 @@ public final class TowersForPGM extends JavaPlugin {
     ConfigManager.getTables().forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
     ConfigManager.getRankedTables()
         .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
+    // Crear tablas de historial
+    org.nicolie.towersforpgm.database.TableManager.createHistoryTables();
   }
 
   // Método para inicializar la base de datos

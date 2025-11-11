@@ -48,7 +48,6 @@ public class SQLStatsManager {
         "UPDATE " + table + " SET elo = ?, lastElo = ?, maxElo = ? WHERE username = ?";
 
     java.util.logging.Logger logger = TowersForPGM.getInstance().getLogger();
-    long startTime = System.currentTimeMillis();
 
     SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
     if (dbManager == null || !dbManager.isConnected()) {
@@ -96,12 +95,6 @@ public class SQLStatsManager {
           conn.commit();
         }
       }
-
-      long endTime = System.currentTimeMillis();
-      long duration = endTime - startTime;
-      logger.info("[SQLStatsManager] updateStats completed for table: " + table + " with "
-          + playerStatsList.size() + " players in " + duration + "ms");
-      logger.info("[SQLStatsManager] SQL: " + sql);
 
     } catch (SQLException e) {
       String errorMessage = LanguageManager.langMessage("errors.database.updateStats");

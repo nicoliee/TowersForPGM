@@ -346,6 +346,26 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
         }
         break;
 
+      case "rollback":
+        if (args.length < 2) {
+          sender.sendMessage("§c/towers rollback <matchID>");
+          return true;
+        }
+        String matchId = args[1];
+        // Ejecutar rollback asincrónico
+        sender.sendMessage("§eIniciando rollback para " + matchId + "...");
+        org.nicolie.towersforpgm.database.MatchHistoryManager.getMatch(matchId)
+            .thenAccept(history -> {
+              if (history == null) {
+                org.bukkit.Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
+                  sender.sendMessage("§cMatchID no encontrado");
+                });
+                return;
+              }
+              org.nicolie.towersforpgm.database.MatchHistoryManager.rollbackMatch(sender, history);
+            });
+        return true;
+
       case "help":
         if (args.length == 2) {
           switch (args[1].toLowerCase()) {
@@ -385,7 +405,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
       CommandSender sender, Command command, String alias, String[] args) {
     if (args.length == 1) {
       List<String> base =
-          Arrays.asList("draft", "preparation", "ranked", "refill", "stats", "help");
+          Arrays.asList("draft", "preparation", "ranked", "rollback", "refill", "stats", "help");
       String input = args[0].toLowerCase();
       return base.stream().filter(s -> s.startsWith(input)).collect(Collectors.toList());
     }
@@ -405,6 +425,12 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               .contains(sub)) {
             return filterPrefix(Arrays.asList("true", "false"), args[2]);
           }
+        }
+        break;
+      case "rollback":
+        if (args.length == 2) {
+          // Sin autocomplete por el momento
+          return new java.util.ArrayList<>();
         }
         break;
 
@@ -468,7 +494,8 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
       case "help":
         if (args.length == 2) {
-          List<String> options = Arrays.asList("draft", "preparation", "refill", "ranked", "stats");
+          List<String> options =
+              Arrays.asList("draft", "preparation", "refill", "ranked", "rollback", "stats");
           return filterPrefix(options, args[1]);
         }
         break;

@@ -62,4 +62,30 @@ public class TableManager {
       plugin.getLogger().severe("Error creando tabla DCAccounts: " + e.getMessage());
     }
   }
+
+  /** Crea tablas de historial de partidas (matches_history y match_players_history) */
+  public static void createHistoryTables() {
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    if (!plugin.getIsDatabaseActivated()) {
+      plugin
+          .getLogger()
+          .warning("Base de datos no activada, no se pueden crear tablas de historial");
+      return;
+    }
+
+    String dbType = plugin.getCurrentDatabaseType();
+    try {
+      if ("MySQL".equals(dbType)) {
+        org.nicolie.towersforpgm.database.sql.SQLTableManager.createHistoryTables();
+      } else if ("SQLite".equals(dbType)) {
+        org.nicolie.towersforpgm.database.sqlite.SQLITETableManager.createHistoryTables();
+      } else {
+        plugin
+            .getLogger()
+            .warning("Tipo de base de datos desconocido: " + dbType + " para tablas de historial");
+      }
+    } catch (Exception e) {
+      plugin.getLogger().severe("Error creando tablas de historial: " + e.getMessage());
+    }
+  }
 }

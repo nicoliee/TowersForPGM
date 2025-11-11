@@ -22,6 +22,11 @@ public class MatchBotConfig {
   private static String emeraldRoleId;
   private static String diamondRoleId;
 
+  private static boolean statsCommandEnabled;
+  private static boolean topCommandEnabled;
+  private static boolean historyCommandEnabled;
+  private static boolean linkCommandEnabled;
+
   public static void loadConfig(FileConfiguration config) {
     tables = config.getStringList("tables");
     discordChannel = config.getString("ranked.discordChannel", "");
@@ -29,15 +34,23 @@ public class MatchBotConfig {
     rankedEnabled = config.getBoolean("ranked.enabled", false);
     accountsTable = config.getString("ranked.table", "DCAccounts");
     registeredRoleId = config.getString("ranked.registeredRoleId", "");
+
     inactiveID = config.getString("ranked.inactiveID", "");
     queueID = config.getString("ranked.queueID", "");
     team1ID = config.getString("ranked.team1ID", "");
     team2ID = config.getString("ranked.team2ID", "");
+
     bronzeRoleId = config.getString("roles.bronzeRoleId", "");
     silverRoleId = config.getString("roles.silverRoleId", "");
     goldRoleId = config.getString("roles.goldRoleId", "");
     emeraldRoleId = config.getString("roles.emeraldRoleId", "");
     diamondRoleId = config.getString("roles.diamondRoleId", "");
+
+    statsCommandEnabled = config.getBoolean("commands.stats", true);
+    topCommandEnabled = config.getBoolean("commands.top", true);
+    historyCommandEnabled = config.getBoolean("commands.history", true);
+    linkCommandEnabled = config.getBoolean("commands.link", true);
+
     BotConfig.addBlacklist(ConfigManager.getRankedMaps());
   }
 
@@ -99,5 +112,21 @@ public class MatchBotConfig {
 
   public static String getDiamondRoleId() {
     return diamondRoleId;
+  }
+
+  public static boolean isStatsCommandEnabled() {
+    return statsCommandEnabled;
+  }
+
+  public static boolean isTopCommandEnabled() {
+    return topCommandEnabled;
+  }
+
+  public static boolean isHistoryCommandEnabled() {
+    return historyCommandEnabled;
+  }
+
+  public static boolean isLinkCommandEnabled() {
+    return linkCommandEnabled;
   }
 }

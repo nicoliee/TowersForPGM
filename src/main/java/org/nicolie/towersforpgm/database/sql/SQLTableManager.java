@@ -50,15 +50,74 @@ public class SQLTableManager {
         boolean isRanked = ConfigManager.getRankedTables() != null
             && ConfigManager.getRankedTables().contains(tableName);
 
+        // Verificar si la tabla ya existe
+        if (tableExists(conn, tableName)) {
+          return;
+        }
+
+        // La tabla no existe, crearla completa con columnas e índices
         List<String> statements = new ArrayList<>();
 
-        // 1. Crear tabla base si no existe
+        // 1. Crear tabla base
         statements.add(buildCreateTableSQL(tableName, isRanked));
 
-        // 2. Consultar columnas existentes
+        // 2. Crear columnas calculadas
+        for (String column : CALCULATED_COLUMNS) {
+          String sql = getCalculatedColumnSQL(tableName, column);
+          if (sql != null) statements.add(sql);
+        }
+
+        // 3. Crear índices para todas las columnas
+        List<String> allColumns = new ArrayList<>(COLUMNS);
+        if (isRanked) allColumns.addAll(RANKED_COLUMNS);
+        allColumns.addAll(CALCULATED_COLUMNS);
+
+        // Crear índices individuales
+        for (String column : allColumns) {
+          String idxName = "idx_" + column;
+          statements.add(
+              "CREATE INDEX IF NOT EXISTS " + idxName + " ON " + tableName + " (" + column + ")");
+        }
+
+        // Crear índice compuesto optimizado para consultas getTop
+        statements.add("CREATE INDEX IF NOT EXISTS idx_composite_order ON " + tableName
+            + " (kills DESC, username ASC, deaths DESC, assists DESC, points DESC, wins DESC)");
+
+        // 4. Ejecutar todas las operaciones
+        executeStatements(conn, statements, tableName);
+
+        TowersForPGM.getInstance()
+            .getLogger()
+            .info("Tabla " + tableName + " creada exitosamente con todas sus columnas e índices");
+
+      } catch (SQLException e) {
+        TowersForPGM.getInstance()
+            .getLogger()
+            .log(Level.SEVERE, "Error conectando a la base de datos", e);
+      }
+    });
+  }
+
+  public static void verifyStatsTable(String tableName, boolean isRanked) {
+    if ("none".equalsIgnoreCase(tableName)) return;
+
+    Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
+      try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
+
+        // Verificar si la tabla existe
+        if (!tableExists(conn, tableName)) {
+          TowersForPGM.getInstance()
+              .getLogger()
+              .warning("Tabla " + tableName + " no existe, no se puede verificar");
+          return;
+        }
+
+        List<String> statements = new ArrayList<>();
+
+        // 1. Consultar columnas existentes
         Set<String> existingColumns = getExistingColumns(conn, tableName);
 
-        // 3. Crear columnas calculadas solo si no existen
+        // 2. Crear columnas calculadas solo si no existen
         for (String column : CALCULATED_COLUMNS) {
           if (!existingColumns.contains(column)) {
             String sql = getCalculatedColumnSQL(tableName, column);
@@ -66,10 +125,10 @@ public class SQLTableManager {
           }
         }
 
-        // 4. Consultar índices existentes
+        // 3. Consultar índices existentes
         Set<String> existingIndexes = getExistingIndexes(conn, tableName);
 
-        // 5. Crear índices para todas las columnas solo si no existen
+        // 4. Crear índices para todas las columnas solo si no existen
         List<String> allColumns = new ArrayList<>(COLUMNS);
         if (isRanked) allColumns.addAll(RANKED_COLUMNS);
         allColumns.addAll(CALCULATED_COLUMNS);
@@ -83,21 +142,30 @@ public class SQLTableManager {
           }
         }
 
-        // Crear índices compuestos optimizados para consultas getTop
+        // Crear índice compuesto optimizado para consultas getTop
         String compositeIdxName = "idx_composite_order";
         if (!existingIndexes.contains(compositeIdxName)) {
-          // Índice compuesto para ORDER BY column DESC, username ASC (para paginación keyset)
           statements.add("CREATE INDEX IF NOT EXISTS " + compositeIdxName + " ON " + tableName
               + " (kills DESC, username ASC, deaths DESC, assists DESC, points DESC, wins DESC)");
         }
 
-        // 6. Ejecutar solo las operaciones necesarias
-        executeStatements(conn, statements, tableName);
+        // 5. Ejecutar solo las operaciones necesarias
+        if (!statements.isEmpty()) {
+          executeStatements(conn, statements, tableName);
+          TowersForPGM.getInstance()
+              .getLogger()
+              .info("Verificación completada para " + tableName + ": " + statements.size()
+                  + " cambios aplicados");
+        } else {
+          TowersForPGM.getInstance()
+              .getLogger()
+              .info("Tabla " + tableName + " está actualizada, no se requieren cambios");
+        }
 
       } catch (SQLException e) {
         TowersForPGM.getInstance()
             .getLogger()
-            .log(Level.SEVERE, "Error conectando a la base de datos", e);
+            .log(Level.SEVERE, "Error verificando tabla " + tableName, e);
       }
     });
   }
@@ -132,6 +200,69 @@ public class SQLTableManager {
     });
   }
 
+  /** Crea tablas de historial de partidas (MySQL) */
+  public static void createHistoryTables() {
+    Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
+      try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
+        // Tabla principal de partidas
+        String createMatches = "CREATE TABLE IF NOT EXISTS matches_history ("
+            + "match_id VARCHAR(96) PRIMARY KEY,"
+            + "table_name VARCHAR(64) NOT NULL,"
+            + "map_name VARCHAR(128) NOT NULL,"
+            + "duration_seconds INT NOT NULL,"
+            + "ranked TINYINT(1) NOT NULL DEFAULT 0,"
+            + "scores_text TEXT,"
+            + "winners_text VARCHAR(255),"
+            + "finished_at BIGINT NOT NULL,"
+            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+            + "INDEX idx_table_date (table_name, created_at)"
+            + ")";
+
+        // Tabla de jugadores por partida
+        String createPlayers = "CREATE TABLE IF NOT EXISTS match_players_history ("
+            + "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
+            + "match_id VARCHAR(96) NOT NULL,"
+            + "username VARCHAR(32) NOT NULL,"
+            + "team VARCHAR(64),"
+            + "kills INT DEFAULT 0,"
+            + "deaths INT DEFAULT 0,"
+            + "assists INT DEFAULT 0,"
+            + "damageDone DOUBLE DEFAULT 0,"
+            + "damageTaken DOUBLE DEFAULT 0,"
+            + "points INT DEFAULT 0,"
+            + "win INT DEFAULT 0,"
+            + "game INT DEFAULT 1,"
+            + "winstreak_delta INT DEFAULT 0,"
+            + "elo_delta INT DEFAULT 0,"
+            + "maxElo_after INT DEFAULT 0,"
+            + "INDEX idx_match (match_id),"
+            + "INDEX idx_user (username),"
+            + "FOREIGN KEY (match_id) REFERENCES matches_history(match_id) ON DELETE CASCADE"
+            + ")";
+
+        try (PreparedStatement stmt1 = conn.prepareStatement(createMatches);
+            PreparedStatement stmt2 = conn.prepareStatement(createPlayers)) {
+          stmt1.executeUpdate();
+          stmt2.executeUpdate();
+        }
+      } catch (SQLException e) {
+        TowersForPGM.getInstance()
+            .getLogger()
+            .log(Level.SEVERE, "Error creando tablas de historial (MySQL)", e);
+      }
+    });
+  }
+
+  // Verifica si la tabla existe en la base de datos
+  private static boolean tableExists(Connection conn, String tableName) throws SQLException {
+    try (PreparedStatement stmt = conn.prepareStatement("SHOW TABLES LIKE ?")) {
+      stmt.setString(1, tableName);
+      try (ResultSet rs = stmt.executeQuery()) {
+        return rs.next();
+      }
+    }
+  }
+
   // Devuelve el conjunto de nombres de columnas existentes en la tabla
   private static Set<String> getExistingColumns(Connection conn, String tableName)
       throws SQLException {
@@ -164,17 +295,11 @@ public class SQLTableManager {
 
   private static void executeStatements(
       Connection conn, List<String> statements, String tableName) {
-    int createdCount = 0; // Contador de columnas/índices realmente creados
     try {
       conn.setAutoCommit(false);
       for (String sql : statements) {
-        // No contar CREATE TABLE IF NOT EXISTS como columna/índice creado
-        boolean isCreateTable = sql.trim().toUpperCase().startsWith("CREATE TABLE");
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
           stmt.executeUpdate();
-          if (!isCreateTable) {
-            createdCount++; // Solo contar si no es CREATE TABLE
-          }
         } catch (SQLException e) {
           // Ignorar si columna calculada ya existe o índice ya existe
           String msg = e.getMessage();
@@ -187,11 +312,6 @@ public class SQLTableManager {
         }
       }
       conn.commit();
-      if (createdCount > 0) {
-        TowersForPGM.getInstance()
-            .getLogger()
-            .info("Creadas " + createdCount + " nuevas columnas o índices en " + tableName);
-      }
     } catch (SQLException e) {
       try {
         conn.rollback();

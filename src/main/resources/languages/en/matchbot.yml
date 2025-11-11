@@ -17,6 +17,22 @@ top:
   perGame-restriction: "The statistic `{stat}` cannot be shown per game."
   invalid-column: "The statistic `{stat}` is not available in the table `{table}`."
   error: "There was an error retrieving the top. {error}"
+history:
+  description: "Shows detailed information about a specific match."
+  matchid: "matchid"
+  desc-matchid: "Match ID (e.g., ranked-10/11/2025-1)"
+  title: "Match History"
+  embed-description: "Finished at <t:{timestamp}:f>, <t:{timestamp}:R>. In table: **{table}**."
+  error-title: "Error"
+  error: "There was an error retrieving the match history."
+  notfound: "Match `{matchid}` not found in history."
+embeds:
+  finish:
+    map: "Map"
+    duration: "Duration"
+    score: "Score"
+    winner: "Winners"
+    loser: "Losers"
 register:
   description: "Generate a code to link your Discord account with Minecraft."
   code-option-description: "6-digit code obtained in Minecraft with /register"

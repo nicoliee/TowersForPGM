@@ -68,11 +68,24 @@ public class AutocompleteHandler extends ListenerAdapter {
     String focused = event.getFocusedOption().getName();
     String userInput = event.getFocusedOption().getValue();
 
-    List<Command.Choice> choices = filterChoices(focused, userInput);
+    List<Command.Choice> choices = filterChoices(event.getName(), focused, userInput);
     event.replyChoices(choices).queue();
   }
 
-  private List<Command.Choice> filterChoices(String optionName, String userInput) {
+  private List<Command.Choice> filterChoices(
+      String commandName, String optionName, String userInput) {
+    // Autocomplete para /history matchid
+    if ("history".equals(commandName)
+        && LanguageManager.langMessage("matchbot.history.matchid").equals(optionName)) {
+      List<String> matchIds =
+          org.nicolie.towersforpgm.database.MatchHistoryManager.getRecentMatchIds(userInput);
+      return matchIds.stream()
+          .limit(25)
+          .map(id -> new Command.Choice(id, id))
+          .collect(Collectors.toList());
+    }
+
+    // Autocomplete para /stats player
     if (LanguageManager.langMessage("matchbot.stats.player").equals(optionName)) {
       List<String> players =
           StatsManager.getAllUsernamesFiltered(userInput == null ? "" : userInput);

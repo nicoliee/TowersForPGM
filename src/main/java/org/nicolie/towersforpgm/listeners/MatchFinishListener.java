@@ -128,27 +128,69 @@ public class MatchFinishListener implements Listener {
         String table = ConfigManager.getActiveTable(map);
         Boolean ranked = Queue.isRanked();
         Boolean rankedTable = ConfigManager.isRankedTable(table);
+        MatchInfo matchInfo = MatchInfo.getMatchInfo(match);
 
         if (ranked && rankedTable) {
-          Map<String, List<Stats>> basicStats = RankedFinish.getPlayerStats(match, allPlayers);
-          MatchInfo matchInfo = MatchInfo.getMatchInfo(match);
-          Elo.addWin(winners, losers).thenAccept(eloChanges -> {
-            for (PlayerEloChange eloChange : eloChanges) {
-              eloChange.sendMessage();
-              eloChange.applyDiscordRoleChange();
-            }
-
-            if (TowersForPGM.getInstance().isMatchBotEnabled()) {
-              Map<String, List<Stats>> statsWithElo = RankedFinish.addElo(basicStats, eloChanges);
-              EmbedBuilder embed = RankedFinish.create(matchInfo, table, statsWithElo);
-              DiscordBot.sendMatchEmbed(embed, match, MatchBotConfig.getDiscordChannel(), null);
-            }
-            StatsManager.updateStats(table, playerStatsList, eloChanges);
-          });
+          handleRankedMatch(match, table, matchInfo, allPlayers, winners, losers, playerStatsList);
         } else {
-          StatsManager.updateStats(table, playerStatsList, null);
+          handleUnrankedMatch(table, matchInfo, playerStatsList);
         }
       }
     }
+  }
+
+  private void handleRankedMatch(
+      Match match,
+      String table,
+      MatchInfo matchInfo,
+      List<MatchPlayer> allPlayers,
+      List<MatchPlayer> winners,
+      List<MatchPlayer> losers,
+      List<Stats> playerStatsList) {
+    Map<String, List<Stats>> basicStats = RankedFinish.getPlayerStats(match, allPlayers);
+    Elo.addWin(winners, losers).thenAccept(eloChanges -> {
+      // Guardar historial y actualizar estadísticas
+      saveMatchHistory(table, matchInfo, true, playerStatsList, eloChanges);
+
+      // Enviar mensajes de cambio de ELO y aplicar cambios de rol en Discord
+      for (PlayerEloChange eloChange : eloChanges) {
+        eloChange.sendMessage();
+        eloChange.applyDiscordRoleChange();
+      }
+
+      // Enviar embed de Discord si está habilitado
+      if (TowersForPGM.getInstance().isMatchBotEnabled()) {
+        Map<String, List<Stats>> statsWithElo = RankedFinish.addElo(basicStats, eloChanges);
+        EmbedBuilder embed = RankedFinish.create(matchInfo, table, statsWithElo);
+        DiscordBot.sendMatchEmbed(embed, match, MatchBotConfig.getDiscordChannel(), null);
+      }
+
+      // Actualizar estadísticas en la base de datos
+      StatsManager.updateStats(table, playerStatsList, eloChanges);
+    });
+  }
+
+  private void handleUnrankedMatch(String table, MatchInfo matchInfo, List<Stats> playerStatsList) {
+    // Guardar historial y actualizar estadísticas
+    saveMatchHistory(table, matchInfo, false, playerStatsList, null);
+    StatsManager.updateStats(table, playerStatsList, null);
+  }
+
+  private void saveMatchHistory(
+      String table,
+      MatchInfo matchInfo,
+      boolean ranked,
+      List<Stats> playerStatsList,
+      List<PlayerEloChange> eloChanges) {
+    org.nicolie.towersforpgm.database.MatchHistoryManager.generateMatchId(table)
+        .thenCompose(matchId -> org.nicolie.towersforpgm.database.MatchHistoryManager.saveMatch(
+            matchId, table, matchInfo, ranked, playerStatsList, eloChanges))
+        .exceptionally(ex -> {
+          TowersForPGM.getInstance()
+              .getLogger()
+              .warning("Error guardando historial " + (ranked ? "ranked" : "unranked") + ": "
+                  + ex.getMessage());
+          return null;
+        });
   }
 }

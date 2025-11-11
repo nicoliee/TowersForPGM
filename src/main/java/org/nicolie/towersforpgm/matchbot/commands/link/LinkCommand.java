@@ -29,6 +29,20 @@ public class LinkCommand extends ListenerAdapter {
     if (jda != null) {
       jda.addEventListener(new LinkCommand());
 
+      // Eliminar comando antiguo "register" si existe
+      jda.retrieveCommands().queue(commands -> {
+        commands.stream().filter(cmd -> cmd.getName().equals("register")).forEach(cmd -> {
+          cmd.delete()
+              .queue(
+                  success -> TowersForPGM.getInstance()
+                      .getLogger()
+                      .info("Comando antiguo /register eliminado exitosamente"),
+                  error -> TowersForPGM.getInstance()
+                      .getLogger()
+                      .warning("No se pudo eliminar el comando /register: " + error.getMessage()));
+        });
+      });
+
       jda.upsertCommand(NAME, LanguageManager.langMessage("matchbot.register.description"))
           .addOption(
               OptionType.STRING,

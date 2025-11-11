@@ -13,12 +13,25 @@ public class MatchInfo {
   private final String mapName;
   private final String scoresText;
   private final boolean hasScorebox;
+  private final int durationSeconds;
+  private final String winnersText;
+  private final long finishedAt;
 
-  private MatchInfo(String duration, String mapName, String scoresText, boolean hasScorebox) {
+  private MatchInfo(
+      String duration,
+      String mapName,
+      String scoresText,
+      boolean hasScorebox,
+      int durationSeconds,
+      String winnersText,
+      long finishedAt) {
     this.duration = duration;
     this.mapName = mapName;
     this.scoresText = scoresText;
     this.hasScorebox = hasScorebox;
+    this.durationSeconds = durationSeconds;
+    this.winnersText = winnersText;
+    this.finishedAt = finishedAt;
   }
 
   public static MatchInfo getMatchInfo(Match match) {
@@ -26,6 +39,14 @@ public class MatchInfo {
     String mapName = match.getMap().getName();
     String scoresText = null;
     boolean hasScorebox = false;
+    int durationSeconds = (int) match.getDuration().getSeconds();
+    long finishedAt = java.time.Instant.now().getEpochSecond();
+
+    // Calcular winnersText
+    String winnersText = match.getWinners().stream()
+        .map(Competitor::getDefaultName)
+        .reduce((a, b) -> a + ", " + b)
+        .orElse("");
 
     if (match.getMap().getGamemodes().contains(Gamemode.SCOREBOX)) {
       hasScorebox = true;
@@ -44,7 +65,8 @@ public class MatchInfo {
       scoresText = scores.toString();
     }
 
-    return new MatchInfo(duration, mapName, scoresText, hasScorebox);
+    return new MatchInfo(
+        duration, mapName, scoresText, hasScorebox, durationSeconds, winnersText, finishedAt);
   }
 
   public String getDuration() {
@@ -61,6 +83,18 @@ public class MatchInfo {
 
   public boolean hasScorebox() {
     return hasScorebox;
+  }
+
+  public int getDurationSeconds() {
+    return durationSeconds;
+  }
+
+  public String getWinnersText() {
+    return winnersText;
+  }
+
+  public long getFinishedAt() {
+    return finishedAt;
   }
 
   public String getScoresFieldTitle() {

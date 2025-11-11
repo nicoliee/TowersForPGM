@@ -17,6 +17,22 @@ top:
   perGame-restriction: "La estadística `{stat}` no se puede mostrar por partida."
   invalid-column: "La estadística `{stat}` no está disponible en la tabla `{table}`."
   error: "Hubo un error al obtener el top. {error}"
+history:
+  description: "Muestra información detallada sobre una partida específica."
+  matchid: "matchid"
+  desc-matchid: "ID de la partida (ej: ranked-10/11/2025-1)"
+  title: "Historial de Partida"
+  embed-description: "Terminada el <t:{timestamp}:f>, <t:{timestamp}:R>. En la tabla: **{table}**."
+  error-title: "Error"
+  error: "Hubo un error al obtener el historial de la partida."
+  notfound: "No se encontró la partida `{matchid}` en el historial."
+embeds:
+  finish:
+    map: "Mapa"
+    duration: "Duración"
+    score: "Puntuación"
+    winner: "Equipo Ganador"
+    loser: "Equipo Perdedor"
 register:
   description: "Genera un código para vincular tu cuenta de Discord con Minecraft."
   code-option-description: "Código de 6 dígitos obtenido en Minecraft con /register"

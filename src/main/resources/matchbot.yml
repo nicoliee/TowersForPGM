@@ -1,3 +1,9 @@
+commands:
+  stats: true
+  top: true
+  history: true
+  link: true
+
 tables:
   - Amistoso
   - TorneoT1
