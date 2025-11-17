@@ -10,32 +10,27 @@ import org.nicolie.towersforpgm.database.models.top.Top;
 
 public class TopLRUCache {
   private static final int MAX_ENTRIES = 256;
-  private static final long TTL_MILLIS = 15_000; // 15s
-  private static final long GLOBAL_FLUSH_INTERVAL = 30_000; 
-  private static volatile long lastGlobalFlush = System.currentTimeMillis();
 
-  private static final Map<String, Entry> CACHE =
-      new LinkedHashMap<String, Entry>(128, 0.75f, true) {
+  private static final Map<String, CacheEntry> CACHE =
+      new LinkedHashMap<String, CacheEntry>(128, 0.75f, true) {
         private static final long serialVersionUID = 1L;
 
         @Override
-        protected boolean removeEldestEntry(Map.Entry<String, Entry> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<String, CacheEntry> eldest) {
           return size() > MAX_ENTRIES;
         }
       };
 
   private static final ConcurrentHashMap<String, Object> LOCKS = new ConcurrentHashMap<>();
 
-  private static class Entry {
+  private static class CacheEntry {
     final List<Top> data;
-    final long time;
     final int totalRecords;
     final double lastValue;
     final String lastUser;
 
-    Entry(List<Top> data, long time, int totalRecords, double lastValue, String lastUser) {
+    CacheEntry(List<Top> data, int totalRecords, double lastValue, String lastUser) {
       this.data = data;
-      this.time = time;
       this.totalRecords = totalRecords;
       this.lastValue = lastValue;
       this.lastUser = lastUser;
@@ -47,14 +42,9 @@ public class TopLRUCache {
   }
 
   public static CachedPage get(String table, String column, int page, int limit, boolean perGame) {
-    clearIfExpired();
     synchronized (CACHE) {
-      Entry e = CACHE.get(key(table, column, page, limit, perGame));
+      CacheEntry e = CACHE.get(key(table, column, page, limit, perGame));
       if (e == null) return null;
-      if (System.currentTimeMillis() - e.time > TTL_MILLIS) {
-        CACHE.remove(key(table, column, page, limit, perGame));
-        return null;
-      }
       return new CachedPage(e.data, e.totalRecords, e.lastValue, e.lastUser);
     }
   }
@@ -69,11 +59,10 @@ public class TopLRUCache {
       int totalRecords,
       double lastValue,
       String lastUser) {
-    clearIfExpired();
     synchronized (CACHE) {
       CACHE.put(
           key(table, column, page, limit, perGame),
-          new Entry(data, System.currentTimeMillis(), totalRecords, lastValue, lastUser));
+          new CacheEntry(data, totalRecords, lastValue, lastUser));
     }
   }
 
@@ -86,8 +75,7 @@ public class TopLRUCache {
       Supplier<CompletableFuture<CachedPage>> supplier) {
     CachedPage cached = get(table, column, page, limit, perGame);
     if (cached != null) return CompletableFuture.completedFuture(cached);
-    Object lock =
-        LOCKS.computeIfAbsent(key(table, column, page, limit, perGame), k -> new Object());
+    Object lock = LOCKS.computeIfAbsent(key(table, column, page, limit, perGame), k -> new Object());
     synchronized (lock) {
       cached = get(table, column, page, limit, perGame);
       if (cached != null) return CompletableFuture.completedFuture(cached);
@@ -109,22 +97,9 @@ public class TopLRUCache {
     }
   }
 
-  private static void clearIfExpired() {
-    long now = System.currentTimeMillis();
-    if (now - lastGlobalFlush >= GLOBAL_FLUSH_INTERVAL) {
-      synchronized (CACHE) {
-        if (now - lastGlobalFlush >= GLOBAL_FLUSH_INTERVAL) {
-          CACHE.clear();
-          lastGlobalFlush = now;
-        }
-      }
-    }
-  }
-
   public static void clear() {
     synchronized (CACHE) {
       CACHE.clear();
-      lastGlobalFlush = System.currentTimeMillis();
     }
     LOCKS.clear();
   }
@@ -159,3 +134,4 @@ public class TopLRUCache {
     }
   }
 }
+
