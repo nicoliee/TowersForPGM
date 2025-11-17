@@ -5,6 +5,7 @@ import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.matchbot.cache.TopLRUCache;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
@@ -67,5 +68,6 @@ public class MatchLoadListener implements Listener {
     plugin.setStatsCancel(false);
     ConfigManager.removeTemp();
     DisconnectManager.clearAll();
+    TopLRUCache.clear();
   }
 }

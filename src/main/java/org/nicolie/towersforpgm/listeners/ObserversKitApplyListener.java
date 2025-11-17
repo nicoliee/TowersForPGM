@@ -28,7 +28,7 @@ public class ObserversKitApplyListener implements Listener {
     }
 
     if (ConfigManager.getRankedMaps().contains(map)) {
-      ItemListener.giveItem(player);
+      ItemListener.giveRankedItem(player);
     }
   }
 }

@@ -109,19 +109,19 @@ public class Utilities {
   public int timerDuration() {
     int size = availablePlayers.getAllAvailablePlayers().size();
     if (size >= 22) {
-      return 180; // 3 minutos
+      return 100;
     } else if (size >= 14) {
-      return 120; // 2 minutos
+      return 80;
     } else if (size >= 7) {
-      return 90; // 1 minuto y 30 segundos
+      return 50;
     } else if (size >= 4) {
-      return 60; // 1 minuto
+      return 30;
     } else if (size >= 2) {
-      return 35; // 35 segundos
+      return 20;
     } else if (size == 1) {
-      return 0; // 1 segundo
+      return 0;
     } else {
-      return 30; // 30 segundos
+      return 20;
     }
   }
 

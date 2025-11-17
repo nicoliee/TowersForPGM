@@ -46,7 +46,6 @@ public class HistoryEmbed {
           true);
     }
 
-    // Separar ganadores y perdedores
     List<PlayerHistory> winners = new ArrayList<>();
     List<PlayerHistory> losers = new ArrayList<>();
     for (PlayerHistory ph : history.getPlayers()) {

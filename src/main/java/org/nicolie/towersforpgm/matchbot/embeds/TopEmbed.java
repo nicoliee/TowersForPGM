@@ -24,7 +24,7 @@ public class TopEmbed {
 
     if (topEntries.isEmpty()) {
       embed.addField(
-          "❌ Sin Datos",
+          "Sin Datos",
           "Estadística " + stat.getDisplayName() + " no disponible para " + table + ".",
           false);
       return embed;

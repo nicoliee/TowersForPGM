@@ -11,7 +11,7 @@ public class MatchHistory {
   private final String scoresText;
   private final String winnersText;
   private final List<PlayerHistory> players;
-  private final long finishedAt; // Timestamp en epoch seconds
+  private final long finishedAt;
 
   public MatchHistory(
       String matchId,

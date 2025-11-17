@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Utilities;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
+import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueJoinListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
@@ -95,6 +96,16 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
           }
         }
         break;
+      case "reload":
+        // permiso exclusivo
+        if (!sender.hasPermission("towers.admin")) {
+          sender.sendMessage(LanguageManager.langMessage("errors.noPermission"));
+          return true;
+        }
+
+        // delegar la lógica de recolección desde voice al listener
+        QueueJoinListener.reloadQueueFromVoice(queue);
+        break;
       default:
         sender.sendMessage(LanguageManager.langMessage("ranked.usage"));
         break;
@@ -106,7 +117,7 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
   public List<String> onTabComplete(
       CommandSender sender, Command command, String alias, String[] args) {
     if (args.length == 1) {
-      List<String> options = Arrays.asList("join", "leave", "list");
+      List<String> options = Arrays.asList("join", "leave", "list", "reload");
       return options.stream()
           .filter(option -> option.startsWith(args[0].toLowerCase()))
           .collect(Collectors.toList());

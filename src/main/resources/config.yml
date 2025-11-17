@@ -26,7 +26,7 @@ draft:
   minOrder: 8              # Número mínimo de jugadores para aplicar el orden
 
 rankeds:
-  disconnectTime: 60  # Tiempo en segundos para que un jugador reconecte sin penalización
+  disconnectTime: 30  # Tiempo en segundos para que un jugador reconecte sin penalización
   size:
     min: 4
     max: 6

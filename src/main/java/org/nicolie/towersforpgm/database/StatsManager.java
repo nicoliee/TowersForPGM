@@ -69,10 +69,6 @@ public class StatsManager {
         SQL_EXECUTOR);
   }
 
-  /**
-   * Apply a sanction: increment games for a single username and update their ELO only. Does not
-   * modify other stats or other users.
-   */
   public static void applySanction(
       String table, String username, int gamesToAdd, PlayerEloChange eloChange) {
     TowersForPGM plugin = TowersForPGM.getInstance();
@@ -286,26 +282,30 @@ public class StatsManager {
         SQL_EXECUTOR);
   }
 
-  public static List<String> getAllUsernamesFiltered(String filter) {
+  public static CompletableFuture<List<String>> getAllUsernamesFiltered(String filter) {
     TowersForPGM plugin = TowersForPGM.getInstance();
     if (!plugin.getIsDatabaseActivated()) {
       plugin.getLogger().warning("Base de datos no activada, no se pueden filtrar usuarios");
-      return java.util.Collections.emptyList();
+      return CompletableFuture.completedFuture(java.util.Collections.emptyList());
     }
 
     String dbType = plugin.getCurrentDatabaseType();
-    try {
-      if ("MySQL".equals(dbType)) {
-        return SQLStatsManager.getAllUsernamesFiltered(filter);
-      } else if ("SQLite".equals(dbType)) {
-        return SQLITEStatsManager.getAllUsernamesFiltered(filter);
-      } else {
-        plugin.getLogger().warning("Tipo de base de datos desconocido: " + dbType);
-        return java.util.Collections.emptyList();
-      }
-    } catch (Exception e) {
-      plugin.getLogger().severe("Error filtrando usuarios: " + e.getMessage());
-      return java.util.Collections.emptyList();
-    }
+    return CompletableFuture.supplyAsync(
+        () -> {
+          try {
+            if ("MySQL".equals(dbType)) {
+              return SQLStatsManager.getAllUsernamesFiltered(filter);
+            } else if ("SQLite".equals(dbType)) {
+              return SQLITEStatsManager.getAllUsernamesFiltered(filter);
+            } else {
+              plugin.getLogger().warning("Tipo de base de datos desconocido: " + dbType);
+              return java.util.Collections.emptyList();
+            }
+          } catch (Exception e) {
+            plugin.getLogger().severe("Error filtrando usuarios: " + e.getMessage());
+            return java.util.Collections.emptyList();
+          }
+        },
+        SQL_EXECUTOR);
   }
 }

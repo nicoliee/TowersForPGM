@@ -9,6 +9,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.database.MatchHistoryManager;
+import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
@@ -61,6 +63,45 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
         LanguageManager.reload();
         sender.sendMessage(LanguageManager.langMessage("system.reload.success"));
         return true;
+
+      case "dbreload":
+        sender.sendMessage("§8[§bTowersForPGM§8] §7Reloading database connection...");
+        try {
+          plugin.initializeDatabase();
+
+          if (plugin.getIsDatabaseActivated()) {
+            // recreate tables and precache match id counters as on enable
+            try {
+              plugin
+                  .getLogger()
+                  .info("DB reload successful, creating tables and precaching match ids.");
+              // create tables
+              ConfigManager.getTables()
+                  .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
+              ConfigManager.getRankedTables()
+                  .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
+              org.nicolie.towersforpgm.database.TableManager.createHistoryTables();
+
+              java.util.Set<String> tables = new java.util.HashSet<>();
+              tables.addAll(ConfigManager.getTables());
+              tables.addAll(ConfigManager.getRankedTables());
+              MatchHistoryManager.preloadMatchIdCountersAsync(tables);
+            } catch (Exception ex) {
+              plugin
+                  .getLogger()
+                  .warning("Error creating tables/precaching after DB reload: " + ex.getMessage());
+            }
+
+            sender.sendMessage(
+                "§aDatabase reloaded and active (" + plugin.getCurrentDatabaseType() + ")");
+          } else {
+            sender.sendMessage(
+                "§cDatabase not active after reload. Check server logs for details.");
+          }
+        } catch (Exception e) {
+          sender.sendMessage("§cError reloading database: " + e.getMessage());
+        }
+        return true;
       default:
         sender.sendMessage(
             "§8[§bTowersForPGM§8] §7Version: " + plugin.getDescription().getVersion());
@@ -73,7 +114,7 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
       CommandSender sender, Command command, String alias, String[] args) {
     if (args.length == 1) {
       // Lista de opciones posibles
-      List<String> options = Arrays.asList("setlanguage", "reloadmessages");
+      List<String> options = Arrays.asList("setlanguage", "reloadmessages", "dbreload");
 
       // Filtrar las opciones que comienzan con el texto ingresado por el usuario
       String input = args[0].toLowerCase();

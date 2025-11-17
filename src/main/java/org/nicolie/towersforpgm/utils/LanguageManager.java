@@ -20,8 +20,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.nicolie.towersforpgm.TowersForPGM;
 
 public class LanguageManager {
-  // Language files are discovered dynamically from either the plugin data folder
-  // (plugins/<plugin>/languages/<lang>/) or the plugin jar under /languages/<lang>/
 
   private static TowersForPGM plugin;
   private static String currentLanguage;
@@ -228,8 +226,20 @@ public class LanguageManager {
 
   private static void loadMessages() {
     File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-    if (messagesFile.exists()) {
-      messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+    try {
+      if (!plugin.getDataFolder().exists()) plugin.getDataFolder().mkdirs();
+      if (!messagesFile.exists()) {
+        try {
+          plugin.saveResource("messages.yml", false);
+        } catch (IllegalArgumentException e) {
+          plugin.getLogger().warning("Default messages.yml resource not found: " + e.getMessage());
+        }
+      }
+      if (messagesFile.exists()) {
+        messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+      }
+    } catch (Exception e) {
+      plugin.getLogger().warning("Failed to load messages.yml: " + e.getMessage());
     }
   }
 }

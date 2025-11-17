@@ -5,6 +5,7 @@ error: "§cError al obtener las estadísticas."
 header: "§7Stats for §3{player}§7 in §2{table}:"
 noStats: "§cJugador no encontrado."
 tableNotFound: "§cLa tabla §4{table} §cno fue encontrada."
+noPage: "§cPágina no encontrada."
 
 elo: "Elo"
 maxElo: "Elo máximo alcanzado"

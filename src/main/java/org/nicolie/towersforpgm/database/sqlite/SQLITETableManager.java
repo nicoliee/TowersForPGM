@@ -144,7 +144,6 @@ public class SQLITETableManager {
             + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
             + "match_id TEXT NOT NULL,"
             + "username TEXT NOT NULL,"
-            + "team TEXT,"
             + "kills INTEGER DEFAULT 0,"
             + "deaths INTEGER DEFAULT 0,"
             + "assists INTEGER DEFAULT 0,"

@@ -15,6 +15,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.scheduler.BukkitTask;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
+import org.nicolie.towersforpgm.draft.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.draft.Matchmaking;
 import org.nicolie.towersforpgm.draft.Teams;
@@ -80,19 +81,26 @@ public class Queue {
   public void addPlayer(UUID playerUUID, Match match) {
     if (playerUUID == null) return;
     if (match == null) match = MatchManager.getMatch();
+    if (queuePlayers.contains(playerUUID)) return;
 
     MatchPlayer onlinePlayer = PGM.get().getMatchManager().getPlayer(playerUUID);
-    String playerName;
+    OfflinePlayer offlinePlayer = onlinePlayer != null ? null : Bukkit.getOfflinePlayer(playerUUID);
+    if (onlinePlayer == null && (offlinePlayer == null || offlinePlayer.getName() == null)) return;
+    String playerName =
+        onlinePlayer != null ? onlinePlayer.getPrefixedName() : "§3" + offlinePlayer.getName();
+    String name = onlinePlayer != null ? onlinePlayer.getNameLegacy() : offlinePlayer.getName();
 
-    if (onlinePlayer != null) {
-      playerName = onlinePlayer.getPrefixedName();
-    } else {
-      OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerUUID);
-      if (offlinePlayer.getName() == null) return;
-      playerName = "§3" + offlinePlayer.getName();
+    if (Queue.isRanked()) {
+      AvailablePlayers available = TowersForPGM.getInstance().getAvailablePlayers();
+      if (available != null) {
+        java.util.List<String> all = available.getAllAvailablePlayers();
+        boolean inAvailable = all.contains(name);
+        if (inAvailable) return;
+      }
+      if (teams != null && teams.isPlayerInAnyTeam(name)) {
+        return;
+      }
     }
-
-    if (queuePlayers.contains(playerUUID)) return;
 
     String map = match.getMap().getName();
     if (!ConfigManager.getRankedMaps().contains(map)) {
@@ -134,6 +142,32 @@ public class Queue {
 
     queuePlayers.remove(playerUUID);
     sendQueueMessage(match, playerName, true);
+  }
+
+  public void processVoiceJoin(UUID playerUUID, Match match) {
+    if (playerUUID == null) return;
+    if (match == null) match = MatchManager.getMatch();
+
+    if (!Queue.isRanked()) {
+      addPlayer(playerUUID, match);
+      return;
+    }
+
+    MatchPlayer onlinePlayer = PGM.get().getMatchManager().getPlayer(playerUUID);
+    String plainName = onlinePlayer != null
+        ? onlinePlayer.getNameLegacy()
+        : Bukkit.getOfflinePlayer(playerUUID).getName();
+    if (plainName == null) return;
+
+    if (teams != null && teams.isPlayerInAnyTeam(plainName)) {
+      if (teams.isPlayerInTeam(plainName, 1)) {
+        RankedListener.movePlayerToTeam1(playerUUID);
+      } else {
+        RankedListener.movePlayerToTeam2(playerUUID);
+      }
+      return;
+    }
+    addPlayer(playerUUID, match);
   }
 
   public void startRanked(Match match) {

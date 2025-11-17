@@ -5,6 +5,7 @@ import org.nicolie.towersforpgm.commands.AddCommand;
 import org.nicolie.towersforpgm.commands.BalanceCommand;
 import org.nicolie.towersforpgm.commands.CancelMatchCommand;
 import org.nicolie.towersforpgm.commands.CaptainsCommand;
+import org.nicolie.towersforpgm.commands.EloCommand;
 import org.nicolie.towersforpgm.commands.LinkCommand;
 import org.nicolie.towersforpgm.commands.PickCommand;
 import org.nicolie.towersforpgm.commands.PreparationTimeCommand;
@@ -44,6 +45,7 @@ public class Commands {
     plugin.getCommand("balance").setExecutor(new BalanceCommand(matchmaking));
     plugin.getCommand("cancelMatch").setExecutor(new CancelMatchCommand());
     plugin.getCommand("captains").setExecutor(new CaptainsCommand(draft));
+    plugin.getCommand("elo").setExecutor(new EloCommand());
     plugin.getCommand("link").setExecutor(new LinkCommand());
     plugin
         .getCommand("pick")

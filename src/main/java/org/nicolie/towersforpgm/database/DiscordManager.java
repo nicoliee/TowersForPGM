@@ -19,8 +19,14 @@ public class DiscordManager {
   });
 
   public static void shutdownDiscordExecutor() {
-    DISCORD_EXECUTOR.shutdown();
     DiscordPlayerCache.clear();
+    try {
+      DISCORD_EXECUTOR.shutdown();
+    } catch (Exception e) {
+      TowersForPGM.getInstance()
+          .getLogger()
+          .warning("Error shutting down Discord executor: " + e.getMessage());
+    }
   }
 
   public static CompletableFuture<Boolean> registerDCAccount(
@@ -43,7 +49,6 @@ public class DiscordManager {
                   SQLITEDiscordManager.registerDCAccount(playerUuid, discordId).join();
             }
 
-            // Si el registro fue exitoso, almacenar en caché
             if (success) {
               DiscordPlayerCache.add(new DiscordPlayer(playerUuid, discordId));
             }

@@ -38,14 +38,13 @@ public class TopCommand extends ListenerAdapter {
 
       CommandCreateAction command = jda.upsertCommand(NAME, DESC);
 
-      // Determinar si usar autocompletado o choices fijos para estadísticas
       if (AutocompleteHandler.shouldUseAutocompleteForStats()) {
         command.addOption(
             net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
             OPT_STAT,
             DESC_STAT,
             true,
-            true); // Autocompletado
+            true);
       } else {
         var statOption = new net.dv8tion.jda.api.interactions.commands.build.OptionData(
             net.dv8tion.jda.api.interactions.commands.OptionType.STRING, OPT_STAT, DESC_STAT, true);
@@ -53,14 +52,13 @@ public class TopCommand extends ListenerAdapter {
         command.addOptions(statOption);
       }
 
-      // Determinar si usar autocompletado o choices fijos para tablas
       if (AutocompleteHandler.shouldUseAutocompleteForTables()) {
         command.addOption(
             net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
             OPT_TABLE,
             DESC_TABLE,
             false,
-            true); // Autocompletado
+            true); 
       } else {
         var tableOption = new net.dv8tion.jda.api.interactions.commands.build.OptionData(
             net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
@@ -101,9 +99,19 @@ public class TopCommand extends ListenerAdapter {
     int page = 1;
     Stat stat = Stat.fromDisplayName(statName);
 
+    if (stat == Stat.POINTS
+        && !org.nicolie.towersforpgm.matchbot.MatchBotConfig.isStatsPointsEnabled()) {
+      event
+          .reply(LanguageManager.langMessage("matchbot.top.invalid-column")
+              .replace("{stat}", stat.getDisplayName())
+              .replace("{table}", table))
+          .setEphemeral(true)
+          .queue();
+      return;
+    }
+
     boolean perGame = perGameOpt != null && perGameOpt.getAsBoolean();
 
-    // Validar que la estadística soporte perGame si el usuario lo solicitó
     if (perGame && !stat.isStatPerGame()) {
       event
           .reply(LanguageManager.langMessage("matchbot.top.perGame-restriction")
@@ -123,7 +131,6 @@ public class TopCommand extends ListenerAdapter {
                 if (perGame || isDamage) {
                   dbColumn = dbColumn + "PerGame";
                 }
-                // Intentar recuperar de caché (solo página 1 por simplicidad)
                 TopLRUCache.CachedPage cached = null;
                 if (page == 1) {
                   cached = TopLRUCache.get(table, dbColumn, page, PAGE_SIZE, perGame);
@@ -133,7 +140,6 @@ public class TopCommand extends ListenerAdapter {
                 if (cached != null) {
                   result = new TopResult(cached.data(), cached.totalRecords());
                 } else {
-                  // Usar el nuevo método combinado que obtiene datos y total en una sola consulta
                   result = StatsManager.getTop(table, dbColumn, PAGE_SIZE, page).get();
                   if (page == 1 && !result.getData().isEmpty()) {
                     double lastValue =

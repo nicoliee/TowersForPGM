@@ -45,7 +45,6 @@ public class Elo {
         return changes;
       }
 
-      // Winners: base on rank.getEloWin() with random +/- 1..3
       for (MatchPlayer winner : winners) {
         String username = winner.getNameLegacy();
         PlayerEloChange playerElo =
@@ -60,7 +59,6 @@ public class Elo {
         changes.add(new PlayerEloChange(username, currentElo, newElo, individualEloChange, maxElo));
       }
 
-      // Losers: base on rank.getEloLose() (negative) with random +/- 1..3
       for (MatchPlayer loser : losers) {
         String username = loser.getNameLegacy();
         PlayerEloChange playerElo =
@@ -69,7 +67,7 @@ public class Elo {
         Rank rank = Rank.getRankByElo(currentElo);
         int base = rank.getEloLose(); // negative
         int jitter = randomJitter();
-        int individualEloChange = base + jitter; // stays around base (still negative)
+        int individualEloChange = base + jitter;
         int newElo = Math.max(-100, currentElo + individualEloChange);
         int maxElo = playerElo.getMaxElo();
         changes.add(new PlayerEloChange(username, currentElo, newElo, individualEloChange, maxElo));

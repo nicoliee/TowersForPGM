@@ -110,7 +110,6 @@ public class PlayerEloChange {
       String discordId = discordPlayer.getDiscordId();
       if (discordId == null || discordId.isEmpty()) return;
 
-      // Si el rango es el mismo que el que ya posee en Discord, RoleManager se encargará
       RoleManager.changeRole(discordId, previousRank, newRank);
     });
   }

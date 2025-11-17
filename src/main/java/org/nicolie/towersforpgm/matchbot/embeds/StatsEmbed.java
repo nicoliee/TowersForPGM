@@ -4,6 +4,7 @@ import java.util.logging.Level;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.models.Stats;
+import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.ConfigManager;
 
@@ -49,10 +50,10 @@ public class StatsEmbed {
       int maxElo = stats.getMaxElo();
       if (maxElo != -9999) {
         Rank rank = Rank.getRankByElo(elo);
-        Rank maxRank = Rank.getRankByElo(maxElo);
+        embed.setColor(rank.getEmbedColor());
         embed.addField(
-            "🏅 Elo: " + rank.getPrefixedRank(false) + " " + elo,
-            "🏅 Máximo elo alcanzado: " + maxRank.getPrefixedRank(false) + " " + maxElo,
+            "Elo:",
+            "⭐ **" + rank.getPrefixedRank(false) + "** " + elo + " [" + maxElo + "]",
             false);
       }
     }
@@ -76,13 +77,16 @@ public class StatsEmbed {
     int winstreak = stats.getWinstreak();
     int maxWinstreak = stats.getMaxWinstreak();
     if (winstreak != -9999 && maxWinstreak != -9999) {
-      embed.addField("🔥 Winstreak", winstreak + " (" + maxWinstreak + ")", true);
+      embed.addField("🔥 Winstreak", winstreak + " [" + maxWinstreak + "]", true);
     }
 
-    int points = stats.getPoints();
-    if (points != -9999) {
-      double pointsPerGame = (games > 0 && games != -9999) ? (double) points / games : 0;
-      embed.addField("🎖 Puntos", points + " (" + String.format("%.2f", pointsPerGame) + ")", true);
+    if (MatchBotConfig.isStatsPointsEnabled()) {
+      int points = stats.getPoints();
+      if (points != -9999) {
+        double pointsPerGame = (games > 0 && games != -9999) ? (double) points / games : 0;
+        embed.addField(
+            "🎖 Puntos", points + " (" + String.format("%.2f", pointsPerGame) + ")", true);
+      }
     }
 
     embed.addField("_ _", "**PvP:**", false);

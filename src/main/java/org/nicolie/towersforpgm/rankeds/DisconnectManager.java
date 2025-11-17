@@ -19,7 +19,7 @@ import tc.oc.pgm.util.bukkit.Sounds;
 public class DisconnectManager {
   private static final Map<UUID, BukkitTask> timers = new HashMap<>();
   private static final Map<String, Sanction> activeSanctions =
-      new HashMap<>(); // matchId -> sanction
+      new HashMap<>(); 
 
   public static void startDisconnectTimer(Match match, MatchPlayer player) {
     if (match == null || player == null) return;

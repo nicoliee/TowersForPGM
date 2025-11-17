@@ -2,7 +2,6 @@ package org.nicolie.towersforpgm.database.models.history;
 
 public class PlayerHistory {
   private final String username;
-  private final String team;
   private final int kills;
   private final int deaths;
   private final int assists;
@@ -17,7 +16,6 @@ public class PlayerHistory {
 
   public PlayerHistory(
       String username,
-      String team,
       int kills,
       int deaths,
       int assists,
@@ -30,7 +28,6 @@ public class PlayerHistory {
       Integer eloDelta,
       Integer maxEloAfter) {
     this.username = username;
-    this.team = team;
     this.kills = kills;
     this.deaths = deaths;
     this.assists = assists;
@@ -46,10 +43,6 @@ public class PlayerHistory {
 
   public String getUsername() {
     return username;
-  }
-
-  public String getTeam() {
-    return team;
   }
 
   public int getKills() {

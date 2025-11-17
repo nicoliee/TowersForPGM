@@ -2,7 +2,7 @@ prefix: "§8[§bTowersForPGM§8]"
 and: "and"
 or: "or"
 languageSet: "§8[§bTowersForPGM§8] §aLanguage changed to §2English§a."
-
+notAvailable: "§cNot available."
 colors:
   positive: "§a"
   negative: "§c"

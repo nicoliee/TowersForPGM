@@ -15,8 +15,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.commands.RankedCommand;
 import org.nicolie.towersforpgm.commands.TagCommand;
-import org.nicolie.towersforpgm.database.DiscordManager;
+import org.nicolie.towersforpgm.database.MatchHistoryManager;
 import org.nicolie.towersforpgm.database.TableManager;
+import org.nicolie.towersforpgm.database.models.discordPlayer.DiscordPlayerCache;
 import org.nicolie.towersforpgm.database.sql.SQLDatabaseManager;
 import org.nicolie.towersforpgm.database.sqlite.SQLITEDatabaseManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
@@ -83,6 +84,7 @@ public final class TowersForPGM extends JavaPlugin {
   private boolean isMatchBotEnabled = false; // Variable para verificar si MatchBot está habilitado
   private File matchBotFile;
   private FileConfiguration matchBotConfig;
+  // Match ID caching handled by MatchHistoryManager
 
   @Override
   public void onEnable() {
@@ -99,6 +101,16 @@ public final class TowersForPGM extends JavaPlugin {
 
     if (database) {
       createTablesOnStartup();
+      // Precargar contadores de matchId en MatchHistoryManager para las tablas configuradas
+      try {
+        java.util.Set<String> tables = new java.util.HashSet<>();
+        tables.addAll(ConfigManager.getTables());
+        tables.addAll(ConfigManager.getRankedTables());
+        MatchHistoryManager.preloadMatchIdCountersAsync(tables).thenRun(() -> getLogger()
+            .info("MatchHistoryManager precargado para tablas: " + tables.size()));
+      } catch (Exception e) {
+        getLogger().warning("Error precargando MatchHistoryManager: " + e.getMessage());
+      }
     } else {
       getLogger().warning("No database connections available!");
     }
@@ -198,9 +210,26 @@ public final class TowersForPGM extends JavaPlugin {
     if (sqliteDatabaseManager != null) {
       sqliteDatabaseManager.disconnect();
     }
+    // Shutdown SQL executors and Discord executor to avoid queued tasks retaining memory
+    try {
+      org.nicolie.towersforpgm.database.StatsManager.shutdownSqlExecutor();
+    } catch (Exception ignored) {
+    }
+    try {
+      org.nicolie.towersforpgm.database.DiscordManager.shutdownDiscordExecutor();
+    } catch (Exception ignored) {
+    }
+    try {
+      org.nicolie.towersforpgm.database.sql.SQLDiscordManager.shutdownSqlExecutor();
+    } catch (Exception ignored) {
+    }
+    try {
+      org.nicolie.towersforpgm.database.sqlite.SQLITEDiscordManager.shutdownSqlExecutor();
+    } catch (Exception ignored) {
+    }
     // Solo apagar el executor de Discord si MatchBot está habilitado
     if (isMatchBotEnabled && database) {
-      DiscordManager.shutdownDiscordExecutor();
+      DiscordPlayerCache.clear();
     }
   }
 
@@ -222,6 +251,11 @@ public final class TowersForPGM extends JavaPlugin {
 
   public Draft getDraft() {
     return draft;
+  }
+
+  // Getter para AvailablePlayers (necesario para comprobaciones desde otras clases)
+  public org.nicolie.towersforpgm.draft.AvailablePlayers getAvailablePlayers() {
+    return availablePlayers;
   }
 
   public void giveItem(Player player) {
@@ -340,10 +374,29 @@ public final class TowersForPGM extends JavaPlugin {
     org.nicolie.towersforpgm.database.TableManager.createHistoryTables();
   }
 
-  // Método para inicializar la base de datos
-  private void initializeDatabase() {
+  // Método para inicializar (o recargar) la base de datos
+  public void initializeDatabase() {
     database = false; // Por defecto desactivada
     currentDatabaseType = "None";
+    // Si había conexiones previas, cerrarlas antes de reintentar
+    try {
+      if (mysqlDatabaseManager != null) {
+        try {
+          mysqlDatabaseManager.disconnect();
+        } catch (Exception ignored) {
+        }
+        mysqlDatabaseManager = null;
+      }
+      if (sqliteDatabaseManager != null) {
+        try {
+          sqliteDatabaseManager.disconnect();
+        } catch (Exception ignored) {
+        }
+        sqliteDatabaseManager = null;
+      }
+    } catch (Exception e) {
+      getLogger().warning("Error cerrando conexiones previas: " + e.getMessage());
+    }
 
     // Verificar si MySQL está habilitado en la configuración
     if (getConfig().getBoolean("database.enabled", false)) {

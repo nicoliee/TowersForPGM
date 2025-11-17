@@ -32,7 +32,6 @@ public class SQLDiscordManager {
           String acc_table = MatchBotConfig.getAccountsTable();
           try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
 
-            // Verificar si ya existe el UUID o Discord ID
             String checkSQL =
                 "SELECT COUNT(*) FROM " + acc_table + " WHERE uuid = ? OR discordId = ?";
             try (PreparedStatement checkStmt = conn.prepareStatement(checkSQL)) {
@@ -50,7 +49,6 @@ public class SQLDiscordManager {
               }
             }
 
-            // Insertar nueva vinculación
             String insertSQL = "INSERT INTO " + acc_table + " (uuid, discordId) VALUES (?, ?)";
             try (PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
               insertStmt.setString(1, playerUuid.toString());

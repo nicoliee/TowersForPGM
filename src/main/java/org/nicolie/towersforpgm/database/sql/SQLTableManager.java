@@ -223,7 +223,6 @@ public class SQLTableManager {
             + "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
             + "match_id VARCHAR(96) NOT NULL,"
             + "username VARCHAR(32) NOT NULL,"
-            + "team VARCHAR(64),"
             + "kills INT DEFAULT 0,"
             + "deaths INT DEFAULT 0,"
             + "assists INT DEFAULT 0,"

@@ -32,7 +32,6 @@ public class TableManager {
     }
   }
 
-  /** Crea la tabla DCAccounts para vincular cuentas Discord-Minecraft */
   public static void createDCAccountsTable() {
     TowersForPGM plugin = TowersForPGM.getInstance();
     if (!plugin.getIsDatabaseActivated()) {
@@ -63,7 +62,6 @@ public class TableManager {
     }
   }
 
-  /** Crea tablas de historial de partidas (matches_history y match_players_history) */
   public static void createHistoryTables() {
     TowersForPGM plugin = TowersForPGM.getInstance();
     if (!plugin.getIsDatabaseActivated()) {

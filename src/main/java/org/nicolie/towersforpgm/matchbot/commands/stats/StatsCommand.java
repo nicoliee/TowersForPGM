@@ -27,16 +27,15 @@ public class StatsCommand extends ListenerAdapter {
               LanguageManager.langMessage("matchbot.stats.player"),
               LanguageManager.langMessage("matchbot.stats.desc-player"),
               true,
-              true); // Siempre autocompletado para jugadores
+              true); 
 
-      // Determinar si usar autocompletado o choices fijos para tablas
       if (AutocompleteHandler.shouldUseAutocompleteForTables()) {
         command.addOption(
             net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
             LanguageManager.langMessage("matchbot.stats.table"),
             LanguageManager.langMessage("matchbot.stats.desc-table"),
             false,
-            true); // Autocompletado
+            true); 
       } else {
         var tableOption = new net.dv8tion.jda.api.interactions.commands.build.OptionData(
             net.dv8tion.jda.api.interactions.commands.OptionType.STRING,

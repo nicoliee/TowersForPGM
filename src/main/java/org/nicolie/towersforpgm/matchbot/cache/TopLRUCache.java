@@ -8,14 +8,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import org.nicolie.towersforpgm.database.models.top.Top;
 
-/**
- * Caché LRU para páginas del top. Clave: table|column|page|limit|perGame TTL de entradas: 15s.
- * Limpieza global cada 30s para invalidar resultados antiguos.
- */
 public class TopLRUCache {
   private static final int MAX_ENTRIES = 256;
   private static final long TTL_MILLIS = 15_000; // 15s
-  private static final long GLOBAL_FLUSH_INTERVAL = 30_000; // 30s
+  private static final long GLOBAL_FLUSH_INTERVAL = 30_000; 
   private static volatile long lastGlobalFlush = System.currentTimeMillis();
 
   private static final Map<String, Entry> CACHE =
@@ -117,12 +113,20 @@ public class TopLRUCache {
     long now = System.currentTimeMillis();
     if (now - lastGlobalFlush >= GLOBAL_FLUSH_INTERVAL) {
       synchronized (CACHE) {
-        if (now - lastGlobalFlush >= GLOBAL_FLUSH_INTERVAL) { // double-check
+        if (now - lastGlobalFlush >= GLOBAL_FLUSH_INTERVAL) {
           CACHE.clear();
           lastGlobalFlush = now;
         }
       }
     }
+  }
+
+  public static void clear() {
+    synchronized (CACHE) {
+      CACHE.clear();
+      lastGlobalFlush = System.currentTimeMillis();
+    }
+    LOCKS.clear();
   }
 
   public static class CachedPage {

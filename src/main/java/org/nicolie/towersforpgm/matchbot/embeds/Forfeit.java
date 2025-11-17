@@ -45,7 +45,6 @@ public class Forfeit {
         .addField("🗺️ " + MessagesConfig.message("embeds.finish.map"), mapName, true)
         .addField("⏱️ " + MessagesConfig.message("embeds.finish.duration"), duration, true);
 
-    // Index elo by username (case-insensitive)
     Map<String, PlayerEloChange> eloByUser = eloList == null
         ? java.util.Collections.emptyMap()
         : eloList.stream()
@@ -61,7 +60,6 @@ public class Forfeit {
     if (teams.size() > 1)
       for (MatchPlayer mp : teams.get(1).getPlayers()) team2Players.add(mp.getNameLegacy());
 
-    // Ensure sanctioned user is added to the appropriate team list
     if (sanctionedUser != null && !sanctionedUser.isEmpty()) {
       String strippedSanctionedTeam = ChatColor.stripColor(sanctionedTeamName);
       String t1 = ChatColor.stripColor(team1Name);
@@ -77,7 +75,6 @@ public class Forfeit {
       } else if (goesToTeam2) {
         if (!team2Players.contains(sanctionedUser)) team2Players.add(sanctionedUser);
       } else {
-        // Fallback: if not matching, add to the smaller team to maintain balance visually
         if (team1Players.size() <= team2Players.size()) {
           if (!team1Players.contains(sanctionedUser)) team1Players.add(sanctionedUser);
         } else if (!team2Players.contains(sanctionedUser)) {
@@ -86,7 +83,7 @@ public class Forfeit {
       }
     }
 
-    // Build team fields
+    embed.addBlankField(false);
     embed.addField(
         team1Name, buildTeamField(team1Players, eloByUser, sanctionedUser, penaltyDelta), true);
     embed.addField(
@@ -103,19 +100,29 @@ public class Forfeit {
     StringBuilder sb = new StringBuilder();
     for (String name : players) {
       PlayerEloChange e = eloByUser.get(name.toLowerCase());
-      int elo = e != null ? e.getCurrentElo() : 0;
-      String rank = Rank.getRankByElo(elo).getPrefixedRank(false);
+      int baseElo = e != null ? e.getCurrentElo() : 0;
+
+      boolean isSanctioned = sanctionedUser != null && name.equalsIgnoreCase(sanctionedUser);
+      int displayedElo = isSanctioned ? baseElo + penaltyDelta : baseElo;
+      displayedElo = Math.max(displayedElo, -100);
+
+      String rank = Rank.getRankByElo(displayedElo).getPrefixedRank(false);
+
       String deltaText = "+0";
-      if (sanctionedUser != null && name.equalsIgnoreCase(sanctionedUser)) {
-        int delta = penaltyDelta; // likely negative
+      if (isSanctioned) {
+        int delta = penaltyDelta;
         deltaText = (delta > 0 ? "+" : "") + delta;
+      } else if (e != null) {
+        int change = e.getEloChange();
+        deltaText = (change > 0 ? "+" : "") + change;
       }
+
       sb.append("**")
           .append(rank)
           .append(" ")
           .append(name)
           .append("**: ")
-          .append(elo)
+          .append(displayedElo)
           .append(" (")
           .append(deltaText)
           .append(")\n");

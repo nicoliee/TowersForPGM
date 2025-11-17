@@ -149,29 +149,24 @@ public class MatchFinishListener implements Listener {
       List<Stats> playerStatsList) {
     Map<String, List<Stats>> basicStats = RankedFinish.getPlayerStats(match, allPlayers);
     Elo.addWin(winners, losers).thenAccept(eloChanges -> {
-      // Guardar historial y actualizar estadísticas
       saveMatchHistory(table, matchInfo, true, playerStatsList, eloChanges);
 
-      // Enviar mensajes de cambio de ELO y aplicar cambios de rol en Discord
       for (PlayerEloChange eloChange : eloChanges) {
         eloChange.sendMessage();
         eloChange.applyDiscordRoleChange();
       }
 
-      // Enviar embed de Discord si está habilitado
       if (TowersForPGM.getInstance().isMatchBotEnabled()) {
         Map<String, List<Stats>> statsWithElo = RankedFinish.addElo(basicStats, eloChanges);
         EmbedBuilder embed = RankedFinish.create(matchInfo, table, statsWithElo);
         DiscordBot.sendMatchEmbed(embed, match, MatchBotConfig.getDiscordChannel(), null);
       }
 
-      // Actualizar estadísticas en la base de datos
       StatsManager.updateStats(table, playerStatsList, eloChanges);
     });
   }
 
   private void handleUnrankedMatch(String table, MatchInfo matchInfo, List<Stats> playerStatsList) {
-    // Guardar historial y actualizar estadísticas
     saveMatchHistory(table, matchInfo, false, playerStatsList, null);
     StatsManager.updateStats(table, playerStatsList, null);
   }

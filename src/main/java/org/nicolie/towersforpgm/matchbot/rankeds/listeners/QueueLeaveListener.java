@@ -21,17 +21,14 @@ public class QueueLeaveListener extends ListenerAdapter {
   public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
     String queueChannelId = MatchBotConfig.getQueueID();
 
-    // Verificar si el queue ID está configurado
     if (queueChannelId == null || queueChannelId.isEmpty()) {
       return;
     }
 
-    // Verificar si el usuario salió del canal de queue
     if (event.getChannelLeft() != null && event.getChannelLeft().getId().equals(queueChannelId)) {
 
       String discordId = event.getMember().getId();
 
-      // Obtener el UUID de Minecraft asociado
       DiscordManager.getDiscordPlayer(discordId)
           .thenAccept(discordPlayer -> {
             if (discordPlayer != null) {

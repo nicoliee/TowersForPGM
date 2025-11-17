@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.matchbot.commands;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,7 +21,7 @@ public class AutocompleteHandler extends ListenerAdapter {
   private static final int MAX_CHOICES_WITHOUT_AUTOCOMPLETE = 25;
 
   public static boolean shouldUseAutocompleteForStats() {
-    return Stat.getAllStatNames().size() > MAX_CHOICES_WITHOUT_AUTOCOMPLETE;
+    return getAvailableStatNames().size() > MAX_CHOICES_WITHOUT_AUTOCOMPLETE;
   }
 
   public static boolean shouldUseAutocompleteForTables() {
@@ -28,7 +29,7 @@ public class AutocompleteHandler extends ListenerAdapter {
   }
 
   public static List<Command.Choice> getStatChoices() {
-    return Stat.getAllStatNames().stream()
+    return getAvailableStatNames().stream()
         .map(name -> new Command.Choice(name, name))
         .collect(Collectors.toUnmodifiableList());
   }
@@ -49,7 +50,7 @@ public class AutocompleteHandler extends ListenerAdapter {
 
   private static void initializeChoices() {
     if (shouldUseAutocompleteForStats()) {
-      List<Command.Choice> statChoices = Stat.getAllStatNames().stream()
+      List<Command.Choice> statChoices = getAvailableStatNames().stream()
           .map(name -> new Command.Choice(name, name))
           .collect(Collectors.toUnmodifiableList());
       CHOICES_CACHE.put(LanguageManager.langMessage("matchbot.top.stat"), statChoices);
@@ -63,10 +64,57 @@ public class AutocompleteHandler extends ListenerAdapter {
     }
   }
 
+  private static List<String> getAvailableStatNames() {
+    return Arrays.stream(Stat.values())
+        .filter(stat -> {
+          // Si la estadística Points está deshabilitada en config, filtrarla
+          if (stat == Stat.POINTS && !MatchBotConfig.isStatsPointsEnabled()) {
+            return false;
+          }
+          return true;
+        })
+        .map(Stat::getDisplayName)
+        .collect(Collectors.toUnmodifiableList());
+  }
+
   @Override
   public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
     String focused = event.getFocusedOption().getName();
     String userInput = event.getFocusedOption().getValue();
+
+    if ("history".equals(event.getName())
+        && LanguageManager.langMessage("matchbot.history.matchid").equals(focused)) {
+      org.nicolie.towersforpgm.database.MatchHistoryManager.getRecentMatchIds(
+              userInput == null ? "" : userInput)
+          .thenAccept(matchIds -> {
+            List<Command.Choice> choices = matchIds.stream()
+                .limit(25)
+                .map(id -> new Command.Choice(id, id))
+                .collect(Collectors.toList());
+            event.replyChoices(choices).queue();
+          })
+          .exceptionally(err -> {
+            event.replyChoices(EMPTY_CHOICES).queue();
+            return null;
+          });
+      return;
+    }
+
+    if (LanguageManager.langMessage("matchbot.stats.player").equals(focused)) {
+      StatsManager.getAllUsernamesFiltered(userInput == null ? "" : userInput)
+          .thenAccept(players -> {
+            List<Command.Choice> choices = players.stream()
+                .limit(25)
+                .map(p -> new Command.Choice(p, p))
+                .collect(Collectors.toList());
+            event.replyChoices(choices).queue();
+          })
+          .exceptionally(err -> {
+            event.replyChoices(EMPTY_CHOICES).queue();
+            return null;
+          });
+      return;
+    }
 
     List<Command.Choice> choices = filterChoices(event.getName(), focused, userInput);
     event.replyChoices(choices).queue();
@@ -74,27 +122,9 @@ public class AutocompleteHandler extends ListenerAdapter {
 
   private List<Command.Choice> filterChoices(
       String commandName, String optionName, String userInput) {
-    // Autocomplete para /history matchid
-    if ("history".equals(commandName)
-        && LanguageManager.langMessage("matchbot.history.matchid").equals(optionName)) {
-      List<String> matchIds =
-          org.nicolie.towersforpgm.database.MatchHistoryManager.getRecentMatchIds(userInput);
-      return matchIds.stream()
-          .limit(25)
-          .map(id -> new Command.Choice(id, id))
-          .collect(Collectors.toList());
-    }
-
-    // Autocomplete para /stats player
-    if (LanguageManager.langMessage("matchbot.stats.player").equals(optionName)) {
-      List<String> players =
-          StatsManager.getAllUsernamesFiltered(userInput == null ? "" : userInput);
-      return players.stream()
-          .limit(25)
-          .map(p -> new Command.Choice(p, p))
-          .collect(Collectors.toList());
-    }
-
+    // Note: async autocompletions (history and stats player) are handled in
+    // onCommandAutoCompleteInteraction since they return CompletableFutures.
+    // This method only handles cached/static choices.
     List<Command.Choice> cachedChoices = CHOICES_CACHE.get(optionName);
 
     if (cachedChoices == null) {

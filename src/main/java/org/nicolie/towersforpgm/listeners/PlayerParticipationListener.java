@@ -8,6 +8,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Captains;
 import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.match.MatchPhase;
@@ -71,6 +72,16 @@ public class PlayerParticipationListener implements Listener {
       UUID playerUUID = event.getPlayer().getBukkit().getUniqueId();
       boolean isInAnyTeam = teams.isPlayerInAnyTeam(playerName);
       int captainNumber = captains.getCaptainTeam(playerUUID);
+
+      // Si es ranked y hay captains (draft), al entrar al Waiting Room/Queue
+      // mover automáticamente al jugador a su canal de voz de equipo si ya estaba asignado
+      if (Queue.isRanked() && captains.isMatchWithCaptains() && isInAnyTeam) {
+        if (teams.isPlayerInTeam(playerName, 1) || captainNumber == 1) {
+          RankedListener.movePlayerToTeam1(playerUUID);
+        } else if (teams.isPlayerInTeam(playerName, 2) || captainNumber == 2) {
+          RankedListener.movePlayerToTeam2(playerUUID);
+        }
+      }
 
       if (teams.isPlayerInTeam(playerName, 1) || captainNumber == 1) {
         event.cancel(Component.text(LanguageManager.langMessage("draft.join.redTeam")));

@@ -9,6 +9,9 @@ tables:
   - TorneoT1
   - RankedT1
 
+stats:
+  points: true
+
 ranked:
   discordChannel: "" # Canal de Discord donde se enviarán los mensajes
   rankedRoleId: "" # ID del rol a tagear cunado se use /tag
@@ -17,15 +20,15 @@ ranked:
   enabled: false 
   table: "DCAccounts" # Tabla donde se guardan los IDS de Discord vinculados con UUIDs de Minecraft
 ## IDs de los canales de voz de Discord y rol para rankeds.
-  registeredRoleId: ""
-  inactiveID: ""
-  queueID: ""
-  team1ID: ""
-  team2ID: ""
-
-roles:
-  bronzeRoleId: ""
-  silverRoleId: ""
-  goldRoleId: ""
-  emeraldRoleId: ""
-  diamondRoleId: ""
+  voice-chat:
+    inactive: ""
+    queue: ""
+    team1: ""
+    team2: ""
+  roles:
+    registered: ""
+    bronze: ""
+    silver: ""
+    gold: ""
+    emerald: ""
+    diamond: ""

@@ -18,7 +18,6 @@ public class Stats {
   private int maxElo;
   private int eloChange;
 
-  // Constructor completo
   public Stats(
       String username,
       int kills,
@@ -50,7 +49,7 @@ public class Stats {
     this.elo = elo;
     this.lastElo = lastElo;
     this.maxElo = maxElo;
-    this.eloChange = elo - lastElo; // Calcular automáticamente el delta
+    this.eloChange = elo - lastElo;
   }
 
   @Override

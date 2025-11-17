@@ -15,13 +15,6 @@ import org.nicolie.towersforpgm.matchbot.cache.TopLRUCache;
 import org.nicolie.towersforpgm.matchbot.embeds.TopEmbed;
 import org.nicolie.towersforpgm.matchbot.enums.Stat;
 
-/**
- * Listener de paginación optimizado con: - Estado en memoria por token - Keyset pagination para
- * avanzar (next) - OFFSET solo para retroceder (prev) como degradación - Evita COUNT reiterado
- * almacenando totalRecords
- *
- * <p>Formato de customId: top_prev_<token> top_next_<token>
- */
 public class TopPaginationListener extends ListenerAdapter {
   public static void register() {
     net.dv8tion.jda.api.JDA jda = me.tbg.match.bot.configs.DiscordBot.getJDA();
@@ -69,7 +62,6 @@ public class TopPaginationListener extends ListenerAdapter {
     }
   }
 
-  // Creado desde TopCommand cuando se envía la primera página
   public static String createStateToken(
       String table,
       Stat stat,
@@ -111,7 +103,6 @@ public class TopPaginationListener extends ListenerAdapter {
     if (!(id.startsWith("top_prev_") || id.startsWith("top_next_"))) return;
 
     boolean isPrev = id.startsWith("top_prev_");
-    // Extraer token correctamente (ambos prefijos tienen longitud 9)
     String token;
     if (isPrev) {
       token = id.substring("top_prev_".length());

@@ -24,7 +24,7 @@ public class HistoryCommand extends ListenerAdapter {
               LanguageManager.langMessage("matchbot.history.matchid"),
               LanguageManager.langMessage("matchbot.history.desc-matchid"),
               true,
-              true); // Con autocomplete
+              true);
 
       command.queue();
     }

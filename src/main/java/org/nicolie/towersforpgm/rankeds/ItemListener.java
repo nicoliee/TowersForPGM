@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,8 +28,7 @@ public class ItemListener implements Listener {
       TowersForPGM.getInstance().getIsDatabaseActivated()
           || !ConfigManager.getRankedTables().isEmpty();
 
-  // Cooldown to avoid spamming the bot with repeated queue join requests
-  private static final long QUEUE_COOLDOWN_MS = 10_000L; // 10 seconds
+  private static final long QUEUE_COOLDOWN_MS = 15_000L;
   private static final Map<UUID, Long> queueCooldowns = new ConcurrentHashMap<>();
 
   public ItemListener(Queue queue) {
@@ -91,7 +89,7 @@ public class ItemListener implements Listener {
     return queueItem;
   }
 
-  public static void giveItem(MatchPlayer player) {
+  public static void giveRankedItem(MatchPlayer player) {
     if (!RANKED_AVAILABLE) return;
     if (MatchBotConfig.isRankedEnabled()) {
       // Give the item only after the match has finished
@@ -117,18 +115,7 @@ public class ItemListener implements Listener {
     player.getInventory().setItem(4, getQueueItem());
   }
 
-  public static void giveItemToPlayers(Match match) {
-    if (!RANKED_AVAILABLE) return;
-    Bukkit.getScheduler()
-        .runTaskLater(
-            TowersForPGM.getInstance(),
-            () -> {
-              for (MatchPlayer player : match.getPlayers()) {
-                giveItem(player);
-              }
-            },
-            10L);
-  }
+
 
   public static void removeItemToPlayers(List<MatchPlayer> players) {
     if (!RANKED_AVAILABLE) return;

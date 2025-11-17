@@ -5,6 +5,7 @@ error: "§cError fetching stats."
 header: "§7Stats for §3{player}§7 in §2{table}:"
 noStats: "§cPlayer not found."
 tableNotFound: "§cTable §4{table} §cnot found."
+noPage: "§cPage not found."
 
 elo: "Elo"
 maxElo: "Max Elo Reached"
