@@ -5,12 +5,10 @@ import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.matchbot.cache.TopLRUCache;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
@@ -18,6 +16,7 @@ import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.event.MatchLoadEvent;
 
 public class MatchLoadListener implements Listener {
+  private final TowersForPGM plugin = TowersForPGM.getInstance();
   private final RefillManager refillManager;
   private final PreparationListener preparationListener;
   private final Draft draft;
@@ -41,20 +40,20 @@ public class MatchLoadListener implements Listener {
     // (10/03/2025)
     refillManager.loadChests(map, world);
     preparationSetup(map);
-    if (!ConfigManager.getRankedMaps().contains(map) && Queue.getQueueSize() > 0) {
+    if (!plugin.config().ranked().getRankedMaps().contains(map) && Queue.getQueueSize() > 0) {
       Queue.clearQueue();
     }
   }
 
   private void preparationSetup(String map) {
     if (preparationListener.isMapInConfig(map)
-        && TowersForPGM.getInstance().isPreparationEnabled()) {
+        && plugin.config().preparationTime().isPreparationEnabled()) {
       SendMessage.sendToAdmins(
-          LanguageManager.langMessage("preparation.isAvailable").replace("{map}", map));
+          LanguageManager.message("preparation.isAvailable").replace("{map}", map));
     } else if (preparationListener.isMapInConfig(map)
-        && !TowersForPGM.getInstance().isPreparationEnabled()) {
+        && !plugin.config().preparationTime().isPreparationEnabled()) {
       SendMessage.sendToAdmins(
-          LanguageManager.langMessage("preparation.isAvailableButDisabled").replace("{map}", map));
+          LanguageManager.message("preparation.isAvailableButDisabled").replace("{map}", map));
     }
   }
 
@@ -66,8 +65,7 @@ public class MatchLoadListener implements Listener {
     plugin.getDisconnectedPlayers().clear();
     ForfeitCommand.forfeitedPlayers.clear();
     plugin.setStatsCancel(false);
-    ConfigManager.removeTemp();
+    plugin.config().databaseTables().removeTempTable();
     DisconnectManager.clearAll();
-    TopLRUCache.clear();
   }
 }

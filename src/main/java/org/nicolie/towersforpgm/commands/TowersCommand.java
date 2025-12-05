@@ -2,6 +2,7 @@ package org.nicolie.towersforpgm.commands;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -17,8 +18,8 @@ import org.nicolie.towersforpgm.commands.commandUtils.RankedConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.RefillConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
 import org.nicolie.towersforpgm.commands.gui.TowersConfigGUI;
+import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.refill.RefillManager;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
@@ -81,7 +82,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int size = Integer.parseInt(args[2]);
               draftConfig.setMinDraftOrder(sender, size);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("draft.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.message("draft.usage"));
               return true;
             }
             break;
@@ -150,7 +151,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int z = Integer.parseInt(args[4]);
               preparationConfig.handleCoordinates(sender, true, x, y, z);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
             }
             break;
           case "min":
@@ -164,7 +165,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int z = Integer.parseInt(args[4]);
               preparationConfig.handleCoordinates(sender, false, x, y, z);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
             }
             break;
           case "timer":
@@ -176,7 +177,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int timer = Integer.parseInt(args[2]);
               preparationConfig.handleTimerCommand(sender, timer);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
               return true;
             }
             break;
@@ -189,7 +190,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               int haste = Integer.parseInt(args[2]);
               preparationConfig.handleHasteCommand(sender, haste);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.langMessage("region.usage"));
+              SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
               return true;
             }
             break;
@@ -486,7 +487,8 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
           String sub = args[1].toLowerCase();
           if (Arrays.asList("default", "add", "remove", "addmap", "addtemporary")
               .contains(sub)) {
-            List<String> tables = ConfigManager.getTables();
+            Set<String> tables =
+                TowersForPGM.getInstance().config().databaseTables().getTables(TableType.ALL);
             return filterPrefix(tables, args[2]);
           }
         }
@@ -514,6 +516,12 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
   }
 
   private List<String> filterPrefix(List<String> options, String input) {
+    return options.stream()
+        .filter(option -> option.toLowerCase().startsWith(input.toLowerCase()))
+        .collect(Collectors.toList());
+  }
+
+  private List<String> filterPrefix(Set<String> options, String input) {
     return options.stream()
         .filter(option -> option.toLowerCase().startsWith(input.toLowerCase()))
         .collect(Collectors.toList());

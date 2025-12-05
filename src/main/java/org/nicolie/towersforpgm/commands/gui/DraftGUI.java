@@ -17,10 +17,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.commandUtils.DraftConfig;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class DraftGUI implements Listener {
+  private static TowersForPGM plugin = TowersForPGM.getInstance();
   private static final int BACK_SLOT = 0;
   private static final int MIN_PLAYERS_SLOT = 10;
   private static final int DRAFT_ORDER_SLOT = 11;
@@ -46,8 +46,7 @@ public class DraftGUI implements Listener {
   }
 
   public void openDraftMenu(Player player) {
-    Inventory gui =
-        Bukkit.createInventory(null, 27, LanguageManager.langMessage("gui.draft.title"));
+    Inventory gui = Bukkit.createInventory(null, 27, LanguageManager.message("gui.draft.title"));
 
     // Gray glass border
     ItemStack grayGlass = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 7);
@@ -65,7 +64,7 @@ public class DraftGUI implements Listener {
     // ===== NAVIGATION =====
     ItemStack backItem = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 14);
     ItemMeta backMeta = backItem.getItemMeta();
-    backMeta.setDisplayName(LanguageManager.langMessage("gui.back"));
+    backMeta.setDisplayName(LanguageManager.message("gui.back"));
     backItem.setItemMeta(backMeta);
     gui.setItem(BACK_SLOT, backItem);
 
@@ -73,13 +72,13 @@ public class DraftGUI implements Listener {
     // Min players
     ItemStack minItem = new ItemStack(Material.GOLD_NUGGET);
     ItemMeta minMeta = minItem.getItemMeta();
-    minMeta.setDisplayName(LanguageManager.langMessage("gui.draft.min_players.title"));
+    minMeta.setDisplayName(LanguageManager.message("gui.draft.min_players.title"));
     List<String> minLore = new ArrayList<>();
-    minLore.add(LanguageManager.langMessage("gui.draft.min_players.current")
-        .replace("{value}", String.valueOf(ConfigManager.getMinDraftOrder())));
+    minLore.add(LanguageManager.message("gui.draft.min_players.current")
+        .replace("{value}", String.valueOf(plugin.config().draft().getMinOrder())));
     minLore.add("§7");
-    minLore.add(LanguageManager.langMessage("gui.draft.min_players.lore1"));
-    minLore.add(LanguageManager.langMessage("gui.draft.min_players.lore2"));
+    minLore.add(LanguageManager.message("gui.draft.min_players.lore1"));
+    minLore.add(LanguageManager.message("gui.draft.min_players.lore2"));
     minMeta.setLore(minLore);
     minItem.setItemMeta(minMeta);
     gui.setItem(MIN_PLAYERS_SLOT, minItem);
@@ -87,13 +86,13 @@ public class DraftGUI implements Listener {
     // Draft order
     ItemStack orderItem = new ItemStack(Material.PAPER);
     ItemMeta orderMeta = orderItem.getItemMeta();
-    orderMeta.setDisplayName(LanguageManager.langMessage("gui.draft.order.title"));
+    orderMeta.setDisplayName(LanguageManager.message("gui.draft.order.title"));
     List<String> orderLore = new ArrayList<>();
-    orderLore.add(LanguageManager.langMessage("gui.draft.order.current")
-        .replace("{value}", ConfigManager.getDraftOrder()));
+    orderLore.add(LanguageManager.message("gui.draft.order.current")
+        .replace("{value}", plugin.config().draft().getOrder()));
     orderLore.add("§7");
-    orderLore.add(LanguageManager.langMessage("gui.draft.order.lore1"));
-    orderLore.add(LanguageManager.langMessage("gui.draft.order.lore2"));
+    orderLore.add(LanguageManager.message("gui.draft.order.lore1"));
+    orderLore.add(LanguageManager.message("gui.draft.order.lore2"));
     orderMeta.setLore(orderLore);
     orderItem.setItemMeta(orderMeta);
     gui.setItem(DRAFT_ORDER_SLOT, orderItem);
@@ -102,18 +101,18 @@ public class DraftGUI implements Listener {
     // Second pick balance
     ItemStack secondPickItem = new ItemStack(Material.GOLD_INGOT);
     ItemMeta secondPickMeta = secondPickItem.getItemMeta();
-    secondPickMeta.setDisplayName(LanguageManager.langMessage("gui.draft.second_pick.title"));
+    secondPickMeta.setDisplayName(LanguageManager.message("gui.draft.second_pick.title"));
     List<String> secondPickLore = new ArrayList<>();
-    boolean secondPickEnabled = ConfigManager.isSecondPickBalance();
-    secondPickLore.add(LanguageManager.langMessage("gui.draft.second_pick.current")
+    boolean secondPickEnabled = plugin.config().draft().isSecondPickBalance();
+    secondPickLore.add(LanguageManager.message("gui.draft.second_pick.current")
         .replace(
             "{status}",
             secondPickEnabled
-                ? LanguageManager.langMessage("gui.status.enabled")
-                : LanguageManager.langMessage("gui.status.disabled")));
+                ? LanguageManager.message("gui.status.enabled")
+                : LanguageManager.message("gui.status.disabled")));
     secondPickLore.add("§7");
-    secondPickLore.add(LanguageManager.langMessage("gui.draft.second_pick.lore1"));
-    secondPickLore.add(LanguageManager.langMessage("gui.draft.second_pick.lore2"));
+    secondPickLore.add(LanguageManager.message("gui.draft.second_pick.lore1"));
+    secondPickLore.add(LanguageManager.message("gui.draft.second_pick.lore2"));
     secondPickMeta.setLore(secondPickLore);
     secondPickItem.setItemMeta(secondPickMeta);
     gui.setItem(SECOND_PICK_BALANCE_SLOT, secondPickItem);
@@ -121,18 +120,18 @@ public class DraftGUI implements Listener {
     // Suggestions
     ItemStack suggestionsItem = new ItemStack(Material.EMERALD);
     ItemMeta suggestionsMeta = suggestionsItem.getItemMeta();
-    suggestionsMeta.setDisplayName(LanguageManager.langMessage("gui.draft.suggestions.title"));
+    suggestionsMeta.setDisplayName(LanguageManager.message("gui.draft.suggestions.title"));
     List<String> suggestionsLore = new ArrayList<>();
-    boolean suggestionsEnabled = ConfigManager.isDraftSuggestions();
-    suggestionsLore.add(LanguageManager.langMessage("gui.draft.suggestions.current")
+    boolean suggestionsEnabled = plugin.config().draft().isDraftSuggestions();
+    suggestionsLore.add(LanguageManager.message("gui.draft.suggestions.current")
         .replace(
             "{status}",
             suggestionsEnabled
-                ? LanguageManager.langMessage("gui.status.enabled")
-                : LanguageManager.langMessage("gui.status.disabled")));
+                ? LanguageManager.message("gui.status.enabled")
+                : LanguageManager.message("gui.status.disabled")));
     suggestionsLore.add("§7");
-    suggestionsLore.add(LanguageManager.langMessage("gui.draft.suggestions.lore1"));
-    suggestionsLore.add(LanguageManager.langMessage("gui.draft.suggestions.lore2"));
+    suggestionsLore.add(LanguageManager.message("gui.draft.suggestions.lore1"));
+    suggestionsLore.add(LanguageManager.message("gui.draft.suggestions.lore2"));
     suggestionsMeta.setLore(suggestionsLore);
     suggestionsItem.setItemMeta(suggestionsMeta);
     gui.setItem(SUGGESTIONS_SLOT, suggestionsItem);
@@ -140,18 +139,18 @@ public class DraftGUI implements Listener {
     // Timer
     ItemStack timerItem = new ItemStack(Material.WATCH);
     ItemMeta timerMeta = timerItem.getItemMeta();
-    timerMeta.setDisplayName(LanguageManager.langMessage("gui.draft.timer.title"));
+    timerMeta.setDisplayName(LanguageManager.message("gui.draft.timer.title"));
     List<String> timerLore = new ArrayList<>();
-    boolean timerEnabled = ConfigManager.isDraftTimer();
-    timerLore.add(LanguageManager.langMessage("gui.draft.timer.current")
+    boolean timerEnabled = plugin.config().draft().isDraftTimer();
+    timerLore.add(LanguageManager.message("gui.draft.timer.current")
         .replace(
             "{status}",
             timerEnabled
-                ? LanguageManager.langMessage("gui.status.enabled")
-                : LanguageManager.langMessage("gui.status.disabled")));
+                ? LanguageManager.message("gui.status.enabled")
+                : LanguageManager.message("gui.status.disabled")));
     timerLore.add("§7");
-    timerLore.add(LanguageManager.langMessage("gui.draft.timer.lore1"));
-    timerLore.add(LanguageManager.langMessage("gui.draft.timer.lore2"));
+    timerLore.add(LanguageManager.message("gui.draft.timer.lore1"));
+    timerLore.add(LanguageManager.message("gui.draft.timer.lore2"));
     timerMeta.setLore(timerLore);
     timerItem.setItemMeta(timerMeta);
     gui.setItem(TIMER_SLOT, timerItem);
@@ -159,10 +158,10 @@ public class DraftGUI implements Listener {
     // Private matches (map-specific, shown as info only)
     ItemStack privateItem = new ItemStack(Material.REDSTONE_TORCH_ON);
     ItemMeta privateMeta = privateItem.getItemMeta();
-    privateMeta.setDisplayName(LanguageManager.langMessage("gui.draft.private.title"));
+    privateMeta.setDisplayName(LanguageManager.message("gui.draft.private.title"));
     List<String> privateLore = new ArrayList<>();
-    privateLore.add(LanguageManager.langMessage("gui.draft.private.lore1"));
-    privateLore.add(LanguageManager.langMessage("gui.draft.private.lore2"));
+    privateLore.add(LanguageManager.message("gui.draft.private.lore1"));
+    privateLore.add(LanguageManager.message("gui.draft.private.lore2"));
     privateMeta.setLore(privateLore);
     privateItem.setItemMeta(privateMeta);
     gui.setItem(PRIVATE_MATCHES_SLOT, privateItem);
@@ -175,7 +174,7 @@ public class DraftGUI implements Listener {
     if (!(event.getWhoClicked() instanceof Player)) return;
     Player player = (Player) event.getWhoClicked();
 
-    if (event.getView().getTitle().equals(LanguageManager.langMessage("gui.draft.title"))) {
+    if (event.getView().getTitle().equals(LanguageManager.message("gui.draft.title"))) {
       event.setCancelled(true);
 
       ItemStack clicked = event.getCurrentItem();
@@ -187,29 +186,29 @@ public class DraftGUI implements Listener {
           break;
         case MIN_PLAYERS_SLOT: // Min players
           player.closeInventory();
-          player.sendMessage(LanguageManager.langMessage("gui.draft.min_players.input"));
+          player.sendMessage(LanguageManager.message("gui.draft.min_players.input"));
           waitingForInput.put(player.getUniqueId(), "min");
           break;
         case DRAFT_ORDER_SLOT: // Draft order
           player.closeInventory();
-          player.sendMessage(LanguageManager.langMessage("gui.draft.order.input"));
+          player.sendMessage(LanguageManager.message("gui.draft.order.input"));
           waitingForInput.put(player.getUniqueId(), "order");
           break;
         case PRIVATE_MATCHES_SLOT: // Private matches - disabled since it's map-specific
-          player.sendMessage(LanguageManager.langMessage("gui.draft.private.disabled"));
+          player.sendMessage(LanguageManager.message("gui.draft.private.disabled"));
           break;
         case SECOND_PICK_BALANCE_SLOT: // Second pick balance
-          boolean currentSecondPick = ConfigManager.isSecondPickBalance();
+          boolean currentSecondPick = plugin.config().draft().isSecondPickBalance();
           draftConfig.handleSecondGetsExtraPlayerCommand(player, !currentSecondPick);
           openDraftMenu(player);
           break;
         case SUGGESTIONS_SLOT: // Suggestions
-          boolean currentSuggestions = ConfigManager.isDraftSuggestions();
+          boolean currentSuggestions = plugin.config().draft().isDraftSuggestions();
           draftConfig.handleDraftSuggestionsCommand(player, !currentSuggestions);
           openDraftMenu(player);
           break;
         case TIMER_SLOT: // Timer
-          boolean currentTimer = ConfigManager.isDraftTimer();
+          boolean currentTimer = plugin.config().draft().isDraftTimer();
           draftConfig.handleDraftTimerCommand(player, !currentTimer);
           openDraftMenu(player);
           break;
@@ -234,7 +233,7 @@ public class DraftGUI implements Listener {
               int minSize = Integer.parseInt(message);
               draftConfig.setMinDraftOrder(player, minSize);
             } catch (NumberFormatException e) {
-              player.sendMessage(LanguageManager.langMessage("gui.error.invalid_number"));
+              player.sendMessage(LanguageManager.message("gui.error.invalid_number"));
             }
             break;
           case "order":

@@ -20,7 +20,7 @@ public class ReadyCommand implements CommandExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
+      sender.sendMessage(LanguageManager.message("errors.noPlayer"));
       return true;
     }
 
@@ -28,8 +28,7 @@ public class ReadyCommand implements CommandExecutor {
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
     // Comprobar si el draft está activo
     if (!captains.isReadyActive()) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.ready.notAvailable")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.ready.notAvailable")));
       return true;
     }
     int captainNumber = captains.getCaptainTeam(player.getUniqueId());
@@ -38,7 +37,7 @@ public class ReadyCommand implements CommandExecutor {
 
       if (alreadyReady) {
         matchPlayer.sendWarning(
-            Component.text(LanguageManager.langMessage("draft.ready.alreadyReady")));
+            Component.text(LanguageManager.message("draft.ready.alreadyReady")));
         return true;
       }
       if (captainNumber == 1) {
@@ -48,8 +47,7 @@ public class ReadyCommand implements CommandExecutor {
       }
       matchPlayer.getMatch().sendMessage(Component.text(getReadyMessage(matchPlayer)));
     } else {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.picks.notCaptain")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.notCaptain")));
       return true;
     }
     return true;
@@ -58,7 +56,7 @@ public class ReadyCommand implements CommandExecutor {
   public static String getReadyMessage(MatchPlayer matchPlayer) {
     String teamColor = matchPlayer.getParty().getColor().toString();
     String teamName = matchPlayer.getParty().getNameLegacy();
-    return LanguageManager.langMessage("draft.ready.ready")
+    return LanguageManager.message("draft.ready.ready")
         .replace("{teamcolor}", teamColor)
         .replace("{team}", teamName);
   }

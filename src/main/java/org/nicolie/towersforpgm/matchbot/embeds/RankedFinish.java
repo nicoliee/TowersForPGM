@@ -24,7 +24,7 @@ public class RankedFinish {
       MatchInfo matchInfo, String table, Map<String, List<Stats>> playerStats) {
     EmbedBuilder embed = new EmbedBuilder()
         .setColor(Color.RED)
-        .setTitle(LanguageManager.langMessage("ranked.matchbot.finish").replace("{table}", table))
+        .setTitle(LanguageManager.message("ranked.matchbot.finish").replace("{table}", table))
         .setTimestamp(Instant.now())
         .setAuthor(
             MessagesConfig.message("author.name"), null, MessagesConfig.message("author.icon_url"))

@@ -6,10 +6,11 @@ import java.sql.Statement;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 
 public class SQLITETableManager {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
 
   public static void createTable(String tableName) {
     if ("none".equalsIgnoreCase(tableName)
@@ -18,8 +19,8 @@ public class SQLITETableManager {
       return;
     }
 
-    boolean isValidTable = ConfigManager.getTables().contains(tableName)
-        || ConfigManager.getRankedTables().contains(tableName);
+    boolean isValidTable =
+        plugin.config().databaseTables().getTables(TableType.ALL).contains(tableName);
 
     if (!isValidTable) {
       TowersForPGM.getInstance()
@@ -90,10 +91,11 @@ public class SQLITETableManager {
   /** Crea la tabla para vincular cuentas Discord-Minecraft */
   public static void createDCAccountsTable() {
     // Solo crear si el sistema ranked está habilitado
-    if (!MatchBotConfig.isRankedEnabled()) {
-      System.out.println("[SQLite] Ranked system not enabled, skipping DCAccounts table creation.");
-      return;
-    }
+    // if (!MatchBotConfig.isVoiceChatEnabled()) {
+    //   System.out.println("[SQLite] Ranked system not enabled, skipping DCAccounts table
+    // creation.");
+    //   return;
+    // }
     Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
       try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
           Statement stmt = conn.createStatement()) {
@@ -187,7 +189,8 @@ public class SQLITETableManager {
   }
 
   private static String buildCreateTableSQL(String tableName) {
-    boolean isRanked = ConfigManager.getRankedTables().contains(tableName);
+    boolean isRanked =
+        plugin.config().databaseTables().getTables(TableType.RANKED).contains(tableName);
 
     StringBuilder sql = new StringBuilder();
     sql.append("CREATE TABLE IF NOT EXISTS ").append(tableName).append(" (");

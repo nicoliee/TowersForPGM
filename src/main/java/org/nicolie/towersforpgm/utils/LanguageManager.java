@@ -24,36 +24,25 @@ public class LanguageManager {
   private static TowersForPGM plugin;
   private static String currentLanguage;
   private static final Map<String, Map<String, Object>> languageCache = new HashMap<>();
-  private static YamlConfiguration messagesConfig;
   private static List<String> availableLanguages = new ArrayList<>();
 
   public static void initialize(TowersForPGM pluginInstance) {
     plugin = pluginInstance;
     currentLanguage = plugin.getConfig().getString("language", "es");
     loadAllLanguages();
-    loadMessages();
   }
 
   public static void reload() {
     currentLanguage = plugin.getConfig().getString("language", "es");
     loadAllLanguages();
-    loadMessages();
   }
 
-  public static String langMessage(String key) {
+  public static String message(String key) {
     Map<String, Object> langData = languageCache.get(currentLanguage);
     if (langData == null) return key;
 
     Object value = langData.get(key);
     return value != null ? ChatColor.translateAlternateColorCodes('&', value.toString()) : key;
-  }
-
-  public static String message(String key) {
-    if (messagesConfig != null) {
-      String msg = messagesConfig.getString(key);
-      if (msg != null) return ChatColor.translateAlternateColorCodes('&', msg);
-    }
-    return key;
   }
 
   public static void setLanguage(String language) {
@@ -222,24 +211,5 @@ public class LanguageManager {
     }
 
     return new ArrayList<>(seen);
-  }
-
-  private static void loadMessages() {
-    File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-    try {
-      if (!plugin.getDataFolder().exists()) plugin.getDataFolder().mkdirs();
-      if (!messagesFile.exists()) {
-        try {
-          plugin.saveResource("messages.yml", false);
-        } catch (IllegalArgumentException e) {
-          plugin.getLogger().warning("Default messages.yml resource not found: " + e.getMessage());
-        }
-      }
-      if (messagesFile.exists()) {
-        messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
-      }
-    } catch (Exception e) {
-      plugin.getLogger().warning("Failed to load messages.yml: " + e.getMessage());
-    }
   }
 }

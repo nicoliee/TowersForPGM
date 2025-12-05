@@ -20,7 +20,7 @@ public class CancelMatchCommand implements CommandExecutor {
     statsConfig.toggleStats(sender);
     Match match = PGM.get().getMatchManager().getMatch(sender);
     match.sendWarning(Component.text(
-        org.nicolie.towersforpgm.utils.LanguageManager.langMessage("system.matchCancelled")));
+        org.nicolie.towersforpgm.utils.LanguageManager.message("system.matchCancelled")));
     if (match.isRunning()) {
       sender.getServer().dispatchCommand(sender.getServer().getConsoleSender(), "end");
     } else {

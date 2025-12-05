@@ -5,13 +5,13 @@ import java.util.List;
 import net.kyori.adventure.text.Component;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class Utilities {
+  private final TowersForPGM plugin = TowersForPGM.getInstance();
   private final AvailablePlayers availablePlayers;
   private final Captains captains;
 
@@ -21,7 +21,7 @@ public class Utilities {
   }
 
   public void suggestPicksForCaptains() {
-    if (!ConfigManager.isDraftSuggestions()) {
+    if (!plugin.config().draft().isDraftSuggestions()) {
       return;
     }
     if (!TowersForPGM.getInstance().getIsDatabaseActivated()) {
@@ -54,7 +54,7 @@ public class Utilities {
     }
     StringBuilder suggestionsBuilder = buildLists(topPlayers, "§b", true);
     if (currentCaptain != null) {
-      String suggestions = LanguageManager.message("captains.suggestions")
+      String suggestions = LanguageManager.message("draft.captains.suggestions")
           .replace("{suggestions}", suggestionsBuilder.toString());
       currentCaptain.playSound(Sounds.RAINDROPS);
       currentCaptain.sendMessage(Component.text(suggestions));
@@ -96,9 +96,9 @@ public class Utilities {
       } else if (i == players.size() - 2) {
         suggestionsBuilder.append(" §8");
         if (useOr) {
-          suggestionsBuilder.append(LanguageManager.langMessage("system.or"));
+          suggestionsBuilder.append(LanguageManager.message("system.or"));
         } else {
-          suggestionsBuilder.append(LanguageManager.langMessage("system.and"));
+          suggestionsBuilder.append(LanguageManager.message("system.and"));
         }
         suggestionsBuilder.append(" §b");
       }
@@ -106,29 +106,27 @@ public class Utilities {
     return suggestionsBuilder;
   }
 
+  private static final int DEFAULT_DURATION = 20;
+  private static final int[][] DURATION_TABLE = {
+    {14, 50},
+    {8, 40},
+    {4, 30},
+    {2, 20},
+    {1, 0}
+  };
+
   public int timerDuration() {
     int size = availablePlayers.getAllAvailablePlayers().size();
-    if (size >= 22) {
-      return 100;
-    } else if (size >= 14) {
-      return 80;
-    } else if (size >= 7) {
-      return 50;
-    } else if (size >= 4) {
-      return 30;
-    } else if (size >= 2) {
-      return 20;
-    } else if (size == 1) {
-      return 0;
-    } else {
-      return 20;
+    for (int[] entry : DURATION_TABLE) {
+      if (size >= entry[0]) return entry[1];
     }
+    return DEFAULT_DURATION;
   }
 
   private static BukkitRunnable readyReminderTask;
 
   public void readyReminder(int delay, int period) {
-    String readyMessage = LanguageManager.langMessage("draft.captains.ready");
+    String readyMessage = LanguageManager.message("draft.captains.ready");
     MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
     MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
     if (captain1 != null) {

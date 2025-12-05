@@ -49,6 +49,14 @@ commands:
     usage: /remove <nick>
     aliases: [rem, delete, del]
     permission: towers.captains
+  sub:
+    description: Sustituir un capitán por otro jugador durante el draft.
+    usage: /sub <capitan_actual> <nuevo_capitan>
+    permission: towers.captains
+  sudo:
+    description: Ejecuta un comando como otro jugador.
+    usage: /sudo <jugador> <comando>
+    permission: towers.developer
   tag:
     description: Tagea a jugadores en discord para jugar rankeds.
     usage: /tag

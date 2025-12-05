@@ -42,11 +42,26 @@ public class Matchmaking {
       MatchManager.setCurrentMatch(match);
     }
 
+    // Validate teams before starting
+    if (!Teams.validateTeamsForDraft(match)) {
+      match.sendMessage(Component.text(LanguageManager.message("ranked.invalidTeams")));
+      return;
+    }
+
+    // Initialize teams from match
+    if (!teams.initializeTeamsFromMatch(match)) {
+      match.sendMessage(Component.text(LanguageManager.message("ranked.invalidTeams")));
+      return;
+    }
+
     // Inicializar estado
     captains.clear();
     availablePlayers.clear();
     teams.clear();
     isMatchmakingActive = true;
+
+    // Re-initialize teams after clearing
+    teams.initializeTeamsFromMatch(match);
 
     // Registrar capitanes
     captains.setCaptain1(captain1);
@@ -64,11 +79,12 @@ public class Matchmaking {
 
     // Mensajes iniciales
     match.playSound(Sounds.RAINDROPS);
-    match.sendMessage(Component.text(LanguageManager.langMessage("captains.captainsHeader")));
-    match.sendMessage(Component.text("§4" + Bukkit.getPlayer(captain1).getName() + " §l§bvs. "
-        + "§9" + Bukkit.getPlayer(captain2).getName()));
+    match.sendMessage(Component.text(LanguageManager.message("captains.captainsHeader")));
+    match.sendMessage(
+        Component.text(teams.getTeamColor(1) + Bukkit.getPlayer(captain1).getName() + " §l§bvs. "
+            + teams.getTeamColor(2) + Bukkit.getPlayer(captain2).getName()));
     match.sendMessage(Component.text("§m---------------------------------"));
-    match.sendMessage(Component.text(LanguageManager.message("picks.choosing")));
+    match.sendMessage(Component.text(LanguageManager.message("draft.picks.choosing")));
 
     // Disparar evento de inicio de matchmaking
     MatchmakingStartEvent matchmakingStartEvent =
@@ -306,12 +322,13 @@ public class Matchmaking {
   }
 
   private void displayTeams(List<String> team1, List<String> team2) {
-    StringBuilder team1Display = utilities.buildLists(team1, "§4", false);
-    StringBuilder team2Display = utilities.buildLists(team2, "§9", false);
+    StringBuilder team1Display = utilities.buildLists(team1, teams.getTeamColor(1), false);
+    StringBuilder team2Display = utilities.buildLists(team2, teams.getTeamColor(2), false);
 
-    SendMessage.broadcast(LanguageManager.langMessage("draft.captains.teamsHeader"));
+    SendMessage.broadcast(LanguageManager.message("draft.captains.teamsHeader"));
     SendMessage.broadcast(team1Display.toString());
-    SendMessage.broadcast("§8[§4" + team1.size() + "§8] §l§bvs. §8[§9" + team2.size() + "§8]");
+    SendMessage.broadcast("§8[" + teams.getTeamColor(1).replace("§", "&") + team1.size()
+        + "&8] &l&bvs. &8[" + teams.getTeamColor(2).replace("§", "&") + team2.size() + "&8]");
     SendMessage.broadcast(team2Display.toString());
     SendMessage.broadcast("§m------------------------------");
   }
@@ -326,7 +343,7 @@ public class Matchmaking {
     captains.setReadyActive(true);
     captains.setMatchWithCaptains(true);
 
-    String readyMessage = LanguageManager.langMessage("captains.ready");
+    String readyMessage = LanguageManager.message("captains.ready");
     MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
     MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
     if (captain1 != null) {

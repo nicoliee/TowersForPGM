@@ -81,8 +81,8 @@ draft:
   timer:
     title: "§e§lTemporizador de Draft"
     current: "§7Actual: {status}"
-    lore1: "§7Haz clic para alternar la"
-    lore2: "§7 temporizador de draft"
+    lore1: "§7Haz clic para alternar el"
+    lore2: "§7temporizador de draft"
 stats:
   title: "§d§lEstadísticas"
   default:
@@ -256,3 +256,8 @@ ranked:
   remove_map:
     title: "§c§lQuitar Mapa Actual"
     lore: "§7Haz clic para quitar el mapa actual de ranked"
+  voicechat:
+    title: "§e§lChat de Voz"
+    current: "§7Estado: {status}"
+    lore1: "§7Haz clic para alternar el"
+    lore2: "§7sistema de chat de voz para ranked"

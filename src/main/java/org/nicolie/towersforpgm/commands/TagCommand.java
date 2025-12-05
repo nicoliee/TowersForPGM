@@ -13,7 +13,6 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedNotify;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
@@ -30,29 +29,30 @@ public class TagCommand implements CommandExecutor {
       return true;
     }
     if (!(sender instanceof Player)) {
-      SendMessage.sendToConsole(LanguageManager.langMessage("errors.noPlayer"));
+      SendMessage.sendToConsole(LanguageManager.message("errors.noPlayer"));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
     String map = match.getMap().getName();
     MatchPlayer player = match.getPlayer((Player) sender);
-    if (!ConfigManager.getRankedMaps().contains(map)) {
-      player.sendWarning(Component.text(LanguageManager.langMessage("ranked.prefix")
-          + LanguageManager.langMessage("ranked.notRankedMap")));
+    boolean isRankedMap = TowersForPGM.getInstance().config().ranked().isMapRanked(map);
+    if (!isRankedMap) {
+      player.sendWarning(Component.text(LanguageManager.message("ranked.prefix")
+          + LanguageManager.message("ranked.notRankedMap")));
       return true;
     }
     if (player.isParticipating()) {
       player.sendWarning(
-          Component.text(LanguageManager.langMessage("ranked.matchbot.tagNotAvailable")));
+          Component.text(LanguageManager.message("ranked.matchbot.tagNotAvailable")));
       return true;
     }
 
     // Solo permitir tag si no hay suficientes jugadores online para el mínimo
     int onlinePlayers = match.getPlayers().size();
-    int minSize = ConfigManager.getRankedMinSize();
+    int minSize = TowersForPGM.getInstance().config().ranked().getRankedMinSize();
     if (onlinePlayers >= minSize) {
-      player.sendWarning(Component.text(LanguageManager.langMessage("ranked.prefix")
-          + LanguageManager.langMessage("ranked.matchbot.tagNotNeeded")));
+      player.sendWarning(Component.text(LanguageManager.message("ranked.prefix")
+          + LanguageManager.message("ranked.matchbot.tagNotNeeded")));
       return true;
     }
     long now = System.currentTimeMillis();
@@ -62,7 +62,7 @@ public class TagCommand implements CommandExecutor {
       long sec = remaining % 60;
       String time = String.format("%d:%02d", min, sec);
       player.sendWarning(Component.text(
-          LanguageManager.langMessage("ranked.matchbot.tagCooldown").replace("{time}", time)));
+          LanguageManager.message("ranked.matchbot.tagCooldown").replace("{time}", time)));
       return true;
     }
     lastExecution = now;
@@ -75,7 +75,8 @@ public class TagCommand implements CommandExecutor {
     for (MatchPlayer matchPlayer : match.getPlayers()) {
       usernames.add(matchPlayer.getNameLegacy());
     }
-    StatsManager.getEloForUsernames(ConfigManager.getRankedDefaultTable(), usernames)
+    StatsManager.getEloForUsernames(
+            TowersForPGM.getInstance().config().databaseTables().getRankedDefaultTable(), usernames)
         .thenAccept(eloChanges -> {
           EmbedBuilder embed = RankedNotify.create(sender, match, eloChanges);
           DiscordBot.setEmbedThumbnail(match.getMap(), embed);
@@ -84,10 +85,9 @@ public class TagCommand implements CommandExecutor {
           org.bukkit.Bukkit.getScheduler()
               .runTask(
                   TowersForPGM.getInstance(),
-                  () ->
-                      match.sendMessage(Component.text(LanguageManager.langMessage("ranked.prefix")
-                          + LanguageManager.langMessage("ranked.matchbot.tagSent")
-                              .replace("{name}", player.getPrefixedName()))));
+                  () -> match.sendMessage(Component.text(LanguageManager.message("ranked.prefix")
+                      + LanguageManager.message("ranked.matchbot.tagSent")
+                          .replace("{name}", player.getPrefixedName()))));
         })
         .exceptionally(throwable -> {
           return null;

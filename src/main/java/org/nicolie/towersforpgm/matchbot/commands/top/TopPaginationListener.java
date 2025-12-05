@@ -10,8 +10,6 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.models.top.Top;
-import org.nicolie.towersforpgm.database.models.top.TopResult;
-import org.nicolie.towersforpgm.matchbot.cache.TopLRUCache;
 import org.nicolie.towersforpgm.matchbot.embeds.TopEmbed;
 import org.nicolie.towersforpgm.matchbot.enums.Stat;
 
@@ -128,54 +126,18 @@ public class TopPaginationListener extends ListenerAdapter {
       }
       int targetPage = currentPage - 1;
       // Usamos fallback OFFSET para página previa
-      // Intentar caché
-      TopLRUCache.CachedPage cached =
-          TopLRUCache.get(state.table, state.dbColumn, targetPage, PAGE_SIZE, state.perGame);
-      if (cached != null) {
-        List<Top> entries = cached.data();
+      StatsManager.getTop(state.table, state.dbColumn, PAGE_SIZE, targetPage).thenAccept(result -> {
         setPage(token, targetPage);
-        updateAnchor(token, entries);
-        TopResult cachedResult = new TopResult(entries, state.totalRecords);
-        EmbedBuilder embed = TopEmbed.createTopEmbed(
-            state.stat, state.table, targetPage, cachedResult, state.perGame);
+        updateAnchor(token, result.getData());
+        EmbedBuilder embed =
+            TopEmbed.createTopEmbed(state.stat, state.table, targetPage, result, state.perGame);
         event
             .editMessageEmbeds(embed.build())
             .setActionRow(
                 Button.secondary("top_prev_" + token, "⬅️").withDisabled(targetPage <= 1),
                 Button.secondary("top_next_" + token, "➡️").withDisabled(targetPage >= totalPages))
             .queue();
-      } else {
-        StatsManager.getTop(state.table, state.dbColumn, PAGE_SIZE, targetPage)
-            .thenAccept(result -> {
-              setPage(token, targetPage);
-              updateAnchor(token, result.getData());
-              EmbedBuilder embed = TopEmbed.createTopEmbed(
-                  state.stat, state.table, targetPage, result, state.perGame);
-              event
-                  .editMessageEmbeds(embed.build())
-                  .setActionRow(
-                      Button.secondary("top_prev_" + token, "⬅️").withDisabled(targetPage <= 1),
-                      Button.secondary("top_next_" + token, "➡️")
-                          .withDisabled(targetPage >= totalPages))
-                  .queue();
-              double lastValuePut = result.getData().isEmpty()
-                  ? 0D
-                  : result.getData().get(result.getData().size() - 1).getValue();
-              String lastUserPut = result.getData().isEmpty()
-                  ? ""
-                  : result.getData().get(result.getData().size() - 1).getUsername();
-              TopLRUCache.put(
-                  state.table,
-                  state.dbColumn,
-                  targetPage,
-                  PAGE_SIZE,
-                  state.perGame,
-                  result.getData(),
-                  result.getTotalRecords(),
-                  lastValuePut,
-                  lastUserPut);
-            });
-      }
+      });
       return;
     }
 
@@ -186,26 +148,6 @@ public class TopPaginationListener extends ListenerAdapter {
 
     Double lastValue = state.lastAnchor == null ? null : state.lastAnchor.value;
     String lastUser = state.lastAnchor == null ? null : state.lastAnchor.user;
-
-    int nextPage = currentPage + 1;
-    TopLRUCache.CachedPage cachedNext =
-        TopLRUCache.get(state.table, state.dbColumn, nextPage, PAGE_SIZE, state.perGame);
-    if (cachedNext != null) {
-      List<Top> entries = cachedNext.data();
-      setPage(token, nextPage);
-      updateAnchor(token, entries);
-      TopResult cachedNextResult = new TopResult(entries, state.totalRecords);
-      EmbedBuilder embed = TopEmbed.createTopEmbed(
-          state.stat, state.table, nextPage, cachedNextResult, state.perGame);
-      event
-          .editMessageEmbeds(embed.build())
-          .setActionRow(
-              Button.secondary("top_prev_" + token, "⬅️").withDisabled(nextPage <= 1),
-              Button.secondary("top_next_" + token, "➡️").withDisabled(nextPage >= totalPages))
-          .queue();
-      return;
-    }
-
     StatsManager.getTop(
             state.table, state.dbColumn, PAGE_SIZE, lastValue, lastUser, state.totalRecords)
         .thenAccept(result -> {
@@ -220,22 +162,6 @@ public class TopPaginationListener extends ListenerAdapter {
                   Button.secondary("top_prev_" + token, "⬅️").withDisabled(newPage <= 1),
                   Button.secondary("top_next_" + token, "➡️").withDisabled(newPage >= totalPages))
               .queue();
-          double lastValuePut = result.getData().isEmpty()
-              ? 0D
-              : result.getData().get(result.getData().size() - 1).getValue();
-          String lastUserPut = result.getData().isEmpty()
-              ? ""
-              : result.getData().get(result.getData().size() - 1).getUsername();
-          TopLRUCache.put(
-              state.table,
-              state.dbColumn,
-              newPage,
-              PAGE_SIZE,
-              state.perGame,
-              result.getData(),
-              result.getTotalRecords(),
-              lastValuePut,
-              lastUserPut);
         });
   }
 }

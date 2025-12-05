@@ -60,14 +60,19 @@ public class PlayerJoinListener implements Listener {
 
     if (plugin.getDisconnectedPlayers().get(player.getName()) != null) {
       plugin.getDisconnectedPlayers().remove(player.getName());
-      // Cancel any pending sanction timer
-      DisconnectManager.cancelDisconnectTimer(player.getUniqueId());
 
-      // Notify match that player reconnected in time, but only if ranked is active
       Match match = PGM.get().getMatchManager().getMatch(player);
-      if (match != null && !match.isFinished() && Queue.isRanked()) {
-        String msg = org.nicolie.towersforpgm.utils.LanguageManager.langMessage("ranked.prefix")
-            + org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+
+      // Only cancel timer and show message if no sanction is active (reconnected in time)
+      if (match != null
+          && !match.isFinished()
+          && Queue.isRanked()
+          && !DisconnectManager.isSanctionActive(match)) {
+        // Cancel the timer since player reconnected in time
+        DisconnectManager.cancelDisconnectTimer(player.getName());
+
+        String msg = org.nicolie.towersforpgm.utils.LanguageManager.message("ranked.prefix")
+            + org.nicolie.towersforpgm.utils.LanguageManager.message(
                     "ranked.disconnect.reconnected")
                 .replace("{player}", player.getName());
         match.sendMessage(net.kyori.adventure.text.Component.text(msg));

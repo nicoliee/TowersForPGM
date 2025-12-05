@@ -128,14 +128,35 @@ public class MatchHistoryManager {
       boolean ranked,
       List<Stats> rawStats,
       List<PlayerEloChange> eloChanges) {
+    return saveMatchWithRetry(matchId, table, matchInfo, ranked, rawStats, eloChanges, false);
+  }
+
+  private static CompletableFuture<Void> saveMatchWithRetry(
+      String matchId,
+      String table,
+      org.nicolie.towersforpgm.matchbot.embeds.MatchInfo matchInfo,
+      boolean ranked,
+      List<Stats> rawStats,
+      List<PlayerEloChange> eloChanges,
+      boolean isRetry) {
     return CompletableFuture.runAsync(
         () -> {
-          try (java.sql.Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
+          TowersForPGM plugin = TowersForPGM.getInstance();
+          long startTime = System.currentTimeMillis();
+
+          try (java.sql.Connection conn = plugin.getDatabaseConnection()) {
             conn.setAutoCommit(false);
+
             try {
               String insertMatch =
                   "INSERT INTO matches_history (match_id, table_name, map_name, duration_seconds, ranked, scores_text, winners_text, finished_at) VALUES (?,?,?,?,?,?,?,?)";
+
               try (java.sql.PreparedStatement pm = conn.prepareStatement(insertMatch)) {
+                // Solo configurar timeout para MySQL
+                if ("MySQL".equals(plugin.getCurrentDatabaseType())) {
+                  pm.setQueryTimeout(
+                      plugin.getMySQLDatabaseManager().TIMEOUT / 1000); // Timeout de 5 segundos
+                }
                 pm.setString(1, matchId);
                 pm.setString(2, table);
                 pm.setString(3, matchInfo.getMap());
@@ -150,6 +171,10 @@ public class MatchHistoryManager {
               String insertPlayer =
                   "INSERT INTO match_players_history (match_id, username, kills, deaths, assists, damageDone, damageTaken, points, win, game, winstreak_delta, elo_delta, maxElo_after) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
               try (java.sql.PreparedStatement pp = conn.prepareStatement(insertPlayer)) {
+                // Solo configurar timeout para MySQL
+                if ("MySQL".equals(plugin.getCurrentDatabaseType())) {
+                  pp.setQueryTimeout(5); // Timeout de 5 segundos
+                }
                 for (Stats s : rawStats) {
                   PlayerEloChange change = null;
                   if (eloChanges != null) {
@@ -159,38 +184,87 @@ public class MatchHistoryManager {
                         .orElse(null);
                   }
                   int eloDelta = change != null ? (change.getNewElo() - change.getCurrentElo()) : 0;
-                  int maxEloAfter =
-                      change != null ? change.getNewElo() : 0;
+                  int maxEloAfter = change != null ? change.getNewElo() : 0;
 
                   int wsDelta = s.getWinstreak();
 
                   pp.setString(1, matchId);
                   pp.setString(2, s.getUsername());
-                  pp.setInt(4, s.getKills());
-                  pp.setInt(5, s.getDeaths());
-                  pp.setInt(6, s.getAssists());
-                  pp.setDouble(7, s.getDamageDone());
-                  pp.setDouble(8, s.getDamageTaken());
-                  pp.setInt(9, s.getPoints());
-                  pp.setInt(10, s.getWins());
-                  pp.setInt(11, s.getGames());
-                  pp.setInt(12, wsDelta);
-                  pp.setInt(13, eloDelta);
-                  pp.setInt(14, maxEloAfter);
+                  pp.setInt(3, s.getKills());
+                  pp.setInt(4, s.getDeaths());
+                  pp.setInt(5, s.getAssists());
+                  pp.setDouble(6, s.getDamageDone());
+                  pp.setDouble(7, s.getDamageTaken());
+                  pp.setInt(8, s.getPoints());
+                  pp.setInt(9, s.getWins());
+                  pp.setInt(10, s.getGames());
+                  pp.setInt(11, wsDelta);
+                  pp.setInt(12, eloDelta);
+                  pp.setInt(13, maxEloAfter);
                   pp.addBatch();
                 }
                 pp.executeBatch();
               }
               conn.commit();
-            } catch (Exception e) {
-              try {
-                conn.rollback();
-              } catch (Exception ex) {
-                // ignore rollback failure
-              }
-              TowersForPGM.getInstance()
+
+              // Log successful save
+              long duration = System.currentTimeMillis() - startTime;
+              plugin
                   .getLogger()
-                  .severe("Error guardando historial partida: " + e.getMessage());
+                  .info("[+] " + matchId + ", " + (ranked ? "ranked" : "unranked") + ", " + duration
+                      + "ms, DB: " + plugin.getCurrentDatabaseType());
+
+            } catch (Exception e) {
+
+              long duration = System.currentTimeMillis() - startTime;
+
+              if ("MySQL".equals(plugin.getCurrentDatabaseType()) && duration >= 5000 && !isRetry) {
+                plugin
+                    .getLogger()
+                    .warning(
+                        "Timeout detectado en saveMatch para matchId " + matchId + " (duración: "
+                            + duration + "ms). Intentando recargar base de datos y reintentar...");
+
+                // Intentar recargar la base de datos
+                if (plugin.reloadDatabase()) {
+                  plugin
+                      .getLogger()
+                      .info(
+                          "Base de datos recargada exitosamente. Reintentando saveMatch para matchId "
+                              + matchId);
+                  // Llamar recursivamente con retry
+                  try {
+                    saveMatchWithRetry(
+                            matchId, table, matchInfo, ranked, rawStats, eloChanges, true)
+                        .get();
+                    return; // Si el retry fue exitoso, salir
+                  } catch (Exception retryException) {
+                    plugin
+                        .getLogger()
+                        .severe("No se pudo guardar el historial de la partida matchId " + matchId
+                            + " después del retry. Operación fallida definitivamente.");
+                  }
+                } else {
+                  plugin
+                      .getLogger()
+                      .severe(
+                          "No se pudo recargar la base de datos para retry de saveMatch matchId "
+                              + matchId);
+                }
+              }
+
+              // Si es un retry fallido o no es caso de timeout, registrar error definitivo
+              if (isRetry) {
+                plugin
+                    .getLogger()
+                    .severe("No se pudo guardar el historial de la partida matchId " + matchId
+                        + " después del retry. Operación fallida definitivamente.");
+              }
+
+              plugin
+                  .getLogger()
+                  .severe("[-] " + matchId + ", " + (ranked ? "ranked" : "unranked") + ", "
+                      + duration + "ms, DB: " + plugin.getCurrentDatabaseType());
             } finally {
               try {
                 conn.setAutoCommit(true);
@@ -198,9 +272,65 @@ public class MatchHistoryManager {
               }
             }
           } catch (Exception e) {
-            TowersForPGM.getInstance()
+            long duration = System.currentTimeMillis() - startTime;
+
+            // Log específico para SQLite - error en conexión
+            if ("SQLite".equals(plugin.getCurrentDatabaseType())) {
+              plugin
+                  .getLogger()
+                  .severe("[SQLite] Error de conexión en saveMatch para " + matchId + ": "
+                      + e.getClass().getSimpleName() + " - " + e.getMessage());
+              e.printStackTrace();
+            }
+
+            // Si es MySQL y la duración supera los 5000ms (timeout), intentar retry una sola vez
+            if ("MySQL".equals(plugin.getCurrentDatabaseType())
+                && duration >= plugin.getMySQLDatabaseManager().TIMEOUT
+                && !isRetry) {
+              plugin
+                  .getLogger()
+                  .warning("Timeout detectado en conexión saveMatch para matchId " + matchId
+                      + " (duración: " + duration
+                      + "ms). Intentando recargar base de datos y reintentar...");
+
+              // Intentar recargar la base de datos
+              if (plugin.reloadDatabase()) {
+                plugin
+                    .getLogger()
+                    .info(
+                        "Base de datos recargada exitosamente. Reintentando saveMatch para matchId "
+                            + matchId);
+                // Llamar recursivamente con retry
+                try {
+                  saveMatchWithRetry(matchId, table, matchInfo, ranked, rawStats, eloChanges, true)
+                      .get();
+                  return; // Si el retry fue exitoso, salir
+                } catch (Exception retryException) {
+                  plugin
+                      .getLogger()
+                      .severe("No se pudo guardar el historial de la partida matchId " + matchId
+                          + " después del retry. Operación fallida definitivamente.");
+                }
+              } else {
+                plugin
+                    .getLogger()
+                    .severe("No se pudo recargar la base de datos para retry de saveMatch matchId "
+                        + matchId);
+              }
+            }
+
+            // Si es un retry fallido o no es caso de timeout, registrar error definitivo
+            if (isRetry) {
+              plugin
+                  .getLogger()
+                  .severe("No se pudo guardar el historial de la partida matchId " + matchId
+                      + " después del retry. Operación fallida definitivamente.");
+            }
+
+            plugin
                 .getLogger()
-                .severe("Error conexión historial: " + e.getMessage());
+                .severe("[-] " + matchId + ", " + (ranked ? "ranked" : "unranked") + ", " + duration
+                    + "ms, DB: " + plugin.getCurrentDatabaseType());
           }
         },
         DB_EXECUTOR);
@@ -344,7 +474,6 @@ public class MatchHistoryManager {
               ps.executeBatch();
             }
 
-            // Borrar registros de historial tras rollback
             String deletePlayers = "DELETE FROM match_players_history WHERE match_id = ?";
             String deleteMatch = "DELETE FROM matches_history WHERE match_id = ?";
             try (java.sql.PreparedStatement dp = conn.prepareStatement(deletePlayers);
@@ -357,7 +486,6 @@ public class MatchHistoryManager {
 
             conn.commit();
 
-            // Enviar mensaje de éxito en sync
             org.bukkit.Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
               sender.sendMessage("§aRollback completado para " + history.getMatchId());
             });

@@ -11,21 +11,22 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.DiscordManager;
 import org.nicolie.towersforpgm.draft.events.DraftEndEvent;
 import org.nicolie.towersforpgm.draft.events.DraftStartEvent;
 import org.nicolie.towersforpgm.draft.events.MatchmakingEndEvent;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 
 public class RankedListener implements Listener {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
 
   private static final String QUEUE_ID = MatchBotConfig.getQueueID();
   private static final String CHANNEL1_ID = MatchBotConfig.getTeam1ID();
   private static final String CHANNEL2_ID = MatchBotConfig.getTeam2ID();
   private static final String INACTIVE_ID = MatchBotConfig.getInactiveID();
-  private static final Boolean RANKED_ENABLED = MatchBotConfig.isRankedEnabled();
+  private static final Boolean RANKED_ENABLED = MatchBotConfig.isVoiceChatEnabled();
 
   private static Guild getBotGuild(JDA jda) {
     if (jda == null) return null;
@@ -261,10 +262,9 @@ public class RankedListener implements Listener {
   private boolean shouldProcessEvent(String mapName) {
     if (!RANKED_ENABLED) return false;
 
-    String table = ConfigManager.getActiveTable(mapName);
     Boolean ranked = Queue.isRanked();
-    Boolean rankedTable = ConfigManager.isRankedTable(table);
+    boolean isRankedTable = plugin.config().databaseTables().currentTableIsRanked();
 
-    return (ranked && rankedTable);
+    return (ranked && isRankedTable);
   }
 }

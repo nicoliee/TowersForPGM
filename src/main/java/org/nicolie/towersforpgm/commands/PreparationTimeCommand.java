@@ -28,7 +28,7 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter {
     Player player = (Player) sender;
     // Verificar que el comando lo ejecute un jugador
     if (!(sender instanceof Player)) {
-      SendMessage.sendToPlayer(player, LanguageManager.langMessage("errors.noPlayer"));
+      SendMessage.sendToPlayer(player, LanguageManager.message("errors.noPlayer"));
       return true;
     }
 
@@ -52,7 +52,7 @@ public class PreparationTimeCommand implements CommandExecutor, TabCompleter {
         break;
 
       default:
-        matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("preparation.usage")));
+        matchPlayer.sendWarning(Component.text(LanguageManager.message("preparation.usage")));
         return true;
     }
     return true;

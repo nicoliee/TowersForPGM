@@ -19,7 +19,6 @@ import org.nicolie.towersforpgm.rankeds.Elo;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.map.Gamemode;
@@ -31,17 +30,13 @@ import tc.oc.pgm.stats.PlayerStats;
 import tc.oc.pgm.stats.StatsMatchModule;
 
 public class MatchFinishListener implements Listener {
-  private final TowersForPGM plugin;
+  private final TowersForPGM plugin = TowersForPGM.getInstance();
   private final PreparationListener preparationListener;
   private final RefillManager refillManager;
   private final Draft draft;
 
   public MatchFinishListener(
-      TowersForPGM plugin,
-      PreparationListener preparationListener,
-      RefillManager refillManager,
-      Draft draft) {
-    this.plugin = plugin;
+      PreparationListener preparationListener, RefillManager refillManager, Draft draft) {
     this.preparationListener = preparationListener;
     this.refillManager = refillManager;
     this.draft = draft;
@@ -66,7 +61,7 @@ public class MatchFinishListener implements Listener {
         .getLogger()
         .info("[-] Stats cancelled for match-" + event.getMatch().getId() + ": " + mapName
             + ", stats not sent to database.");
-    SendMessage.sendToDevelopers(LanguageManager.langMessage("stats.consoleCancel")
+    SendMessage.sendToDevelopers(LanguageManager.message("stats.consoleCancel")
         .replace("{id}", String.valueOf(event.getMatch().getId()))
         .replace("{map}", mapName)
         .replace("{size}", String.valueOf(event.getMatch().getParticipants().size())));
@@ -125,9 +120,9 @@ public class MatchFinishListener implements Listener {
             ));
       }
       if (!playerStatsList.isEmpty()) {
-        String table = ConfigManager.getActiveTable(map);
+        String table = plugin.config().databaseTables().getTable(map);
         Boolean ranked = Queue.isRanked();
-        Boolean rankedTable = ConfigManager.isRankedTable(table);
+        Boolean rankedTable = plugin.config().databaseTables().currentTableIsRanked();
         MatchInfo matchInfo = MatchInfo.getMatchInfo(match);
 
         if (ranked && rankedTable) {

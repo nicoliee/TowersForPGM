@@ -130,4 +130,16 @@ public class Captains {
   public UUID getCurrentCaptain() {
     return isCaptain1Turn ? captain1 : captain2;
   }
+
+  public boolean isCaptain(UUID playerUUID) {
+    return playerUUID.equals(captain1) || playerUUID.equals(captain2);
+  }
+
+  public void substituteCaptain(UUID oldCaptain, UUID newCaptain) {
+    if (captain1 != null && captain1.equals(oldCaptain)) {
+      captain1 = newCaptain;
+    } else if (captain2 != null && captain2.equals(oldCaptain)) {
+      captain2 = newCaptain;
+    }
+  }
 }

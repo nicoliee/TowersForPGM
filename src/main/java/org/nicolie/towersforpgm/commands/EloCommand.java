@@ -6,10 +6,10 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.models.top.Top;
 import org.nicolie.towersforpgm.rankeds.Rank;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
@@ -17,33 +17,27 @@ import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.text.TextFormatter;
 
 public class EloCommand implements CommandExecutor {
+  private final TowersForPGM plugin = TowersForPGM.getInstance();
+
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      sender.sendMessage(LanguageManager.langMessage("ranked.prefix")
-          + LanguageManager.langMessage("errors.noPlayer"));
+      sender.sendMessage(
+          LanguageManager.message("ranked.prefix") + LanguageManager.message("errors.noPlayer"));
       return true;
     }
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     Match match = matchPlayer.getMatch();
     String map = match.getMap().getName();
-    boolean isRankedMap = false;
-    if (ConfigManager.getRankedMaps() != null && map != null) {
-      for (String ranked : ConfigManager.getRankedMaps()) {
-        if (ranked.equalsIgnoreCase(map)) {
-          isRankedMap = true;
-          break;
-        }
-      }
-    }
+    boolean isRankedMap = plugin.config().ranked().isMapRanked(map);
     boolean matchInProgress = match != null && match.isRunning() && matchPlayer.isParticipating();
 
     if (!isRankedMap || matchInProgress) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.prefix")
-          + LanguageManager.langMessage("system.notAvailable")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.prefix")
+          + LanguageManager.message("system.notAvailable")));
       return true;
     }
-    String table = ConfigManager.getRankedDefaultTable();
+    String table = plugin.config().databaseTables().getRankedDefaultTable();
     if (args.length > 0 && "lb".equalsIgnoreCase(args[0])) {
       int page = 1;
       if (args.length > 1) {
@@ -66,7 +60,7 @@ public class EloCommand implements CommandExecutor {
     StatsManager.getStats(table, targetName).thenAccept(stats -> {
       if (stats == null) {
         // No hay estadísticas en la base de datos para ese jugador
-        matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("stats.noStats")));
+        matchPlayer.sendWarning(Component.text(LanguageManager.message("stats.noStats")));
         return;
       }
 
@@ -90,14 +84,14 @@ public class EloCommand implements CommandExecutor {
       if (topResult == null
           || topResult.getData() == null
           || topResult.getData().isEmpty()) {
-        matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.prefix")
-            + LanguageManager.langMessage("stats.noPage")));
+        matchPlayer.sendWarning(Component.text(
+            LanguageManager.message("ranked.prefix") + LanguageManager.message("stats.noPage")));
         return;
       }
       matchPlayer.sendMessage(TextFormatter.horizontalLineHeading(
           sender,
-          Component.text("Top " + LanguageManager.langMessage("stats.elo") + " §8[§f" + page
-              + "§6/§f" + topResult.getTotalPages(PAGE_SIZE) + "§8]"),
+          Component.text("Top " + LanguageManager.message("stats.elo") + " §8[§f" + page + "§6/§f"
+              + topResult.getTotalPages(PAGE_SIZE) + "§8]"),
           TextColor.color(0xFFFFFF),
           TextFormatter.GUARANTEED_NO_WRAP_CHAT_PAGE_WIDTH * 3));
 

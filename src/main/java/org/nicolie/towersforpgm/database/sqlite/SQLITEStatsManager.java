@@ -10,29 +10,26 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.database.models.top.Top;
 import org.nicolie.towersforpgm.database.models.top.TopResult;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
-import org.nicolie.towersforpgm.utils.ConfigManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class SQLITEStatsManager {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
 
   public static void updateStats(
       String table, List<Stats> playerStatsList, List<PlayerEloChange> eloChangeList) {
-
-    if (playerStatsList.isEmpty()
-        || table == null
-        || table.isEmpty()
-        || !ConfigManager.getTables().contains(table)) {
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    if (playerStatsList.isEmpty() || table == null || table.isEmpty() || tableInfo == null) {
       return;
     }
 
-    boolean isRanked = ConfigManager.getRankedTables().contains(table);
+    boolean isRanked = tableInfo != null && tableInfo.isRanked();
 
-    try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
+    try (Connection conn = plugin.getDatabaseConnection()) {
       conn.setAutoCommit(false);
 
       // Columnas básicas + winstreaks + ratios
@@ -178,8 +175,6 @@ public class SQLITEStatsManager {
       TowersForPGM.getInstance()
           .getLogger()
           .log(Level.SEVERE, "Error al actualizar estadísticas en SQLite", e);
-      SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
-          "errors.database.updateStats"));
     }
   }
 
@@ -196,9 +191,8 @@ public class SQLITEStatsManager {
     }
 
     // La tabla es válida si está en cualquiera de las listas configuradas
-    boolean validTable =
-        org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table)
-            || MatchBotConfig.getTables().contains(table);
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    boolean validTable = tableInfo != null || MatchBotConfig.getTables().contains(table);
     if (!validTable) {
       TowersForPGM.getInstance()
           .getLogger()
@@ -254,8 +248,6 @@ public class SQLITEStatsManager {
       TowersForPGM.getInstance()
           .getLogger()
           .log(Level.SEVERE, "Error al obtener estadísticas del usuario en SQLite", e);
-      SendMessage.sendToDevelopers(
-          org.nicolie.towersforpgm.utils.LanguageManager.langMessage("errors.database.getStats"));
       return null;
     }
   }
@@ -270,10 +262,8 @@ public class SQLITEStatsManager {
         || page < 1) {
       return new TopResult(new ArrayList<>(), 0);
     }
-
-    boolean validTable =
-        org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table)
-            || MatchBotConfig.getTables().contains(table);
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    boolean validTable = tableInfo != null || MatchBotConfig.getTables().contains(table);
     if (!validTable) return new TopResult(new ArrayList<>(), 0);
 
     int offset = (page - 1) * limit;
@@ -324,10 +314,8 @@ public class SQLITEStatsManager {
     if (table == null || table.isEmpty() || dbColumn == null || dbColumn.isEmpty() || limit <= 0) {
       return new TopResult(new ArrayList<>(), 0);
     }
-
-    boolean validTable =
-        org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table)
-            || MatchBotConfig.getTables().contains(table);
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    boolean validTable = tableInfo != null || MatchBotConfig.getTables().contains(table);
     if (!validTable) return new TopResult(new ArrayList<>(), 0);
 
     String sql;
@@ -517,8 +505,9 @@ public class SQLITEStatsManager {
       String username,
       int gamesToAdd,
       org.nicolie.towersforpgm.rankeds.PlayerEloChange elo) {
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
     if (table == null || table.isEmpty() || username == null || username.isEmpty()) return;
-    if (!ConfigManager.getTables().contains(table)) return;
+    if (tableInfo == null) return;
 
     try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
       conn.setAutoCommit(false);

@@ -44,8 +44,7 @@ public class PickCommand implements CommandExecutor, TabCompleter {
 
   private String validatePlayerToPick(String inputName, Player player) {
     if (teams.isPlayerInAnyTeam(inputName)) {
-      return LanguageManager.langMessage("draft.picks.alreadyPicked")
-          .replace("{player}", inputName);
+      return LanguageManager.message("draft.picks.alreadyPicked").replace("{player}", inputName);
     }
 
     String pickedPlayerString = availablePlayers.getAvailablePlayers().stream()
@@ -58,7 +57,7 @@ public class PickCommand implements CommandExecutor, TabCompleter {
             .orElse(null));
 
     if (pickedPlayerString == null) {
-      return LanguageManager.langMessage("draft.picks.notInList").replace("{player}", inputName);
+      return LanguageManager.message("draft.picks.notInList").replace("{player}", inputName);
     }
 
     return null;
@@ -68,7 +67,7 @@ public class PickCommand implements CommandExecutor, TabCompleter {
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     // Comprobar si el comando fue ejecutado por un jugador
     if (!(sender instanceof Player)) {
-      sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
+      sender.sendMessage(LanguageManager.message("errors.noPlayer"));
       return true;
     }
 
@@ -76,7 +75,7 @@ public class PickCommand implements CommandExecutor, TabCompleter {
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
     // Comprobar si el draft está activo
     if (!Draft.isDraftActive()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.picks.noDraft")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.noDraft")));
       return true;
     }
 
@@ -92,8 +91,7 @@ public class PickCommand implements CommandExecutor, TabCompleter {
       if (args.length == 1) {
         if ((captains.isCaptain1Turn() && captainNumber == 2)
             || (!captains.isCaptain1Turn() && captainNumber == 1)) {
-          matchPlayer.sendWarning(
-              Component.text(LanguageManager.langMessage("draft.picks.notTurn")));
+          matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.notTurn")));
           return true;
         }
 
@@ -107,7 +105,7 @@ public class PickCommand implements CommandExecutor, TabCompleter {
         draft.pickPlayer(inputName);
       }
     } else {
-      SendMessage.sendToPlayer(player, LanguageManager.langMessage("draft.picks.notCaptain"));
+      SendMessage.sendToPlayer(player, LanguageManager.message("draft.picks.notCaptain"));
       return true;
     }
     return true;

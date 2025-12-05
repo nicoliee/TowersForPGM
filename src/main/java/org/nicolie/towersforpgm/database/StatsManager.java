@@ -55,15 +55,15 @@ public class StatsManager {
             long duration = endTime - startTime;
             plugin
                 .getLogger()
-                .info("[StatsManager] updateStats completado exitosamente para tabla: " + table
-                    + " con " + playerStatsList.size() + " jugadores en " + duration + "ms");
+                .info("[+] updateStats: " + table + ", " + playerStatsList.size() + " players, "
+                    + duration + "ms");
           } catch (Exception e) {
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
             plugin
                 .getLogger()
-                .severe("Error actualizando estadísticas en tabla " + table + " después de "
-                    + duration + "ms: " + e.getMessage());
+                .severe("[-] updateStats: " + table + ", " + playerStatsList.size() + " players, "
+                    + duration + "ms");
           }
         },
         SQL_EXECUTOR);
@@ -132,16 +132,14 @@ public class StatsManager {
             long duration = endTime - startTime;
             plugin
                 .getLogger()
-                .info("[StatsManager] getStats completado exitosamente para usuario: " + username
-                    + " en tabla: " + table + " en " + duration + "ms");
+                .info("[+] getStats: " + table + ", " + username + ", " + duration + "ms");
             return result;
           } catch (Exception e) {
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
             plugin
                 .getLogger()
-                .severe("Error obteniendo estadísticas de tabla " + table + " después de "
-                    + duration + "ms: " + e.getMessage());
+                .severe("[-] getStats: " + table + ", " + username + ", " + duration + "ms");
             return null;
           }
         },
@@ -179,16 +177,16 @@ public class StatsManager {
             long duration = endTime - startTime;
             plugin
                 .getLogger()
-                .info("[StatsManager] getTop completado exitosamente para tabla: " + table
-                    + " columna: " + dbColumn + " página: " + page + " en " + duration + "ms");
+                .info("[+] getTop: " + table + ", " + dbColumn + ", page=" + page + ", " + duration
+                    + "ms");
             return result;
           } catch (Exception e) {
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
             plugin
                 .getLogger()
-                .severe("Error obteniendo top de tabla " + table + " después de " + duration
-                    + "ms: " + e.getMessage());
+                .severe("[-] getTop: " + table + ", " + dbColumn + ", page=" + page + ", "
+                    + duration + "ms");
             return new TopResult(java.util.Collections.emptyList(), 0);
           }
         },
@@ -233,16 +231,14 @@ public class StatsManager {
             long duration = endTime - startTime;
             plugin
                 .getLogger()
-                .info("[StatsManager] getTop(keyset) completado exitosamente para tabla: " + table
-                    + " columna: " + dbColumn + " en " + duration + "ms");
+                .info("[+] getTop(keyset): " + table + ", " + dbColumn + ", " + duration + "ms");
             return result;
           } catch (Exception e) {
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
             plugin
                 .getLogger()
-                .severe("Error obteniendo top de tabla " + table + " después de " + duration
-                    + "ms: " + e.getMessage());
+                .severe("[-] getTop(keyset): " + table + ", " + dbColumn + ", " + duration + "ms");
             return new TopResult(java.util.Collections.emptyList(), 0);
           }
         },
@@ -262,12 +258,14 @@ public class StatsManager {
     String dbType = plugin.getCurrentDatabaseType();
     return CompletableFuture.supplyAsync(
         () -> {
+          long startTime = System.currentTimeMillis();
           try {
+            List<PlayerEloChange> result = null;
             if ("MySQL".equals(dbType)) {
-              return SQLStatsManager.getEloForUsernames(table, usernames);
+              result = SQLStatsManager.getEloForUsernames(table, usernames);
             } else if ("SQLite".equals(dbType)) {
               plugin.getLogger().warning("Usando SQLite para obtener elos de tabla: " + table);
-              return SQLITEStatsManager.getEloForUsernames(table, usernames);
+              result = SQLITEStatsManager.getEloForUsernames(table, usernames);
             } else {
               plugin
                   .getLogger()
@@ -275,7 +273,20 @@ public class StatsManager {
                       "Tipo de base de datos desconocido: " + dbType + " para tabla: " + table);
               return java.util.Collections.emptyList();
             }
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            plugin
+                .getLogger()
+                .info("[+] getEloForUsernames: " + table + ", " + usernames.size() + " users, "
+                    + duration + "ms");
+            return result;
           } catch (Exception e) {
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            plugin
+                .getLogger()
+                .severe("[-] getEloForUsernames: " + table + ", " + usernames.size() + " users, "
+                    + duration + "ms");
             return java.util.Collections.emptyList();
           }
         },

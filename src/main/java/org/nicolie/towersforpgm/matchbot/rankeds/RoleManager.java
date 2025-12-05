@@ -11,7 +11,7 @@ import org.nicolie.towersforpgm.rankeds.Rank;
 public class RoleManager {
 
   public static void changeRole(String discordId, Rank previousRank, Rank newRank) {
-    if (!MatchBotConfig.isRankedEnabled()) return;
+    if (!MatchBotConfig.isVoiceChatEnabled()) return;
 
     String newRoleId = newRank.getRoleID();
     if (newRoleId == null || newRoleId.isEmpty()) return;

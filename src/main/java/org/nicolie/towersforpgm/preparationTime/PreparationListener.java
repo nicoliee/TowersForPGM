@@ -39,7 +39,7 @@ public class PreparationListener implements Listener {
       new HashMap<>(); // Mapa para almacenar temporizadores activos por nombre de mundo
 
   public boolean isMapInConfig(String mapName) {
-    if (plugin.getRegions().containsKey(mapName)) {
+    if (plugin.config().preparationTime().getRegions().containsKey(mapName)) {
       return true;
     }
     return false;
@@ -50,16 +50,16 @@ public class PreparationListener implements Listener {
     // Acceder a las regiones cargadas a través del plugin
     String matchName = match.getMap().getName(); // Obtener el nombre del partido
     String worldName = match.getWorld().getName(); // Obtener el nombre del mundo
-    Map<String, Region> regions = plugin.getRegions();
+    Map<String, Region> regions = plugin.config().preparationTime().getRegions();
 
     // Buscar la región por el nombre del partido
     Region region = regions.get(matchName);
 
     if (region != null) {
       // Comprobar si ya existe una configuración para el mundo
-      if (plugin.getMatchConfig(worldName) != null) {
+      if (plugin.config().preparationTime().getMatchConfig(worldName) != null) {
         // Si la configuración ya existe, no sobrescribir y dar un aviso
-        SendMessage.sendToPlayer(player, LanguageManager.langMessage("preparation.alreadyStarted"));
+        SendMessage.sendToPlayer(player, LanguageManager.message("preparation.alreadyStarted"));
         return; // Salir del método para evitar sobreescribir la configuración
       }
 
@@ -74,13 +74,16 @@ public class PreparationListener implements Listener {
       // Crear la instancia de MatchConfig con las coordenadas obtenidas
       MatchConfig matchConfig = new MatchConfig(p1, p2, timer, haste, timeStart);
       // Almacenar la configuración usando el método de la clase principal
-      plugin.storeMatchConfig(
-          worldName, matchConfig); // Guarda la configuración asociada al worldName
+      plugin
+          .config()
+          .preparationTime()
+          .storeMatchConfig(
+              worldName, matchConfig); // Guarda la configuración asociada al worldName
       startProtectionTimer(
           player, timer, haste, region, match); // Iniciar el temporizador de protección
       protectionStartTimes.put(worldName, System.currentTimeMillis());
     } else {
-      SendMessage.sendToPlayer(player, LanguageManager.langMessage("region.mapError"));
+      SendMessage.sendToPlayer(player, LanguageManager.message("region.mapError"));
     }
   }
 
@@ -88,10 +91,13 @@ public class PreparationListener implements Listener {
   public void stopProtection(Player player, Match match) {
     String worldName = match.getWorld().getName(); // Obtener el nombre del mundo
     // Verificar si la configuración existe para el mundo
-    MatchConfig matchConfig = plugin.getMatchConfig(worldName);
+    MatchConfig matchConfig = plugin.config().preparationTime().getMatchConfig(worldName);
     if (matchConfig != null) {
       Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-        plugin.removeMatchConfig(worldName); // Eliminar la configuración del mundo
+        plugin
+            .config()
+            .preparationTime()
+            .removeMatchConfig(worldName); // Eliminar la configuración del mundo
         activeTimers.get(worldName).cancel();
         activeTimers.remove(worldName); // Eliminar el temporizador del mapa
         protectionStartTimes.remove(worldName); // Eliminar el tiempo de inicio de la protección
@@ -102,14 +108,14 @@ public class PreparationListener implements Listener {
       });
     } else {
       // Si la configuración no existe, enviamos un mensaje sincrónicamente
-      SendMessage.sendToPlayer(player, LanguageManager.langMessage("preparation.notStarted"));
+      SendMessage.sendToPlayer(player, LanguageManager.message("preparation.notStarted"));
     }
   }
 
   private void startProtectionTimer(
       Player player, int timer, int haste, Region region, Match match) {
     String worldName = match.getWorld().getName(); // Obtener el nombre del mundo
-    Component message = Component.text(LanguageManager.langMessage("preparation.actionBar"));
+    Component message = Component.text(LanguageManager.message("preparation.actionBar"));
     SendMessage.sendToWorld(
         worldName,
         LanguageManager.message("preparation.timeRemaining")
@@ -123,7 +129,8 @@ public class PreparationListener implements Listener {
         // Obtener el tiempo actual y calcular el tiempo restante en función de la diferencia con el
         // tiempo de inicio
         long currentTime = System.currentTimeMillis();
-        long timeElapsed = (currentTime - plugin.getMatchConfig(worldName).getTimeStart())
+        long timeElapsed = (currentTime
+                - plugin.config().preparationTime().getMatchConfig(worldName).getTimeStart())
             / 1000; // Tiempo transcurrido en segundos
         int timeRemaining =
             (int) (timer - timeElapsed); // Tiempo restante de protección en segundos
@@ -178,7 +185,7 @@ public class PreparationListener implements Listener {
             plugin,
             () -> {
               String worldName = player.getWorld().getName();
-              MatchConfig matchConfig = plugin.getMatchConfig(worldName);
+              MatchConfig matchConfig = plugin.config().preparationTime().getMatchConfig(worldName);
 
               if (matchConfig != null) {
                 // Obtener tiempos de protección y Haste
@@ -210,7 +217,7 @@ public class PreparationListener implements Listener {
     String worldName = location.getWorld().getName();
 
     // Obtener la configuración de la región para ese mundo
-    MatchConfig matchConfig = plugin.getMatchConfig(worldName);
+    MatchConfig matchConfig = plugin.config().preparationTime().getMatchConfig(worldName);
 
     if (matchConfig != null) {
       // Verifica si la ubicación está dentro de la región
@@ -218,7 +225,7 @@ public class PreparationListener implements Listener {
         Player player = event.getPlayer();
         // Cancela el evento si la ubicación está dentro de la región
         event.setCancelled(true);
-        Component message = Component.text(LanguageManager.langMessage("preparation.blockPlace"));
+        Component message = Component.text(LanguageManager.message("preparation.blockPlace"));
         PGM.get().getMatchManager().getPlayer(player).sendWarning(message);
       }
     }
@@ -231,7 +238,7 @@ public class PreparationListener implements Listener {
     String worldName = location.getWorld().getName();
 
     // Obtener la configuración de la región para ese mundo
-    MatchConfig matchConfig = plugin.getMatchConfig(worldName);
+    MatchConfig matchConfig = plugin.config().preparationTime().getMatchConfig(worldName);
 
     if (matchConfig != null) {
       // Verifica si la ubicación está dentro de la región
@@ -239,7 +246,7 @@ public class PreparationListener implements Listener {
         // Cancela el evento si la ubicación está dentro de la región
         Player player = event.getPlayer();
         event.setCancelled(true);
-        Component message = Component.text(LanguageManager.langMessage("preparation.blockBreak"));
+        Component message = Component.text(LanguageManager.message("preparation.blockBreak"));
         PGM.get().getMatchManager().getPlayer(player).sendWarning(message);
       }
     }

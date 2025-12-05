@@ -3,7 +3,6 @@ package org.nicolie.towersforpgm.database;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.sql.SQLTableManager;
 import org.nicolie.towersforpgm.database.sqlite.SQLITETableManager;
-import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 
 public class TableManager {
 
@@ -38,19 +37,16 @@ public class TableManager {
       plugin.getLogger().warning("Base de datos no activada, no se puede crear tabla DCAccounts");
       return;
     }
-    System.out.println("Attempting to create DCAccounts table...");
 
-    if (!MatchBotConfig.isRankedEnabled()) {
-      System.out.println("Ranked system not enabled, skipping DCAccounts table creation.");
-      return;
-    }
+    // if (!MatchBotConfig.isVoiceChatEnabled()) {
+    //   System.out.println("Ranked system not enabled, skipping DCAccounts table creation.");
+    //   return;
+    // }
     String dbType = plugin.getCurrentDatabaseType();
     try {
       if ("MySQL".equals(dbType)) {
-        System.out.println("Creating DCAccounts table in MySQL database...");
         SQLTableManager.createDCAccountsTable();
       } else if ("SQLite".equals(dbType)) {
-        System.out.println("Creating DCAccounts table in SQLite database...");
         SQLITETableManager.createDCAccountsTable();
       } else {
         plugin

@@ -9,8 +9,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.database.MatchHistoryManager;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
@@ -23,7 +21,7 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!sender.hasPermission("towers.admin")) {
-      sender.sendMessage(LanguageManager.langMessage("errors.noPermission"));
+      sender.sendMessage(LanguageManager.message("errors.noPermission"));
       return true;
     }
 
@@ -37,70 +35,45 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
     switch (argument) {
       case "setlanguage":
         if (args.length < 2) {
-          sender.sendMessage(LanguageManager.langMessage("system.noLanguage"));
+          sender.sendMessage(LanguageManager.message("system.noLanguage"));
           return true;
         }
         String language = args[1].toLowerCase();
         if (!LanguageManager.getSupportedLanguages().contains(language)) {
-          sender.sendMessage(LanguageManager.langMessage("system.invalidLanguage"));
+          sender.sendMessage(LanguageManager.message("system.invalidLanguage"));
           return true;
         }
         LanguageManager.setLanguage(language);
-        sender.sendMessage(LanguageManager.langMessage("system.languageSet"));
+        sender.sendMessage(LanguageManager.message("system.languageSet"));
         return true;
 
       case "reloadmessages":
         File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        sender.sendMessage(LanguageManager.langMessage("system.reload.start"));
+        sender.sendMessage(LanguageManager.message("system.reload.start"));
 
         if (messagesFile.exists()) {
           if (!messagesFile.delete()) {
-            sender.sendMessage(LanguageManager.langMessage("system.reload.error"));
+            sender.sendMessage(LanguageManager.message("system.reload.error"));
             return true;
           }
         }
         plugin.saveResource("messages.yml", false);
         LanguageManager.reload();
-        sender.sendMessage(LanguageManager.langMessage("system.reload.success"));
+        sender.sendMessage(LanguageManager.message("system.reload.success"));
         return true;
 
       case "dbreload":
         sender.sendMessage("§8[§bTowersForPGM§8] §7Reloading database connection...");
-        try {
-          plugin.initializeDatabase();
-
-          if (plugin.getIsDatabaseActivated()) {
-            // recreate tables and precache match id counters as on enable
-            try {
-              plugin
-                  .getLogger()
-                  .info("DB reload successful, creating tables and precaching match ids.");
-              // create tables
-              ConfigManager.getTables()
-                  .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
-              ConfigManager.getRankedTables()
-                  .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
-              org.nicolie.towersforpgm.database.TableManager.createHistoryTables();
-
-              java.util.Set<String> tables = new java.util.HashSet<>();
-              tables.addAll(ConfigManager.getTables());
-              tables.addAll(ConfigManager.getRankedTables());
-              MatchHistoryManager.preloadMatchIdCountersAsync(tables);
-            } catch (Exception ex) {
-              plugin
-                  .getLogger()
-                  .warning("Error creating tables/precaching after DB reload: " + ex.getMessage());
-            }
-
-            sender.sendMessage(
-                "§aDatabase reloaded and active (" + plugin.getCurrentDatabaseType() + ")");
-          } else {
-            sender.sendMessage(
-                "§cDatabase not active after reload. Check server logs for details.");
-          }
-        } catch (Exception e) {
-          sender.sendMessage("§cError reloading database: " + e.getMessage());
+        if (plugin.reloadDatabase()) {
+          sender.sendMessage(
+              "§aDatabase reloaded and active (" + plugin.getCurrentDatabaseType() + ")");
+        } else {
+          sender.sendMessage("§cDatabase not active after reload. Check server logs for details.");
         }
+        return true;
+      case "test":
+        // For testing purposes only, may change depending on what is being added/tested
+        System.out.println(plugin.config().preparationTime().toString());
         return true;
       default:
         sender.sendMessage(

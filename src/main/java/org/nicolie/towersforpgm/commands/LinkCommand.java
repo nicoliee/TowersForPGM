@@ -10,7 +10,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.database.DiscordManager;
-import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.RegisterCodeManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
@@ -22,25 +21,25 @@ public class LinkCommand implements CommandExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      SendMessage.sendToPlayer(sender, LanguageManager.langMessage("errors.noPlayer"));
+      SendMessage.sendToPlayer(sender, LanguageManager.message("errors.noPlayer"));
       return true;
     }
 
     Player player = (Player) sender;
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
 
-    // Verificar si el sistema de ranked está habilitado
-    if (!MatchBotConfig.isRankedEnabled()) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("matchbot.register.system-disabled")));
-      return true;
-    }
+    // // Verificar si el sistema de ranked está habilitado
+    // if (!MatchBotConfig.isVoiceChatEnabled()) {
+    //   matchPlayer.sendWarning(
+    //       Component.text(LanguageManager.message("matchbot.register.system-disabled")));
+    //   return true;
+    // }
 
     // Verificar si la cuenta ya está vinculada
     DiscordManager.getDiscordPlayer(player.getUniqueId()).thenAccept(discordPlayer -> {
       if (discordPlayer != null) {
         Component message =
-            Component.text(LanguageManager.langMessage("matchbot.register.already-linked")
+            Component.text(LanguageManager.message("matchbot.register.already-linked")
                 .replace("{discord_id}", discordPlayer.getDiscordId()));
         matchPlayer.sendWarning(message);
         return;
@@ -51,20 +50,19 @@ public class LinkCommand implements CommandExecutor {
         String existingCode = RegisterCodeManager.getActiveCode(player.getUniqueId());
 
         Component hoverText = Component.text(
-                LanguageManager.langMessage("matchbot.register.click-copy-tooltip"))
+                LanguageManager.message("matchbot.register.click-copy-tooltip"))
             .color(NamedTextColor.AQUA)
             .decorate(TextDecoration.BOLD)
             .append(Component.text("\n"
-                    + LanguageManager.langMessage("matchbot.register.use-code-discord")
+                    + LanguageManager.message("matchbot.register.use-code-discord")
                         .replace("{code}", existingCode))
                 .color(NamedTextColor.YELLOW))
-            .append(
-                Component.text("\n" + LanguageManager.langMessage("matchbot.register.code-expires"))
-                    .color(NamedTextColor.GRAY)
-                    .decorate(TextDecoration.ITALIC));
+            .append(Component.text("\n" + LanguageManager.message("matchbot.register.code-expires"))
+                .color(NamedTextColor.GRAY)
+                .decorate(TextDecoration.ITALIC));
 
         Component message = Component.text(
-                LanguageManager.langMessage("matchbot.register.active-code-exists"))
+                LanguageManager.message("matchbot.register.active-code-exists"))
             .color(NamedTextColor.YELLOW)
             .append(Component.text("[" + existingCode + "]")
                 .color(NamedTextColor.GOLD)
@@ -83,24 +81,22 @@ public class LinkCommand implements CommandExecutor {
       RegisterCodeManager.storeCode(player.getUniqueId(), code);
 
       Component hoverText = Component.text(
-              LanguageManager.langMessage("matchbot.register.click-copy-tooltip"))
+              LanguageManager.message("matchbot.register.click-copy-tooltip"))
           .color(NamedTextColor.AQUA)
           .decorate(TextDecoration.BOLD)
           .append(Component.text("\n"
-                  + LanguageManager.langMessage("matchbot.register.use-code-discord")
+                  + LanguageManager.message("matchbot.register.use-code-discord")
                       .replace("{code}", code))
               .color(NamedTextColor.YELLOW))
-          .append(
-              Component.text("\n" + LanguageManager.langMessage("matchbot.register.code-expires"))
-                  .color(NamedTextColor.GRAY)
-                  .decorate(TextDecoration.ITALIC));
+          .append(Component.text("\n" + LanguageManager.message("matchbot.register.code-expires"))
+              .color(NamedTextColor.GRAY)
+              .decorate(TextDecoration.ITALIC));
 
       Component message = Component.text(
-              LanguageManager.langMessage("matchbot.register.code-generated") + " ")
+              LanguageManager.message("matchbot.register.code-generated") + " ")
           .color(NamedTextColor.GREEN)
-          .append(
-              Component.text(LanguageManager.langMessage("matchbot.register.click-to-copy") + " ")
-                  .color(NamedTextColor.YELLOW))
+          .append(Component.text(LanguageManager.message("matchbot.register.click-to-copy") + " ")
+              .color(NamedTextColor.YELLOW))
           .append(Component.text("[" + code + "]")
               .color(NamedTextColor.GOLD)
               .decorate(TextDecoration.BOLD)

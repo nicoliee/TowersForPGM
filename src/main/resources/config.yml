@@ -14,7 +14,7 @@ database:
       # - <Mapa>
       # - <Mapa1>
     Amistoso:
-    RankedT1:
+    TorneoT1:
       - Mini Towers:TE
   defaultTable: Amistoso  # Tabla por defecto
 

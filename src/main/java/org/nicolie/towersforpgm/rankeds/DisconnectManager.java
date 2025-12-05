@@ -3,148 +3,233 @@ package org.nicolie.towersforpgm.rankeds;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.utils.LanguageManager;
-import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class DisconnectManager {
-  private static final Map<UUID, BukkitTask> timers = new HashMap<>();
-  private static final Map<String, Sanction> activeSanctions =
-      new HashMap<>(); 
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
+  private static final Map<String, BukkitTask> activeTimers = new HashMap<>();
+  private static final Map<String, Sanction> activeSanctions = new HashMap<>();
+  private static Teams teams;
 
+  public static void setTeams(Teams teamsInstance) {
+    teams = teamsInstance;
+  }
+
+  /** Checks for offline players in teams when a ranked match starts */
+  public static void checkOfflinePlayersOnMatchStart(Match match) {
+    if (!isValidRankedMatch(match) || teams == null) return;
+    // Check both teams for offline players
+    for (int teamNumber = 1; teamNumber <= 2; teamNumber++) {
+      for (String playerName : teams.getTeamOfflinePlayers(teamNumber)) {
+        startDisconnectTimer(match, playerName, teamNumber);
+      }
+    }
+  }
+
+  /** Starts a disconnect timer for a player when they disconnect from a ranked match */
   public static void startDisconnectTimer(Match match, MatchPlayer player) {
-    if (match == null || player == null) return;
-    if (!Queue.isRanked()) return;
+    if (!isValidRankedMatch(match) || player == null || teams == null) return;
 
-    int seconds = Math.max(1, ConfigManager.getDisconnectTime());
-    UUID playerId = player.getId();
-    cancelDisconnectTimer(playerId);
+    String playerName = player.getNameLegacy();
+    int teamNumber = getPlayerTeamNumber(player);
+    if (teamNumber == -1) return;
 
-    final String username = player.getNameLegacy();
-    final int[] remaining = new int[] {seconds};
+    startDisconnectTimer(match, playerName, teamNumber);
+  }
 
-    String msg = LanguageManager.langMessage("ranked.prefix")
-        + LanguageManager.langMessage("ranked.disconnect.countdown")
-            .replace("{player}", username)
-            .replace("{time}", formatTime(remaining[0]));
-    match.sendMessage(Component.text(msg));
+  private static void startDisconnectTimer(Match match, String playerName, int teamNumber) {
+    // Cancel any existing timer for this player
+    cancelDisconnectTimer(playerName);
 
+    int seconds = Math.max(1, plugin.config().ranked().getDisconnectTime());
+    final int[] timeRemaining = {seconds};
+
+    // Reset forfeit votes for the disconnected player's team
+    resetTeamForfeits(match, teamNumber);
+
+    // Send initial countdown message
+    sendCountdownMessage(match, playerName, timeRemaining[0]);
+
+    // Start the countdown timer
     BukkitTask task = Bukkit.getScheduler()
         .runTaskTimer(
             TowersForPGM.getInstance(),
-            () -> {
-              if (match.isFinished() || !Queue.isRanked()) {
-                cancelDisconnectTimer(playerId);
-                return;
-              }
-
-              if (PGM.get().getMatchManager().getPlayer(playerId) != null) {
-                cancelDisconnectTimer(playerId);
-                return;
-              }
-
-              remaining[0]--;
-              if (remaining[0] <= 0) {
-                cancelDisconnectTimer(playerId);
-                onTimeout(match, playerId, username);
-              }
-            },
+            new DisconnectTimerTask(match, playerName, teamNumber, timeRemaining),
             0L,
             20L);
 
-    timers.put(playerId, task);
+    activeTimers.put(playerName, task);
   }
 
-  public static void cancelDisconnectTimer(UUID playerId) {
-    if (playerId == null) return;
-    BukkitTask task = timers.remove(playerId);
+  private static class DisconnectTimerTask implements Runnable {
+    private final Match match;
+    private final String playerName;
+    private final int teamNumber;
+    private final int[] timeRemaining;
+
+    public DisconnectTimerTask(
+        Match match, String playerName, int teamNumber, int[] timeRemaining) {
+      this.match = match;
+      this.playerName = playerName;
+      this.teamNumber = teamNumber;
+      this.timeRemaining = timeRemaining;
+    }
+
+    @Override
+    public void run() {
+      // Check if match ended or is no longer ranked
+      if (match.isFinished() || !Queue.isRanked()) {
+        cancelDisconnectTimer(playerName);
+        return;
+      }
+
+      // Check if player reconnected
+      if (isPlayerOnline(playerName)) {
+        // Only cancel if no sanction is active
+        if (!isSanctionActive(match)) {
+          cancelDisconnectTimer(playerName);
+          sendReconnectedMessage(match, playerName);
+        }
+        return;
+      }
+
+      // Countdown
+      timeRemaining[0]--;
+      if (timeRemaining[0] <= 0) {
+        cancelDisconnectTimer(playerName);
+        applyDisconnectSanction(match, playerName, teamNumber);
+      }
+    }
+  }
+
+  public static void cancelDisconnectTimer(String playerName) {
+    if (playerName == null) return;
+    BukkitTask task = activeTimers.remove(playerName);
     if (task != null) task.cancel();
   }
 
-  private static void onTimeout(Match match, UUID playerId, String username) {
-    if (PGM.get().getMatchManager().getPlayer(playerId) != null) return;
+  private static void applyDisconnectSanction(Match match, String playerName, int teamNumber) {
+    activeSanctions.put(match.getId(), new Sanction(playerName, teamNumber));
 
-    if (match == null) return;
-    if (!Queue.isRanked()) return;
-    if (match.isFinished()) return;
+    // Reset forfeit votes when sanction is applied so team can forfeit again
+    resetTeamForfeits(match, teamNumber);
 
-    Party team = null;
-    MatchPlayer cached = TowersForPGM.getInstance().getDisconnectedPlayers().get(username);
-    if (cached != null) {
-      team = cached.getParty();
-    }
-
-    activeSanctions.put(match.getId(), new Sanction(playerId, username, team));
-
-    String message = LanguageManager.langMessage("ranked.prefix")
-        + LanguageManager.langMessage("ranked.disconnect.notice").replace("{player}", username);
+    // Send sanction notice
+    String message = LanguageManager.message("ranked.prefix")
+        + LanguageManager.message("ranked.disconnect.notice").replace("{player}", playerName);
     match.sendMessage(Component.text(message));
     match.playSound(Sounds.ALERT);
   }
 
+  // Helper methods
+  private static boolean isValidRankedMatch(Match match) {
+    return match != null && Queue.isRanked() && !match.isFinished();
+  }
+
+  private static boolean isPlayerOnline(String playerName) {
+    return Bukkit.getPlayer(playerName) != null;
+  }
+
+  private static int getPlayerTeamNumber(MatchPlayer player) {
+    if (teams == null || player.getParty() == null) return -1;
+
+    if (player.getParty() instanceof tc.oc.pgm.teams.Team) {
+      tc.oc.pgm.teams.Team team = (tc.oc.pgm.teams.Team) player.getParty();
+      return teams.getTeamNumber(team);
+    }
+    return -1;
+  }
+
+  private static void sendCountdownMessage(Match match, String playerName, int timeRemaining) {
+    String message = LanguageManager.message("ranked.prefix")
+        + LanguageManager.message("ranked.disconnect.countdown")
+            .replace("{player}", playerName)
+            .replace("{time}", formatTime(timeRemaining));
+    match.sendMessage(Component.text(message));
+  }
+
+  private static void sendReconnectedMessage(Match match, String playerName) {
+    String message = LanguageManager.message("ranked.prefix")
+        + LanguageManager.message("ranked.disconnect.reconnected").replace("{player}", playerName);
+    match.sendMessage(Component.text(message));
+  }
+
+  private static void resetTeamForfeits(Match match, int teamNumber) {
+    if (teams == null) return;
+    tc.oc.pgm.teams.Team team = teams.getTeam(teamNumber);
+    if (team != null) {
+      org.nicolie.towersforpgm.commands.ForfeitCommand.resetTeamForfeits(team);
+    }
+  }
+
+  // Public API methods
   public static boolean isSanctionActive(Match match) {
     if (match == null) return false;
     return activeSanctions.containsKey(match.getId());
   }
 
   public static boolean isSanctionForTeam(Match match, Party team) {
-    if (match == null) return false;
-    Sanction s = activeSanctions.get(match.getId());
-    if (s == null) return false;
-    if (team == null || s.team == null) return true;
-    return team.equals(s.team);
-  }
+    if (match == null || teams == null) return false;
+    Sanction sanction = activeSanctions.get(match.getId());
+    if (sanction == null) return false;
 
-  public static UUID getSanctionedPlayerId(Match match) {
-    Sanction s = activeSanctions.get(match.getId());
-    return s != null ? s.playerId : null;
+    if (team instanceof tc.oc.pgm.teams.Team) {
+      int teamNumber = teams.getTeamNumber((tc.oc.pgm.teams.Team) team);
+      return teamNumber == sanction.teamNumber;
+    }
+    return false;
   }
 
   public static String getSanctionedUsername(Match match) {
-    Sanction s = activeSanctions.get(match.getId());
-    return s != null ? s.username : null;
+    Sanction sanction = activeSanctions.get(match.getId());
+    return sanction != null ? sanction.playerName : null;
+  }
+
+  public static boolean isSanctionedPlayer(Match match, MatchPlayer player) {
+    if (match == null || player == null) return false;
+    Sanction sanction = activeSanctions.get(match.getId());
+    return sanction != null && sanction.playerName.equals(player.getNameLegacy());
   }
 
   public static void clearMatch(Match match) {
     if (match == null) return;
-    Sanction s = activeSanctions.remove(match.getId());
-    if (s != null) {
-      cancelDisconnectTimer(s.playerId);
+    Sanction sanction = activeSanctions.remove(match.getId());
+    if (sanction != null) {
+      cancelDisconnectTimer(sanction.playerName);
     }
   }
 
   public static void clearAll() {
-    for (BukkitTask task : new HashSet<>(timers.values())) {
+    // Cancel all active timers
+    for (BukkitTask task : new HashSet<>(activeTimers.values())) {
       if (task != null) task.cancel();
     }
-    timers.clear();
+    activeTimers.clear();
     activeSanctions.clear();
   }
 
   private static String formatTime(int totalSeconds) {
-    int m = Math.max(0, totalSeconds) / 60;
-    int s = Math.max(0, totalSeconds) % 60;
-    return String.format("%02d:%02d", m, s);
+    int minutes = Math.max(0, totalSeconds) / 60;
+    int seconds = Math.max(0, totalSeconds) % 60;
+    return String.format("%02d:%02d", minutes, seconds);
   }
 
   private static class Sanction {
-    private final UUID playerId;
-    private final String username;
-    private final Party team;
+    private final String playerName;
+    private final int teamNumber;
 
-    private Sanction(UUID playerId, String username, Party team) {
-      this.playerId = playerId;
-      this.username = username;
-      this.team = team;
+    private Sanction(String playerName, int teamNumber) {
+      this.playerName = playerName;
+      this.teamNumber = teamNumber;
     }
   }
 }

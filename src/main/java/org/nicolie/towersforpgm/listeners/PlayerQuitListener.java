@@ -37,7 +37,7 @@ public class PlayerQuitListener implements Listener {
     }
 
     boolean isPlayerInQueue = queue.getQueuePlayers().contains(uuid);
-    boolean isRankedEnabled = MatchBotConfig.isRankedEnabled();
+    boolean isRankedEnabled = MatchBotConfig.isVoiceChatEnabled();
 
     if (isPlayerInQueue && !isRankedEnabled) {
       queue.removePlayer(matchPlayer);

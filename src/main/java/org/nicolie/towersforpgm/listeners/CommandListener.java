@@ -1,5 +1,7 @@
 package org.nicolie.towersforpgm.listeners;
 
+import java.util.Arrays;
+import java.util.List;
 import net.kyori.adventure.text.Component;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,8 +28,13 @@ public class CommandListener implements Listener {
     Boolean ranked = Queue.isRanked();
     Boolean isCaptains = captains.isMatchWithCaptains();
 
-    if (command.toLowerCase().startsWith("/end") && (ranked || isCaptains) && match.isRunning()) {
-      if (command.toLowerCase().endsWith(" -f")) {
+    String lower = command.toLowerCase();
+    List<String> matchEndingCommands = Arrays.asList("/end", "/cycle", "/qr");
+
+    boolean isProtected = matchEndingCommands.stream().anyMatch(lower::startsWith);
+
+    if (isProtected && (ranked || isCaptains) && match.isRunning()) {
+      if (lower.endsWith(" -f")) {
         String commandWithoutFlag = command.substring(0, command.length() - 3);
         event.setMessage(commandWithoutFlag);
       } else {
@@ -35,9 +42,9 @@ public class CommandListener implements Listener {
         String context = ranked ? " en una ranked." : " en un draft.";
         player.sendWarning(Component.text("No puedes hacer esto" + context));
       }
-    } else if (command.toLowerCase().toLowerCase().equals("/team") && ranked) {
-      if (command.endsWith(" -f")) {
-        String commandWithoutFlag = command.replaceAll(" -f", "");
+    } else if (lower.startsWith("/team") && ranked) {
+      if (lower.endsWith(" -f")) {
+        String commandWithoutFlag = command.substring(0, command.length() - 3);
         event.setMessage(commandWithoutFlag);
       } else {
         event.setCancelled(true);

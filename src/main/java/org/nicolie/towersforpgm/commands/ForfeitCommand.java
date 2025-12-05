@@ -11,14 +11,15 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.StatsManager;
+import org.nicolie.towersforpgm.draft.Teams;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.Forfeit;
 import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Elo;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
@@ -28,39 +29,57 @@ import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class ForfeitCommand implements CommandExecutor {
+  private final TowersForPGM plugin = TowersForPGM.getInstance();
+  private final Teams teams;
   public static Set<UUID> forfeitedPlayers = new HashSet<>();
 
-  // Pensado SOLAMENTE para 2 equipos
-  // "red" y "blue"
+  public ForfeitCommand(Teams teams) {
+    this.teams = teams;
+  }
+
+  public static void resetTeamForfeits(Party team) {
+    if (team == null) return;
+    team.getPlayers().forEach(mp -> forfeitedPlayers.remove(mp.getId()));
+  }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      SendMessage.sendToConsole(LanguageManager.langMessage("errors.noPlayer"));
+      SendMessage.sendToConsole(LanguageManager.message("errors.noPlayer"));
       return true;
     }
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     if (!Queue.isRanked() || matchPlayer.isObserving()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.noForfeit")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.noForfeit")));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
     Party team = matchPlayer.getParty();
 
-    if (!forfeitedPlayers.add(matchPlayer.getId())) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("ranked.alreadyForfeited")));
+    // Initialize teams from match if not already done
+    if (!teams.initializeTeamsFromMatch(match)) {
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.invalidTeams")));
       return true;
     }
 
-    match.sendMessage(Component.text(LanguageManager.langMessage("ranked.prefix")
-        + LanguageManager.langMessage("ranked.forfeit")
+    if (!forfeitedPlayers.add(matchPlayer.getId())) {
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.alreadyForfeited")));
+      return true;
+    }
+
+    match.sendMessage(Component.text(LanguageManager.message("ranked.prefix")
+        + LanguageManager.message("ranked.forfeit")
             .replace("{player}", matchPlayer.getPrefixedName())));
     match.playSound(Sounds.ALERT);
 
-    boolean allForfeited =
-        team.getPlayers().stream().allMatch(mp -> forfeitedPlayers.contains(mp.getId()));
-    String winningTeam = team.getNameLegacy().equalsIgnoreCase("red") ? "blue" : "red";
+    boolean allForfeited = team.getPlayers().stream()
+        .filter(mp -> !DisconnectManager.isSanctionedPlayer(match, mp))
+        .allMatch(mp -> forfeitedPlayers.contains(mp.getId()));
+
+    // Get the opposing team name
+    int currentTeamNumber = teams.getTeamNumber((tc.oc.pgm.teams.Team) team);
+    int opponentTeamNumber = currentTeamNumber == 1 ? 2 : 1;
+    String winningTeam = teams.getTeamName(opponentTeamNumber);
     if (allForfeited) {
       boolean sanctionedForThisTeam = DisconnectManager.isSanctionActive(match)
           && DisconnectManager.isSanctionForTeam(match, team);
@@ -79,16 +98,18 @@ public class ForfeitCommand implements CommandExecutor {
               .thenAccept((PlayerEloChange penalty) -> {
                 Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
                   TowersForPGM.getInstance().setStatsCancel(true);
-                  String table = ConfigManager.getActiveTable(match.getMap().getName());
+                  String table =
+                      plugin.config().databaseTables().getTable(match.getMap().getName());
                   StatsManager.applySanction(table, sanctionedUser, 2, penalty);
 
-                  match.sendMessage(Component.text(LanguageManager.langMessage("ranked.prefix")
-                      + LanguageManager.langMessage("ranked.forfeitSanctionApplied")
+                  match.sendMessage(Component.text(LanguageManager.message("ranked.prefix")
+                      + LanguageManager.message("ranked.forfeitSanctionApplied")
                           .replace("{player}", sanctionedUser)
                           .replace("{elo}", String.valueOf(Math.abs(penalty.getEloChange())))));
-
-                  if (TowersForPGM.getInstance().isMatchBotEnabled()
-                      && ConfigManager.isRankedTable(table)) {
+                  TableInfo tableInfo =
+                      TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
+                  boolean isRankedTable = tableInfo != null && tableInfo.isRanked();
+                  if (TowersForPGM.getInstance().isMatchBotEnabled() && isRankedTable) {
                     java.util.Set<String> usernames = new java.util.HashSet<>();
                     for (MatchPlayer mp : match.getPlayers()) usernames.add(mp.getNameLegacy());
                     if (sanctionedUser != null && !sanctionedUser.isEmpty())

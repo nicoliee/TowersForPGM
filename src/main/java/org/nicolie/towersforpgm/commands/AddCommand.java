@@ -34,22 +34,22 @@ public class AddCommand implements CommandExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      SendMessage.sendToConsole(LanguageManager.langMessage("errors.noPlayer"));
+      SendMessage.sendToConsole(LanguageManager.message("errors.noPlayer"));
       return true;
     }
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     if (!Draft.isDraftActive()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.picks.noDraft")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.noDraft")));
       return true;
     }
 
     if (args.length < 1) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.add.usage")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.add.usage")));
       return true;
     }
 
     if (Queue.isRanked()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.notAllowed")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.notAllowed")));
       return true;
     }
 
@@ -61,7 +61,8 @@ public class AddCommand implements CommandExecutor {
 
     availablePlayers.addPlayer(playerName);
     pickInventory.updateAllInventories();
-    SendMessage.broadcast(LanguageManager.message("picks.add").replace("{player}", playerName));
+    SendMessage.broadcast(
+        LanguageManager.message("draft.picks.add").replace("{player}", playerName));
     PGM.get().getMatchManager().getMatch(sender).getMatch().playSound(Sounds.ALERT);
     return true;
   }
@@ -72,19 +73,19 @@ public class AddCommand implements CommandExecutor {
             && captains.getCaptain1Name().equalsIgnoreCase(playerName))
         || (captains.getCaptain2Name() != null
             && captains.getCaptain2Name().equalsIgnoreCase(playerName))) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.add.captain")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.add.captain")));
       return true;
     }
 
     if (teams.isPlayerInAnyTeam(playerName)) {
       matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.captains.alreadyInTeam")));
+          Component.text(LanguageManager.message("draft.captains.alreadyInTeam")));
       return true;
     }
 
     if (availablePlayers.getAllAvailablePlayers().contains(playerName)) {
       matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.captains.alreadyInDraft")));
+          Component.text(LanguageManager.message("draft.captains.alreadyInDraft")));
       return true;
     }
     return false;

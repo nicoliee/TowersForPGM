@@ -4,20 +4,23 @@ import java.text.DecimalFormat;
 import java.time.Instant;
 import java.util.List;
 import net.dv8tion.jda.api.EmbedBuilder;
+import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.models.top.Top;
 import org.nicolie.towersforpgm.database.models.top.TopResult;
 import org.nicolie.towersforpgm.matchbot.enums.Stat;
 import org.nicolie.towersforpgm.rankeds.Rank;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 
 public class TopEmbed {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
 
   private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
 
   public static EmbedBuilder createTopEmbed(
       Stat stat, String table, int page, TopResult topResult, boolean perGame) {
 
-    boolean isRankedTable = ConfigManager.getRankedTables().contains(table);
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    boolean isRankedTable = tableInfo != null && tableInfo.isRanked();
     EmbedBuilder embed = new EmbedBuilder().setTimestamp(Instant.now());
 
     List<Top> topEntries = topResult.getData();

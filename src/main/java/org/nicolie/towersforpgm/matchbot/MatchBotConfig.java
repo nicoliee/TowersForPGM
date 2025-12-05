@@ -3,17 +3,12 @@ package org.nicolie.towersforpgm.matchbot;
 import java.util.List;
 import me.tbg.match.bot.configs.BotConfig;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.TowersForPGM;
 
 public class MatchBotConfig {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
   // tables
   private static List<String> tables;
-
-  // commands
-  private static boolean statsCommandEnabled;
-  private static boolean topCommandEnabled;
-  private static boolean historyCommandEnabled;
-  private static boolean linkCommandEnabled;
 
   // stats
   private static boolean statsPointsEnabled;
@@ -21,10 +16,10 @@ public class MatchBotConfig {
   // ranked
   private static String discordChannel;
   private static String rankedRoleId;
-  private static boolean rankedEnabled;
   private static String accountsTable;
 
   // ranked.voice-chat
+  private static boolean voiceChatEnabled;
   private static String inactiveID;
   private static String queueID;
   private static String team1ID;
@@ -41,28 +36,22 @@ public class MatchBotConfig {
   public static void loadConfig(FileConfiguration config) {
     tables = config.getStringList("tables");
 
-    // commands
-    statsCommandEnabled = config.getBoolean("commands.stats", true);
-    topCommandEnabled = config.getBoolean("commands.top", true);
-    historyCommandEnabled = config.getBoolean("commands.history", true);
-    linkCommandEnabled = config.getBoolean("commands.link", true);
-
     // stats
     statsPointsEnabled = config.getBoolean("stats.points", true);
 
     // ranked
     discordChannel = config.getString("ranked.discordChannel", "");
     rankedRoleId = config.getString("ranked.rankedRoleId", "");
-    rankedEnabled = config.getBoolean("ranked.enabled", false);
     accountsTable = config.getString("ranked.table", "DCAccounts");
 
     // voice-chat
+    voiceChatEnabled = config.getBoolean("ranked.voice-chat.enabled", false);
     inactiveID = config.getString("ranked.voice-chat.inactive", "");
     queueID = config.getString("ranked.voice-chat.queue", "");
     team1ID = config.getString("ranked.voice-chat.team1", "");
     team2ID = config.getString("ranked.voice-chat.team2", "");
 
-    // roles under ranked
+    // roles
     registeredRoleId = config.getString("ranked.roles.registered", "");
     bronzeRoleId = config.getString("ranked.roles.bronze", "");
     silverRoleId = config.getString("ranked.roles.silver", "");
@@ -70,29 +59,122 @@ public class MatchBotConfig {
     emeraldRoleId = config.getString("ranked.roles.emerald", "");
     diamondRoleId = config.getString("ranked.roles.diamond", "");
 
-    BotConfig.addBlacklist(ConfigManager.getRankedMaps());
+    BotConfig.addBlacklist(plugin.config().ranked().getRankedMaps());
+  }
+
+  private static void saveToFile(String path, Object value) {
+    try {
+      TowersForPGM plugin = TowersForPGM.getInstance();
+      if (plugin == null) return;
+      FileConfiguration cfg = plugin.getMatchBotConfig();
+      if (cfg == null) return;
+      cfg.set(path, value);
+      plugin.saveMatchBotConfig();
+      // reload in-memory values after saving
+      loadConfig(cfg);
+    } catch (Exception ignored) {
+    }
+  }
+
+  // tables
+  public static void addTable(String table) {
+    if (tables == null) tables = new java.util.ArrayList<>();
+    if (!tables.contains(table)) {
+      tables.add(table);
+      saveToFile("tables", tables);
+    }
+  }
+
+  public static void removeTable(String table) {
+    if (tables == null) return;
+    if (tables.contains(table)) {
+      tables.remove(table);
+      saveToFile("tables", tables);
+    }
+  }
+
+  // stats
+  public static void setStatsPointsEnabled(boolean enabled) {
+    statsPointsEnabled = enabled;
+    saveToFile("stats.points", enabled);
+  }
+
+  // ranked
+  public static void setDiscordChannel(String channel) {
+    discordChannel = channel;
+    saveToFile("ranked.discordChannel", channel);
+  }
+
+  public static void setRankedRoleId(String roleId) {
+    rankedRoleId = roleId;
+    saveToFile("ranked.rankedRoleId", roleId);
+  }
+
+  public static void setVoiceChatEnabled(boolean enabled) {
+    voiceChatEnabled = enabled;
+    saveToFile("ranked.voice-chat.enabled", enabled);
+  }
+
+  public static void setAccountsTable(String table) {
+    accountsTable = table;
+    saveToFile("ranked.table", table);
+  }
+
+  // ranked.voice-chat
+  public static void setInactiveID(String id) {
+    inactiveID = id;
+    saveToFile("ranked.voice-chat.inactive", id);
+  }
+
+  public static void setQueueID(String id) {
+    queueID = id;
+    saveToFile("ranked.voice-chat.queue", id);
+  }
+
+  public static void setTeam1ID(String id) {
+    team1ID = id;
+    saveToFile("ranked.voice-chat.team1", id);
+  }
+
+  public static void setTeam2ID(String id) {
+    team2ID = id;
+    saveToFile("ranked.voice-chat.team2", id);
+  }
+
+  // ranked.roles
+  public static void setRegisteredRoleId(String id) {
+    registeredRoleId = id;
+    saveToFile("ranked.roles.registered", id);
+  }
+
+  public static void setBronzeRoleId(String id) {
+    bronzeRoleId = id;
+    saveToFile("ranked.roles.bronze", id);
+  }
+
+  public static void setSilverRoleId(String id) {
+    silverRoleId = id;
+    saveToFile("ranked.roles.silver", id);
+  }
+
+  public static void setGoldRoleId(String id) {
+    goldRoleId = id;
+    saveToFile("ranked.roles.gold", id);
+  }
+
+  public static void setEmeraldRoleId(String id) {
+    emeraldRoleId = id;
+    saveToFile("ranked.roles.emerald", id);
+  }
+
+  public static void setDiamondRoleId(String id) {
+    diamondRoleId = id;
+    saveToFile("ranked.roles.diamond", id);
   }
 
   // tables
   public static List<String> getTables() {
     return tables;
-  }
-
-  // commands
-  public static boolean isStatsCommandEnabled() {
-    return statsCommandEnabled;
-  }
-
-  public static boolean isTopCommandEnabled() {
-    return topCommandEnabled;
-  }
-
-  public static boolean isHistoryCommandEnabled() {
-    return historyCommandEnabled;
-  }
-
-  public static boolean isLinkCommandEnabled() {
-    return linkCommandEnabled;
   }
 
   // stats
@@ -109,8 +191,8 @@ public class MatchBotConfig {
     return rankedRoleId;
   }
 
-  public static boolean isRankedEnabled() {
-    return rankedEnabled;
+  public static boolean isVoiceChatEnabled() {
+    return voiceChatEnabled;
   }
 
   public static String getAccountsTable() {

@@ -9,6 +9,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 public class SQLDatabaseManager {
   private final TowersForPGM plugin;
   private HikariDataSource dataSource;
+  public final int TIMEOUT = 5000;
 
   public SQLDatabaseManager(TowersForPGM plugin) {
     this.plugin = plugin;
@@ -42,7 +43,7 @@ public class SQLDatabaseManager {
       config.setMinimumIdle(20);
       config.setIdleTimeout(60000);
       config.setMaxLifetime(1200000);
-      config.setConnectionTimeout(5000);
+      config.setConnectionTimeout(TIMEOUT);
       config.setLeakDetectionThreshold(2000);
 
       dataSource = new HikariDataSource(config);

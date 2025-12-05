@@ -6,7 +6,7 @@ import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public enum Rank {
   BRONZE(
-      LanguageManager.langMessage("ranked.ranks.bronze"),
+      LanguageManager.message("ranked.ranks.bronze"),
       "§7",
       -100,
       -1,
@@ -14,23 +14,16 @@ public enum Rank {
       -20,
       new Color(150, 75, 0)),
   BRONZE_PLUS(
-      LanguageManager.langMessage("ranked.ranks.bronze") + "+",
+      LanguageManager.message("ranked.ranks.bronze") + "+",
       "§7",
       0,
       99,
       25,
       -20,
       new Color(150, 75, 0)),
-  SILVER(
-      LanguageManager.langMessage("ranked.ranks.silver"),
-      "§8",
-      100,
-      199,
-      25,
-      -20,
-      Color.LIGHT_GRAY),
+  SILVER(LanguageManager.message("ranked.ranks.silver"), "§8", 100, 199, 25, -20, Color.LIGHT_GRAY),
   SILVER_PLUS(
-      LanguageManager.langMessage("ranked.ranks.silver") + "+",
+      LanguageManager.message("ranked.ranks.silver") + "+",
       "§8",
       200,
       299,
@@ -38,7 +31,7 @@ public enum Rank {
       -20,
       Color.LIGHT_GRAY),
   GOLD(
-      LanguageManager.langMessage("ranked.ranks.gold"),
+      LanguageManager.message("ranked.ranks.gold"),
       "§6",
       300,
       399,
@@ -46,7 +39,7 @@ public enum Rank {
       -25,
       new Color(255, 215, 0)),
   GOLD_PLUS(
-      LanguageManager.langMessage("ranked.ranks.gold") + "+",
+      LanguageManager.message("ranked.ranks.gold") + "+",
       "§6",
       400,
       499,
@@ -54,7 +47,7 @@ public enum Rank {
       -25,
       new Color(255, 215, 0)),
   EMERALD(
-      LanguageManager.langMessage("ranked.ranks.emerald"),
+      LanguageManager.message("ranked.ranks.emerald"),
       "§2",
       500,
       599,
@@ -62,7 +55,7 @@ public enum Rank {
       -25,
       new Color(0, 153, 51)),
   EMERALD_PLUS(
-      LanguageManager.langMessage("ranked.ranks.emerald") + "+",
+      LanguageManager.message("ranked.ranks.emerald") + "+",
       "§2",
       600,
       699,
@@ -70,7 +63,7 @@ public enum Rank {
       -25,
       new Color(0, 153, 51)),
   DIAMOND(
-      LanguageManager.langMessage("ranked.ranks.diamond"),
+      LanguageManager.message("ranked.ranks.diamond"),
       "§9",
       700,
       Integer.MAX_VALUE,
@@ -149,7 +142,7 @@ public enum Rank {
   }
 
   public String getRoleID() {
-    if (!MatchBotConfig.isRankedEnabled()) return null;
+    if (!MatchBotConfig.isVoiceChatEnabled()) return null;
 
     switch (this) {
       case BRONZE:

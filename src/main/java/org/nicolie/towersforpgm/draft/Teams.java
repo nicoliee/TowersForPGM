@@ -1,6 +1,7 @@
 package org.nicolie.towersforpgm.draft;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.utils.MatchManager;
@@ -16,12 +17,62 @@ public class Teams {
 
   private final Map<Integer, Set<MatchPlayer>> onlineTeams = new HashMap<>();
   private final Map<Integer, Set<String>> offlineTeams = new HashMap<>();
+  private Team team1;
+  private Team team2;
 
   public Teams() {
     onlineTeams.put(1, new HashSet<>());
     onlineTeams.put(2, new HashSet<>());
     offlineTeams.put(1, new HashSet<>());
     offlineTeams.put(2, new HashSet<>());
+  }
+
+  public static boolean validateTeamsForDraft(Match match) {
+    if (match == null) return false;
+
+    TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
+    if (teamModule == null) return false;
+
+    return teamModule.getTeams().size() == 2;
+  }
+
+  public boolean initializeTeamsFromMatch(Match match) {
+    if (!validateTeamsForDraft(match)) return false;
+
+    TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
+    if (teamModule == null) return false;
+
+    List<Team> participatingTeams = teamModule.getTeams().stream().collect(Collectors.toList());
+
+    if (participatingTeams.size() != 2) return false;
+
+    this.team1 = participatingTeams.get(0);
+    this.team2 = participatingTeams.get(1);
+    return true;
+  }
+
+  public int getTeamNumber(Team team) {
+    if (team == null) return -1;
+    if (team.equals(team1)) return 1;
+    if (team.equals(team2)) return 2;
+    return -1;
+  }
+
+  public Team getTeam(int teamNumber) {
+    if (teamNumber == 1) return team1;
+    if (teamNumber == 2) return team2;
+    return null;
+  }
+
+  public String getTeamColor(int teamNumber) {
+    Team team = getTeam(teamNumber);
+    if (team == null) return teamNumber == 1 ? "§4" : "§9"; // Fallback colors
+    return team.getColor().toString();
+  }
+
+  public String getTeamName(int teamNumber) {
+    Team team = getTeam(teamNumber);
+    return team != null ? team.getDefaultName() : "Team " + teamNumber;
   }
 
   public void addPlayerToTeam(String playerName, int teamNumber) {
@@ -60,6 +111,8 @@ public class Teams {
   public void clear() {
     onlineTeams.values().forEach(Set::clear);
     offlineTeams.values().forEach(Set::clear);
+    team1 = null;
+    team2 = null;
   }
 
   public Set<String> getAllTeam(int teamNumber) {
@@ -85,12 +138,7 @@ public class Teams {
     TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
     if (teamModule == null) return;
 
-    Team targetTeam = teamModule.getTeams().stream()
-        .filter(team -> (teamNumber == 1 && team.getDefaultName().equalsIgnoreCase("red"))
-            || (teamNumber == 2 && team.getDefaultName().equalsIgnoreCase("blue")))
-        .findFirst()
-        .orElse(null);
-
+    Team targetTeam = getTeam(teamNumber);
     if (targetTeam == null) return;
 
     MatchPlayer matchPlayer = match.getPlayer(player);
@@ -98,6 +146,16 @@ public class Teams {
       JoinRequest request = JoinRequest.fromPlayer(matchPlayer, targetTeam, JoinRequest.Flag.FORCE);
       JoinResult result = teamModule.queryJoin(matchPlayer, request);
       teamModule.join(matchPlayer, request, result);
+    }
+  }
+
+  public void assignToObserver(Player player) {
+    Match match = PGM.get().getMatchManager().getMatch(player);
+    if (match == null) return;
+
+    MatchPlayer matchPlayer = match.getPlayer(player);
+    if (matchPlayer != null) {
+      match.setParty(matchPlayer, match.getDefaultParty());
     }
   }
 

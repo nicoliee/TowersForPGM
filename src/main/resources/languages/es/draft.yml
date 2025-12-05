@@ -9,10 +9,14 @@ remove:
   usage: "§cUso: /remove <nick>"
 
 captains:
+  choose: "{teamcolor}{captain} ha elegido a {player}."
+  turn: "{teamcolor}Es el turno de {captain}."
+  suggestions: "Te sugerimos que elijas a {suggestions}§f."
   alreadyInDraft: "§cEl jugador ya está en el draft."
   alreadyInTeam: "§cEl jugador ya está en un equipo."
   bossbar: "{captain} está eligiendo. §bTiempo restante: §a{time}"
   captainsHeader: "§m-----------§r §b§lCapitanes §f§m-----------"
+  invalidTeams: "§cLa partida debe tener exactamente 2 equipos para iniciar un draft."
   matchStarted: "§cLa partida ya ha comenzado."
   notEnoughPlayers: "§cNo hay suficientes jugadores en la partida."
   notInDraft: "§cEl jugador no está en el draft."
@@ -27,12 +31,23 @@ captains:
   usage: "§cUso: /captains <nick1> <nick2>"
 
 picks:
+  choosing: "§eSeleccionando jugadores..."
+  add: "§3{player} §7ha sido añadido a la lista."
+  remove: "§3{player} §7ha sido eliminado de la lista."
   noDraft: "§cNo hay un draft en curso."
   usage: "§cUso: /pick <jugador>"
   alreadyPicked: "§c{player} ya ha sido elegido."
   notInList: "§c{player} no está disponible para elegir."
   notTurn: "§cNo es tu turno de elegir."
   notCaptain: "§cNo eres un capitán."
+
+substitute:
+  usage: "§cUso: /sub <capitan_actual> <nuevo_capitan>"
+  notConnected: "§cEl jugador {player} no está conectado"
+  notCaptain: "§cEl jugador especificado no es un capitán"
+  enemyTeam: "§cNo puedes sustituir con un jugador del equipo contrario"
+  notAvailable: "§cEl jugador especificado no está disponible para la sustitución"
+  success: "§a{player} ahora es capitán del equipo {team}"
 
 # Alias de nivel raíz para compatibilidad con código que busca "draft.itemLore"
 itemLore: "§7Clic derecho para abrir el menú de draft."
@@ -47,8 +62,7 @@ ready:
 
 join:
   notAllowed: "No puedes unirte a la partida."
-  redTeam: "Estás en el equipo rojo."
-  blueTeam: "Estás en el equipo azul."
+  team: "Estás en el equipo {team}."
 
 config:
   clickToPick: "§eHaz clic para elegir."

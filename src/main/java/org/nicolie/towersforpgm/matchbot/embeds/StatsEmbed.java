@@ -3,15 +3,18 @@ package org.nicolie.towersforpgm.matchbot.embeds;
 import java.util.logging.Level;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.Rank;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 
 public class StatsEmbed {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
+
   public static EmbedBuilder create(String table, String user, Stats stats) {
     String username = stats != null && stats.getUsername() != null ? stats.getUsername() : user;
-    boolean isRankedTable = ConfigManager.getRankedTables().contains(table);
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    boolean isRankedTable = tableInfo != null && tableInfo.isRanked();
 
     EmbedBuilder embed = new EmbedBuilder();
     embed.setTitle(username + " - " + table);
@@ -25,7 +28,7 @@ public class StatsEmbed {
     try {
       addStatsToEmbed(embed, stats, isRankedTable);
     } catch (Exception e) {
-      TowersForPGM.getInstance()
+      plugin
           .getLogger()
           .log(Level.SEVERE, "Error al procesar estadísticas para embed de " + username, e);
       embed.addField("Error", "Hubo un error al procesar las estadísticas.", false);

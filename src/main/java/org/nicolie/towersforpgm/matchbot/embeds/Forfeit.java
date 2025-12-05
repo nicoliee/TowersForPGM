@@ -31,9 +31,8 @@ public class Forfeit {
     String duration = info.getDuration();
 
     EmbedBuilder embed = new EmbedBuilder()
-        .setColor(Color.ORANGE)
-        .setTitle(
-            LanguageManager.langMessage("ranked.matchbot.cancelled").replace("{table}", table))
+        .setColor(Color.RED)
+        .setTitle(LanguageManager.message("ranked.matchbot.finish").replace("{table}", table))
         .setTimestamp(Instant.now())
         .setAuthor(
             MessagesConfig.message("author.name"), null, MessagesConfig.message("author.icon_url"))

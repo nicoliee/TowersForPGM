@@ -5,11 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class Elo {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
 
   public static CompletableFuture<List<PlayerEloChange>> addWin(
       List<MatchPlayer> winners, List<MatchPlayer> losers) {
@@ -19,7 +20,7 @@ public class Elo {
     List<String> usernames =
         allPlayers.stream().map(MatchPlayer::getNameLegacy).collect(Collectors.toList());
 
-    String table = ConfigManager.getRankedDefaultTable();
+    String table = plugin.config().databaseTables().getRankedDefaultTable();
     if (table == null || table.isEmpty()) {
       org.bukkit.Bukkit.getLogger().warning("[Elo.addWin] Table is null or empty");
       CompletableFuture<List<PlayerEloChange>> future = new CompletableFuture<>();
@@ -77,34 +78,9 @@ public class Elo {
     });
   }
 
-  public static CompletableFuture<EloOrderResult> eloOrder(List<MatchPlayer> players) {
-    List<String> usernames =
-        players.stream().map(MatchPlayer::getNameLegacy).collect(Collectors.toList());
-    String table = ConfigManager.getRankedDefaultTable();
-
-    if (table == null || table.isEmpty()) {
-      CompletableFuture<EloOrderResult> future = new CompletableFuture<>();
-      future.complete(new EloOrderResult(null, 0));
-      return future;
-    }
-
-    return StatsManager.getEloForUsernames(table, usernames).thenApply(eloList -> {
-      List<PlayerEloChange> sortedList = eloList.stream()
-          .sorted((e1, e2) -> Integer.compare(e2.getCurrentElo(), e1.getCurrentElo()))
-          .collect(Collectors.toList());
-
-      int avgElo = 0;
-      if (!sortedList.isEmpty()) {
-        int total = sortedList.stream().mapToInt(PlayerEloChange::getCurrentElo).sum();
-        avgElo = total / sortedList.size();
-      }
-      return new EloOrderResult(sortedList, avgElo);
-    });
-  }
-
   public static CompletableFuture<PlayerEloChange> doubleLossPenalty(
       String sanctionedUsername, List<MatchPlayer> sanctionedTeam, List<MatchPlayer> opponent) {
-    String table = ConfigManager.getRankedDefaultTable();
+    String table = plugin.config().databaseTables().getRankedDefaultTable();
     if (table == null || table.isEmpty()) {
       CompletableFuture<PlayerEloChange> f = new CompletableFuture<>();
       f.complete(new PlayerEloChange(sanctionedUsername, 0, 0, 0, 0));
@@ -118,12 +94,20 @@ public class Elo {
           .findFirst()
           .orElse(new PlayerEloChange(sanctionedUsername, 0, 0, 0, 0));
       int current = base.getCurrentElo();
-      Rank rank = Rank.getRankByElo(current);
+      int clampedCurrent = Math.max(-100, current);
+      Rank rank = Rank.getRankByElo(clampedCurrent);
       int baseLose = rank.getEloLose(); // negative
       int jitter = randomJitter();
-      int penalty = (baseLose + jitter) * 2; // double the loss
-      int newElo = Math.max(-100, current + penalty);
-      return new PlayerEloChange(sanctionedUsername, current, newElo, penalty, base.getMaxElo());
+      int desiredPenalty = (baseLose + jitter) * 2; // doble pérdida
+      int penalty = desiredPenalty;
+      // Si la penalización completa llevaría por debajo de -100, ajustarla para llegar exactamente
+      // a -100
+      if (clampedCurrent + penalty < -100) {
+        penalty = -100 - clampedCurrent;
+      }
+      int newElo = clampedCurrent + penalty;
+      return new PlayerEloChange(
+          sanctionedUsername, clampedCurrent, newElo, penalty, base.getMaxElo());
     });
   }
 

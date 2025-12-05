@@ -26,37 +26,36 @@ public class BalanceCommand implements CommandExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
+      sender.sendMessage(LanguageManager.message("errors.noPlayer"));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     if (match.isRunning() || match.isFinished()) {
       matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.captains.matchStarted")));
+          Component.text(LanguageManager.message("draft.captains.matchStarted")));
       return true;
     }
 
     if (args.length < 2) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.balance.usage")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.balance.usage")));
       return true;
     }
     if (Bukkit.getOnlinePlayers().size() < 2) {
       matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.captains.notEnoughPlayers")));
+          Component.text(LanguageManager.message("draft.captains.notEnoughPlayers")));
       return true;
     }
     if (args[0].equalsIgnoreCase(args[1])) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.captains.usage")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.usage")));
       return true;
     }
     if (Bukkit.getPlayer(args[0]) == null || Bukkit.getPlayer(args[1]) == null) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.captains.offline")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.offline")));
       return true;
     }
     if (Queue.isRanked()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.notAllowed")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.notAllowed")));
       return true;
     }
 

@@ -29,7 +29,7 @@ public class RefillManager {
       } else {
         Bukkit.getScheduler().runTask(plugin, () -> {
           SendMessage.sendToAdmins(
-              LanguageManager.langMessage("refill.mapFound").replace("{map}", mapName));
+              LanguageManager.message("refill.mapFound").replace("{map}", mapName));
         });
       }
 

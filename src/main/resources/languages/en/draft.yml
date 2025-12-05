@@ -10,10 +10,14 @@ remove:
   usage: "§cUsage: /remove <nickname>"
 
 captains:
+  choose: "{teamcolor}{captain} has chosen {player}."
+  turn: "{teamcolor}It's {captain}'s turn."
+  suggestions: "We suggest you pick {suggestions}§f."
   alreadyInDraft: "§cThe player is already in the draft."
   alreadyInTeam: "§cThe player is already in a team."
   bossbar: "{captain} is choosing. §bTime remaining: §a{time}"
   captainsHeader: "§m-----------§r §b§lCaptains §f§m-----------"
+  invalidTeams: "§cThe match must have exactly 2 teams to start a draft."
   matchStarted: "§cThe game has already started."
   notEnoughPlayers: "§cThere are not enough players in the game."
   notInDraft: "§cThe player is not in the draft."
@@ -28,12 +32,31 @@ captains:
   usage: "§cUsage: /captains <nick1> <nick2>"
 
 picks:
+  choosing: "§eSelecting players..."
+  add: "§3{player} §7has been added to the list."
+  remove: "§3{player} §7has been removed from the list."
   noDraft: "§cThere is no ongoing draft."
   usage: "§cUsage: /pick <player>"
   alreadyPicked: "§c{player} has already been picked."
   notInList: "§c{player} is not available to pick."
   notTurn: "§cIt's not your turn to pick."
   notCaptain: "§cYou are not a captain."
+
+substitute:
+  usage: "§cUsage: /sub <current_captain> <new_captain>"
+  notConnected: "§cThe player {player} is not connected"
+  notCaptain: "§cThe specified player is not a captain"
+  enemyTeam: "§cYou cannot substitute with a player from the opposing team"
+  notAvailable: "§cThe specified player is not available for substitution"
+  success: "§a{player} is now captain of the {team} team"
+
+substitute:
+  usage: "§cUsage: /sub <current_captain> <new_captain>"
+  notConnected: "§cThe player {player} is not connected"
+  notCaptain: "§cThe specified player is not a captain"
+  enemyTeam: "§cYou cannot substitute with a player from the opposing team"
+  notAvailable: "§cThe specified player is not available for substitution"
+  success: "§a{player} is now captain of the {team} team"
 
 # Root-level alias to support code that requests "draft.itemLore"
 itemLore: "§7Right-click to open the draft menu."
@@ -66,5 +89,4 @@ balance:
 
 join:
   notAllowed: "You cannot join the game."
-  redTeam: "You are in the red team."
-  blueTeam: "You are in the blue team."
+  team: "You are in the {team} team."

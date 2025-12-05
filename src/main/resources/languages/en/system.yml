@@ -18,3 +18,7 @@ reload:
   start: "§8[§bTowersForPGM§8] §aReloading messages..."
   success: "§8[§bTowersForPGM§8] §aMessages reloaded successfully."
   error: "§8[§bTowersForPGM§8] §cError reloading messages."
+
+sudo:
+  usage: "§cUsage: /sudo <player> <message/command>"
+  playerOffline: "§cPlayer {player} is not online."

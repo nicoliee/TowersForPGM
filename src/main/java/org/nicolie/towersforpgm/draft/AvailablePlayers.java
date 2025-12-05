@@ -11,13 +11,13 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.models.MMR;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class AvailablePlayers {
+  private final TowersForPGM plugin = TowersForPGM.getInstance();
   private final List<MatchPlayer> availablePlayers = new ArrayList<>();
   private final List<String> availableOfflinePlayers = new ArrayList<>();
   private final Map<String, Stats> playerStats = new HashMap<>();
@@ -109,6 +109,12 @@ public class AvailablePlayers {
     return availablePlayers.isEmpty() && availableOfflinePlayers.isEmpty();
   }
 
+  public boolean isPlayerAvailable(String playerName) {
+    return availablePlayers.stream()
+            .anyMatch(player -> player.getNameLegacy().equalsIgnoreCase(playerName))
+        || availableOfflinePlayers.stream().anyMatch(name -> name.equalsIgnoreCase(playerName));
+  }
+
   public void clear() {
     if (availablePlayers == null || availableOfflinePlayers == null) return;
     if (availablePlayers.isEmpty() && availableOfflinePlayers.isEmpty()) return;
@@ -144,7 +150,10 @@ public class AvailablePlayers {
       return; // Ya están cargadas
     }
 
-    String table = ConfigManager.getActiveTable(MatchManager.getMatch().getMap().getName());
+    String table = plugin
+        .config()
+        .databaseTables()
+        .getTable(MatchManager.getMatch().getMap().getName());
     boolean isRanked = Queue.isRanked();
 
     org.nicolie.towersforpgm.database.StatsManager.getStats(table, playerName)

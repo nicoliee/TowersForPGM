@@ -11,6 +11,8 @@ import org.nicolie.towersforpgm.commands.PickCommand;
 import org.nicolie.towersforpgm.commands.PreparationTimeCommand;
 import org.nicolie.towersforpgm.commands.ReadyCommand;
 import org.nicolie.towersforpgm.commands.RemoveCommand;
+import org.nicolie.towersforpgm.commands.SubstituteCommand;
+import org.nicolie.towersforpgm.commands.SudoCommand;
 import org.nicolie.towersforpgm.commands.TowersCommand;
 import org.nicolie.towersforpgm.commands.TowersForPGMCommand;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
@@ -58,6 +60,8 @@ public class Commands {
     plugin
         .getCommand("remove")
         .setExecutor(new RemoveCommand(draft, teams, captains, availablePlayers, pickInventory));
+    plugin.getCommand("sub").setExecutor(new SubstituteCommand(draft, teams));
+    plugin.getCommand("sudo").setExecutor(new SudoCommand());
     plugin.getCommand("towersForPGM").setExecutor(new TowersForPGMCommand(plugin));
   }
 }

@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import me.tbg.match.bot.configs.DiscordBot;
 import net.dv8tion.jda.api.EmbedBuilder;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Rank;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -16,13 +16,15 @@ import tc.oc.pgm.teams.Team;
 import tc.oc.pgm.teams.TeamMatchModule;
 
 public class RankedStart {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
+
   public static EmbedBuilder create(Match match, List<PlayerEloChange> eloChange) {
-    String table = ConfigManager.getRankedDefaultTable();
+    String table = plugin.config().databaseTables().getRankedDefaultTable();
     DiscordBot.storeMatchStartData(Long.parseLong(match.getId()), Instant.now().getEpochSecond());
 
     EmbedBuilder embed = new EmbedBuilder()
         .setColor(Color.GREEN)
-        .setTitle(LanguageManager.langMessage("ranked.matchbot.start").replace("{table}", table))
+        .setTitle(LanguageManager.message("ranked.matchbot.start").replace("{table}", table))
         .setTimestamp(Instant.now())
         .setDescription(me.tbg.match.bot.configs.MessagesConfig.message("embeds.start.description")
             .replace(

@@ -11,18 +11,18 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.Draft;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
-// Comando para iniciar un draft de capitanes, actualmente solo soporta dos equipos "red" y "blue"
 // PGM actualmente solo soporta una partida a la vez, por lo que no se pueden realizar múltiples
 // drafts simultáneamente
 public class CaptainsCommand implements CommandExecutor, TabCompleter {
+  private final TowersForPGM plugin = TowersForPGM.getInstance();
   private final Draft draft;
 
   public CaptainsCommand(Draft draft) {
@@ -32,7 +32,7 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!(sender instanceof Player)) {
-      sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
+      sender.sendMessage(LanguageManager.message("errors.noPlayer"));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
@@ -40,39 +40,45 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
     // Verificar si la partida está en curso
     if (match.isRunning() || match.isFinished()) {
       matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.captains.matchStarted")));
+          Component.text(LanguageManager.message("draft.captains.matchStarted")));
       return true;
     }
 
     // Verificar si los argumentos son suficientes
     if (args.length < 2) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.captains.usage")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.usage")));
       return true;
     }
 
     // Verificar si hay suficientes jugadores en línea
     if (Bukkit.getOnlinePlayers().size() < 2) {
       matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.captains.notEnoughPlayers")));
+          Component.text(LanguageManager.message("draft.captains.notEnoughPlayers")));
       return true;
     }
 
     // Evitar que los argumentos sean iguales (duplicados)
     if (args[0].equalsIgnoreCase(args[1])) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.captains.usage")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.usage")));
       return true;
     }
 
     // Verificar si los capitanes están en línea
     if (Bukkit.getPlayer(args[0]) == null || Bukkit.getPlayer(args[1]) == null) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.captains.offline")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.offline")));
       return true;
     }
 
     // Verificar que no sea una ranked
     if (Queue.isRanked()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("ranked.notAllowed")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.notAllowed")));
+      return true;
+    }
+
+    // Verificar que la partida tenga exactamente 2 equipos
+    if (!org.nicolie.towersforpgm.draft.Teams.validateTeamsForDraft(match)) {
+      matchPlayer.sendWarning(
+          Component.text(LanguageManager.message("draft.captains.invalidTeams")));
       return true;
     }
 
@@ -92,7 +98,8 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
         .collect(Collectors.toList());
 
     // Iniciar el draft con los capitanes y los jugadores restantes
-    draft.setCustomOrderPattern(ConfigManager.getDraftOrder(), ConfigManager.getMinDraftOrder());
+    draft.setCustomOrderPattern(
+        plugin.config().draft().getOrder(), plugin.config().draft().getMinOrder());
     draft.startDraft(captain1, captain2, onlinePlayersExcludingCaptains, match, randomizeOrder);
     return true;
   }

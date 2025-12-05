@@ -14,24 +14,25 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
-public class ItemListener implements Listener {
+public class RankedItem implements Listener {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
   private final Queue queue;
   private static final Boolean RANKED_AVAILABLE =
       TowersForPGM.getInstance().getIsDatabaseActivated()
-          || !ConfigManager.getRankedTables().isEmpty();
+          || !plugin.config().databaseTables().getTables(TableType.RANKED).isEmpty();
 
   private static final long QUEUE_COOLDOWN_MS = 15_000L;
   private static final Map<UUID, Long> queueCooldowns = new ConcurrentHashMap<>();
 
-  public ItemListener(Queue queue) {
+  public RankedItem(Queue queue) {
     this.queue = queue;
   }
 
@@ -50,22 +51,18 @@ public class ItemListener implements Listener {
     Match match = PGM.get().getMatchManager().getMatch(event.getPlayer());
     MatchPlayer player = match.getPlayer(event.getPlayer());
 
-    if (MatchBotConfig.isRankedEnabled()) {
-      // Throttle requests per player
+    if (MatchBotConfig.isVoiceChatEnabled()) {
       UUID uuid = player.getId();
       long now = System.currentTimeMillis();
       long last = queueCooldowns.getOrDefault(uuid, 0L);
       if (now - last >= QUEUE_COOLDOWN_MS) {
         queueCooldowns.put(uuid, now);
-        // Inform the player and trigger the Discord move
-        player.sendMessage(Component.text(LanguageManager.langMessage("ranked.prefix")
-            + LanguageManager.langMessage("ranked.queue.joining")));
+        player.sendMessage(Component.text(LanguageManager.message("ranked.prefix")
+            + LanguageManager.message("ranked.queue.joining")));
         RankedListener.movePlayerToQueue(uuid);
       }
       return;
     }
-
-    // Default behavior when bot is disabled: add to internal queue
     queue.addPlayer(player);
   }
 
@@ -78,34 +75,32 @@ public class ItemListener implements Listener {
       return false;
     }
     String displayName = meta.getDisplayName();
-    return displayName.equals(LanguageManager.langMessage("ranked.item"));
+    return displayName.equals(LanguageManager.message("ranked.item"));
   }
 
   public static ItemStack getQueueItem() {
     ItemStack queueItem = new ItemStack(Material.EYE_OF_ENDER);
     ItemMeta meta = queueItem.getItemMeta();
-    meta.setDisplayName(LanguageManager.langMessage("ranked.item"));
+    meta.setDisplayName(LanguageManager.message("ranked.item"));
     queueItem.setItemMeta(meta);
     return queueItem;
   }
 
   public static void giveRankedItem(MatchPlayer player) {
     if (!RANKED_AVAILABLE) return;
-    if (MatchBotConfig.isRankedEnabled()) {
-      // Give the item only after the match has finished
+    if (MatchBotConfig.isVoiceChatEnabled()) {
       Match match = player.getMatch();
       if (match != null && match.isFinished()) {
         player.getBukkit().getInventory().setItem(4, getQueueItem());
       }
       return;
     }
-    // Bot disabled: current behavior
     player.getBukkit().getInventory().setItem(4, getQueueItem());
   }
 
   public static void giveItem(Player player) {
     if (!RANKED_AVAILABLE) return;
-    if (MatchBotConfig.isRankedEnabled()) {
+    if (MatchBotConfig.isVoiceChatEnabled()) {
       Match match = PGM.get().getMatchManager().getMatch(player);
       if (match != null && match.isFinished()) {
         player.getInventory().setItem(4, getQueueItem());
@@ -114,8 +109,6 @@ public class ItemListener implements Listener {
     }
     player.getInventory().setItem(4, getQueueItem());
   }
-
-
 
   public static void removeItemToPlayers(List<MatchPlayer> players) {
     if (!RANKED_AVAILABLE) return;

@@ -12,10 +12,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 
 public class SQLTableManager {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
   public static final List<String> COLUMNS = Arrays.asList(
       "kills",
       "deaths",
@@ -47,8 +48,8 @@ public class SQLTableManager {
     Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
       try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
 
-        boolean isRanked = ConfigManager.getRankedTables() != null
-            && ConfigManager.getRankedTables().contains(tableName);
+        TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(tableName);
+        boolean isRanked = tableInfo != null && tableInfo.isRanked();
 
         // Verificar si la tabla ya existe
         if (tableExists(conn, tableName)) {
@@ -171,9 +172,9 @@ public class SQLTableManager {
   }
 
   public static void createDCAccountsTable() {
-    if (!MatchBotConfig.isRankedEnabled()) {
-      return;
-    }
+    // if (!MatchBotConfig.isVoiceChatEnabled()) {
+    //   return;
+    // }
 
     Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
       try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {

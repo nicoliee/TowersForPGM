@@ -10,22 +10,28 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.database.models.top.Top;
 import org.nicolie.towersforpgm.database.models.top.TopResult;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class SQLStatsManager {
+  private static final TowersForPGM plugin = TowersForPGM.getInstance();
 
   public static void updateStats(
-      String table, List<Stats> playerStatsList, List<PlayerEloChange> eloChange) {
-    if (playerStatsList.isEmpty()
-        || table == null
-        || table.isEmpty()
-        || (!org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table))) {
+      String table, List<Stats> playerStatsList, List<PlayerEloChange> eloChange)
+      throws SQLException {
+    updateStatsWithRetry(table, playerStatsList, eloChange, false);
+  }
+
+  private static void updateStatsWithRetry(
+      String table, List<Stats> playerStatsList, List<PlayerEloChange> eloChange, boolean isRetry)
+      throws SQLException {
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    if (playerStatsList.isEmpty() || table == null || table.isEmpty() || (tableInfo == null)) {
       return;
     }
 
@@ -48,19 +54,55 @@ public class SQLStatsManager {
         "UPDATE " + table + " SET elo = ?, lastElo = ?, maxElo = ? WHERE username = ?";
 
     java.util.logging.Logger logger = TowersForPGM.getInstance().getLogger();
+    TowersForPGM plugin = TowersForPGM.getInstance();
 
-    SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
+    SQLDatabaseManager dbManager = plugin.getMySQLDatabaseManager();
     if (dbManager == null || !dbManager.isConnected()) {
-      String errorMessage = LanguageManager.langMessage("errors.database.connectionClosed");
+      String errorMessage = LanguageManager.message("errors.database.connectionClosed");
       logger.log(Level.SEVERE, errorMessage);
-      SendMessage.sendToDevelopers(errorMessage);
       return;
     }
+
+    long startTime = System.currentTimeMillis();
+
+    // Log del SQL y datos de jugadores
+    logger.info("[SQLStatsManager] Ejecutando updateStats para tabla: " + table);
+    logger.info("[SQLStatsManager] SQL a ejecutar: " + sql);
+    StringBuilder playersInfo = new StringBuilder();
+    playersInfo
+        .append("[SQLStatsManager] Datos de jugadores a actualizar (")
+        .append(playerStatsList.size())
+        .append(" jugadores):");
+    for (Stats playerStat : playerStatsList) {
+      playersInfo
+          .append("\n  - ")
+          .append(playerStat.getUsername())
+          .append(": K=")
+          .append(playerStat.getKills())
+          .append(", D=")
+          .append(playerStat.getDeaths())
+          .append(", A=")
+          .append(playerStat.getAssists())
+          .append(", DD=")
+          .append(playerStat.getDamageDone())
+          .append(", DT=")
+          .append(playerStat.getDamageTaken())
+          .append(", P=")
+          .append(playerStat.getPoints())
+          .append(", W=")
+          .append(playerStat.getWins())
+          .append(", G=")
+          .append(playerStat.getGames())
+          .append(", WS=")
+          .append(playerStat.getWinstreak());
+    }
+    logger.info(playersInfo.toString());
+
     try (Connection conn = dbManager.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       conn.setAutoCommit(false);
-      stmt.setQueryTimeout(5); // Reducir timeout drásticamente
+      stmt.setQueryTimeout(plugin.getMySQLDatabaseManager().TIMEOUT / 1000);
       int batchSize = 0;
       for (Stats playerStat : playerStatsList) {
         stmt.setString(1, playerStat.getUsername());
@@ -83,6 +125,25 @@ public class SQLStatsManager {
       conn.commit();
 
       if (eloChange != null && !eloChange.isEmpty()) {
+        logger.info("[SQLStatsManager] SQL para ELO a ejecutar: " + rankedSql);
+        StringBuilder eloInfo = new StringBuilder();
+        eloInfo
+            .append("[SQLStatsManager] Cambios de ELO a aplicar (")
+            .append(eloChange.size())
+            .append(" jugadores):");
+        for (PlayerEloChange change : eloChange) {
+          eloInfo
+              .append("\n  - ")
+              .append(change.getUsername())
+              .append(": CurrentELO=")
+              .append(change.getCurrentElo())
+              .append(", NewELO=")
+              .append(change.getNewElo())
+              .append(", MaxELO=")
+              .append(change.getMaxElo());
+        }
+        logger.info(eloInfo.toString());
+
         try (PreparedStatement rankedStmt = conn.prepareStatement(rankedSql)) {
           for (PlayerEloChange change : eloChange) {
             rankedStmt.setInt(1, change.getNewElo());
@@ -97,9 +158,30 @@ public class SQLStatsManager {
       }
 
     } catch (SQLException e) {
-      String errorMessage = LanguageManager.langMessage("errors.database.updateStats");
-      logger.log(Level.SEVERE, String.format(errorMessage), e);
-      SendMessage.sendToDevelopers(errorMessage);
+      long duration = System.currentTimeMillis() - startTime;
+
+      if ("MySQL".equals(plugin.getCurrentDatabaseType())
+          && duration >= plugin.getMySQLDatabaseManager().TIMEOUT
+          && !isRetry) {
+        logger.warning("Timeout detectado en updateStats para tabla " + table + " (duración: "
+            + duration + "ms). Intentando recargar base de datos y reintentar...");
+
+        if (plugin.reloadDatabase()) {
+          updateStatsWithRetry(table, playerStatsList, eloChange, true); // Retry con flag
+          return;
+        } else {
+          logger.severe(
+              "No se pudo recargar la base de datos para retry de updateStats en tabla " + table);
+        }
+      }
+
+      if (isRetry) {
+        logger.severe("No se pudieron subir las estadísticas para tabla " + table
+            + " después del retry. Operación fallida definitivamente.");
+      }
+
+      // Re-lanzar excepción para que StatsManager pueda manejar el logging
+      throw e;
     }
   }
 
@@ -108,11 +190,9 @@ public class SQLStatsManager {
     if (table == null || table.isEmpty() || username == null || username.isEmpty()) {
       return null;
     }
-
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
     // La tabla es válida si está en cualquiera de las listas configuradas
-    boolean validTable =
-        org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table)
-            || MatchBotConfig.getTables().contains(table);
+    boolean validTable = tableInfo != null || MatchBotConfig.getTables().contains(table);
     if (!validTable) {
       return null;
     }
@@ -161,9 +241,8 @@ public class SQLStatsManager {
       }
     } catch (SQLException e) {
       TowersForPGM.getInstance();
-      String errorMessage = LanguageManager.langMessage("errors.database.getStats");
+      String errorMessage = LanguageManager.message("errors.database.getStats");
       TowersForPGM.getInstance().getLogger().log(Level.SEVERE, errorMessage, e);
-      SendMessage.sendToDevelopers(errorMessage);
       return null;
     }
   }
@@ -178,10 +257,8 @@ public class SQLStatsManager {
         || page < 1) {
       return new TopResult(new ArrayList<>(), 0);
     }
-
-    boolean validTable =
-        org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table)
-            || MatchBotConfig.getTables().contains(table);
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    boolean validTable = tableInfo != null || MatchBotConfig.getTables().contains(table);
     if (!validTable) return new TopResult(new ArrayList<>(), 0);
 
     int offset = (page - 1) * limit;
@@ -197,9 +274,8 @@ public class SQLStatsManager {
     int totalRecords = 0;
     SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
     if (dbManager == null || !dbManager.isConnected()) {
-      String errorMessage = LanguageManager.langMessage("errors.database.connectionClosed");
+      String errorMessage = LanguageManager.message("errors.database.connectionClosed");
       TowersForPGM.getInstance().getLogger().log(Level.SEVERE, errorMessage);
-      SendMessage.sendToDevelopers(errorMessage);
       return new TopResult(new ArrayList<>(), 0);
     }
 
@@ -251,10 +327,8 @@ public class SQLStatsManager {
     if (table == null || table.isEmpty() || dbColumn == null || dbColumn.isEmpty() || limit <= 0) {
       return new TopResult(new ArrayList<>(), 0);
     }
-
-    boolean validTable =
-        org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table)
-            || MatchBotConfig.getTables().contains(table);
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    boolean validTable = tableInfo != null || MatchBotConfig.getTables().contains(table);
     if (!validTable) return new TopResult(new ArrayList<>(), 0);
 
     String sql;
@@ -289,9 +363,8 @@ public class SQLStatsManager {
     int total = knownTotal != null ? knownTotal : 0;
     SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
     if (dbManager == null || !dbManager.isConnected()) {
-      String errorMessage = LanguageManager.langMessage("errors.database.connectionClosed");
+      String errorMessage = LanguageManager.message("errors.database.connectionClosed");
       TowersForPGM.getInstance().getLogger().log(Level.SEVERE, errorMessage);
-      SendMessage.sendToDevelopers(errorMessage);
       return new TopResult(new ArrayList<>(), 0);
     }
     try (Connection conn = dbManager.getConnection();
@@ -339,7 +412,13 @@ public class SQLStatsManager {
     }
   }
 
-  public static List<PlayerEloChange> getEloForUsernames(String table, List<String> usernames) {
+  public static List<PlayerEloChange> getEloForUsernames(String table, List<String> usernames)
+      throws SQLException {
+    return getEloForUsernamesWithRetry(table, usernames, false);
+  }
+
+  private static List<PlayerEloChange> getEloForUsernamesWithRetry(
+      String table, List<String> usernames, boolean isRetry) throws SQLException {
     if (usernames == null || usernames.isEmpty()) {
       return Collections.emptyList();
     }
@@ -348,12 +427,16 @@ public class SQLStatsManager {
     String sql =
         "SELECT username, elo, maxElo FROM " + table + " WHERE username IN (" + placeholders + ")";
 
+    java.util.logging.Logger logger = TowersForPGM.getInstance().getLogger();
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    long startTime = System.currentTimeMillis();
+
     try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
       for (int i = 0; i < usernames.size(); i++) {
         stmt.setString(i + 1, usernames.get(i));
       }
-      stmt.setQueryTimeout(3); // Reducir timeout
+      stmt.setQueryTimeout(plugin.getMySQLDatabaseManager().TIMEOUT / 1000);
       try (ResultSet rs = stmt.executeQuery()) {
         List<org.nicolie.towersforpgm.rankeds.PlayerEloChange> result = new java.util.ArrayList<>();
         java.util.Set<String> foundUsernames = new java.util.HashSet<>();
@@ -386,14 +469,56 @@ public class SQLStatsManager {
 
         return orderedResult;
       } catch (SQLException e) {
-        SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
-            "errors.database.getEloForUsernames"));
-        return Collections.emptyList();
+        long duration = System.currentTimeMillis() - startTime;
+
+        if ("MySQL".equals(plugin.getCurrentDatabaseType())
+            && duration >= plugin.getMySQLDatabaseManager().TIMEOUT
+            && !isRetry) {
+          logger.warning("Timeout detectado en getEloForUsernames para tabla " + table
+              + " Intentando recargar base de datos y reintentar...");
+
+          if (plugin.reloadDatabase()) {
+            return getEloForUsernamesWithRetry(table, usernames, true); // Retry con flag
+          } else {
+            logger.severe(
+                "No se pudo recargar la base de datos para retry de getEloForUsernames en tabla "
+                    + table);
+          }
+        }
+
+        if (isRetry) {
+          logger.severe("No se pudieron obtener los elos para tabla " + table
+              + " después del retry. Operación fallida definitivamente.");
+        }
+
+        // Re-lanzar excepción para que StatsManager pueda manejar el logging
+        throw e;
       }
     } catch (SQLException e) {
-      SendMessage.sendToDevelopers(org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
-          "errors.database.getEloForUsernames"));
-      return Collections.emptyList();
+      long duration = System.currentTimeMillis() - startTime;
+
+      if ("MySQL".equals(plugin.getCurrentDatabaseType())
+          && duration >= plugin.getMySQLDatabaseManager().TIMEOUT
+          && !isRetry) {
+        logger.warning("Timeout detectado en getEloForUsernames para tabla " + table
+            + " (duración: " + duration + "ms). Intentando recargar base de datos y reintentar...");
+
+        if (plugin.reloadDatabase()) {
+          return getEloForUsernamesWithRetry(table, usernames, true); // Retry con flag
+        } else {
+          logger.severe(
+              "No se pudo recargar la base de datos para retry de getEloForUsernames en tabla "
+                  + table);
+        }
+      }
+
+      if (isRetry) {
+        logger.severe("No se pudieron obtener los elos para tabla " + table
+            + " después del retry. Operación fallida definitivamente.");
+      }
+
+      // Re-lanzar excepción para que StatsManager pueda manejar el logging
+      throw e;
     }
   }
 
@@ -450,8 +575,9 @@ public class SQLStatsManager {
       String username,
       int gamesToAdd,
       org.nicolie.towersforpgm.rankeds.PlayerEloChange elo) {
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
     if (table == null || table.isEmpty() || username == null || username.isEmpty()) return;
-    if (!org.nicolie.towersforpgm.utils.ConfigManager.getTables().contains(table)) return;
+    if (tableInfo == null) return;
 
     String upsertSql = "INSERT INTO " + table
         + " (username, games, elo, lastElo, maxElo) VALUES (?, ?, ?, ?, ?) "

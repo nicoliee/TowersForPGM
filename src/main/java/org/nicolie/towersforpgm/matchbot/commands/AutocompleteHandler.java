@@ -53,14 +53,14 @@ public class AutocompleteHandler extends ListenerAdapter {
       List<Command.Choice> statChoices = getAvailableStatNames().stream()
           .map(name -> new Command.Choice(name, name))
           .collect(Collectors.toUnmodifiableList());
-      CHOICES_CACHE.put(LanguageManager.langMessage("matchbot.top.stat"), statChoices);
+      CHOICES_CACHE.put(LanguageManager.message("matchbot.top.stat"), statChoices);
     }
 
     if (shouldUseAutocompleteForTables()) {
       List<Command.Choice> tableChoices = MatchBotConfig.getTables().stream()
           .map(name -> new Command.Choice(name, name))
           .collect(Collectors.toUnmodifiableList());
-      CHOICES_CACHE.put(LanguageManager.langMessage("matchbot.top.table"), tableChoices);
+      CHOICES_CACHE.put(LanguageManager.message("matchbot.top.table"), tableChoices);
     }
   }
 
@@ -83,7 +83,7 @@ public class AutocompleteHandler extends ListenerAdapter {
     String userInput = event.getFocusedOption().getValue();
 
     if ("history".equals(event.getName())
-        && LanguageManager.langMessage("matchbot.history.matchid").equals(focused)) {
+        && LanguageManager.message("matchbot.history.matchid").equals(focused)) {
       org.nicolie.towersforpgm.database.MatchHistoryManager.getRecentMatchIds(
               userInput == null ? "" : userInput)
           .thenAccept(matchIds -> {
@@ -100,7 +100,7 @@ public class AutocompleteHandler extends ListenerAdapter {
       return;
     }
 
-    if (LanguageManager.langMessage("matchbot.stats.player").equals(focused)) {
+    if (LanguageManager.message("matchbot.stats.player").equals(focused)) {
       StatsManager.getAllUsernamesFiltered(userInput == null ? "" : userInput)
           .thenAccept(players -> {
             List<Command.Choice> choices = players.stream()

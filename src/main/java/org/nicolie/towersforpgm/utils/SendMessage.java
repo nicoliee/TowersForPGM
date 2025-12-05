@@ -23,17 +23,6 @@ public class SendMessage {
     Bukkit.broadcastMessage(coloredMessage);
   }
 
-  public static void sendToPlayer(Player player, String message) {
-    if (player == null) {
-      return;
-    }
-    if (message == null) {
-      return;
-    }
-    String coloredMessage = ChatColor.translateAlternateColorCodes('&', message);
-    player.sendMessage(coloredMessage);
-  }
-
   public static void sendToPlayer(CommandSender sender, String message) {
     if (sender == null) {
       return;

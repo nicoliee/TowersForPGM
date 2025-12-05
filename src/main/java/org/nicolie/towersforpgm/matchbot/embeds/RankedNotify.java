@@ -22,12 +22,12 @@ public class RankedNotify {
     }
     EmbedBuilder embed = new EmbedBuilder()
         .setColor(Color.BLUE)
-        .setTitle(LanguageManager.langMessage("ranked.matchbot.available"))
+        .setTitle(LanguageManager.message("ranked.matchbot.available"))
         .setTimestamp(Instant.now())
         .setAuthor(
             MessagesConfig.message("author.name"), null, MessagesConfig.message("author.icon_url"))
         .setDescription(sender.getName()
-            + LanguageManager.langMessage("ranked.matchbot.hasTagged")
+            + LanguageManager.message("ranked.matchbot.hasTagged")
             + "<@&" + rankedRole + ">")
         .addField(
             "🗺️ " + MessagesConfig.message("embeds.start.map"), match.getMap().getName(), false);
@@ -41,7 +41,7 @@ public class RankedNotify {
 
     if (!playerLines.isEmpty()) {
       embed.addField(
-          "👥 " + LanguageManager.langMessage("ranked.matchbot.online"),
+          "👥 " + LanguageManager.message("ranked.matchbot.online"),
           String.join("\n", playerLines),
           false);
     }

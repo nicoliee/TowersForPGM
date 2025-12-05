@@ -256,3 +256,8 @@ ranked:
   remove_map:
     title: "§c§lRemove Current Map"
     lore: "§7Click to remove the current map from ranked"
+  voicechat:
+    title: "§e§lVoice Chat"
+    current: "§7Status: {status}"
+    lore1: "§7Click to toggle the"
+    lore2: "§7voice chat system for ranked"

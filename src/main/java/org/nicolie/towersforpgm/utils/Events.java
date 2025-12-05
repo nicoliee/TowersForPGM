@@ -18,8 +18,8 @@ import org.nicolie.towersforpgm.listeners.PlayerJoinListener;
 import org.nicolie.towersforpgm.listeners.PlayerParticipationListener;
 import org.nicolie.towersforpgm.listeners.PlayerQuitListener;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
-import org.nicolie.towersforpgm.rankeds.ItemListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.rankeds.RankedItem;
 import org.nicolie.towersforpgm.refill.RefillManager;
 
 public class Events {
@@ -49,7 +49,7 @@ public class Events {
     pluginManager.registerEvents(
         new MatchStartListener(preparationListener, refillManager, captains), plugin);
     pluginManager.registerEvents(
-        new MatchFinishListener(plugin, preparationListener, refillManager, draft), plugin);
+        new MatchFinishListener(preparationListener, refillManager, draft), plugin);
     pluginManager.registerEvents(new ObserversKitApplyListener(pickInventory), plugin);
     pluginManager.registerEvents(
         new PlayerJoinListener(plugin, availablePlayers, teams, captains), plugin);
@@ -57,6 +57,6 @@ public class Events {
     pluginManager.registerEvents(new PlayerQuitListener(plugin, queue), plugin);
     // pluginManager.registerEvents(new CompetitorScoreChangeListener(), plugin);
     pluginManager.registerEvents(new MatchStatsListener(), plugin);
-    pluginManager.registerEvents(new ItemListener(queue), plugin);
+    pluginManager.registerEvents(new RankedItem(queue), plugin);
   }
 }

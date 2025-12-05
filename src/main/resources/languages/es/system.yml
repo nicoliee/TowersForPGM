@@ -18,3 +18,7 @@ reload:
   start: "§8[§bTowersForPGM§8] §aRecargando los mensajes..."
   success: "§8[§bTowersForPGM§8] §aLos mensajes se han recargado correctamente."
   error: "§8[§bTowersForPGM§8] §cError al recargar los mensajes."
+
+sudo:
+  usage: "§cUso: /sudo <jugador> <mensaje/comando>"
+  playerOffline: "§cEl jugador {player} no está en línea."

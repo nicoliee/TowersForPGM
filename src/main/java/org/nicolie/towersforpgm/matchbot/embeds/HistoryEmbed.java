@@ -14,34 +14,34 @@ import org.nicolie.towersforpgm.utils.LanguageManager;
 public class HistoryEmbed {
 
   public static EmbedBuilder create(MatchHistory history) {
-    String description = LanguageManager.langMessage("matchbot.history.embed-description")
+    String description = LanguageManager.message("matchbot.history.embed-description")
         .replace("{timestamp}", String.valueOf(history.getFinishedAt()))
         .replace("{table}", history.getTableName());
 
     EmbedBuilder embed = new EmbedBuilder()
         .setColor(Color.BLUE)
-        .setTitle(LanguageManager.langMessage("matchbot.history.title") + " `"
-            + history.getMatchId() + "`")
+        .setTitle(
+            LanguageManager.message("matchbot.history.title") + " `" + history.getMatchId() + "`")
         .setDescription(description)
         .setAuthor(
             MessagesConfig.message("author.name"), null, MessagesConfig.message("author.icon_url"))
         .addField(
-            "🗺️ " + LanguageManager.langMessage("matchbot.embeds.finish.map"),
+            "🗺️ " + LanguageManager.message("matchbot.embeds.finish.map"),
             history.getMapName(),
             true)
         .addField(
-            "⏱️ " + LanguageManager.langMessage("matchbot.embeds.finish.duration"),
+            "⏱️ " + LanguageManager.message("matchbot.embeds.finish.duration"),
             formatDuration(history.getDurationSeconds()),
             true);
 
     if (history.getScoresText() != null && !history.getScoresText().isEmpty()) {
       embed.addField(
-          "🏆 " + LanguageManager.langMessage("matchbot.embeds.finish.score"),
+          "🏆 " + LanguageManager.message("matchbot.embeds.finish.score"),
           history.getScoresText(),
           true);
     } else if (history.getWinnersText() != null && !history.getWinnersText().isEmpty()) {
       embed.addField(
-          "🏆 " + LanguageManager.langMessage("matchbot.embeds.finish.winner"),
+          "🏆 " + LanguageManager.message("matchbot.embeds.finish.winner"),
           history.getWinnersText(),
           true);
     }
@@ -60,7 +60,7 @@ public class HistoryEmbed {
       addTeamStatsFields(
           embed,
           "🏆",
-          LanguageManager.langMessage("matchbot.embeds.finish.winner"),
+          LanguageManager.message("matchbot.embeds.finish.winner"),
           winners,
           history.isRanked());
     }
@@ -70,7 +70,7 @@ public class HistoryEmbed {
       addTeamStatsFields(
           embed,
           "⚔️",
-          LanguageManager.langMessage("matchbot.embeds.finish.loser"),
+          LanguageManager.message("matchbot.embeds.finish.loser"),
           losers,
           history.isRanked());
     }
@@ -81,7 +81,7 @@ public class HistoryEmbed {
   public static EmbedBuilder createError(String matchId, String errorMessage) {
     return new EmbedBuilder()
         .setColor(Color.RED)
-        .setTitle("❌ " + LanguageManager.langMessage("matchbot.history.error-title"))
+        .setTitle("❌ " + LanguageManager.message("matchbot.history.error-title"))
         .setDescription(errorMessage.replace("{matchid}", matchId))
         .setTimestamp(Instant.now());
   }
@@ -96,12 +96,12 @@ public class HistoryEmbed {
     StringBuilder chunk = new StringBuilder();
     boolean isFirstField = true;
 
-    String killsLabel = LanguageManager.langMessage("stats.kills");
-    String deathsLabel = LanguageManager.langMessage("stats.deaths");
-    String assistsLabel = LanguageManager.langMessage("stats.assists");
-    String damageDoneLabel = LanguageManager.langMessage("stats.damageDone");
-    String damageTakenLabel = LanguageManager.langMessage("stats.damageTaken");
-    String pointsLabel = LanguageManager.langMessage("stats.points");
+    String killsLabel = LanguageManager.message("stats.kills");
+    String deathsLabel = LanguageManager.message("stats.deaths");
+    String assistsLabel = LanguageManager.message("stats.assists");
+    String damageDoneLabel = LanguageManager.message("stats.damageDone");
+    String damageTakenLabel = LanguageManager.message("stats.damageTaken");
+    String pointsLabel = LanguageManager.message("stats.points");
 
     for (PlayerHistory ph : statsList) {
       StringBuilder entry = new StringBuilder();

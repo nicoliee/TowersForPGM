@@ -17,8 +17,6 @@ import tc.oc.pgm.events.PlayerParticipationStopEvent;
 import tc.oc.pgm.events.PlayerPartyChangeEvent;
 import tc.oc.pgm.join.JoinRequest;
 
-// El plugin espera que los nombres de los teams sean "red" y "blue"
-
 public class PlayerParticipationListener implements Listener {
   private final Teams teams;
   private final Captains captains;
@@ -43,13 +41,15 @@ public class PlayerParticipationListener implements Listener {
 
       if (event.getNewParty() == null) return;
 
-      String newParty = event.getNewParty().getDefaultName().toLowerCase();
-      if (newParty.equalsIgnoreCase("red")) {
-        teams.forceTeam(event.getPlayer(), 1);
-      } else if (newParty.equalsIgnoreCase("blue")) {
-        teams.forceTeam(event.getPlayer(), 2);
-      } else if (newParty.equalsIgnoreCase("observers") && event.getOldParty() != null) {
-        teams.removeFromAnyTeam(playerName);
+      // Check if the new party is one of our draft teams
+      if (event.getNewParty() instanceof tc.oc.pgm.teams.Team) {
+        tc.oc.pgm.teams.Team newTeam = (tc.oc.pgm.teams.Team) event.getNewParty();
+        int teamNumber = teams.getTeamNumber(newTeam);
+        if (teamNumber != -1) {
+          teams.forceTeam(event.getPlayer(), teamNumber);
+        } else if (newTeam.isObserving() && event.getOldParty() != null) {
+          teams.removeFromAnyTeam(playerName);
+        }
       }
     }
   }
@@ -83,28 +83,30 @@ public class PlayerParticipationListener implements Listener {
         }
       }
 
+      int playerTeam = -1;
       if (teams.isPlayerInTeam(playerName, 1) || captainNumber == 1) {
-        event.cancel(Component.text(LanguageManager.langMessage("draft.join.redTeam")));
-        new BukkitRunnable() {
-          @Override
-          public void run() {
-            teams.assignTeam(event.getPlayer().getBukkit(), 1);
-          }
-        }.runTaskLater(plugin, 1);
-        return;
+        playerTeam = 1;
       } else if (teams.isPlayerInTeam(playerName, 2) || captainNumber == 2) {
-        event.cancel(Component.text(LanguageManager.langMessage("draft.join.blueTeam")));
+        playerTeam = 2;
+      }
+
+      if (playerTeam != -1) {
+        String teamName = teams.getTeamName(playerTeam);
+        String message = LanguageManager.message("draft.join.team").replace("{team}", teamName);
+        event.cancel(Component.text(message));
+
+        final int finalTeam = playerTeam;
         new BukkitRunnable() {
           @Override
           public void run() {
-            teams.assignTeam(event.getPlayer().getBukkit(), 2);
+            teams.assignTeam(event.getPlayer().getBukkit(), finalTeam);
           }
         }.runTaskLater(plugin, 1);
         return;
       }
 
       if (!isInAnyTeam && captainNumber == -1) {
-        event.cancel(Component.text(LanguageManager.langMessage("draft.join.notAllowed")));
+        event.cancel(Component.text(LanguageManager.message("draft.join.notAllowed")));
         return;
       }
     }
@@ -124,7 +126,7 @@ public class PlayerParticipationListener implements Listener {
       return;
     }
     if (Queue.isRanked() && event.getMatch().isRunning()) {
-      event.cancel(Component.text(LanguageManager.langMessage("ranked.notAllowed")));
+      event.cancel(Component.text(LanguageManager.message("ranked.notAllowed")));
       return;
     }
   }

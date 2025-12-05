@@ -6,7 +6,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.match.event.MatchStatsEvent;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -19,11 +18,9 @@ public class MatchStatsListener implements Listener {
 
   @EventHandler
   public void onMatchStatsEvent(MatchStatsEvent event) {
-    if ((Queue.isRanked()
-            && ConfigManager.isRankedTable(
-                ConfigManager.getActiveTable(event.getMatch().getMap().getName())))
-        && plugin.isMatchBotEnabled()) {
-      String messageEndMatch = LanguageManager.langMessage("ranked.end-match");
+    boolean isRankedTable = plugin.config().databaseTables().currentTableIsRanked();
+    if ((Queue.isRanked() && isRankedTable) && plugin.isMatchBotEnabled()) {
+      String messageEndMatch = LanguageManager.message("ranked.end-match");
       org.bukkit.Bukkit.getScheduler()
           .runTaskLater(
               plugin,

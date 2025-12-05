@@ -1,105 +1,106 @@
 package org.nicolie.towersforpgm.commands.commandUtils;
 
 import org.bukkit.command.CommandSender;
-import org.nicolie.towersforpgm.utils.ConfigManager;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
 
 public class DraftConfig {
+  private final TowersForPGM plugin = TowersForPGM.getInstance();
 
   public void handleDraftSuggestionsCommand(CommandSender sender, Boolean isEnabled) {
     if (isEnabled == null) {
-      boolean isDraftSuggestions = ConfigManager.isDraftSuggestions();
+      boolean isDraftSuggestions = plugin.config().draft().isDraftSuggestions();
       String status = isDraftSuggestions
-          ? LanguageManager.langMessage("draft.config.enabled")
-          : LanguageManager.langMessage("draft.config.disabled");
+          ? LanguageManager.message("draft.config.enabled")
+          : LanguageManager.message("draft.config.disabled");
       String message =
-          LanguageManager.langMessage("draft.config.suggestionsStatus").replace("{status}", status);
+          LanguageManager.message("draft.config.suggestionsStatus").replace("{status}", status);
       SendMessage.sendToPlayer(sender, message);
       return;
     }
-    ConfigManager.setDraftSuggestions(isEnabled);
+    plugin.config().draft().setDraftSuggestions(isEnabled);
     String message = isEnabled
-        ? LanguageManager.langMessage("draft.config.suggestions")
-        : LanguageManager.langMessage("draft.config.noSuggestions");
+        ? LanguageManager.message("draft.config.suggestions")
+        : LanguageManager.message("draft.config.noSuggestions");
     SendMessage.sendToPlayer(sender, message);
   }
 
   public void handleDraftTimerCommand(CommandSender sender, Boolean isEnabled) {
     if (isEnabled == null) {
-      boolean isDraftTimer = ConfigManager.isDraftTimer();
+      boolean isDraftTimer = plugin.config().draft().isDraftTimer();
       String status = isDraftTimer
-          ? LanguageManager.langMessage("draft.config.enabled")
-          : LanguageManager.langMessage("draft.config.disabled");
+          ? LanguageManager.message("draft.config.enabled")
+          : LanguageManager.message("draft.config.disabled");
       String message =
-          LanguageManager.langMessage("draft.config.timerStatus").replace("{status}", status);
+          LanguageManager.message("draft.config.timerStatus").replace("{status}", status);
       SendMessage.sendToPlayer(sender, message);
       return;
     }
-    ConfigManager.setDraftTimer(isEnabled);
+    plugin.config().draft().setDraftTimer(isEnabled);
     String message = isEnabled
-        ? LanguageManager.langMessage("draft.config.timer")
-        : LanguageManager.langMessage("draft.config.noTimer");
+        ? LanguageManager.message("draft.config.timer")
+        : LanguageManager.message("draft.config.noTimer");
     SendMessage.sendToPlayer(sender, message);
   }
 
   public void handleSecondGetsExtraPlayerCommand(CommandSender sender, Boolean isEnabled) {
     if (isEnabled == null) {
-      boolean secondGetsExtraPlayer = ConfigManager.isSecondPickBalance();
+      boolean secondGetsExtraPlayer = plugin.config().draft().isSecondPickBalance();
       String status = secondGetsExtraPlayer
-          ? LanguageManager.langMessage("draft.config.gets")
-          : LanguageManager.langMessage("draft.config.doesNotGet");
-      String message = LanguageManager.langMessage("draft.config.secondTeamBalanceStatus")
+          ? LanguageManager.message("draft.config.gets")
+          : LanguageManager.message("draft.config.doesNotGet");
+      String message = LanguageManager.message("draft.config.secondTeamBalanceStatus")
           .replace("{status}", status);
       SendMessage.sendToPlayer(sender, message);
       return;
     }
-    ConfigManager.setSecondPickBalance(isEnabled);
+    plugin.config().draft().setSecondPickBalance(isEnabled);
     String message = isEnabled
-        ? LanguageManager.langMessage("draft.config.secondTeamBalance")
-        : LanguageManager.langMessage("draft.config.noSecondTeamBalance");
+        ? LanguageManager.message("draft.config.secondTeamBalance")
+        : LanguageManager.message("draft.config.noSecondTeamBalance");
     SendMessage.sendToPlayer(sender, message);
   }
 
   public void setPrivateMatch(CommandSender sender, boolean isPrivateMatch) {
     String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
-    ConfigManager.setPrivateMatch(mapName, isPrivateMatch);
+    plugin.config().privateMatch().setPrivateMatch(mapName, isPrivateMatch);
     String message = isPrivateMatch
-        ? LanguageManager.langMessage("privateMatch.true").replace("{map}", mapName)
-        : LanguageManager.langMessage("privateMatch.false").replace("{map}", mapName);
+        ? LanguageManager.message("privateMatch.true").replace("{map}", mapName)
+        : LanguageManager.message("privateMatch.false").replace("{map}", mapName);
     SendMessage.sendToPlayer(sender, message);
   }
 
   public void setDraftOrder(CommandSender sender, String order) {
     if (order == null || order.isEmpty()) {
-      String currentOrder = ConfigManager.getDraftOrder();
+      String currentOrder = plugin.config().draft().getOrder();
       String message =
-          LanguageManager.langMessage("draft.config.currentOrder").replace("{order}", currentOrder);
+          LanguageManager.message("draft.config.currentOrder").replace("{order}", currentOrder);
       SendMessage.sendToPlayer(sender, message);
       return;
     }
     if (!order.matches("A[AB]+")) {
-      String errorMessage = LanguageManager.langMessage("draft.config.invalidOrder");
+      String errorMessage = LanguageManager.message("draft.config.invalidOrder");
       SendMessage.sendToPlayer(sender, errorMessage);
       return;
     }
-    ConfigManager.setDraftOrder(order);
-    String success = LanguageManager.langMessage("draft.config.orderSet").replace("{order}", order);
+    plugin.config().draft().setOrder(order);
+    String success = LanguageManager.message("draft.config.orderSet").replace("{order}", order);
     SendMessage.sendToPlayer(sender, success);
   }
 
   public void setMinDraftOrder(CommandSender sender, int size) {
     if (size < 1) {
-      int currentSize = ConfigManager.getMinDraftOrder();
-      String message = LanguageManager.langMessage("draft.config.currentSize")
+      int currentSize = plugin.config().draft().getMinOrder();
+      String message = LanguageManager.message("draft.config.currentSize")
           .replace("{size}", String.valueOf(currentSize));
       SendMessage.sendToPlayer(sender, message);
       return;
     }
-    ConfigManager.setMinDraftOrder(size);
+    plugin.config().draft().setMinOrder(size);
     String message =
-        LanguageManager.langMessage("draft.config.sizeSet").replace("{size}", String.valueOf(size));
+        LanguageManager.message("draft.config.sizeSet").replace("{size}", String.valueOf(size));
     SendMessage.sendToPlayer(sender, message);
   }
 }

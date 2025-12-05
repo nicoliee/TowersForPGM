@@ -66,19 +66,18 @@ public class PlayerEloChange {
               Rank previousRank = Rank.getRankByElo(previousElo);
               Rank newRank = Rank.getRankByElo(newElo);
               String color = eloChange >= 0
-                  ? org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
-                      "system.colors.positive")
-                  : org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+                  ? org.nicolie.towersforpgm.utils.LanguageManager.message("system.colors.positive")
+                  : org.nicolie.towersforpgm.utils.LanguageManager.message(
                       "system.colors.negative");
               String sign = eloChange >= 0 ? "+" : "";
               String white =
-                  org.nicolie.towersforpgm.utils.LanguageManager.langMessage("system.colors.white");
+                  org.nicolie.towersforpgm.utils.LanguageManager.message("system.colors.white");
               String message;
               if (!previousRank.equals(newRank)) {
                 String arrow = newElo > previousElo
-                    ? org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+                    ? org.nicolie.towersforpgm.utils.LanguageManager.message(
                         "system.colors.arrow.up")
-                    : org.nicolie.towersforpgm.utils.LanguageManager.langMessage(
+                    : org.nicolie.towersforpgm.utils.LanguageManager.message(
                         "system.colors.arrow.down");
                 Sound sound = newElo > previousElo ? Sounds.ADMIN_CHAT : Sounds.ALERT;
                 player.playSound(sound);

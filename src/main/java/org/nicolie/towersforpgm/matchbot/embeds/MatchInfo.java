@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm.matchbot.embeds;
 import java.util.Map;
 import me.tbg.match.bot.configs.DiscordBot;
 import me.tbg.match.bot.configs.MessagesConfig;
+import org.nicolie.towersforpgm.TowersForPGM;
 import tc.oc.pgm.api.map.Gamemode;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.party.Competitor;
@@ -35,7 +36,10 @@ public class MatchInfo {
   }
 
   public static MatchInfo getMatchInfo(Match match) {
-    String duration = DiscordBot.parseDuration(match.getDuration());
+    String duration = TowersForPGM.getInstance().isMatchBotEnabled()
+        ? DiscordBot.parseDuration(match.getDuration())
+        : match.getDuration().toMinutes() + " minutes";
+    ;
     String mapName = match.getMap().getName();
     String scoresText = null;
     boolean hasScorebox = false;

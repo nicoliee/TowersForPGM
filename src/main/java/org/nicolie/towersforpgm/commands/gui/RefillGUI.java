@@ -38,8 +38,7 @@ public class RefillGUI implements Listener {
   }
 
   public void openRefillMenu(Player player) {
-    Inventory gui =
-        Bukkit.createInventory(null, 27, LanguageManager.langMessage("gui.refill.title"));
+    Inventory gui = Bukkit.createInventory(null, 27, LanguageManager.message("gui.refill.title"));
 
     // Gray glass border
     ItemStack grayGlass = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 7);
@@ -57,7 +56,7 @@ public class RefillGUI implements Listener {
     // ===== NAVIGATION =====
     ItemStack backItem = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 14);
     ItemMeta backMeta = backItem.getItemMeta();
-    backMeta.setDisplayName(LanguageManager.langMessage("gui.back"));
+    backMeta.setDisplayName(LanguageManager.message("gui.back"));
     backItem.setItemMeta(backMeta);
     gui.setItem(BACK_SLOT, backItem);
 
@@ -65,10 +64,10 @@ public class RefillGUI implements Listener {
     // Add refill location
     ItemStack addItem = new ItemStack(Material.CHEST);
     ItemMeta addMeta = addItem.getItemMeta();
-    addMeta.setDisplayName(LanguageManager.langMessage("gui.refill.add.title"));
+    addMeta.setDisplayName(LanguageManager.message("gui.refill.add.title"));
     List<String> addLore = new ArrayList<>();
-    addLore.add(LanguageManager.langMessage("gui.refill.add.lore1"));
-    addLore.add(LanguageManager.langMessage("gui.refill.add.lore2"));
+    addLore.add(LanguageManager.message("gui.refill.add.lore1"));
+    addLore.add(LanguageManager.message("gui.refill.add.lore2"));
     addMeta.setLore(addLore);
     addItem.setItemMeta(addMeta);
     gui.setItem(ADD_SLOT, addItem);
@@ -76,10 +75,10 @@ public class RefillGUI implements Listener {
     // Remove refill location
     ItemStack removeItem = new ItemStack(Material.BARRIER);
     ItemMeta removeMeta = removeItem.getItemMeta();
-    removeMeta.setDisplayName(LanguageManager.langMessage("gui.refill.remove.title"));
+    removeMeta.setDisplayName(LanguageManager.message("gui.refill.remove.title"));
     List<String> removeLore = new ArrayList<>();
-    removeLore.add(LanguageManager.langMessage("gui.refill.remove.lore1"));
-    removeLore.add(LanguageManager.langMessage("gui.refill.remove.lore2"));
+    removeLore.add(LanguageManager.message("gui.refill.remove.lore1"));
+    removeLore.add(LanguageManager.message("gui.refill.remove.lore2"));
     removeMeta.setLore(removeLore);
     removeItem.setItemMeta(removeMeta);
     gui.setItem(REMOVE_SLOT, removeItem);
@@ -87,10 +86,10 @@ public class RefillGUI implements Listener {
     // Test/Reload refill
     ItemStack reloadItem = new ItemStack(Material.REDSTONE);
     ItemMeta reloadMeta = reloadItem.getItemMeta();
-    reloadMeta.setDisplayName(LanguageManager.langMessage("gui.refill.reload.title"));
+    reloadMeta.setDisplayName(LanguageManager.message("gui.refill.reload.title"));
     List<String> reloadLore = new ArrayList<>();
-    reloadLore.add(LanguageManager.langMessage("gui.refill.reload.lore1"));
-    reloadLore.add(LanguageManager.langMessage("gui.refill.reload.lore2"));
+    reloadLore.add(LanguageManager.message("gui.refill.reload.lore1"));
+    reloadLore.add(LanguageManager.message("gui.refill.reload.lore2"));
     reloadMeta.setLore(reloadLore);
     reloadItem.setItemMeta(reloadMeta);
     gui.setItem(RELOAD_SLOT, reloadItem);
@@ -103,7 +102,7 @@ public class RefillGUI implements Listener {
     if (!(event.getWhoClicked() instanceof Player)) return;
     Player player = (Player) event.getWhoClicked();
 
-    if (event.getView().getTitle().equals(LanguageManager.langMessage("gui.refill.title"))) {
+    if (event.getView().getTitle().equals(LanguageManager.message("gui.refill.title"))) {
       event.setCancelled(true);
 
       ItemStack clicked = event.getCurrentItem();

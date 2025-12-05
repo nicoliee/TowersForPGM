@@ -44,7 +44,7 @@ public class PreparationGUI implements Listener {
 
   public void openPreparationMenu(Player player) {
     Inventory gui =
-        Bukkit.createInventory(null, 27, LanguageManager.langMessage("gui.preparation.title"));
+        Bukkit.createInventory(null, 27, LanguageManager.message("gui.preparation.title"));
 
     // Gray glass border
     ItemStack grayGlass = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 7);
@@ -62,30 +62,30 @@ public class PreparationGUI implements Listener {
     // ===== NAVIGATION =====
     ItemStack backItem = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 14);
     ItemMeta backMeta = backItem.getItemMeta();
-    backMeta.setDisplayName(LanguageManager.langMessage("gui.back"));
+    backMeta.setDisplayName(LanguageManager.message("gui.back"));
     backItem.setItemMeta(backMeta);
     gui.setItem(BACK_SLOT, backItem);
 
     // Get current map name
     String mapName = PGM.get().getMatchManager().getMatch(player).getMap().getName();
     TowersForPGM plugin = TowersForPGM.getInstance();
-    boolean preparationEnabled = plugin.isPreparationEnabled();
+    boolean preparationEnabled = plugin.config().preparationTime().isPreparationEnabled();
 
     // ===== PREPARATION CONTROLS =====
     // Toggle preparation
     ItemStack toggleItem = new ItemStack(preparationEnabled ? Material.EMERALD : Material.REDSTONE);
     ItemMeta toggleMeta = toggleItem.getItemMeta();
-    toggleMeta.setDisplayName(LanguageManager.langMessage("gui.preparation.toggle.title"));
+    toggleMeta.setDisplayName(LanguageManager.message("gui.preparation.toggle.title"));
     List<String> toggleLore = new ArrayList<>();
-    toggleLore.add(LanguageManager.langMessage("gui.preparation.toggle.current")
+    toggleLore.add(LanguageManager.message("gui.preparation.toggle.current")
         .replace(
             "{status}",
             preparationEnabled
-                ? LanguageManager.langMessage("gui.status.enabled")
-                : LanguageManager.langMessage("gui.status.disabled")));
+                ? LanguageManager.message("gui.status.enabled")
+                : LanguageManager.message("gui.status.disabled")));
     toggleLore.add("§7");
-    toggleLore.add(LanguageManager.langMessage("gui.preparation.toggle.lore1"));
-    toggleLore.add(LanguageManager.langMessage("gui.preparation.toggle.lore2"));
+    toggleLore.add(LanguageManager.message("gui.preparation.toggle.lore1"));
+    toggleLore.add(LanguageManager.message("gui.preparation.toggle.lore2"));
     toggleMeta.setLore(toggleLore);
     toggleItem.setItemMeta(toggleMeta);
     gui.setItem(TOGGLE_SLOT, toggleItem);
@@ -93,10 +93,10 @@ public class PreparationGUI implements Listener {
     // Add region
     ItemStack addItem = new ItemStack(Material.EMERALD_BLOCK);
     ItemMeta addMeta = addItem.getItemMeta();
-    addMeta.setDisplayName(LanguageManager.langMessage("gui.preparation.add.title"));
+    addMeta.setDisplayName(LanguageManager.message("gui.preparation.add.title"));
     List<String> addLore = new ArrayList<>();
-    addLore.add(LanguageManager.langMessage("gui.preparation.add.lore1"));
-    addLore.add(LanguageManager.langMessage("gui.preparation.add.lore2"));
+    addLore.add(LanguageManager.message("gui.preparation.add.lore1"));
+    addLore.add(LanguageManager.message("gui.preparation.add.lore2"));
     addMeta.setLore(addLore);
     addItem.setItemMeta(addMeta);
     gui.setItem(ADD_SLOT, addItem);
@@ -104,10 +104,10 @@ public class PreparationGUI implements Listener {
     // Remove region
     ItemStack removeItem = new ItemStack(Material.REDSTONE_BLOCK);
     ItemMeta removeMeta = removeItem.getItemMeta();
-    removeMeta.setDisplayName(LanguageManager.langMessage("gui.preparation.remove.title"));
+    removeMeta.setDisplayName(LanguageManager.message("gui.preparation.remove.title"));
     List<String> removeLore = new ArrayList<>();
-    removeLore.add(LanguageManager.langMessage("gui.preparation.remove.lore1"));
-    removeLore.add(LanguageManager.langMessage("gui.preparation.remove.lore2"));
+    removeLore.add(LanguageManager.message("gui.preparation.remove.lore1"));
+    removeLore.add(LanguageManager.message("gui.preparation.remove.lore2"));
     removeMeta.setLore(removeLore);
     removeItem.setItemMeta(removeMeta);
     gui.setItem(REMOVE_SLOT, removeItem);
@@ -115,10 +115,10 @@ public class PreparationGUI implements Listener {
     // List regions
     ItemStack listItem = new ItemStack(Material.BOOK);
     ItemMeta listMeta = listItem.getItemMeta();
-    listMeta.setDisplayName(LanguageManager.langMessage("gui.preparation.list.title"));
+    listMeta.setDisplayName(LanguageManager.message("gui.preparation.list.title"));
     List<String> listLore = new ArrayList<>();
-    listLore.add(LanguageManager.langMessage("gui.preparation.list.lore1"));
-    listLore.add(LanguageManager.langMessage("gui.preparation.list.lore2"));
+    listLore.add(LanguageManager.message("gui.preparation.list.lore1"));
+    listLore.add(LanguageManager.message("gui.preparation.list.lore2"));
     listMeta.setLore(listLore);
     listItem.setItemMeta(listMeta);
     gui.setItem(LIST_SLOT, listItem);
@@ -133,14 +133,14 @@ public class PreparationGUI implements Listener {
     // Set max coordinates
     ItemStack maxItem = new ItemStack(Material.DIAMOND_BLOCK);
     ItemMeta maxMeta = maxItem.getItemMeta();
-    maxMeta.setDisplayName(LanguageManager.langMessage("gui.preparation.max.title"));
+    maxMeta.setDisplayName(LanguageManager.message("gui.preparation.max.title"));
     List<String> maxLore = new ArrayList<>();
     maxLore.add(
-        LanguageManager.langMessage("gui.preparation.max.current").replace("{coords}", maxCoords));
+        LanguageManager.message("gui.preparation.max.current").replace("{coords}", maxCoords));
     maxLore.add("§7");
-    maxLore.add(LanguageManager.langMessage("gui.preparation.max.lore1"));
-    maxLore.add(LanguageManager.langMessage("gui.preparation.max.lore2"));
-    maxLore.add(LanguageManager.langMessage("gui.preparation.max.lore3"));
+    maxLore.add(LanguageManager.message("gui.preparation.max.lore1"));
+    maxLore.add(LanguageManager.message("gui.preparation.max.lore2"));
+    maxLore.add(LanguageManager.message("gui.preparation.max.lore3"));
     maxMeta.setLore(maxLore);
     maxItem.setItemMeta(maxMeta);
     gui.setItem(MAX_SLOT, maxItem);
@@ -148,14 +148,14 @@ public class PreparationGUI implements Listener {
     // Set min coordinates
     ItemStack minItem = new ItemStack(Material.IRON_BLOCK);
     ItemMeta minMeta = minItem.getItemMeta();
-    minMeta.setDisplayName(LanguageManager.langMessage("gui.preparation.min.title"));
+    minMeta.setDisplayName(LanguageManager.message("gui.preparation.min.title"));
     List<String> minLore = new ArrayList<>();
     minLore.add(
-        LanguageManager.langMessage("gui.preparation.min.current").replace("{coords}", minCoords));
+        LanguageManager.message("gui.preparation.min.current").replace("{coords}", minCoords));
     minLore.add("§7");
-    minLore.add(LanguageManager.langMessage("gui.preparation.min.lore1"));
-    minLore.add(LanguageManager.langMessage("gui.preparation.min.lore2"));
-    minLore.add(LanguageManager.langMessage("gui.preparation.min.lore3"));
+    minLore.add(LanguageManager.message("gui.preparation.min.lore1"));
+    minLore.add(LanguageManager.message("gui.preparation.min.lore2"));
+    minLore.add(LanguageManager.message("gui.preparation.min.lore3"));
     minMeta.setLore(minLore);
     minItem.setItemMeta(minMeta);
     gui.setItem(MIN_SLOT, minItem);
@@ -163,13 +163,13 @@ public class PreparationGUI implements Listener {
     // Timer settings
     ItemStack timerItem = new ItemStack(Material.WATCH);
     ItemMeta timerMeta = timerItem.getItemMeta();
-    timerMeta.setDisplayName(LanguageManager.langMessage("gui.preparation.timer.title"));
+    timerMeta.setDisplayName(LanguageManager.message("gui.preparation.timer.title"));
     List<String> timerLore = new ArrayList<>();
-    timerLore.add(LanguageManager.langMessage("gui.preparation.timer.current")
+    timerLore.add(LanguageManager.message("gui.preparation.timer.current")
         .replace("{timer}", timer > 0 ? timer + " min" : ""));
     timerLore.add("§7");
-    timerLore.add(LanguageManager.langMessage("gui.preparation.timer.lore1"));
-    timerLore.add(LanguageManager.langMessage("gui.preparation.timer.lore2"));
+    timerLore.add(LanguageManager.message("gui.preparation.timer.lore1"));
+    timerLore.add(LanguageManager.message("gui.preparation.timer.lore2"));
     timerMeta.setLore(timerLore);
     timerItem.setItemMeta(timerMeta);
     gui.setItem(TIMER_SLOT, timerItem);
@@ -177,13 +177,13 @@ public class PreparationGUI implements Listener {
     // Haste settings
     ItemStack hasteItem = new ItemStack(Material.SUGAR);
     ItemMeta hasteMeta = hasteItem.getItemMeta();
-    hasteMeta.setDisplayName(LanguageManager.langMessage("gui.preparation.haste.title"));
+    hasteMeta.setDisplayName(LanguageManager.message("gui.preparation.haste.title"));
     List<String> hasteLore = new ArrayList<>();
-    hasteLore.add(LanguageManager.langMessage("gui.preparation.haste.current")
+    hasteLore.add(LanguageManager.message("gui.preparation.haste.current")
         .replace("{haste}", haste > 0 ? haste + " min" : ""));
     hasteLore.add("§7");
-    hasteLore.add(LanguageManager.langMessage("gui.preparation.haste.lore1"));
-    hasteLore.add(LanguageManager.langMessage("gui.preparation.haste.lore2"));
+    hasteLore.add(LanguageManager.message("gui.preparation.haste.lore1"));
+    hasteLore.add(LanguageManager.message("gui.preparation.haste.lore2"));
     hasteMeta.setLore(hasteLore);
     hasteItem.setItemMeta(hasteMeta);
     gui.setItem(HASTE_SLOT, hasteItem);
@@ -196,7 +196,7 @@ public class PreparationGUI implements Listener {
     if (!(event.getWhoClicked() instanceof Player)) return;
     Player player = (Player) event.getWhoClicked();
 
-    if (event.getView().getTitle().equals(LanguageManager.langMessage("gui.preparation.title"))) {
+    if (event.getView().getTitle().equals(LanguageManager.message("gui.preparation.title"))) {
       event.setCancelled(true);
 
       ItemStack clicked = event.getCurrentItem();
@@ -220,23 +220,23 @@ public class PreparationGUI implements Listener {
           break;
         case MAX_SLOT: // Set max coordinates
           player.closeInventory();
-          player.sendMessage(LanguageManager.langMessage("gui.preparation.max.command1"));
-          player.sendMessage(LanguageManager.langMessage("gui.preparation.max.command2"));
+          player.sendMessage(LanguageManager.message("gui.preparation.max.command1"));
+          player.sendMessage(LanguageManager.message("gui.preparation.max.command2"));
           break;
         case MIN_SLOT: // Set min coordinates
           player.closeInventory();
-          player.sendMessage(LanguageManager.langMessage("gui.preparation.min.command1"));
-          player.sendMessage(LanguageManager.langMessage("gui.preparation.min.command2"));
+          player.sendMessage(LanguageManager.message("gui.preparation.min.command1"));
+          player.sendMessage(LanguageManager.message("gui.preparation.min.command2"));
           break;
         case TIMER_SLOT: // Timer settings
           player.closeInventory();
-          player.sendMessage(LanguageManager.langMessage("gui.preparation.timer.command1"));
-          player.sendMessage(LanguageManager.langMessage("gui.preparation.timer.command2"));
+          player.sendMessage(LanguageManager.message("gui.preparation.timer.command1"));
+          player.sendMessage(LanguageManager.message("gui.preparation.timer.command2"));
           break;
         case HASTE_SLOT: // Haste settings
           player.closeInventory();
-          player.sendMessage(LanguageManager.langMessage("gui.preparation.haste.command1"));
-          player.sendMessage(LanguageManager.langMessage("gui.preparation.haste.command2"));
+          player.sendMessage(LanguageManager.message("gui.preparation.haste.command1"));
+          player.sendMessage(LanguageManager.message("gui.preparation.haste.command2"));
           break;
         case LIST_SLOT: // List regions
           player.closeInventory();

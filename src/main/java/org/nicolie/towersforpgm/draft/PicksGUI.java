@@ -73,7 +73,7 @@ public class PicksGUI implements Listener {
       inv = Bukkit.createInventory(
           null,
           inventorySize,
-          LanguageManager.langMessage("draft.config.inventoryName")
+          LanguageManager.message("draft.config.inventoryName")
               .replace("{size}", String.valueOf(totalPlayers)));
 
       // Cambiar el color e los cristales según las condiciones
@@ -137,7 +137,7 @@ public class PicksGUI implements Listener {
       inv = Bukkit.createInventory(
           null,
           inventorySize,
-          LanguageManager.langMessage("draft.config.inventoryName")
+          LanguageManager.message("draft.config.inventoryName")
               .replace("{size}", String.valueOf(totalPlayers)));
       columnsPerRow = 9;
 
@@ -197,26 +197,26 @@ public class PicksGUI implements Listener {
     int elo = stats.getElo();
     if (elo != -9999) {
       Rank rank = Rank.getRankByElo(elo);
-      lore.add(LanguageManager.langMessage("stats.elo") + ": " + rank.getPrefixedRank(true) + " "
+      lore.add(LanguageManager.message("stats.elo") + ": " + rank.getPrefixedRank(true) + " "
           + rank.getColor() + elo);
       lore.add(" ");
     }
-    lore.add(LanguageManager.langMessage("stats.kills") + ": §a" + stats.getKills());
-    lore.add(LanguageManager.langMessage("stats.deaths") + ": §a" + stats.getDeaths());
-    lore.add(LanguageManager.langMessage("stats.assists") + ": §a" + stats.getAssists());
-    lore.add(LanguageManager.langMessage("stats.damageDone") + ": §a"
+    lore.add(LanguageManager.message("stats.kills") + ": §a" + stats.getKills());
+    lore.add(LanguageManager.message("stats.deaths") + ": §a" + stats.getDeaths());
+    lore.add(LanguageManager.message("stats.assists") + ": §a" + stats.getAssists());
+    lore.add(LanguageManager.message("stats.damageDone") + ": §a"
         + String.format(
             "%.1f", stats.getGames() > 0 ? stats.getDamageDone() / stats.getGames() : 0.0));
-    lore.add(LanguageManager.langMessage("stats.damageTaken") + ": §a"
+    lore.add(LanguageManager.message("stats.damageTaken") + ": §a"
         + String.format(
             "%.1f", stats.getGames() > 0 ? stats.getDamageTaken() / stats.getGames() : 0.0));
-    lore.add(LanguageManager.langMessage("stats.points") + ": §a" + stats.getPoints());
-    lore.add(LanguageManager.langMessage("stats.wins") + ": §a" + stats.getWins());
-    lore.add(LanguageManager.langMessage("stats.games") + ": §a" + stats.getGames());
-    lore.add(LanguageManager.langMessage("stats.winstreak") + ": §a" + stats.getWinstreak()
+    lore.add(LanguageManager.message("stats.points") + ": §a" + stats.getPoints());
+    lore.add(LanguageManager.message("stats.wins") + ": §a" + stats.getWins());
+    lore.add(LanguageManager.message("stats.games") + ": §a" + stats.getGames());
+    lore.add(LanguageManager.message("stats.winstreak") + ": §a" + stats.getWinstreak()
         + " §7(Max: §a" + stats.getMaxWinstreak() + "§7)");
     lore.add(" ");
-    lore.add(LanguageManager.langMessage("draft.config.clickToPick"));
+    lore.add(LanguageManager.message("draft.config.clickToPick"));
     meta.setLore(lore);
     skull.setItemMeta(meta);
   }
@@ -238,11 +238,11 @@ public class PicksGUI implements Listener {
     }
 
     if (pickedPlayerString == null) {
-      return LanguageManager.langMessage("draft.picks.notInList").replace("{player}", inputName);
+      return LanguageManager.message("draft.picks.notInList").replace("{player}", inputName);
     }
 
     if (teams.isPlayerInAnyTeam(pickedPlayerString)) {
-      return LanguageManager.langMessage("draft.picks.alreadyPicked")
+      return LanguageManager.message("draft.picks.alreadyPicked")
           .replace("{player}", pickedPlayerString);
     }
 
@@ -271,8 +271,7 @@ public class PicksGUI implements Listener {
     if (captainNumber == -1) {
       openInventories.remove(clickerId);
       clicker.closeInventory();
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.langMessage("draft.picks.notCaptain")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.notCaptain")));
       return;
     }
 
@@ -280,7 +279,7 @@ public class PicksGUI implements Listener {
         || (!captains.isCaptain1Turn() && captainNumber == 1)) {
       openInventories.remove(clickerId);
       clicker.closeInventory();
-      matchPlayer.sendWarning(Component.text(LanguageManager.langMessage("draft.picks.notTurn")));
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.notTurn")));
       return;
     }
 
@@ -341,7 +340,7 @@ public class PicksGUI implements Listener {
     ItemStack specialItem = new ItemStack(Material.NETHER_STAR);
     ItemMeta meta = specialItem.getItemMeta();
     meta.setDisplayName("§6Draft Menu");
-    meta.setLore(Collections.singletonList(LanguageManager.langMessage("draft.itemLore")));
+    meta.setLore(Collections.singletonList(LanguageManager.message("draft.itemLore")));
     specialItem.setItemMeta(meta);
 
     player.getInventory().setItem(2, null);
@@ -390,7 +389,7 @@ public class PicksGUI implements Listener {
             && "§6Draft Menu".equals(meta.getDisplayName())) {
           // Si el draft no está activo, mostrar mensaje
           if (!Draft.isDraftActive()) {
-            SendMessage.sendToPlayer(player, LanguageManager.langMessage("draft.picks.noDraft"));
+            SendMessage.sendToPlayer(player, LanguageManager.message("draft.picks.noDraft"));
             player.getInventory().remove(Material.NETHER_STAR);
             return;
           }

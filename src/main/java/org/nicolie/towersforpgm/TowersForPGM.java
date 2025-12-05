@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -15,9 +12,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.nicolie.towersforpgm.commands.ForfeitCommand;
 import org.nicolie.towersforpgm.commands.RankedCommand;
 import org.nicolie.towersforpgm.commands.TagCommand;
+import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.database.MatchHistoryManager;
 import org.nicolie.towersforpgm.database.TableManager;
-import org.nicolie.towersforpgm.database.models.discordPlayer.DiscordPlayerCache;
 import org.nicolie.towersforpgm.database.sql.SQLDatabaseManager;
 import org.nicolie.towersforpgm.database.sqlite.SQLITEDatabaseManager;
 import org.nicolie.towersforpgm.draft.AvailablePlayers;
@@ -36,13 +33,10 @@ import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueJoinListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueLeaveListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedFinishListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
-import org.nicolie.towersforpgm.preparationTime.MatchConfig;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
-import org.nicolie.towersforpgm.preparationTime.Region;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.Commands;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.Events;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -50,13 +44,11 @@ import tc.oc.pgm.api.player.MatchPlayer;
 public final class TowersForPGM extends JavaPlugin {
   private static TowersForPGM instance; // Instancia de la clase principal
 
+  // Configs
+  private org.nicolie.towersforpgm.configs.ConfigManager ConfigManager;
+
   // preparationTime
-  private final Map<String, Region> regions =
-      new HashMap<>(); // Mapa para almacenar las regiones definidas
-  private Map<String, MatchConfig> matchConfigs =
-      new HashMap<>(); // Mapa para almacenar MatchConfig por nombre de mundo
   private PreparationListener preparationListener;
-  private boolean preparationEnabled = true; // Protección de partida
 
   // Base de datos
   private SQLDatabaseManager mysqlDatabaseManager;
@@ -84,16 +76,13 @@ public final class TowersForPGM extends JavaPlugin {
   private boolean isMatchBotEnabled = false; // Variable para verificar si MatchBot está habilitado
   private File matchBotFile;
   private FileConfiguration matchBotConfig;
-  // Match ID caching handled by MatchHistoryManager
 
   @Override
   public void onEnable() {
     instance = this;
     saveDefaultConfig();
-    loadRegions();
+    this.ConfigManager = new org.nicolie.towersforpgm.configs.ConfigManager(this);
     loadRefillConfig();
-    ConfigManager.loadConfig();
-    preparationEnabled = getConfig().getBoolean("preparationTime.enabled", false);
     LanguageManager.initialize(this);
     refillManager = new RefillManager();
     preparationListener = new PreparationListener();
@@ -104,8 +93,7 @@ public final class TowersForPGM extends JavaPlugin {
       // Precargar contadores de matchId en MatchHistoryManager para las tablas configuradas
       try {
         java.util.Set<String> tables = new java.util.HashSet<>();
-        tables.addAll(ConfigManager.getTables());
-        tables.addAll(ConfigManager.getRankedTables());
+        tables.addAll(this.config().databaseTables().getTables(TableType.ALL));
         MatchHistoryManager.preloadMatchIdCountersAsync(tables).thenRun(() -> getLogger()
             .info("MatchHistoryManager precargado para tablas: " + tables.size()));
       } catch (Exception e) {
@@ -117,9 +105,12 @@ public final class TowersForPGM extends JavaPlugin {
 
     // Inicializar el Draft
     availablePlayers = new AvailablePlayers();
-    captains = new Captains();
     teams = new Teams();
+    captains = new Captains();
     utilities = new Utilities(availablePlayers, captains);
+
+    // Set Teams instance in DisconnectManager
+    org.nicolie.towersforpgm.rankeds.DisconnectManager.setTeams(teams);
     draft = new Draft(captains, availablePlayers, teams, utilities);
     pickInventory = new PicksGUI(draft, captains, availablePlayers, teams);
     getServer().getPluginManager().registerEvents(pickInventory, this);
@@ -130,7 +121,7 @@ public final class TowersForPGM extends JavaPlugin {
     // Registrar Rankeds
     Queue queue = new Queue(draft, matchmaking, teams);
     getCommand("ranked").setExecutor(new RankedCommand(queue, utilities));
-    getCommand("forfeit").setExecutor(new ForfeitCommand());
+    getCommand("forfeit").setExecutor(new ForfeitCommand(teams));
     getCommand("tag").setExecutor(new TagCommand());
     // Registrar comandos
     Commands commandManager = new Commands(this);
@@ -165,40 +156,26 @@ public final class TowersForPGM extends JavaPlugin {
 
       if (database) {
         TableManager.createDCAccountsTable();
-
-        // Registrar comandos condicionalmente según configuración
-        if (MatchBotConfig.isStatsCommandEnabled()) {
-          StatsCommand.register();
-        }
-
-        if (MatchBotConfig.isTopCommandEnabled()) {
-          TopCommand.register();
-          TopPaginationListener.register();
-        }
-
-        if (MatchBotConfig.isHistoryCommandEnabled()) {
-          org.nicolie.towersforpgm.matchbot.commands.history.HistoryCommand.register();
-        }
-
-        if (MatchBotConfig.isLinkCommandEnabled()) {
-          org.nicolie.towersforpgm.matchbot.commands.link.LinkCommand.register();
-        }
-
-        // AutocompleteHandler siempre se registra si algún comando está habilitado
-        if (MatchBotConfig.isStatsCommandEnabled()
-            || MatchBotConfig.isTopCommandEnabled()
-            || MatchBotConfig.isHistoryCommandEnabled()) {
-          AutocompleteHandler.register();
-        }
+        StatsCommand.register();
+        TopCommand.register();
+        TopPaginationListener.register();
+        org.nicolie.towersforpgm.matchbot.commands.history.HistoryCommand.register();
+        org.nicolie.towersforpgm.matchbot.commands.link.LinkCommand.register();
+        AutocompleteHandler.register();
 
         // Registrar listener del queue de voz
         QueueJoinListener.register();
         QueueLeaveListener.register();
+
         // Registrar listeners de gestión de canales de voz para ranked
         getServer().getPluginManager().registerEvents(new RankedListener(), this);
         getServer().getPluginManager().registerEvents(new RankedFinishListener(), this);
       }
     }
+  }
+
+  public org.nicolie.towersforpgm.configs.ConfigManager config() {
+    return this.ConfigManager;
   }
 
   @Override
@@ -209,27 +186,6 @@ public final class TowersForPGM extends JavaPlugin {
     }
     if (sqliteDatabaseManager != null) {
       sqliteDatabaseManager.disconnect();
-    }
-    // Shutdown SQL executors and Discord executor to avoid queued tasks retaining memory
-    try {
-      org.nicolie.towersforpgm.database.StatsManager.shutdownSqlExecutor();
-    } catch (Exception ignored) {
-    }
-    try {
-      org.nicolie.towersforpgm.database.DiscordManager.shutdownDiscordExecutor();
-    } catch (Exception ignored) {
-    }
-    try {
-      org.nicolie.towersforpgm.database.sql.SQLDiscordManager.shutdownSqlExecutor();
-    } catch (Exception ignored) {
-    }
-    try {
-      org.nicolie.towersforpgm.database.sqlite.SQLITEDiscordManager.shutdownSqlExecutor();
-    } catch (Exception ignored) {
-    }
-    // Solo apagar el executor de Discord si MatchBot está habilitado
-    if (isMatchBotEnabled && database) {
-      DiscordPlayerCache.clear();
     }
   }
 
@@ -253,7 +209,6 @@ public final class TowersForPGM extends JavaPlugin {
     return draft;
   }
 
-  // Getter para AvailablePlayers (necesario para comprobaciones desde otras clases)
   public org.nicolie.towersforpgm.draft.AvailablePlayers getAvailablePlayers() {
     return availablePlayers;
   }
@@ -264,98 +219,15 @@ public final class TowersForPGM extends JavaPlugin {
     }
   }
 
-  // Preparation Time
-  // Método para cargar las regiones desde el archivo de configuración
-  private void loadRegions() {
-    ConfigurationSection section = getConfig().getConfigurationSection("preparationTime.maps");
-    if (section == null) {
-      getLogger().warning("Preparation time maps not found.");
-      return;
-    }
-
-    for (String regionName : section.getKeys(false)) {
-      ConfigurationSection regionSection = section.getConfigurationSection(regionName);
-      if (regionSection == null) continue;
-
-      // Obtener P1 y P2
-      Location p1 = parseLocation(regionSection.getString("P1"));
-      Location p2 = parseLocation(regionSection.getString("P2"));
-
-      if (p1 == null || p2 == null) {
-        getLogger().warning("Error loading region: " + regionName);
-        continue;
-      }
-
-      // Obtener Timer y Haste
-      int timer = regionSection.getInt("Timer", 0);
-      int haste = regionSection.getInt("Haste", 0);
-
-      // Crear la región y almacenarla
-      Region region = new Region(p1, p2, timer, haste);
-      regions.put(regionName, region);
-      getLogger().info("Region loaded: " + regionName);
-    }
-  }
-
-  // Método para convertir una cadena de texto en una ubicación
-  private Location parseLocation(String input) {
-    if (input == null) return null;
-    String[] parts = input.split(", ");
-    if (parts.length != 3) return null;
-
-    try {
-      double x = Double.parseDouble(parts[0]);
-      double y = Double.parseDouble(parts[1]);
-      double z = Double.parseDouble(parts[2]);
-      return new Location(Bukkit.getWorlds().get(0), x, y, z);
-    } catch (NumberFormatException e) {
-      getLogger().warning("Invalid coordinates: " + input);
-      return null;
-    }
-  }
-
-  // Método para obtener las regiones cargadas
-  public Map<String, Region> getRegions() {
-    return regions;
-  }
-
-  // Método para almacenar la configuración del partido
-  public void storeMatchConfig(String worldName, MatchConfig matchConfig) {
-    matchConfigs.put(worldName, matchConfig);
-  }
-
-  // Método para eliminar la configuración del partido
-  public void removeMatchConfig(String worldName) {
-    matchConfigs.remove(worldName);
-  }
-
-  // Método para obtener la configuración del partido
-  public MatchConfig getMatchConfig(String worldName) {
-    return matchConfigs.get(worldName);
-  }
-
-  // Método para obtener el booleano de protección de partida
-  public boolean isPreparationEnabled() {
-    return preparationEnabled;
-  }
-
-  // Método para establecer el booleano de protección de partida
-  public void setPreparationEnabled(boolean enabled) {
-    this.preparationEnabled = enabled;
-  }
-
   // Base de datos
-  // Método para obtener el administrador de la base de datos MySQL
   public SQLDatabaseManager getMySQLDatabaseManager() {
     return mysqlDatabaseManager;
   }
 
-  // Método para obtener el administrador de la base de datos SQLite
   public SQLITEDatabaseManager getSQLiteDatabaseManager() {
     return sqliteDatabaseManager;
   }
 
-  // Método para obtener una conexión de base de datos (la que esté activa)
   public java.sql.Connection getDatabaseConnection() throws java.sql.SQLException {
     if ("MySQL".equals(currentDatabaseType) && mysqlDatabaseManager != null) {
       return mysqlDatabaseManager.getConnection();
@@ -365,12 +237,15 @@ public final class TowersForPGM extends JavaPlugin {
     throw new java.sql.SQLException("No hay conexiones de base de datos disponibles");
   }
 
-  // Método para crear tablas al inicio
   private void createTablesOnStartup() {
-    ConfigManager.getTables().forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
-    ConfigManager.getRankedTables()
+    config()
+        .databaseTables()
+        .getTables(TableType.ALL)
         .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
-    // Crear tablas de historial
+    this.config()
+        .databaseTables()
+        .getTables(TableType.RANKED)
+        .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
     org.nicolie.towersforpgm.database.TableManager.createHistoryTables();
   }
 
@@ -469,28 +344,23 @@ public final class TowersForPGM extends JavaPlugin {
     return false;
   }
 
-  // Método para obtener el booleano de activación de la base de datos
   public boolean getIsDatabaseActivated() {
     return database;
   }
 
-  // Método para obtener el tipo de base de datos actual
   public String getCurrentDatabaseType() {
     return currentDatabaseType;
   }
 
-  // Método para establecer el booleano de activación de la base de datos
   public void setIsDatabaseActivated(boolean activated) {
     this.database = activated;
   }
 
-  // Método para obtener los jugadores desconectados
   public Map<String, MatchPlayer> getDisconnectedPlayers() {
     return disconnectedPlayers;
   }
 
   // Stats
-  // Métodos para añadir y eliminar jugadores desconectados
   public void addDisconnectedPlayer(String username, MatchPlayer player) {
     disconnectedPlayers.put(username, player);
   }
@@ -499,7 +369,6 @@ public final class TowersForPGM extends JavaPlugin {
     disconnectedPlayers.remove(username);
   }
 
-  // Método para obtener el booleano de cancelación de estadísticas
   public boolean isStatsCancel() {
     return isStatsCancel;
   }
@@ -512,7 +381,6 @@ public final class TowersForPGM extends JavaPlugin {
   public void loadRefillConfig() {
     refillFile = new File(getDataFolder(), "refill.yml");
 
-    // Si el archivo no existe, crearlo desde recursos
     if (!refillFile.exists()) {
       saveResource("refill.yml", false);
     }
@@ -548,14 +416,11 @@ public final class TowersForPGM extends JavaPlugin {
   public void loadMatchBotConfig() {
     matchBotFile = new File(getDataFolder(), "matchbot.yml");
 
-    // Si el archivo no existe, crearlo desde recursos
     if (!matchBotFile.exists()) {
       saveResource("matchbot.yml", false);
     }
 
     matchBotConfig = YamlConfiguration.loadConfiguration(matchBotFile);
-
-    // Cargar la configuración en MatchBotConfig
     MatchBotConfig.loadConfig(matchBotConfig);
 
     getLogger().info("MatchBot configuration loaded successfully.");
@@ -576,5 +441,39 @@ public final class TowersForPGM extends JavaPlugin {
   public void reloadMatchBotConfig() {
     matchBotConfig = YamlConfiguration.loadConfiguration(matchBotFile);
     MatchBotConfig.loadConfig(matchBotConfig);
+  }
+
+  public boolean reloadDatabase() {
+    getLogger().info("Reloading database connection...");
+    try {
+      initializeDatabase();
+
+      if (getIsDatabaseActivated()) {
+        try {
+          getLogger().info("DB reload successful, creating tables and precaching match ids.");
+          config()
+              .databaseTables()
+              .getTables(TableType.ALL)
+              .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
+          org.nicolie.towersforpgm.database.TableManager.createHistoryTables();
+
+          java.util.Set<String> tables = new java.util.HashSet<>();
+          tables.addAll(this.config().databaseTables().getTables(TableType.ALL));
+          MatchHistoryManager.preloadMatchIdCountersAsync(tables);
+        } catch (Exception ex) {
+          getLogger()
+              .warning("Error creating tables/precaching after DB reload: " + ex.getMessage());
+        }
+
+        getLogger().info("Database reloaded and active (" + getCurrentDatabaseType() + ")");
+        return true;
+      } else {
+        getLogger().warning("Database not active after reload. Check server logs for details.");
+        return false;
+      }
+    } catch (Exception e) {
+      getLogger().severe("Error reloading database: " + e.getMessage());
+      return false;
+    }
   }
 }

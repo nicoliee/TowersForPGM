@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.models.top.TopResult;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
-import org.nicolie.towersforpgm.matchbot.cache.TopLRUCache;
 import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
 import org.nicolie.towersforpgm.matchbot.embeds.TopEmbed;
 import org.nicolie.towersforpgm.matchbot.enums.Stat;
@@ -21,15 +20,14 @@ import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TopCommand extends ListenerAdapter {
   public static final String NAME = "top";
-  private static final String DESC = LanguageManager.langMessage("matchbot.top.description");
+  private static final String DESC = LanguageManager.message("matchbot.top.description");
   private static final int PAGE_SIZE = 10;
-  private static final String OPT_STAT = LanguageManager.langMessage("matchbot.top.stat");
-  private static final String DESC_STAT = LanguageManager.langMessage("matchbot.top.desc-stat");
-  private static final String OPT_TABLE = LanguageManager.langMessage("matchbot.top.table");
-  private static final String DESC_TABLE = LanguageManager.langMessage("matchbot.top.desc-table");
-  private static final String OPT_PER_GAME = LanguageManager.langMessage("matchbot.top.per-game");
-  private static final String DESC_PER_GAME =
-      LanguageManager.langMessage("matchbot.top.desc-per-game");
+  private static final String OPT_STAT = LanguageManager.message("matchbot.top.stat");
+  private static final String DESC_STAT = LanguageManager.message("matchbot.top.desc-stat");
+  private static final String OPT_TABLE = LanguageManager.message("matchbot.top.table");
+  private static final String DESC_TABLE = LanguageManager.message("matchbot.top.desc-table");
+  private static final String OPT_PER_GAME = LanguageManager.message("matchbot.top.per-game");
+  private static final String DESC_PER_GAME = LanguageManager.message("matchbot.top.desc-per-game");
 
   public static void register() {
     JDA jda = DiscordBot.getJDA();
@@ -58,7 +56,7 @@ public class TopCommand extends ListenerAdapter {
             OPT_TABLE,
             DESC_TABLE,
             false,
-            true); 
+            true);
       } else {
         var tableOption = new net.dv8tion.jda.api.interactions.commands.build.OptionData(
             net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
@@ -102,7 +100,7 @@ public class TopCommand extends ListenerAdapter {
     if (stat == Stat.POINTS
         && !org.nicolie.towersforpgm.matchbot.MatchBotConfig.isStatsPointsEnabled()) {
       event
-          .reply(LanguageManager.langMessage("matchbot.top.invalid-column")
+          .reply(LanguageManager.message("matchbot.top.invalid-column")
               .replace("{stat}", stat.getDisplayName())
               .replace("{table}", table))
           .setEphemeral(true)
@@ -114,7 +112,7 @@ public class TopCommand extends ListenerAdapter {
 
     if (perGame && !stat.isStatPerGame()) {
       event
-          .reply(LanguageManager.langMessage("matchbot.top.perGame-restriction")
+          .reply(LanguageManager.message("matchbot.top.perGame-restriction")
               .replace("{stat}", stat.getDisplayName()))
           .setEphemeral(true)
           .queue();
@@ -131,36 +129,12 @@ public class TopCommand extends ListenerAdapter {
                 if (perGame || isDamage) {
                   dbColumn = dbColumn + "PerGame";
                 }
-                TopLRUCache.CachedPage cached = null;
-                if (page == 1) {
-                  cached = TopLRUCache.get(table, dbColumn, page, PAGE_SIZE, perGame);
-                }
 
                 TopResult result;
-                if (cached != null) {
-                  result = new TopResult(cached.data(), cached.totalRecords());
-                } else {
-                  result = StatsManager.getTop(table, dbColumn, PAGE_SIZE, page).get();
-                  if (page == 1 && !result.getData().isEmpty()) {
-                    double lastValue =
-                        result.getData().get(result.getData().size() - 1).getValue();
-                    String lastUser =
-                        result.getData().get(result.getData().size() - 1).getUsername();
-                    TopLRUCache.put(
-                        table,
-                        dbColumn,
-                        page,
-                        PAGE_SIZE,
-                        perGame,
-                        result.getData(),
-                        result.getTotalRecords(),
-                        lastValue,
-                        lastUser);
-                  }
-                }
+                result = StatsManager.getTop(table, dbColumn, PAGE_SIZE, page).get();
 
                 if (result.getData().isEmpty()) {
-                  hook.sendMessage(LanguageManager.langMessage("matchbot.top.invalid-column")
+                  hook.sendMessage(LanguageManager.message("matchbot.top.invalid-column")
                           .replace("{stat}", stat.getDisplayName())
                           .replace("{table}", table))
                       .setEphemeral(true)
@@ -187,7 +161,7 @@ public class TopCommand extends ListenerAdapter {
                                 result.getData().isEmpty() || result.getData().size() < PAGE_SIZE))
                     .queue();
               } catch (Exception e) {
-                hook.sendMessage(LanguageManager.langMessage("matchbot.top.error")
+                hook.sendMessage(LanguageManager.message("matchbot.top.error")
                         .replace("{error}", e.getMessage()))
                     .queue();
               }

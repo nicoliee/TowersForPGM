@@ -11,21 +11,26 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.draft.Utilities;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueJoinListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.ConfigManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class RankedCommand implements CommandExecutor, TabCompleter {
+  TowersForPGM plugin = TowersForPGM.getInstance();
   private final Utilities utilities;
   private final Queue queue;
   private static Boolean RANKED_AVAILABLE = TowersForPGM.getInstance().getIsDatabaseActivated()
-      || !ConfigManager.getRankedTables().isEmpty();
+      || !TowersForPGM.getInstance()
+          .config()
+          .databaseTables()
+          .getTables(TableType.RANKED)
+          .isEmpty();
 
   public RankedCommand(Queue queue, Utilities utilities) {
     this.utilities = utilities;
@@ -38,7 +43,7 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
       return true;
     }
     if (args.length == 0) {
-      sender.sendMessage(LanguageManager.langMessage("ranked.usage"));
+      sender.sendMessage(LanguageManager.message("ranked.usage"));
       return true;
     }
 
@@ -46,7 +51,7 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
       PGM.get()
           .getMatchManager()
           .getPlayer((Player) sender)
-          .sendWarning(Component.text(LanguageManager.langMessage("ranked.unavailable")));
+          .sendWarning(Component.text(LanguageManager.message("ranked.unavailable")));
       return true;
     }
 
@@ -55,10 +60,10 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
       case "join":
       case "leave":
         if (!(sender instanceof Player)) {
-          sender.sendMessage(LanguageManager.langMessage("errors.noPlayer"));
+          sender.sendMessage(LanguageManager.message("errors.noPlayer"));
           return true;
         }
-        if (MatchBotConfig.isRankedEnabled()) return true;
+        if (MatchBotConfig.isVoiceChatEnabled()) return true;
         Match match = PGM.get().getMatchManager().getMatch(sender);
         MatchPlayer player = match.getPlayer((Player) sender);
         if (mainArg.equals("join")) {
@@ -68,14 +73,14 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
         }
         break;
       case "list":
-        String prefix = LanguageManager.langMessage("ranked.prefix");
+        String prefix = LanguageManager.message("ranked.prefix");
         Match listMatch = sender instanceof Player
             ? PGM.get().getMatchManager().getMatch(sender)
             : PGM.get().getMatchManager().getMatches().next();
         int targetSize = queue.getTargetSize(listMatch);
 
         String header = prefix
-            + LanguageManager.langMessage("ranked.queueHeader")
+            + LanguageManager.message("ranked.queueHeader")
                 .replace("{current}", String.valueOf(Queue.getQueueSize()))
                 .replace("{target}", String.valueOf(targetSize));
         List<String> queuePlayers = queue.getQueueList();
@@ -99,15 +104,56 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
       case "reload":
         // permiso exclusivo
         if (!sender.hasPermission("towers.admin")) {
-          sender.sendMessage(LanguageManager.langMessage("errors.noPermission"));
+          sender.sendMessage(LanguageManager.message("errors.noPermission"));
           return true;
         }
 
         // delegar la lógica de recolección desde voice al listener
         QueueJoinListener.reloadQueueFromVoice(queue);
         break;
+      case "time":
+        if (!sender.hasPermission("towers.admin")) {
+          sender.sendMessage(LanguageManager.message("errors.noPermission"));
+          return true;
+        }
+
+        if (args.length < 2) {
+          sender.sendMessage(LanguageManager.message("ranked.time.usage"));
+          return true;
+        }
+
+        Match timeMatch = sender instanceof Player
+            ? PGM.get().getMatchManager().getMatch(sender)
+            : PGM.get().getMatchManager().getMatches().next();
+
+        String timeArg = args[1].toLowerCase();
+        if (timeArg.equals("cancel")) {
+          if (queue.cancelManualRanked(timeMatch)) {
+            sender.sendMessage(LanguageManager.message("ranked.time.cancelled"));
+          } else {
+            sender.sendMessage(LanguageManager.message("ranked.time.noCountdown"));
+          }
+        } else {
+          try {
+            int seconds = Integer.parseInt(timeArg);
+            if (seconds < 1 || seconds > 300) {
+              sender.sendMessage(LanguageManager.message("ranked.time.invalidRange"));
+              return true;
+            }
+
+            if (queue.startManualRanked(timeMatch, seconds)) {
+              sender.sendMessage(LanguageManager.message("ranked.time.started")
+                  .replace("{time}", String.valueOf(seconds)));
+            } else {
+              sender.sendMessage(LanguageManager.message("ranked.time.cannotStart"));
+            }
+          } catch (NumberFormatException e) {
+            sender.sendMessage(LanguageManager.message("ranked.time.invalidNumber"));
+          }
+        }
+        break;
       default:
-        sender.sendMessage(LanguageManager.langMessage("ranked.usage"));
+        sender.sendMessage(LanguageManager.message("ranked.usage"));
         break;
     }
     return true;
@@ -117,9 +163,14 @@ public class RankedCommand implements CommandExecutor, TabCompleter {
   public List<String> onTabComplete(
       CommandSender sender, Command command, String alias, String[] args) {
     if (args.length == 1) {
-      List<String> options = Arrays.asList("join", "leave", "list", "reload");
+      List<String> options = Arrays.asList("join", "leave", "list", "reload", "time");
       return options.stream()
           .filter(option -> option.startsWith(args[0].toLowerCase()))
+          .collect(Collectors.toList());
+    } else if (args.length == 2 && args[0].equalsIgnoreCase("time")) {
+      List<String> timeOptions = Arrays.asList("cancel", "30", "60", "90", "120");
+      return timeOptions.stream()
+          .filter(option -> option.startsWith(args[1].toLowerCase()))
           .collect(Collectors.toList());
     }
     return Collections.emptyList();

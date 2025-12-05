@@ -28,11 +28,11 @@ public class LinkCommand extends ListenerAdapter {
     JDA jda = DiscordBot.getJDA();
     if (jda != null) {
       jda.addEventListener(new LinkCommand());
-      jda.upsertCommand(NAME, LanguageManager.langMessage("matchbot.register.description"))
+      jda.upsertCommand(NAME, LanguageManager.message("matchbot.register.description"))
           .addOption(
               OptionType.STRING,
               OPTION_CODE,
-              LanguageManager.langMessage("matchbot.register.code-option-description"),
+              LanguageManager.message("matchbot.register.code-option-description"),
               true)
           .queue();
     }
@@ -42,18 +42,18 @@ public class LinkCommand extends ListenerAdapter {
   public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
     if (!event.getName().equals(NAME)) return;
 
-    if (!MatchBotConfig.isRankedEnabled()) {
-      event
-          .reply("❌ " + LanguageManager.langMessage("matchbot.register.system-disabled"))
-          .setEphemeral(true)
-          .queue();
-      return;
-    }
+    // if (!MatchBotConfig.isVoiceChatEnabled()) {
+    //   event
+    //       .reply("❌ " + LanguageManager.message("matchbot.register.system-disabled"))
+    //       .setEphemeral(true)
+    //       .queue();
+    //   return;
+    // }
 
     OptionMapping codeOption = event.getOption(OPTION_CODE);
     if (codeOption == null) {
       event
-          .reply("❌ " + LanguageManager.langMessage("matchbot.register.code-required-error"))
+          .reply("❌ " + LanguageManager.message("matchbot.register.code-required-error"))
           .setEphemeral(true)
           .queue();
       return;
@@ -64,7 +64,7 @@ public class LinkCommand extends ListenerAdapter {
 
     if (!code.matches("\\d{6}")) {
       event
-          .reply("❌ " + LanguageManager.langMessage("matchbot.register.invalid-code-format"))
+          .reply("❌ " + LanguageManager.message("matchbot.register.invalid-code-format"))
           .setEphemeral(true)
           .queue();
       return;
@@ -83,8 +83,8 @@ public class LinkCommand extends ListenerAdapter {
                 updateNicknameIfNeeded(event, playerName, true);
               }
 
-              hook.editOriginal("❌ "
-                      + LanguageManager.langMessage("matchbot.register.discord-already-linked"))
+              hook.editOriginal(
+                      "❌ " + LanguageManager.message("matchbot.register.discord-already-linked"))
                   .queue();
               return;
             }
@@ -92,7 +92,7 @@ public class LinkCommand extends ListenerAdapter {
             UUID playerUuid = RegisterCodeManager.validateAndConsumeCode(code);
             if (playerUuid == null) {
               hook.editOriginal(
-                      "❌ " + LanguageManager.langMessage("matchbot.register.invalid-or-expired"))
+                      "❌ " + LanguageManager.message("matchbot.register.invalid-or-expired"))
                   .queue();
               return;
             }
@@ -112,8 +112,7 @@ public class LinkCommand extends ListenerAdapter {
                     }
 
                     hook.editOriginal("❌ "
-                            + LanguageManager.langMessage(
-                                "matchbot.register.minecraft-already-linked"))
+                            + LanguageManager.message("matchbot.register.minecraft-already-linked"))
                         .queue();
                     return;
                   }
@@ -153,8 +152,7 @@ public class LinkCommand extends ListenerAdapter {
 
                           EmbedBuilder embed = new EmbedBuilder()
                               .setColor(Color.GREEN)
-                              .setTitle(
-                                  "✅ " + LanguageManager.langMessage("matchbot.register.success"))
+                              .setTitle("✅ " + LanguageManager.message("matchbot.register.success"))
                               .setTimestamp(Instant.now())
                               .setThumbnail(
                                   "https://mc-heads.net/avatar/" + playerName.toLowerCase())
@@ -163,17 +161,17 @@ public class LinkCommand extends ListenerAdapter {
                                   null,
                                   MessagesConfig.message("author.icon_url"))
                               .addField(
-                                  LanguageManager.langMessage("matchbot.register.minecraft-label"),
+                                  LanguageManager.message("matchbot.register.minecraft-label"),
                                   playerName,
                                   true)
                               .addField(
-                                  LanguageManager.langMessage("matchbot.register.discord-label"),
+                                  LanguageManager.message("matchbot.register.discord-label"),
                                   "<@" + discordId + ">",
                                   true);
                           hook.editOriginalEmbeds(embed.build()).queue();
                         } else {
-                          hook.editOriginal("❌ "
-                                  + LanguageManager.langMessage("matchbot.register.link-error"))
+                          hook.editOriginal(
+                                  "❌ " + LanguageManager.message("matchbot.register.link-error"))
                               .queue();
                         }
                       })
@@ -181,8 +179,8 @@ public class LinkCommand extends ListenerAdapter {
                         TowersForPGM.getInstance()
                             .getLogger()
                             .severe("Error registrando vinculación: " + throwable.getMessage());
-                        hook.editOriginal("❌ "
-                                + LanguageManager.langMessage("matchbot.register.internal-error"))
+                        hook.editOriginal(
+                                "❌ " + LanguageManager.message("matchbot.register.internal-error"))
                             .queue();
                         return null;
                       });
@@ -192,7 +190,7 @@ public class LinkCommand extends ListenerAdapter {
                       .getLogger()
                       .severe("Error verificando cuenta Minecraft: " + throwable.getMessage());
                   hook.editOriginal(
-                          "❌ " + LanguageManager.langMessage("matchbot.register.internal-error"))
+                          "❌ " + LanguageManager.message("matchbot.register.internal-error"))
                       .queue();
                   return null;
                 });
@@ -201,8 +199,7 @@ public class LinkCommand extends ListenerAdapter {
             TowersForPGM.getInstance()
                 .getLogger()
                 .severe("Error verificando cuenta Discord: " + throwable.getMessage());
-            hook.editOriginal(
-                    "❌ " + LanguageManager.langMessage("matchbot.register.internal-error"))
+            hook.editOriginal("❌ " + LanguageManager.message("matchbot.register.internal-error"))
                 .queue();
             return null;
           });
