@@ -6,7 +6,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.nicolie.towersforpgm.draft.Captains;
+import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
@@ -29,7 +29,7 @@ public class CommandListener implements Listener {
     Boolean isCaptains = captains.isMatchWithCaptains();
 
     String lower = command.toLowerCase();
-    List<String> matchEndingCommands = Arrays.asList("/end", "/cycle", "/qr");
+    List<String> matchEndingCommands = Arrays.asList("/end", "/cycle", "/qr", "/finish");
 
     boolean isProtected = matchEndingCommands.stream().anyMatch(lower::startsWith);
 

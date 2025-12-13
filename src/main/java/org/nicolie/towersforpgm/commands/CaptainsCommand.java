@@ -12,7 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
@@ -76,7 +76,7 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
     }
 
     // Verificar que la partida tenga exactamente 2 equipos
-    if (!org.nicolie.towersforpgm.draft.Teams.validateTeamsForDraft(match)) {
+    if (!org.nicolie.towersforpgm.draft.core.Teams.validateTeamsForDraft(match)) {
       matchPlayer.sendWarning(
           Component.text(LanguageManager.message("draft.captains.invalidTeams")));
       return true;

@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.StatsManager;
-import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.Forfeit;
 import org.nicolie.towersforpgm.rankeds.DisconnectManager;

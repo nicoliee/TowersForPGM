@@ -3,9 +3,9 @@ package org.nicolie.towersforpgm.rankeds;
 import java.util.List;
 import java.util.UUID;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.Matchmaking;
-import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.draft.core.Draft;
+import org.nicolie.towersforpgm.draft.core.Matchmaking;
+import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.rankeds.queue.CountdownManager;
 import org.nicolie.towersforpgm.rankeds.queue.MatchStarter;
 import org.nicolie.towersforpgm.rankeds.queue.QueueManager;
@@ -39,7 +39,6 @@ public class Queue {
     if (queueManager.addPlayer(player)) {
       queueMessaging.sendQueueMessage(player.getMatch(), player.getPrefixedName(), false);
 
-      // Start countdown if conditions are met
       if (queueState.getQueueSize() >= plugin.config().ranked().getRankedMinSize()
           && !queueState.isRanked()
           && !queueState.isCountdownActive()) {
@@ -54,7 +53,6 @@ public class Queue {
       if (playerName != null) {
         queueMessaging.sendQueueMessage(match, playerName, false);
 
-        // Start countdown if conditions are met
         if (queueState.getQueueSize() >= plugin.config().ranked().getRankedMinSize()
             && !queueState.isRanked()
             && !queueState.isCountdownActive()) {
@@ -70,17 +68,40 @@ public class Queue {
     }
   }
 
-  public void removePlayer(UUID playerUUID, Match match) {
+  public boolean removePlayer(UUID playerUUID) {
+    Match match = org.nicolie.towersforpgm.utils.MatchManager.getMatch();
     if (queueManager.removePlayer(playerUUID)) {
       String playerName = getPlayerNameForDisplay(playerUUID);
       if (playerName != null && match != null) {
         queueMessaging.sendQueueMessage(match, playerName, true);
       }
+      return true;
     }
+    return false;
   }
 
-  public void processVoiceJoin(UUID playerUUID, Match match) {
-    queueManager.processVoiceJoin(playerUUID, match);
+  public boolean processVoiceJoin(UUID playerUUID, Match match) {
+    if (match == null) {
+      match = org.nicolie.towersforpgm.utils.MatchManager.getMatch();
+    }
+
+    boolean added = queueManager.processVoiceJoin(playerUUID, match);
+
+    if (added) {
+      String playerName = getPlayerNameForDisplay(playerUUID);
+      if (playerName != null && match != null) {
+        queueMessaging.sendQueueMessage(match, playerName, false);
+
+        // Start countdown if conditions are met
+        if (queueState.getQueueSize() >= plugin.config().ranked().getRankedMinSize()
+            && !queueState.isRanked()
+            && !queueState.isCountdownActive()) {
+          countdownManager.startRankedCountdown(match);
+        }
+      }
+    }
+
+    return added;
   }
 
   public void startRanked(Match match) {
@@ -146,7 +167,6 @@ public class Queue {
     return QueueState.getInstance().isCountdownActive();
   }
 
-  /** Helper method to get player name for display purposes. */
   private String getPlayerNameForDisplay(UUID playerUUID) {
     tc.oc.pgm.api.player.MatchPlayer onlinePlayer =
         tc.oc.pgm.api.PGM.get().getMatchManager().getPlayer(playerUUID);

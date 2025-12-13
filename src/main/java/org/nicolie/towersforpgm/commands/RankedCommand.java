@@ -12,7 +12,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.tables.TableType;
-import org.nicolie.towersforpgm.draft.Utilities;
+import org.nicolie.towersforpgm.draft.core.Utilities;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueJoinListener;
 import org.nicolie.towersforpgm.rankeds.Queue;

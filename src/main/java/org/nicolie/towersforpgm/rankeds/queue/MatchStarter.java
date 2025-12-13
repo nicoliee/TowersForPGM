@@ -12,8 +12,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
-import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.Matchmaking;
+import org.nicolie.towersforpgm.draft.core.Draft;
+import org.nicolie.towersforpgm.draft.core.Matchmaking;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedStart;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
@@ -25,7 +25,6 @@ import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.event.MatchStartEvent;
 import tc.oc.pgm.api.player.MatchPlayer;
 
-/** Handles the initiation of ranked matches including draft and matchmaking logic. */
 public class MatchStarter {
   private final TowersForPGM plugin;
   private final QueueState queueState;
@@ -41,7 +40,6 @@ public class MatchStarter {
     this.matchmaking = matchmaking;
   }
 
-  /** Starts a ranked match with the given table configuration. */
   public void startMatch(Match match, String table) {
     removeDisconnectedPlayersFromQueue(match);
 
@@ -66,7 +64,6 @@ public class MatchStarter {
     processEloAndStartMatch(match, table, rankedPlayers, rankedMatchPlayers);
   }
 
-  /** Sends ranked start embed to Discord when match begins. */
   public static void sendRankedStartEmbed(MatchStartEvent event) {
     TowersForPGM plugin = TowersForPGM.getInstance();
     QueueState queueState = QueueState.getInstance();
@@ -135,7 +132,7 @@ public class MatchStarter {
   private void removePlayersFromQueue(int finalSize) {
     List<UUID> queuePlayers = queueState.getQueuePlayers();
     for (int i = 0; i < finalSize && i < queuePlayers.size(); i++) {
-      queueState.removePlayer(queuePlayers.get(0)); // Always remove first element
+      queueState.removePlayer(queuePlayers.get(i));
     }
   }
 

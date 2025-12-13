@@ -15,12 +15,12 @@ import org.nicolie.towersforpgm.commands.SubstituteCommand;
 import org.nicolie.towersforpgm.commands.SudoCommand;
 import org.nicolie.towersforpgm.commands.TowersCommand;
 import org.nicolie.towersforpgm.commands.TowersForPGMCommand;
-import org.nicolie.towersforpgm.draft.AvailablePlayers;
-import org.nicolie.towersforpgm.draft.Captains;
-import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.Matchmaking;
-import org.nicolie.towersforpgm.draft.PicksGUI;
-import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.draft.components.PicksGUI;
+import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.core.Captains;
+import org.nicolie.towersforpgm.draft.core.Draft;
+import org.nicolie.towersforpgm.draft.core.Matchmaking;
+import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
 

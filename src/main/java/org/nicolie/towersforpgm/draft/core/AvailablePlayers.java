@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.draft;
+package org.nicolie.towersforpgm.draft.core;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -18,10 +18,15 @@ import tc.oc.pgm.api.player.MatchPlayer;
 
 public class AvailablePlayers {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
+  private final org.nicolie.towersforpgm.configs.ConfigManager configManager;
   private final List<MatchPlayer> availablePlayers = new ArrayList<>();
   private final List<String> availableOfflinePlayers = new ArrayList<>();
   private final Map<String, Stats> playerStats = new HashMap<>();
   private final List<String> topPlayers = new ArrayList<>();
+
+  public AvailablePlayers(org.nicolie.towersforpgm.configs.ConfigManager configManager) {
+    this.configManager = configManager;
+  }
 
   public void addPlayer(String playerName) {
     Player player = Bukkit.getPlayerExact(playerName);
@@ -150,10 +155,8 @@ public class AvailablePlayers {
       return; // Ya están cargadas
     }
 
-    String table = plugin
-        .config()
-        .databaseTables()
-        .getTable(MatchManager.getMatch().getMap().getName());
+    String table =
+        configManager.databaseTables().getTable(MatchManager.getMatch().getMap().getName());
     boolean isRanked = Queue.isRanked();
 
     org.nicolie.towersforpgm.database.StatsManager.getStats(table, playerName)

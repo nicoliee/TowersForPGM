@@ -27,7 +27,6 @@ public class QueueState {
     return instance;
   }
 
-  // Ranked state management
   public boolean isRanked() {
     return ranked;
   }
@@ -36,7 +35,6 @@ public class QueueState {
     this.ranked = ranked;
   }
 
-  // Countdown state management
   public boolean isCountdownActive() {
     return countdownActive;
   }
@@ -80,7 +78,6 @@ public class QueueState {
     queuePlayers.clear();
   }
 
-  // ELO cache management
   public Map<String, java.util.concurrent.CompletableFuture<List<PlayerEloChange>>> getEloCache() {
     return eloCache;
   }
@@ -99,7 +96,6 @@ public class QueueState {
     eloCache.remove(table);
   }
 
-  // Full reset
   public void reset() {
     ranked = false;
     countdownActive = false;
@@ -111,7 +107,6 @@ public class QueueState {
     eloCache.clear();
   }
 
-  // Cancel countdown
   public void cancelCountdown() {
     if (countdownTask != null) {
       countdownTask.cancel();

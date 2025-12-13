@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.draft;
+package org.nicolie.towersforpgm.draft.components;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +25,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.configs.ConfigManager;
 import org.nicolie.towersforpgm.database.models.Stats;
+import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.core.Captains;
+import org.nicolie.towersforpgm.draft.core.Draft;
+import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
@@ -34,6 +39,8 @@ import tc.oc.pgm.api.player.MatchPlayer;
 
 public class PicksGUI implements Listener {
 
+  private final TowersForPGM plugin;
+  private final ConfigManager configManager;
   private final Draft draft;
   private final Captains captains;
   private final AvailablePlayers availablePlayers;
@@ -42,7 +49,15 @@ public class PicksGUI implements Listener {
   // Para saber qué inventario pertenece a qué capitán
   private final Map<UUID, Inventory> openInventories = new HashMap<>();
 
-  public PicksGUI(Draft draft, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
+  public PicksGUI(
+      TowersForPGM plugin,
+      ConfigManager configManager,
+      Draft draft,
+      Captains captains,
+      AvailablePlayers availablePlayers,
+      Teams teams) {
+    this.plugin = plugin;
+    this.configManager = configManager;
     this.draft = draft;
     this.captains = captains;
     this.availablePlayers = availablePlayers;
@@ -115,7 +130,7 @@ public class PicksGUI implements Listener {
 
         ItemStack skull = createPlayerSkull(name, isOnline);
 
-        if (TowersForPGM.getInstance().getIsDatabaseActivated()) {
+        if (plugin.getIsDatabaseActivated()) {
           Stats stats = availablePlayers.getStatsForPlayer(name);
           addSkullLore(skull, stats);
         }
@@ -124,7 +139,7 @@ public class PicksGUI implements Listener {
         int slot = rowOffset + row * 9 + (col + 1); // +1 para saltar el primer borde
 
         int finalSlot = slot;
-        Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
+        Bukkit.getScheduler().runTask(plugin, () -> {
           inv.setItem(finalSlot, skull);
         });
 
@@ -146,13 +161,13 @@ public class PicksGUI implements Listener {
 
         ItemStack skull = createPlayerSkull(name, isOnline);
 
-        if (TowersForPGM.getInstance().getIsDatabaseActivated()) {
+        if (plugin.getIsDatabaseActivated()) {
           Stats stats = availablePlayers.getStatsForPlayer(name);
           addSkullLore(skull, stats);
         }
 
         int slot = currentIndex;
-        Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
+        Bukkit.getScheduler().runTask(plugin, () -> {
           inv.setItem(slot, skull);
         });
 

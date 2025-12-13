@@ -21,7 +21,7 @@ public class RefillManager {
 
   public void loadChests(String mapName, String worldName) {
     Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-      FileConfiguration refillConfig = plugin.getRefillConfig();
+      FileConfiguration refillConfig = plugin.config().refill().config();
       ConfigurationSection refillSection =
           refillConfig.getConfigurationSection("refill." + mapName);
       if (refillSection == null) {

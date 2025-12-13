@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.draft;
+package org.nicolie.towersforpgm.draft.core;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.nicolie.towersforpgm.configs.ConfigManager;
 import org.nicolie.towersforpgm.database.models.MMR;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.draft.events.MatchmakingEndEvent;
@@ -22,14 +23,20 @@ import tc.oc.pgm.start.StartMatchModule;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class Matchmaking {
+  private final ConfigManager configManager;
   private final Captains captains;
   private final Utilities utilities;
   private final AvailablePlayers availablePlayers;
   private final Teams teams;
-  private static boolean isMatchmakingActive = false;
+  private boolean matchmakingActive = false;
 
   public Matchmaking(
-      AvailablePlayers availablePlayers, Captains captains, Teams teams, Utilities utilities) {
+      ConfigManager configManager,
+      AvailablePlayers availablePlayers,
+      Captains captains,
+      Teams teams,
+      Utilities utilities) {
+    this.configManager = configManager;
     this.captains = captains;
     this.availablePlayers = availablePlayers;
     this.teams = teams;
@@ -42,56 +49,46 @@ public class Matchmaking {
       MatchManager.setCurrentMatch(match);
     }
 
-    // Validate teams before starting
     if (!Teams.validateTeamsForDraft(match)) {
       match.sendMessage(Component.text(LanguageManager.message("ranked.invalidTeams")));
       return;
     }
 
-    // Initialize teams from match
     if (!teams.initializeTeamsFromMatch(match)) {
       match.sendMessage(Component.text(LanguageManager.message("ranked.invalidTeams")));
       return;
     }
 
-    // Inicializar estado
     captains.clear();
     availablePlayers.clear();
     teams.clear();
-    isMatchmakingActive = true;
+    matchmakingActive = true;
 
-    // Re-initialize teams after clearing
     teams.initializeTeamsFromMatch(match);
 
-    // Registrar capitanes
     captains.setCaptain1(captain1);
     captains.setCaptain2(captain2);
 
-    // Limpiar equipos y agregar capitanes
     teams.removeFromTeams(match);
     teams.addPlayerToTeam(Bukkit.getPlayer(captain1).getName(), 1);
     teams.addPlayerToTeam(Bukkit.getPlayer(captain2).getName(), 2);
 
-    // Registrar jugadores disponibles
     for (MatchPlayer player : players) {
       availablePlayers.addPlayer(player.getNameLegacy());
     }
 
-    // Mensajes iniciales
     match.playSound(Sounds.RAINDROPS);
-    match.sendMessage(Component.text(LanguageManager.message("captains.captainsHeader")));
+    match.sendMessage(Component.text(LanguageManager.message("draft.captains.captainsHeader")));
     match.sendMessage(
         Component.text(teams.getTeamColor(1) + Bukkit.getPlayer(captain1).getName() + " §l§bvs. "
             + teams.getTeamColor(2) + Bukkit.getPlayer(captain2).getName()));
     match.sendMessage(Component.text("§m---------------------------------"));
     match.sendMessage(Component.text(LanguageManager.message("draft.picks.choosing")));
 
-    // Disparar evento de inicio de matchmaking
     MatchmakingStartEvent matchmakingStartEvent =
         new MatchmakingStartEvent(captain1, captain2, players, match);
     Bukkit.getPluginManager().callEvent(matchmakingStartEvent);
 
-    // Realizar balance de equipos
     balanceTeams(match);
   }
 
@@ -365,11 +362,11 @@ public class Matchmaking {
   }
 
   public boolean isMatchmakingActive() {
-    return isMatchmakingActive;
+    return matchmakingActive;
   }
 
   public void setMatchmakingActive(boolean active) {
-    isMatchmakingActive = active;
+    matchmakingActive = active;
   }
 
   private static class TeamPartition {

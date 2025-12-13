@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.matchbot.embeds;
 
+import java.time.Instant;
 import java.util.logging.Level;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.nicolie.towersforpgm.TowersForPGM;
@@ -17,9 +18,9 @@ public class StatsEmbed {
     boolean isRankedTable = tableInfo != null && tableInfo.isRanked();
 
     EmbedBuilder embed = new EmbedBuilder();
+    embed.setTimestamp(Instant.now());
+    embed.setThumbnail("https://vzge.me/bust/" + username.toLowerCase());
     embed.setTitle(username + " - " + table);
-    embed.setThumbnail("https://mc-heads.net/avatar/" + username.toLowerCase());
-
     if (stats == null) {
       embed.setDescription("No se encontraron estadísticas para este usuario.");
       return embed;
@@ -47,7 +48,6 @@ public class StatsEmbed {
 
   private static void addStatsToEmbed(EmbedBuilder embed, Stats stats, boolean isRankedTable) {
     int games = stats.getGames();
-
     if (isRankedTable && stats.getElo() != -9999) {
       int elo = stats.getElo();
       int maxElo = stats.getMaxElo();
@@ -55,16 +55,14 @@ public class StatsEmbed {
         Rank rank = Rank.getRankByElo(elo);
         embed.setColor(rank.getEmbedColor());
         embed.addField(
-            "Elo:",
-            "⭐ **" + rank.getPrefixedRank(false) + "** " + elo + " [" + maxElo + "]",
+            "⭐ Elo:",
+            "**" + rank.getPrefixedRank(false) + "** " + elo + " [" + maxElo + "]",
             false);
       }
     }
-
-    embed.addField("_ _", "**General:**", false);
-
+    embed.setDescription("**General:**");
     if (games != -9999) {
-      embed.addField("🏟 Partidas", String.valueOf(games), true);
+      embed.addField("⚽ Partidas", String.valueOf(games), true);
     }
 
     int wins = stats.getWins();
@@ -75,6 +73,12 @@ public class StatsEmbed {
     if (games > 0 && games != -9999 && wins != -9999) {
       double winrate = (wins * 100.0) / games;
       embed.addField("▶ Winrate", String.format("%.0f", winrate) + "%", true);
+    }
+
+    if (games > 0 && games != -9999 && wins != -9999) {
+      int losses = stats.getGames() - wins;
+      double wlratio = losses > 0 ? (double) wins / losses : 0.0;
+      embed.addField("📊 W/L Ratio", String.format("%.2f", wlratio), true);
     }
 
     int winstreak = stats.getWinstreak();
@@ -88,7 +92,7 @@ public class StatsEmbed {
       if (points != -9999) {
         double pointsPerGame = (games > 0 && games != -9999) ? (double) points / games : 0;
         embed.addField(
-            "🎖 Puntos", points + " (" + String.format("%.2f", pointsPerGame) + ")", true);
+            "🎯 Puntos", points + " (" + String.format("%.2f", pointsPerGame) + ")", true);
       }
     }
 
@@ -119,7 +123,7 @@ public class StatsEmbed {
 
     if (kills != -9999 && deaths != -9999) {
       double kdRatio = stats.getKDRatio();
-      embed.addField("▶ K/D Ratio", String.format("%.2f", kdRatio), true);
+      embed.addField("📊 K/D Ratio", String.format("%.2f", kdRatio), true);
     }
 
     if (damageDone != -9999.0) {

@@ -17,20 +17,23 @@ import org.nicolie.towersforpgm.database.MatchHistoryManager;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.database.sql.SQLDatabaseManager;
 import org.nicolie.towersforpgm.database.sqlite.SQLITEDatabaseManager;
-import org.nicolie.towersforpgm.draft.AvailablePlayers;
-import org.nicolie.towersforpgm.draft.Captains;
-import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.Matchmaking;
-import org.nicolie.towersforpgm.draft.PicksGUI;
-import org.nicolie.towersforpgm.draft.Teams;
-import org.nicolie.towersforpgm.draft.Utilities;
+import org.nicolie.towersforpgm.draft.components.DraftDisplayManager;
+import org.nicolie.towersforpgm.draft.components.DraftPickManager;
+import org.nicolie.towersforpgm.draft.components.DraftState;
+import org.nicolie.towersforpgm.draft.components.DraftTurnManager;
+import org.nicolie.towersforpgm.draft.components.PicksGUI;
+import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.core.Captains;
+import org.nicolie.towersforpgm.draft.core.Draft;
+import org.nicolie.towersforpgm.draft.core.Matchmaking;
+import org.nicolie.towersforpgm.draft.core.Teams;
+import org.nicolie.towersforpgm.draft.core.Utilities;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
 import org.nicolie.towersforpgm.matchbot.commands.stats.StatsCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopPaginationListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueJoinListener;
-import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueLeaveListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedFinishListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
@@ -69,8 +72,6 @@ public final class TowersForPGM extends JavaPlugin {
 
   // Refill
   private RefillManager refillManager; // Administrador de refill
-  private File refillFile;
-  private FileConfiguration refillConfig;
 
   // MatchBot (opcional)
   private boolean isMatchBotEnabled = false; // Variable para verificar si MatchBot está habilitado
@@ -82,7 +83,6 @@ public final class TowersForPGM extends JavaPlugin {
     instance = this;
     saveDefaultConfig();
     this.ConfigManager = new org.nicolie.towersforpgm.configs.ConfigManager(this);
-    loadRefillConfig();
     LanguageManager.initialize(this);
     refillManager = new RefillManager();
     preparationListener = new PreparationListener();
@@ -103,20 +103,46 @@ public final class TowersForPGM extends JavaPlugin {
       getLogger().warning("No database connections available!");
     }
 
-    // Inicializar el Draft
-    availablePlayers = new AvailablePlayers();
+    availablePlayers = new AvailablePlayers(this.ConfigManager);
     teams = new Teams();
     captains = new Captains();
-    utilities = new Utilities(availablePlayers, captains);
+    utilities = new Utilities(this.ConfigManager, availablePlayers, captains);
 
-    // Set Teams instance in DisconnectManager
     org.nicolie.towersforpgm.rankeds.DisconnectManager.setTeams(teams);
-    draft = new Draft(captains, availablePlayers, teams, utilities);
-    pickInventory = new PicksGUI(draft, captains, availablePlayers, teams);
+    DraftState draftState = new DraftState();
+    DraftTurnManager draftTurnManager = new DraftTurnManager(draftState, captains, teams);
+    DraftPickManager draftPickManager = new DraftPickManager(
+        this,
+        this.ConfigManager,
+        draftState,
+        captains,
+        availablePlayers,
+        teams,
+        utilities,
+        draftTurnManager);
+    DraftDisplayManager draftDisplayManager =
+        new DraftDisplayManager(this, this.ConfigManager, draftState, captains, teams, utilities);
+    draftPickManager.setDisplayManager(draftDisplayManager);
+    draftDisplayManager.setPickManager(draftPickManager);
+
+    draft = new Draft(
+        this,
+        this.ConfigManager,
+        draftState,
+        draftTurnManager,
+        draftPickManager,
+        draftDisplayManager,
+        captains,
+        availablePlayers,
+        teams,
+        utilities);
+    pickInventory =
+        new PicksGUI(this, this.ConfigManager, draft, captains, availablePlayers, teams);
     getServer().getPluginManager().registerEvents(pickInventory, this);
 
     // Inicializar el matchmaking
-    Matchmaking matchmaking = new Matchmaking(availablePlayers, captains, teams, utilities);
+    Matchmaking matchmaking =
+        new Matchmaking(this.ConfigManager, availablePlayers, captains, teams, utilities);
 
     // Registrar Rankeds
     Queue queue = new Queue(draft, matchmaking, teams);
@@ -165,7 +191,6 @@ public final class TowersForPGM extends JavaPlugin {
 
         // Registrar listener del queue de voz
         QueueJoinListener.register();
-        QueueLeaveListener.register();
 
         // Registrar listeners de gestión de canales de voz para ranked
         getServer().getPluginManager().registerEvents(new RankedListener(), this);
@@ -209,7 +234,7 @@ public final class TowersForPGM extends JavaPlugin {
     return draft;
   }
 
-  public org.nicolie.towersforpgm.draft.AvailablePlayers getAvailablePlayers() {
+  public org.nicolie.towersforpgm.draft.core.AvailablePlayers getAvailablePlayers() {
     return availablePlayers;
   }
 
@@ -378,34 +403,8 @@ public final class TowersForPGM extends JavaPlugin {
   }
 
   // Refill
-  public void loadRefillConfig() {
-    refillFile = new File(getDataFolder(), "refill.yml");
-
-    if (!refillFile.exists()) {
-      saveResource("refill.yml", false);
-    }
-
-    refillConfig = YamlConfiguration.loadConfiguration(refillFile);
-  }
-
-  public FileConfiguration getRefillConfig() {
-    return refillConfig;
-  }
-
   public RefillManager getRefillManager() {
     return refillManager;
-  }
-
-  public void saveRefillConfig() {
-    try {
-      refillConfig.save(refillFile);
-    } catch (IOException e) {
-      getLogger().severe("Error al guardar refill.yml: " + e.getMessage());
-    }
-  }
-
-  public void reloadRefillConfig() {
-    refillConfig = YamlConfiguration.loadConfiguration(refillFile);
   }
 
   // MatchBot

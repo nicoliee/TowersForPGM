@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.draft;
+package org.nicolie.towersforpgm.draft.core;
 
 import java.util.*;
 import java.util.stream.Collectors;

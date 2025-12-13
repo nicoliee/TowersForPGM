@@ -7,18 +7,14 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.draft.AvailablePlayers;
-import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
-/**
- * Handles player-related queue operations such as adding/removing players and managing player
- * validation logic.
- */
 public class QueueManager {
   private final TowersForPGM plugin;
   private final QueueState queueState;
@@ -30,7 +26,6 @@ public class QueueManager {
     this.teams = teams;
   }
 
-  /** Adds a player to the queue with full validation. */
   public boolean addPlayer(MatchPlayer player) {
     UUID playerUUID = player.getId();
     Match match = player.getMatch();
@@ -60,7 +55,6 @@ public class QueueManager {
     return true;
   }
 
-  /** Adds a player to the queue by UUID with validation. */
   public boolean addPlayer(UUID playerUUID, Match match) {
     if (playerUUID == null || queueState.containsPlayer(playerUUID)) {
       return false;
@@ -102,7 +96,6 @@ public class QueueManager {
     return true;
   }
 
-  /** Removes a player from the queue. */
   public boolean removePlayer(MatchPlayer player) {
     UUID playerUUID = player.getId();
 
@@ -114,7 +107,6 @@ public class QueueManager {
 
     queueState.removePlayer(playerUUID);
 
-    // Reset ranked if queue becomes too small and no countdown is active
     if (queueState.isRanked()
         && !queueState.isCountdownActive()
         && queueState.getQueueSize() < plugin.config().ranked().getRankedMinSize()) {
@@ -124,7 +116,6 @@ public class QueueManager {
     return true;
   }
 
-  /** Removes a player from the queue by UUID. */
   public boolean removePlayer(UUID playerUUID) {
     if (playerUUID == null || !queueState.containsPlayer(playerUUID)) {
       return false;
@@ -133,17 +124,15 @@ public class QueueManager {
     return queueState.removePlayer(playerUUID);
   }
 
-  /** Processes voice join logic for a player. */
-  public void processVoiceJoin(UUID playerUUID, Match match) {
-    if (playerUUID == null) return;
+  public boolean processVoiceJoin(UUID playerUUID, Match match) {
+    if (playerUUID == null) return false;
 
     if (match == null) {
       match = getDefaultMatch();
     }
 
     if (!queueState.isRanked()) {
-      addPlayer(playerUUID, match);
-      return;
+      return addPlayer(playerUUID, match);
     }
 
     MatchPlayer onlinePlayer = PGM.get().getMatchManager().getPlayer(playerUUID);
@@ -151,7 +140,7 @@ public class QueueManager {
         ? onlinePlayer.getNameLegacy()
         : Bukkit.getOfflinePlayer(playerUUID).getName();
 
-    if (plainName == null) return;
+    if (plainName == null) return false;
 
     if (teams != null && teams.isPlayerInAnyTeam(plainName)) {
       if (teams.isPlayerInTeam(plainName, 1)) {
@@ -159,13 +148,12 @@ public class QueueManager {
       } else {
         RankedListener.movePlayerToTeam2(playerUUID);
       }
-      return;
+      return false;
     }
 
-    addPlayer(playerUUID, match);
+    return addPlayer(playerUUID, match);
   }
 
-  /** Gets list of player names in queue for display. */
   public List<String> getQueueDisplayNames() {
     return queueState.getQueuePlayers().stream()
         .map(uuid -> {
@@ -181,14 +169,12 @@ public class QueueManager {
         .collect(Collectors.toList());
   }
 
-  /** Gets list of disconnected players in queue. */
   public List<UUID> getDisconnectedPlayersInQueue() {
     return queueState.getQueuePlayers().stream()
         .filter(uuid -> PGM.get().getMatchManager().getPlayer(uuid) == null)
         .collect(Collectors.toList());
   }
 
-  /** Removes disconnected players from queue. */
   public void removeDisconnectedPlayers(Match match, List<UUID> disconnectedPlayerUUIDs) {
     for (UUID playerUUID : disconnectedPlayerUUIDs) {
       if (playerUUID != null && queueState.containsPlayer(playerUUID)) {
@@ -198,13 +184,11 @@ public class QueueManager {
     }
   }
 
-  /** Gets UUID from username. */
   public UUID getUUIDFromUsername(String username) {
     OfflinePlayer offline = Bukkit.getPlayerExact(username);
     return offline != null ? offline.getUniqueId() : null;
   }
 
-  /** Gets valid ranked size based on match and configuration. */
   public int getValidRankedSize(Match match) {
     int minSize = plugin.config().ranked().getRankedMinSize();
     int maxSize = plugin.config().ranked().getRankedMaxSize();

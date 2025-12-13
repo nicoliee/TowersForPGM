@@ -14,7 +14,6 @@ import tc.oc.pgm.api.match.event.MatchFinishEvent;
 
 public class RankedFinishListener implements Listener {
   private static final TowersForPGM plugin = TowersForPGM.getInstance();
-  private static final Boolean RANKED_ENABLED = MatchBotConfig.isVoiceChatEnabled();
   private static final String INACTIVE_ID = MatchBotConfig.getInactiveID();
   private static final String CHANNEL1_ID = MatchBotConfig.getTeam1ID();
   private static final String CHANNEL2_ID = MatchBotConfig.getTeam2ID();
@@ -30,7 +29,7 @@ public class RankedFinishListener implements Listener {
   }
 
   private boolean shouldProcessEvent(String mapName) {
-    if (!RANKED_ENABLED) return false;
+    if (!MatchBotConfig.isVoiceChatEnabled()) return false;
 
     Boolean ranked = Queue.isRanked();
     boolean isRankedTable = plugin.config().databaseTables().currentTableIsRanked();

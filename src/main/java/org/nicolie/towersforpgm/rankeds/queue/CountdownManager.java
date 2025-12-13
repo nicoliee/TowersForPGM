@@ -13,15 +13,11 @@ import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.MatchPhase;
 import tc.oc.pgm.util.bukkit.Sounds;
 
-/**
- * Manages countdown logic for ranked queue system. Handles the timing and countdown mechanics
- * before matches start.
- */
 public class CountdownManager {
   private final TowersForPGM plugin;
   private final QueueState queueState;
   private final QueueManager queueManager;
-  private MatchStarter matchStarter; // Will be set after initialization
+  private MatchStarter matchStarter;
 
   public CountdownManager(QueueManager queueManager) {
     this.plugin = TowersForPGM.getInstance();
@@ -33,7 +29,6 @@ public class CountdownManager {
     this.matchStarter = matchStarter;
   }
 
-  /** Starts the ranked countdown if conditions are met. */
   public boolean startRankedCountdown(Match match) {
     if (!canStartCountdown(match)) {
       return false;
@@ -52,7 +47,6 @@ public class CountdownManager {
     return true;
   }
 
-  /** Starts a manual ranked countdown with custom time. */
   public boolean startManualRankedCountdown(Match match, int customTime) {
     if (!canStartCountdown(match)) {
       return false;
@@ -74,7 +68,6 @@ public class CountdownManager {
     return true;
   }
 
-  /** Cancels the current countdown. */
   public boolean cancelCountdown(Match match) {
     if (!queueState.isCountdownActive() || queueState.getCountdownTask() == null) {
       return false;

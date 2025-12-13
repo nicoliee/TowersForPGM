@@ -7,7 +7,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.party.Party;
@@ -24,7 +24,6 @@ public class DisconnectManager {
     teams = teamsInstance;
   }
 
-  /** Checks for offline players in teams when a ranked match starts */
   public static void checkOfflinePlayersOnMatchStart(Match match) {
     if (!isValidRankedMatch(match) || teams == null) return;
     // Check both teams for offline players
@@ -32,10 +31,14 @@ public class DisconnectManager {
       for (String playerName : teams.getTeamOfflinePlayers(teamNumber)) {
         startDisconnectTimer(match, playerName, teamNumber);
       }
+      for (MatchPlayer player : teams.getTeamOnlinePlayers(teamNumber)) {
+        if (!player.getBukkit().isOnline()) {
+          startDisconnectTimer(match, player);
+        }
+      }
     }
   }
 
-  /** Starts a disconnect timer for a player when they disconnect from a ranked match */
   public static void startDisconnectTimer(Match match, MatchPlayer player) {
     if (!isValidRankedMatch(match) || player == null || teams == null) return;
 
@@ -47,19 +50,15 @@ public class DisconnectManager {
   }
 
   private static void startDisconnectTimer(Match match, String playerName, int teamNumber) {
-    // Cancel any existing timer for this player
     cancelDisconnectTimer(playerName);
 
     int seconds = Math.max(1, plugin.config().ranked().getDisconnectTime());
     final int[] timeRemaining = {seconds};
 
-    // Reset forfeit votes for the disconnected player's team
     resetTeamForfeits(match, teamNumber);
 
-    // Send initial countdown message
     sendCountdownMessage(match, playerName, timeRemaining[0]);
 
-    // Start the countdown timer
     BukkitTask task = Bukkit.getScheduler()
         .runTaskTimer(
             TowersForPGM.getInstance(),
@@ -86,15 +85,12 @@ public class DisconnectManager {
 
     @Override
     public void run() {
-      // Check if match ended or is no longer ranked
       if (match.isFinished() || !Queue.isRanked()) {
         cancelDisconnectTimer(playerName);
         return;
       }
 
-      // Check if player reconnected
       if (isPlayerOnline(playerName)) {
-        // Only cancel if no sanction is active
         if (!isSanctionActive(match)) {
           cancelDisconnectTimer(playerName);
           sendReconnectedMessage(match, playerName);
@@ -102,7 +98,6 @@ public class DisconnectManager {
         return;
       }
 
-      // Countdown
       timeRemaining[0]--;
       if (timeRemaining[0] <= 0) {
         cancelDisconnectTimer(playerName);
@@ -120,17 +115,14 @@ public class DisconnectManager {
   private static void applyDisconnectSanction(Match match, String playerName, int teamNumber) {
     activeSanctions.put(match.getId(), new Sanction(playerName, teamNumber));
 
-    // Reset forfeit votes when sanction is applied so team can forfeit again
     resetTeamForfeits(match, teamNumber);
 
-    // Send sanction notice
     String message = LanguageManager.message("ranked.prefix")
         + LanguageManager.message("ranked.disconnect.notice").replace("{player}", playerName);
     match.sendMessage(Component.text(message));
     match.playSound(Sounds.ALERT);
   }
 
-  // Helper methods
   private static boolean isValidRankedMatch(Match match) {
     return match != null && Queue.isRanked() && !match.isFinished();
   }
@@ -171,7 +163,6 @@ public class DisconnectManager {
     }
   }
 
-  // Public API methods
   public static boolean isSanctionActive(Match match) {
     if (match == null) return false;
     return activeSanctions.containsKey(match.getId());

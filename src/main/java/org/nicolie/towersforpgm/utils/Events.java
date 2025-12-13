@@ -2,11 +2,11 @@ package org.nicolie.towersforpgm.utils;
 
 import org.bukkit.plugin.PluginManager;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.draft.AvailablePlayers;
-import org.nicolie.towersforpgm.draft.Captains;
-import org.nicolie.towersforpgm.draft.Draft;
-import org.nicolie.towersforpgm.draft.PicksGUI;
-import org.nicolie.towersforpgm.draft.Teams;
+import org.nicolie.towersforpgm.draft.components.PicksGUI;
+import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.core.Captains;
+import org.nicolie.towersforpgm.draft.core.Draft;
+import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.listeners.CommandListener;
 import org.nicolie.towersforpgm.listeners.MatchAfterLoadListener;
 import org.nicolie.towersforpgm.listeners.MatchFinishListener;

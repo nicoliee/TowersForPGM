@@ -26,7 +26,6 @@ public class RankedListener implements Listener {
   private static final String CHANNEL1_ID = MatchBotConfig.getTeam1ID();
   private static final String CHANNEL2_ID = MatchBotConfig.getTeam2ID();
   private static final String INACTIVE_ID = MatchBotConfig.getInactiveID();
-  private static final Boolean RANKED_ENABLED = MatchBotConfig.isVoiceChatEnabled();
 
   private static Guild getBotGuild(JDA jda) {
     if (jda == null) return null;
@@ -36,7 +35,10 @@ public class RankedListener implements Listener {
   }
 
   private void movePlayersToChannel(java.util.List<UUID> uuids, VoiceChannel targetChannel) {
-    if (!RANKED_ENABLED || uuids == null || uuids.isEmpty() || targetChannel == null) return;
+    if (!MatchBotConfig.isVoiceChatEnabled()
+        || uuids == null
+        || uuids.isEmpty()
+        || targetChannel == null) return;
 
     JDA jda = DiscordBot.getJDA();
     Guild guild = getBotGuild(jda);
@@ -74,7 +76,7 @@ public class RankedListener implements Listener {
   }
 
   public static void movePlayerToInactive(UUID minecraftUUID) {
-    if (!RANKED_ENABLED) return;
+    if (!MatchBotConfig.isVoiceChatEnabled()) return;
 
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
@@ -104,7 +106,7 @@ public class RankedListener implements Listener {
   }
 
   public static void movePlayerToQueue(UUID minecraftUUID) {
-    if (!RANKED_ENABLED) return;
+    if (!MatchBotConfig.isVoiceChatEnabled()) return;
 
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
@@ -134,7 +136,7 @@ public class RankedListener implements Listener {
   }
 
   public static void movePlayerToTeam1(UUID minecraftUUID) {
-    if (!RANKED_ENABLED) return;
+    if (!MatchBotConfig.isVoiceChatEnabled()) return;
 
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
@@ -164,7 +166,7 @@ public class RankedListener implements Listener {
   }
 
   public static void movePlayerToTeam2(UUID minecraftUUID) {
-    if (!RANKED_ENABLED) return;
+    if (!MatchBotConfig.isVoiceChatEnabled()) return;
 
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
@@ -260,7 +262,7 @@ public class RankedListener implements Listener {
   }
 
   private boolean shouldProcessEvent(String mapName) {
-    if (!RANKED_ENABLED) return false;
+    if (!MatchBotConfig.isVoiceChatEnabled()) return false;
 
     Boolean ranked = Queue.isRanked();
     boolean isRankedTable = plugin.config().databaseTables().currentTableIsRanked();

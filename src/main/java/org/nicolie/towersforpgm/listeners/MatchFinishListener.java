@@ -10,7 +10,7 @@ import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.models.Stats;
-import org.nicolie.towersforpgm.draft.Draft;
+import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.MatchInfo;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedFinish;

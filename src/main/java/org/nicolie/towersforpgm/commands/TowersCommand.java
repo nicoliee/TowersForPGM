@@ -19,7 +19,6 @@ import org.nicolie.towersforpgm.commands.commandUtils.RefillConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
 import org.nicolie.towersforpgm.commands.gui.TowersConfigGUI;
 import org.nicolie.towersforpgm.configs.tables.TableType;
-import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
@@ -35,15 +34,13 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
   private final PreparationConfig preparationConfig;
   private final RefillConfig refillConfig;
   private final RankedConfig rankedConfig;
-  private final RefillManager refillManager;
   private static TowersConfigGUI configGUI;
 
   public TowersCommand() {
-    this.refillManager = TowersForPGM.getInstance().getRefillManager();
     this.draftConfig = new DraftConfig();
     this.statsConfig = new StatsConfig();
     this.preparationConfig = new PreparationConfig();
-    this.refillConfig = new RefillConfig(refillManager);
+    this.refillConfig = new RefillConfig();
     this.rankedConfig = new RankedConfig();
 
     // Solo crear una instancia del GUI si no existe

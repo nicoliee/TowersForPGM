@@ -9,7 +9,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.draft.Matchmaking;
+import org.nicolie.towersforpgm.draft.core.Matchmaking;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;

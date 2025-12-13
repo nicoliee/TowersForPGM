@@ -18,7 +18,6 @@ import org.nicolie.towersforpgm.commands.commandUtils.PreparationConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.RankedConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.RefillConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
-import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TowersConfigGUI implements Listener {
@@ -33,7 +32,6 @@ public class TowersConfigGUI implements Listener {
   private final PreparationConfig preparationConfig;
   private final RefillConfig refillConfig;
   private final RankedConfig rankedConfig;
-  private final RefillManager refillManager;
 
   private StatsGUI statsGUI;
   private DraftGUI draftGUI;
@@ -42,11 +40,10 @@ public class TowersConfigGUI implements Listener {
   private RankedGUI rankedGUI;
 
   public TowersConfigGUI() {
-    this.refillManager = TowersForPGM.getInstance().getRefillManager();
     this.draftConfig = new DraftConfig();
     this.statsConfig = new StatsConfig();
     this.preparationConfig = new PreparationConfig();
-    this.refillConfig = new RefillConfig(refillManager);
+    this.refillConfig = new RefillConfig();
     this.rankedConfig = new RankedConfig();
 
     // Registrar eventos solo una vez para esta clase

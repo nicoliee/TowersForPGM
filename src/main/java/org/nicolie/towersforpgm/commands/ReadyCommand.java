@@ -5,7 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.draft.Captains;
+import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;

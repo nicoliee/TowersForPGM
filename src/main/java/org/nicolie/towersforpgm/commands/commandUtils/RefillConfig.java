@@ -12,14 +12,9 @@ import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class RefillConfig {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
-  private final RefillManager refillManager;
-
-  public RefillConfig(RefillManager refillManager) {
-    this.refillManager = refillManager;
-  }
 
   public void addRefillLocation(CommandSender sender, String mapName, Location loc) {
-    FileConfiguration refillConfig = plugin.getRefillConfig();
+    FileConfiguration refillConfig = plugin.config().refill().config();
 
     // Verificar si las coordenadas corresponden a un cofre
     Block block = loc.getBlock();
@@ -56,20 +51,20 @@ public class RefillConfig {
     refillConfig.set("refill." + mapName + ".c" + i, coords);
     SendMessage.sendToPlayer(
         sender, LanguageManager.message("refill.chestSet").replace("{coords}", coords));
-    plugin.saveRefillConfig();
-    plugin.reloadRefillConfig();
+    plugin.config().refill().save();
+    plugin.config().refill().reload();
   }
 
   public void removeRefillLocation(CommandSender sender, String mapName, Location loc) {
-    FileConfiguration refillConfig = plugin.getRefillConfig();
+    FileConfiguration refillConfig = plugin.config().refill().config();
     String coords = loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ();
     boolean found = false;
     for (int i = 1; refillConfig.contains("refill." + mapName + ".c" + i); i++) {
       String storedCoords = refillConfig.getString("refill." + mapName + ".c" + i);
       if (storedCoords.equals(coords)) {
         refillConfig.set("refill." + mapName + ".c" + i, null);
-        plugin.saveRefillConfig();
-        plugin.reloadRefillConfig();
+        plugin.config().refill().save();
+        plugin.config().refill().reload();
         SendMessage.sendToPlayer(
             sender, LanguageManager.message("refill.chestDeleted").replace("{coords}", coords));
         found = true;
@@ -84,6 +79,7 @@ public class RefillConfig {
   }
 
   public void testRefill(CommandSender sender, String mapName, String world) {
+    RefillManager refillManager = TowersForPGM.getInstance().getRefillManager();
     refillManager.loadChests(mapName, world);
   }
 }

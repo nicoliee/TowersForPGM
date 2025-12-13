@@ -12,6 +12,7 @@ public class ConfigManager {
   private final RankedConfig ranked;
   private final PreparationTimeConfig preparationTime;
   private final DraftConfig draft;
+  private final RefillConfigManager refill;
 
   private final FileConfiguration config;
 
@@ -24,6 +25,7 @@ public class ConfigManager {
     this.ranked = new RankedConfig(plugin);
     this.preparationTime = new PreparationTimeConfig(plugin);
     this.draft = new DraftConfig(plugin);
+    this.refill = new RefillConfigManager(plugin);
   }
 
   public void reload() {
@@ -52,5 +54,9 @@ public class ConfigManager {
 
   public DraftConfig draft() {
     return draft;
+  }
+
+  public RefillConfigManager refill() {
+    return refill;
   }
 }

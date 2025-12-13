@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.draft;
+package org.nicolie.towersforpgm.draft.core;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,16 +12,21 @@ import tc.oc.pgm.util.bukkit.Sounds;
 
 public class Utilities {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
+  private final org.nicolie.towersforpgm.configs.ConfigManager configManager;
   private final AvailablePlayers availablePlayers;
   private final Captains captains;
 
-  public Utilities(AvailablePlayers availablePlayers, Captains captains) {
+  public Utilities(
+      org.nicolie.towersforpgm.configs.ConfigManager configManager,
+      AvailablePlayers availablePlayers,
+      Captains captains) {
+    this.configManager = configManager;
     this.availablePlayers = availablePlayers;
     this.captains = captains;
   }
 
   public void suggestPicksForCaptains() {
-    if (!plugin.config().draft().isDraftSuggestions()) {
+    if (!configManager.draft().isDraftSuggestions()) {
       return;
     }
     if (!TowersForPGM.getInstance().getIsDatabaseActivated()) {
