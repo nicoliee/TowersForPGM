@@ -319,4 +319,108 @@ public class StatsManager {
         },
         SQL_EXECUTOR);
   }
+
+  public static CompletableFuture<org.nicolie.towersforpgm.database.models.StatsTransferResult>
+      transferStats(String table, String oldAccount, String newAccount) {
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    if (!plugin.getIsDatabaseActivated()) {
+      plugin.getLogger().warning("Base de datos no activada, no se puede transferir estadísticas");
+      return CompletableFuture.completedFuture(
+          org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+              "Base de datos no activada"));
+    }
+
+    String dbType = plugin.getCurrentDatabaseType();
+    return CompletableFuture.supplyAsync(
+        () -> {
+          long startTime = System.currentTimeMillis();
+          try {
+            org.nicolie.towersforpgm.database.models.StatsTransferResult result = null;
+            if ("MySQL".equals(dbType)) {
+              result = SQLStatsManager.transferStats(table, oldAccount, newAccount);
+            } else if ("SQLite".equals(dbType)) {
+              result = SQLITEStatsManager.transferStats(table, oldAccount, newAccount);
+            } else {
+              plugin
+                  .getLogger()
+                  .warning(
+                      "Tipo de base de datos desconocido: " + dbType + " para tabla: " + table);
+              return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+                  "Tipo de base de datos desconocido: " + dbType);
+            }
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+
+            if (result.isSuccess()) {
+              plugin
+                  .getLogger()
+                  .info("[+] transferStats: " + table + ", " + oldAccount + " -> " + newAccount
+                      + ", " + duration + "ms");
+            } else {
+              plugin
+                  .getLogger()
+                  .warning("[-] transferStats: " + table + ", " + oldAccount + " -> " + newAccount
+                      + ", " + duration + "ms - " + result.getMessage());
+            }
+            return result;
+          } catch (Exception e) {
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            plugin
+                .getLogger()
+                .severe("[-] transferStats: " + table + ", " + oldAccount + " -> " + newAccount
+                    + ", " + duration + "ms - " + e.getMessage());
+            return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+                "Error inesperado: " + e.getMessage());
+          }
+        },
+        SQL_EXECUTOR);
+  }
+
+  public static CompletableFuture<List<Integer>> getEloHistory(String username, String table) {
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    if (!plugin.getIsDatabaseActivated()) {
+      plugin
+          .getLogger()
+          .warning(
+              "Base de datos no activada, no se puede obtener historial de ELO de tabla: " + table);
+      return CompletableFuture.completedFuture(java.util.Collections.emptyList());
+    }
+
+    String dbType = plugin.getCurrentDatabaseType();
+    return CompletableFuture.supplyAsync(
+        () -> {
+          long startTime = System.currentTimeMillis();
+          try {
+            List<Integer> result = null;
+            if ("MySQL".equals(dbType)) {
+              result = SQLStatsManager.getEloHistory(username, table);
+            } else if ("SQLite".equals(dbType)) {
+              result = SQLITEStatsManager.getEloHistory(username, table);
+            } else {
+              plugin
+                  .getLogger()
+                  .warning(
+                      "Tipo de base de datos desconocido: " + dbType + " para tabla: " + table);
+              return java.util.Collections.emptyList();
+            }
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            plugin
+                .getLogger()
+                .info("[+] getEloHistory: " + table + ", " + username + ", " + result.size()
+                    + " matches, " + duration + "ms");
+            return result;
+          } catch (Exception e) {
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            plugin
+                .getLogger()
+                .severe("[-] getEloHistory: " + table + ", " + username + ", " + duration + "ms - "
+                    + e.getMessage());
+            return java.util.Collections.emptyList();
+          }
+        },
+        SQL_EXECUTOR);
+  }
 }

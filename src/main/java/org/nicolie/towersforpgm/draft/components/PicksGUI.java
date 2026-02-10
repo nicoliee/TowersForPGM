@@ -35,6 +35,7 @@ import org.nicolie.towersforpgm.rankeds.Rank;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class PicksGUI implements Listener {
@@ -282,6 +283,16 @@ public class PicksGUI implements Listener {
     SkullMeta meta = (SkullMeta) clicked.getItemMeta();
     if (meta == null || meta.getOwner() == null) return;
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(clicker);
+
+    // Prevenir picks durante la fase de reroll o captains
+    DraftPhase currentPhase = Draft.getPhase();
+    if (currentPhase == DraftPhase.CAPTAINS || currentPhase == DraftPhase.REROLL) {
+      openInventories.remove(clickerId);
+      clicker.closeInventory();
+      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.notTurn")));
+      return;
+    }
+
     int captainNumber = captains.getCaptainTeam(clickerId);
     if (captainNumber == -1) {
       openInventories.remove(clickerId);
@@ -351,11 +362,20 @@ public class PicksGUI implements Listener {
     }
   }
 
+  public void giveItemToMatch(Match match) {
+    for (MatchPlayer matchPlayer : match.getPlayers()) {
+      Player player = matchPlayer.getBukkit();
+      if (player != null && player.isOnline()) {
+        giveItemToPlayer(player);
+      }
+    }
+  }
+
   public void giveItemToPlayer(Player player) {
     ItemStack specialItem = new ItemStack(Material.NETHER_STAR);
     ItemMeta meta = specialItem.getItemMeta();
     meta.setDisplayName("§6Draft Menu");
-    meta.setLore(Collections.singletonList(LanguageManager.message("draft.itemLore")));
+    meta.setLore(Collections.singletonList(LanguageManager.message("draft.picks.itemLore")));
     specialItem.setItemMeta(meta);
 
     player.getInventory().setItem(2, null);
@@ -403,7 +423,7 @@ public class PicksGUI implements Listener {
             && meta != null
             && "§6Draft Menu".equals(meta.getDisplayName())) {
           // Si el draft no está activo, mostrar mensaje
-          if (!Draft.isDraftActive()) {
+          if (Draft.getPhase() == DraftPhase.IDLE) {
             SendMessage.sendToPlayer(player, LanguageManager.message("draft.picks.noDraft"));
             player.getInventory().remove(Material.NETHER_STAR);
             return;

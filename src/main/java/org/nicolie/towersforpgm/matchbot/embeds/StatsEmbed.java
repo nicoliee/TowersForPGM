@@ -1,54 +1,41 @@
 package org.nicolie.towersforpgm.matchbot.embeds;
 
 import java.time.Instant;
-import java.util.logging.Level;
 import net.dv8tion.jda.api.EmbedBuilder;
-import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.Rank;
 
 public class StatsEmbed {
-  private static final TowersForPGM plugin = TowersForPGM.getInstance();
 
   public static EmbedBuilder create(String table, String user, Stats stats) {
     String username = stats != null && stats.getUsername() != null ? stats.getUsername() : user;
-    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
-    boolean isRankedTable = tableInfo != null && tableInfo.isRanked();
 
     EmbedBuilder embed = new EmbedBuilder();
     embed.setTimestamp(Instant.now());
     embed.setThumbnail("https://vzge.me/bust/" + username.toLowerCase());
-    embed.setTitle(username + " - " + table);
+    embed.setTitle(username.replace("_", "\\_") + " - " + table);
     if (stats == null) {
       embed.setDescription("No se encontraron estadísticas para este usuario.");
       return embed;
     }
 
-    try {
-      addStatsToEmbed(embed, stats, isRankedTable);
-    } catch (Exception e) {
-      plugin
-          .getLogger()
-          .log(Level.SEVERE, "Error al procesar estadísticas para embed de " + username, e);
-      embed.addField("Error", "Hubo un error al procesar las estadísticas.", false);
-    }
+    addStatsToEmbed(embed, stats);
 
     return embed;
   }
 
   public static EmbedBuilder createError(String table, String username, String errorMessage) {
     EmbedBuilder embed = new EmbedBuilder();
-    embed.setTitle(username + " - " + table);
+    embed.setTitle(username.replace("_", "\\_") + " - " + table);
     embed.setThumbnail("https://mc-heads.net/avatar/" + username.toLowerCase());
     embed.addField("Error", errorMessage, false);
     return embed;
   }
 
-  private static void addStatsToEmbed(EmbedBuilder embed, Stats stats, boolean isRankedTable) {
+  private static void addStatsToEmbed(EmbedBuilder embed, Stats stats) {
     int games = stats.getGames();
-    if (isRankedTable && stats.getElo() != -9999) {
+    if (stats.getElo() != -9999) {
       int elo = stats.getElo();
       int maxElo = stats.getMaxElo();
       if (maxElo != -9999) {
@@ -89,10 +76,14 @@ public class StatsEmbed {
 
     if (MatchBotConfig.isStatsPointsEnabled()) {
       int points = stats.getPoints();
+      int maxPoints = stats.getMaxPoints();
       if (points != -9999) {
         double pointsPerGame = (games > 0 && games != -9999) ? (double) points / games : 0;
-        embed.addField(
-            "🎯 Puntos", points + " (" + String.format("%.2f", pointsPerGame) + ")", true);
+        String pointsText = points + " (" + String.format("%.2f", pointsPerGame) + ")";
+        if (maxPoints != -9999) {
+          pointsText += " [" + maxPoints + "]";
+        }
+        embed.addField("🎯 Puntos", pointsText, true);
       }
     }
 
@@ -105,8 +96,13 @@ public class StatsEmbed {
     double damageTaken = stats.getDamageTaken();
 
     if (kills != -9999) {
+      int maxKills = stats.getMaxKills();
       double killsPerGame = (games > 0 && games != -9999) ? (double) kills / games : 0;
-      embed.addField("⚔ Kills", kills + " (" + String.format("%.2f", killsPerGame) + ")", true);
+      String killsText = kills + " (" + String.format("%.2f", killsPerGame) + ")";
+      if (maxKills != -9999) {
+        killsText += " [" + maxKills + "]";
+      }
+      embed.addField("⚔ Kills", killsText, true);
     }
 
     if (deaths != -9999) {

@@ -12,6 +12,7 @@ public class DatabaseConfig {
   private String name;
   private String user;
   private String password;
+  private String id;
 
   public DatabaseConfig(FileConfiguration config) {
     this.config = config;
@@ -26,6 +27,7 @@ public class DatabaseConfig {
     this.name = config.getString("database.name", "database");
     this.user = config.getString("database.user", "root");
     this.password = config.getString("database.password", "");
+    this.id = config.getString("database.id", "server1");
   }
 
   public boolean isEnabled() {
@@ -52,6 +54,10 @@ public class DatabaseConfig {
     return password;
   }
 
+  public String getId() {
+    return id;
+  }
+
   @Override
   public String toString() {
     return "DatabaseConfig{" + "enabled="
@@ -59,7 +65,7 @@ public class DatabaseConfig {
         + host + '\'' + ", port="
         + port + ", name='"
         + name + '\'' + ", user='"
-        + user + '\'' + ", password='"
-        + (password != null && !password.isEmpty() ? "***" : "empty") + '\'' + '}';
+        + user + '\'' + ", id='"
+        + id + '\'' + '}';
   }
 }

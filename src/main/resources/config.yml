@@ -9,6 +9,7 @@ database:
   name: "torneodb"
   user: "root" 
   password: "password" 
+  id: "server1"  # Identificador único del servidor
   tables:         # Tablas disponibles en la base de datos
     # <Tabla>:
       # - <Mapa>
@@ -24,23 +25,40 @@ draft:
   secondPickBalance: true # Si es true y el draft es impar, el segundo capitán tendrá un jugador más
   order: "ABBAAB"     # Orden de elección: A = Primer Capitán, B = Segundo Capitán
   minOrder: 8              # Número mínimo de jugadores para aplicar el orden
+  reroll: false # Los capitanes podrán volver a ser elegidos.
 
 rankeds:
-  disconnectTime: 30  # Tiempo en segundos para que un jugador reconecte sin penalización
-  size:
-    min: 4
-    max: 6
-  matchmaking: false # (true = equipos automaticos | false = capitanes automaticos)
-  order: "ABBAAB"  # Orden de elección: A = Primer Capitán, B = Segundo Capitán (SI MATCHMAKING = FALSE)
+  activeProfile: "default"  # Perfil activo de ranked
   tables:              # Tablas disponibles para rankeds
-    # - <Tabla>
-    # - <Tabla1>
     - RankedT1
-  defaultTable: RankedT1  # Tabla por defecto para rankeds
-  maps: # Lista de mapas disponibles para rankeds
-    # - <Mapa>
-    # - <Mapa1>
-    - Mini Towers:TE
+    - TowersT1
+  profiles:
+    default:
+      min: 4
+      max: 6
+      timer: # Tiempo en segundos
+        waiting: 30 # Tiempo de espera cuando alguien de la queue no se ha conectado.
+        minReached: 15 # Se llega al mínimo de jugadores.
+        full: 5 # La queue está llena.
+        disconnect: 30  # Tiempo en segundos para que un jugador reconecte sin penalización
+      matchmaking: false # (true = equipos automaticos | false = capitanes automaticos)
+      order: "ABBA"  # Orden de elección: A = Primer Capitán, B = Segundo Capitán (SI MATCHMAKING = FALSE)
+      reroll: true # Los capitanes podrán volver a ser elegidos.
+      table: RankedT1  # Tabla para este perfil
+      mapPool: "default"  # Map pool de PGM para este perfil
+    towers:
+      min: 6
+      max: 8
+      timer:
+        waiting: 30
+        minReached: 15
+        full: 5
+        disconnect: 60
+      matchmaking: false
+      order: "ABBABAA"
+      reroll: true
+      table: TowersT1
+      mapPool: "towers"
 
 preparationTime:
   enabled: true

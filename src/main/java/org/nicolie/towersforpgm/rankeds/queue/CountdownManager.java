@@ -41,28 +41,7 @@ public class CountdownManager {
     final int maxSize = plugin.config().ranked().getRankedMaxSize();
     final int minSize = plugin.config().ranked().getRankedMinSize();
 
-    BukkitTask countdownTask = createCountdownTask(match, countdown, maxSize, minSize, false);
-    queueState.setCountdownTask(countdownTask);
-
-    return true;
-  }
-
-  public boolean startManualRankedCountdown(Match match, int customTime) {
-    if (!canStartCountdown(match)) {
-      return false;
-    }
-
-    if (queueState.getQueueSize() < plugin.config().ranked().getRankedMinSize()) {
-      return false;
-    }
-
-    queueState.setRanked(false);
-    queueState.setCountdownActive(true);
-
-    final AtomicInteger countdown = new AtomicInteger(customTime);
-    final int minSize = plugin.config().ranked().getRankedMinSize();
-
-    BukkitTask countdownTask = createCountdownTask(match, countdown, -1, minSize, true);
+    BukkitTask countdownTask = createCountdownTask(match, countdown, maxSize, minSize);
     queueState.setCountdownTask(countdownTask);
 
     return true;
@@ -92,22 +71,21 @@ public class CountdownManager {
   }
 
   private BukkitTask createCountdownTask(
-      Match match, AtomicInteger countdown, int maxSize, int minSize, boolean isManual) {
+      Match match, AtomicInteger countdown, int maxSize, int minSize) {
+    match.sendMessage(Component.text(getRankedPrefix()
+        + LanguageManager.message("ranked.countdown")
+            .replace("{time}", String.valueOf(countdown.get()))));
     return Bukkit.getScheduler()
         .runTaskTimer(
-            plugin,
-            () -> handleCountdownTick(match, countdown, maxSize, minSize, isManual),
-            0L,
-            20L);
+            plugin, () -> handleCountdownTick(match, countdown, maxSize, minSize), 0L, 20L);
   }
 
-  private void handleCountdownTick(
-      Match match, AtomicInteger countdown, int maxSize, int minSize, boolean isManual) {
+  private void handleCountdownTick(Match match, AtomicInteger countdown, int maxSize, int minSize) {
     int timeLeft = countdown.get();
     List<UUID> disconnectedPlayerUUIDs = queueManager.getDisconnectedPlayersInQueue();
 
     if (timeLeft <= 0) {
-      handleCountdownEnd(match, disconnectedPlayerUUIDs, minSize, isManual);
+      handleCountdownEnd(match, disconnectedPlayerUUIDs, minSize);
       return;
     }
 
@@ -116,18 +94,11 @@ public class CountdownManager {
       return;
     }
 
-    handleDisconnectedPlayers(match, disconnectedPlayerUUIDs, countdown);
-
-    if (!isManual) {
-      adjustCountdownTime(countdown, maxSize, disconnectedPlayerUUIDs.isEmpty());
-    }
-
-    sendCountdownMessage(match, timeLeft);
+    sendCountdownMessage(match, timeLeft, disconnectedPlayerUUIDs);
     countdown.decrementAndGet();
   }
 
-  private void handleCountdownEnd(
-      Match match, List<UUID> disconnectedPlayerUUIDs, int minSize, boolean isManual) {
+  private void handleCountdownEnd(Match match, List<UUID> disconnectedPlayerUUIDs, int minSize) {
     queueManager.removeDisconnectedPlayers(match, disconnectedPlayerUUIDs);
 
     if (queueState.getQueueSize() < minSize) {
@@ -138,11 +109,6 @@ public class CountdownManager {
     String table = plugin.config().databaseTables().getRankedDefaultTable();
     plugin.config().databaseTables().setTempTable(table);
 
-    String logMessage = isManual
-        ? "[+] Queue: starting manual draft/matchmaking, "
-        : "[+] Queue: starting draft/matchmaking, ";
-    plugin.getLogger().info(logMessage + queueState.getQueueSize() + " players");
-
     matchStarter.startMatch(match, table);
 
     queueState.getCountdownTask().cancel();
@@ -151,57 +117,42 @@ public class CountdownManager {
     queueState.setRanked(true);
   }
 
-  private void handleDisconnectedPlayers(
-      Match match, List<UUID> disconnectedPlayerUUIDs, AtomicInteger countdown) {
-    if (!disconnectedPlayerUUIDs.isEmpty()) {
-      List<String> disconnectedNames = disconnectedPlayerUUIDs.stream()
+  private void sendCountdownMessage(Match match, int timeLeft, List<UUID> disconnectedPlayers) {
+    String message = getRankedPrefix()
+        + LanguageManager.message("ranked.countdown").replace("{time}", String.valueOf(timeLeft));
+
+    if (!disconnectedPlayers.isEmpty()) {
+      List<String> disconnectedNames = disconnectedPlayers.stream()
           .map(uuid -> Bukkit.getOfflinePlayer(uuid).getName())
           .filter(name -> name != null)
           .collect(Collectors.toList());
 
-      if (countdown.get() > 30) {
-        countdown.set(30);
-      }
-
-      match.sendActionBar(Component.text(getRankedPrefix()
+      message += " | "
           + LanguageManager.message("ranked.waitingFor")
-              .replace("{player}", String.join(", ", disconnectedNames))));
+              .replace("{player}", String.join(", ", disconnectedNames));
     }
-  }
 
-  private void adjustCountdownTime(AtomicInteger countdown, int maxSize, boolean noDisconnected) {
-    if (noDisconnected) {
-      int currentTime = countdown.get();
-      int queueSize = queueState.getQueueSize();
-
-      if (queueSize >= maxSize && currentTime > 5) {
-        countdown.set(5);
-      } else if (queueSize < maxSize && currentTime > 15 && currentTime <= 30) {
-        countdown.set(15);
-      }
-    }
-  }
-
-  private void sendCountdownMessage(Match match, int timeLeft) {
-    match.sendMessage(Component.text(getRankedPrefix()
-        + LanguageManager.message("ranked.countdown").replace("{time}", String.valueOf(timeLeft))));
+    match.sendActionBar(Component.text(message));
     match.playSound(Sounds.INVENTORY_CLICK);
   }
 
   private int getCountdownTime(Match match) {
     int minSize = plugin.config().ranked().getRankedMinSize();
     int maxSize = plugin.config().ranked().getRankedMaxSize();
+    int TimerWaiting = plugin.config().ranked().getOnTimerWaiting();
+    int TimerMinReached = plugin.config().ranked().getOnTimerMinReached();
+    int TimerFull = plugin.config().ranked().getOnTimerFull();
 
     if (!queueManager.getDisconnectedPlayersInQueue().isEmpty()) {
-      return 30;
+      return TimerWaiting;
     }
 
     if (queueState.getQueueSize() >= maxSize) {
-      return 5;
+      return TimerFull;
     }
 
     int playerCount = match.getPlayers().size();
-    return (playerCount == minSize || playerCount == minSize + 1) ? 5 : 15;
+    return (playerCount == minSize || playerCount == minSize + 1) ? TimerFull : TimerMinReached;
   }
 
   private String getRankedPrefix() {

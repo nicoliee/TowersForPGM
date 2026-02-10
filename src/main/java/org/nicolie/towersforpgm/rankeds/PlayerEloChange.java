@@ -112,4 +112,14 @@ public class PlayerEloChange {
       RoleManager.changeRole(discordId, previousRank, newRank);
     });
   }
+
+  public String discordFormat() {
+    int newRankElo = getNewElo();
+    int eloChange = getEloChange();
+    String username = getUsername();
+    String eloChangeStr = (eloChange >= 0 ? "+" : "") + eloChange;
+    String format = Rank.getRankByElo(newRankElo).getPrefixedRank(false) + " " + username + " "
+        + newRankElo + " (" + eloChangeStr + ")";
+    return format;
+  }
 }

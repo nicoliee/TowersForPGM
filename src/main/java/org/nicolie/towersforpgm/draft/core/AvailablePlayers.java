@@ -23,6 +23,7 @@ public class AvailablePlayers {
   private final List<String> availableOfflinePlayers = new ArrayList<>();
   private final Map<String, Stats> playerStats = new HashMap<>();
   private final List<String> topPlayers = new ArrayList<>();
+  private final List<Map.Entry<String, Integer>> pickHistory = new ArrayList<>();
 
   public AvailablePlayers(org.nicolie.towersforpgm.configs.ConfigManager configManager) {
     this.configManager = configManager;
@@ -75,8 +76,15 @@ public class AvailablePlayers {
       playerStats.remove(playerName);
     }
 
-    // Remover de la lista de mejores jugadores
     topPlayers.removeIf(name -> name.equalsIgnoreCase(playerName));
+  }
+
+  public void recordPick(String playerName, int teamNumber) {
+    pickHistory.add(new AbstractMap.SimpleEntry<>(playerName, teamNumber));
+  }
+
+  public List<Map.Entry<String, Integer>> getPickHistory() {
+    return new ArrayList<>(pickHistory);
   }
 
   public String getExactUser(String playerName) {
@@ -122,11 +130,11 @@ public class AvailablePlayers {
 
   public void clear() {
     if (availablePlayers == null || availableOfflinePlayers == null) return;
-    if (availablePlayers.isEmpty() && availableOfflinePlayers.isEmpty()) return;
     availablePlayers.clear();
     availableOfflinePlayers.clear();
     playerStats.clear();
     topPlayers.clear();
+    pickHistory.clear();
   }
 
   public void handleDisconnect(Player player) {
@@ -168,7 +176,7 @@ public class AvailablePlayers {
             int lastElo = isRanked ? 0 : -9999;
             int maxElo = isRanked ? 0 : -9999;
             Stats defaultStats =
-                new Stats(playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, elo, lastElo, maxElo);
+                new Stats(playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, elo, lastElo, maxElo);
             playerStats.put(playerName, defaultStats);
           }
         })
@@ -178,7 +186,7 @@ public class AvailablePlayers {
           int lastElo = isRanked ? 0 : -9999;
           int maxElo = isRanked ? 0 : -9999;
           Stats defaultStats =
-              new Stats(playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, elo, lastElo, maxElo);
+              new Stats(playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, elo, lastElo, maxElo);
           playerStats.put(playerName, defaultStats);
           return null;
         });
@@ -186,7 +194,7 @@ public class AvailablePlayers {
 
   public Stats getStatsForPlayer(String playerName) {
     return playerStats.getOrDefault(
-        playerName, new Stats(playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -9999, -9999, -9999));
+        playerName, new Stats(playerName, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -9999, -9999, -9999));
   }
 
   private void updateTopPlayers() {

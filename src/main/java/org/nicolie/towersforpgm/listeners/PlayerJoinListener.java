@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.draft.components.DraftPhase;
 import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.draft.core.Draft;
@@ -34,7 +35,7 @@ public class PlayerJoinListener implements Listener {
   public void onPlayerJoin(PlayerJoinEvent event) {
     Player player = event.getPlayer();
     String username = player.getName();
-    if (Draft.isDraftActive()) {
+    if (Draft.getPhase() == DraftPhase.RUNNING) {
       MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
       Draft.showBossBarToPlayer(matchPlayer);
       availablePlayers.handleReconnect(player);

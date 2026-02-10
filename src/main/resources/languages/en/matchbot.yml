@@ -54,3 +54,10 @@ register:
   discord-label: "Discord:"
   link-error: "Error linking accounts. Please try again later."
   internal-error: "Internal error. Please try again later."
+unlink:
+  usage: "§cUsage: /unlink <uuid|discordId>"
+  processing: "§eProcessing account unlink..."
+  success: "§aAccount successfully unlinked: {identifier}"
+  notFound: "§cNo linked account found for: {identifier}"
+  error: "§cAn error occurred while unlinking the account."
+  database-disabled: "§cDatabase is not enabled. Cannot unlink accounts."

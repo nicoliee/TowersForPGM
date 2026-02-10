@@ -45,6 +45,23 @@ public class LanguageManager {
     return value != null ? ChatColor.translateAlternateColorCodes('&', value.toString()) : key;
   }
 
+  public static List<String> messageList(String key) {
+    Map<String, Object> langData = languageCache.get(currentLanguage);
+    if (langData == null) return List.of(key);
+
+    Object value = langData.get(key);
+    if (value instanceof List) {
+      List<?> rawList = (List<?>) value;
+      List<String> result = new ArrayList<>();
+      for (Object item : rawList) {
+        result.add(ChatColor.translateAlternateColorCodes('&', item.toString()));
+      }
+      return result;
+    }
+
+    return List.of(key);
+  }
+
   public static void setLanguage(String language) {
     if (languageCache.containsKey(language)) {
       currentLanguage = language;

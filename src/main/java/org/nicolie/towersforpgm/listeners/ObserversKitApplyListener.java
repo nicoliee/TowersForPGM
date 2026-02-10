@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm.listeners;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.draft.components.DraftPhase;
 import org.nicolie.towersforpgm.draft.components.PicksGUI;
 import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.rankeds.RankedItem;
@@ -24,7 +25,7 @@ public class ObserversKitApplyListener implements Listener {
     Match match = player.getMatch();
     String map = match.getMap().getName();
 
-    if (Draft.isDraftActive() && (match.isFinished() || !match.isRunning())) {
+    if (Draft.getPhase() == DraftPhase.RUNNING) {
       pickInventory.giveItemToPlayer(player.getBukkit());
     }
 

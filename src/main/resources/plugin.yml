@@ -69,6 +69,10 @@ commands:
     description: Comando principal de TowersForPGM.
     usage: /towersForPGM
     permission: towers.admin
+  unlink:
+    description: Desvincular una cuenta de Discord usando UUID o Discord ID.
+    usage: /unlink <uuid|discordId>
+    permission: towers.admin
 permissions:
   towers.admin:
     description: Permite administrar y cambiar configuraciones.

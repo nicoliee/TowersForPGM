@@ -19,11 +19,13 @@ public class SQLTableManager {
   private static final TowersForPGM plugin = TowersForPGM.getInstance();
   public static final List<String> COLUMNS = Arrays.asList(
       "kills",
+      "maxKills",
       "deaths",
       "assists",
       "damageDone",
       "damageTaken",
       "points",
+      "maxPoints",
       "games",
       "wins",
       "winstreak",
@@ -40,11 +42,10 @@ public class SQLTableManager {
       "damageDonePerGame",
       "damageTakenPerGame",
       "kdRatio",
-      "winrate");
+      "winrate",
+      "wlRatio");
 
   public static void createTable(String tableName) {
-    if ("none".equalsIgnoreCase(tableName)) return;
-
     Bukkit.getScheduler().runTaskAsynchronously(TowersForPGM.getInstance(), () -> {
       try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
 
@@ -76,13 +77,8 @@ public class SQLTableManager {
         // Crear índices individuales
         for (String column : allColumns) {
           String idxName = "idx_" + column;
-          statements.add(
-              "CREATE INDEX IF NOT EXISTS " + idxName + " ON " + tableName + " (" + column + ")");
+          statements.add("CREATE INDEX " + idxName + " ON " + tableName + " (" + column + ")");
         }
-
-        // Crear índice compuesto optimizado para consultas getTop
-        statements.add("CREATE INDEX IF NOT EXISTS idx_composite_order ON " + tableName
-            + " (kills DESC, username ASC, deaths DESC, assists DESC, points DESC, wins DESC)");
 
         // 4. Ejecutar todas las operaciones
         executeStatements(conn, statements, tableName);
@@ -118,7 +114,15 @@ public class SQLTableManager {
         // 1. Consultar columnas existentes
         Set<String> existingColumns = getExistingColumns(conn, tableName);
 
-        // 2. Crear columnas calculadas solo si no existen
+        // 2. Asegurar que existan maxKills y maxPoints
+        if (!existingColumns.contains("maxKills")) {
+          statements.add("ALTER TABLE " + tableName + " ADD COLUMN maxKills INT DEFAULT 0");
+        }
+        if (!existingColumns.contains("maxPoints")) {
+          statements.add("ALTER TABLE " + tableName + " ADD COLUMN maxPoints INT DEFAULT 0");
+        }
+
+        // 3. Crear columnas calculadas solo si no existen
         for (String column : CALCULATED_COLUMNS) {
           if (!existingColumns.contains(column)) {
             String sql = getCalculatedColumnSQL(tableName, column);
@@ -126,10 +130,10 @@ public class SQLTableManager {
           }
         }
 
-        // 3. Consultar índices existentes
+        // 4. Consultar índices existentes
         Set<String> existingIndexes = getExistingIndexes(conn, tableName);
 
-        // 4. Crear índices para todas las columnas solo si no existen
+        // 5. Crear índices para todas las columnas solo si no existen
         List<String> allColumns = new ArrayList<>(COLUMNS);
         if (isRanked) allColumns.addAll(RANKED_COLUMNS);
         allColumns.addAll(CALCULATED_COLUMNS);
@@ -138,19 +142,11 @@ public class SQLTableManager {
         for (String column : allColumns) {
           String idxName = "idx_" + column;
           if (!existingIndexes.contains(idxName)) {
-            statements.add(
-                "CREATE INDEX IF NOT EXISTS " + idxName + " ON " + tableName + " (" + column + ")");
+            statements.add("CREATE INDEX " + idxName + " ON " + tableName + " (" + column + ")");
           }
         }
 
-        // Crear índice compuesto optimizado para consultas getTop
-        String compositeIdxName = "idx_composite_order";
-        if (!existingIndexes.contains(compositeIdxName)) {
-          statements.add("CREATE INDEX IF NOT EXISTS " + compositeIdxName + " ON " + tableName
-              + " (kills DESC, username ASC, deaths DESC, assists DESC, points DESC, wins DESC)");
-        }
-
-        // 5. Ejecutar solo las operaciones necesarias
+        // 6. Ejecutar solo las operaciones necesarias
         if (!statements.isEmpty()) {
           executeStatements(conn, statements, tableName);
           TowersForPGM.getInstance()
@@ -381,6 +377,9 @@ public class SQLTableManager {
       case "winrate":
         return baseSQL
             + "winrate INT GENERATED ALWAYS AS (CASE WHEN games=0 THEN 0 ELSE ROUND((wins/games)*100) END) STORED";
+      case "wlRatio":
+        return baseSQL
+            + "wlRatio DOUBLE GENERATED ALWAYS AS (CASE WHEN (games - wins)=0 THEN wins ELSE wins/(games - wins) END) STORED";
       default:
         return null;
     }

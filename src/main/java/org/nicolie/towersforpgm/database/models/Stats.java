@@ -3,12 +3,13 @@ package org.nicolie.towersforpgm.database.models;
 public class Stats {
   private String username;
   private int kills;
+  private int maxKills;
   private int deaths;
   private int assists;
   private double damageDone;
   private double damageTaken;
-  private double bowAccuracy;
   private int points;
+  private int maxPoints;
   private int wins;
   private int games;
   private int winstreak;
@@ -21,12 +22,13 @@ public class Stats {
   public Stats(
       String username,
       int kills,
+      int maxKills,
       int deaths,
       int assists,
       double damageDone,
       double damageTaken,
-      double bowAccuracy,
       int points,
+      int maxPoints,
       int wins,
       int games,
       int winstreak,
@@ -36,12 +38,13 @@ public class Stats {
       int maxElo) {
     this.username = username;
     this.kills = kills;
+    this.maxKills = maxKills;
     this.deaths = deaths;
     this.assists = assists;
     this.damageDone = damageDone;
     this.damageTaken = damageTaken;
-    this.bowAccuracy = bowAccuracy;
     this.points = points;
+    this.maxPoints = maxPoints;
     this.wins = wins;
     this.games = games;
     this.winstreak = winstreak;
@@ -56,13 +59,14 @@ public class Stats {
   public String toString() {
     return "Stats{" + "username='"
         + username + '\'' + ", kills="
-        + kills + ", deaths="
+        + kills + ", maxKills="
+        + maxKills + ", deaths="
         + deaths + ", assists="
         + assists + ", damageDone="
         + damageDone + ", damageTaken="
-        + damageTaken + ", bowAccuracy="
-        + bowAccuracy + ", points="
-        + points + ", wins="
+        + damageTaken + ", points="
+        + points + ", maxPoints="
+        + maxPoints + ", wins="
         + wins + ", games="
         + games + ", winstreak="
         + winstreak + ", maxWinstreak="
@@ -82,6 +86,10 @@ public class Stats {
     return kills;
   }
 
+  public int getMaxKills() {
+    return maxKills;
+  }
+
   public int getDeaths() {
     return deaths;
   }
@@ -98,12 +106,12 @@ public class Stats {
     return damageTaken;
   }
 
-  public double getBowAccuracy() {
-    return bowAccuracy;
-  }
-
   public int getPoints() {
     return points;
+  }
+
+  public int getMaxPoints() {
+    return maxPoints;
   }
 
   public int getWins() {

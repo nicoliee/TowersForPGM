@@ -1,3 +1,4 @@
+commands: true
 tables: # Tablas para mostrar en los comandos de stats/top
   - Amistoso
   - TorneoT1
@@ -9,8 +10,6 @@ stats:
 ranked:
   discordChannel: "" # Canal de Discord donde se enviarán los mensajes
   rankedRoleId: "" # ID del rol a tagear cunado se use /tag
-
-## Configuración de rankeds con voice chat
   table: "DCAccounts" # Tabla donde se guardan los IDS de Discord vinculados con UUIDs de Minecraft
 ## IDs de los canales de voz de Discord y rol para rankeds.
   voice-chat:

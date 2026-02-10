@@ -124,36 +124,6 @@ public class QueueManager {
     return queueState.removePlayer(playerUUID);
   }
 
-  public boolean processVoiceJoin(UUID playerUUID, Match match) {
-    if (playerUUID == null) return false;
-
-    if (match == null) {
-      match = getDefaultMatch();
-    }
-
-    if (!queueState.isRanked()) {
-      return addPlayer(playerUUID, match);
-    }
-
-    MatchPlayer onlinePlayer = PGM.get().getMatchManager().getPlayer(playerUUID);
-    String plainName = onlinePlayer != null
-        ? onlinePlayer.getNameLegacy()
-        : Bukkit.getOfflinePlayer(playerUUID).getName();
-
-    if (plainName == null) return false;
-
-    if (teams != null && teams.isPlayerInAnyTeam(plainName)) {
-      if (teams.isPlayerInTeam(plainName, 1)) {
-        RankedListener.movePlayerToTeam1(playerUUID);
-      } else {
-        RankedListener.movePlayerToTeam2(playerUUID);
-      }
-      return false;
-    }
-
-    return addPlayer(playerUUID, match);
-  }
-
   public List<String> getQueueDisplayNames() {
     return queueState.getQueuePlayers().stream()
         .map(uuid -> {

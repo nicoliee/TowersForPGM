@@ -137,4 +137,53 @@ public class DiscordManager {
         },
         DISCORD_EXECUTOR);
   }
+
+  public static CompletableFuture<Boolean> unlinkPlayer(String identifier) {
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    if (!plugin.getIsDatabaseActivated()) {
+      return CompletableFuture.completedFuture(false);
+    }
+
+    String dbType = plugin.getCurrentDatabaseType();
+    return CompletableFuture.supplyAsync(
+        () -> {
+          try {
+            java.util.UUID uuid = null;
+            try {
+              uuid = java.util.UUID.fromString(identifier);
+            } catch (IllegalArgumentException ignored) {
+              // No es un UUID, es un Discord ID
+            }
+
+            boolean success = false;
+            if (uuid != null) {
+              // Es un UUID
+              if ("MySQL".equals(dbType)) {
+                success = SQLDiscordManager.deleteByUuid(uuid).join();
+              } else if ("SQLite".equals(dbType)) {
+                success = SQLITEDiscordManager.deleteByUuid(uuid).join();
+              }
+              if (success) {
+                DiscordPlayerCache.remove(uuid, null);
+              }
+            } else {
+              // Es un Discord ID
+              if ("MySQL".equals(dbType)) {
+                success = SQLDiscordManager.deleteByDiscordId(identifier).join();
+              } else if ("SQLite".equals(dbType)) {
+                success = SQLITEDiscordManager.deleteByDiscordId(identifier).join();
+              }
+              if (success) {
+                DiscordPlayerCache.remove(null, identifier);
+              }
+            }
+
+            return success;
+          } catch (Exception e) {
+            plugin.getLogger().severe("[DiscordManager] Error en unlinkPlayer: " + e.getMessage());
+            return false;
+          }
+        },
+        DISCORD_EXECUTOR);
+  }
 }

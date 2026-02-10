@@ -6,7 +6,6 @@ import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
-/** Administra el orden de turnos y patrones personalizados. */
 public class DraftTurnManager {
   private final DraftState state;
   private final Captains captains;
@@ -33,6 +32,12 @@ public class DraftTurnManager {
 
   public void resetIndex() {
     state.setCurrentPatternIndex(0);
+  }
+
+  public void resetTurnOrder() {
+    state.setCurrentPatternIndex(0);
+    // No borrar el custom pattern, solo resetear el índice
+    // La flag de usingCustomPattern se mantiene si había un patrón activo
   }
 
   public void updateTurnOrder() {

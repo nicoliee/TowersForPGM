@@ -1,15 +1,17 @@
 package org.nicolie.towersforpgm.matchbot.rankeds.listeners;
 
+import java.util.Objects;
+import java.util.stream.Stream;
 import me.tbg.match.bot.configs.BotConfig;
 import me.tbg.match.bot.configs.DiscordBot;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.rankeds.RankedItem;
 import tc.oc.pgm.api.match.event.MatchFinishEvent;
 
 public class RankedFinishListener implements Listener {
@@ -21,14 +23,18 @@ public class RankedFinishListener implements Listener {
 
   @EventHandler
   public void onMatchFinish(MatchFinishEvent event) {
-    if (!shouldProcessEvent(event.getMatch().getMap().getName())) return;
+    if (!shouldProcessEvent()) return;
 
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
-    movePlayersToInactiveChannel();
+
+    // Dar tiempo para que los jugadores hagan click al item antes de mover a AFK
+    // El item ya se da automáticamente por ObserverKitApplyEvent
+    org.bukkit.Bukkit.getScheduler()
+        .runTaskLaterAsynchronously(plugin, this::movePlayersToInactiveChannel, 100L);
   }
 
-  private boolean shouldProcessEvent(String mapName) {
+  private boolean shouldProcessEvent() {
     if (!MatchBotConfig.isVoiceChatEnabled()) return false;
 
     Boolean ranked = Queue.isRanked();
@@ -46,24 +52,10 @@ public class RankedFinishListener implements Listener {
     VoiceChannel inactiveChannel = guild.getVoiceChannelById(INACTIVE_ID);
     if (inactiveChannel == null) return;
 
-    VoiceChannel channel1 = guild.getVoiceChannelById(CHANNEL1_ID);
-    VoiceChannel channel2 = guild.getVoiceChannelById(CHANNEL2_ID);
-
-    var membersToMove = new java.util.ArrayList<Member>();
-
-    if (channel1 != null) {
-      membersToMove.addAll(channel1.getMembers());
-    }
-    if (channel2 != null) {
-      membersToMove.addAll(channel2.getMembers());
-    }
-
-    if (!membersToMove.isEmpty()) {
-      var moveActions = membersToMove.stream()
-          .map(member -> guild.moveVoiceMember(member, inactiveChannel))
-          .toList();
-
-      net.dv8tion.jda.api.requests.RestAction.allOf(moveActions).queue();
-    }
+    Stream.of(guild.getVoiceChannelById(CHANNEL1_ID), guild.getVoiceChannelById(CHANNEL2_ID))
+        .filter(Objects::nonNull)
+        .flatMap(channel -> channel.getMembers().stream())
+        .filter(member -> !RankedItem.isDiscordIdGoingToQueue(member.getId()))
+        .forEach(member -> guild.moveVoiceMember(member, inactiveChannel).queue());
   }
 }

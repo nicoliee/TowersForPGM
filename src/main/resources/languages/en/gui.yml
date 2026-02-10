@@ -228,10 +228,12 @@ ranked:
     current: "§7Tables: §a{count}"
     item: "§7- §a{table}"
   default_table:
-    title: "§e§lDefault Table"
-    current: "§7Current: §a{table}"
-    lore1: "§7Click to change the"
-    lore2: "§7default table for ranked"
+    title: "§e§lActive Profile Table"
+    current: "§7Table: §a{table}"
+    profile: "Profile: §b{profile}"
+    readonly: "This table is defined in the active profile"
+    lore1: "§7This table comes from the active profile"
+    lore2: "§7Use /towers ranked profile to view profiles"
     input: "§eEnter the name of the default table:"
   maps:
     title: "§e§lRanked Maps"

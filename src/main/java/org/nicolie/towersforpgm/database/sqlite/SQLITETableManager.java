@@ -35,6 +35,35 @@ public class SQLITETableManager {
 
         // Verificar si la tabla ya existe
         if (tableExists(conn, tableName)) {
+          // Si existe, asegurar que tenga las columnas maxKills, maxPoints y wlRatio
+          try {
+            stmt.executeUpdate(
+                "ALTER TABLE " + tableName + " ADD COLUMN maxKills INTEGER DEFAULT 0");
+            TowersForPGM.getInstance()
+                .getLogger()
+                .info("Columna maxKills agregada a tabla '" + tableName + "'");
+          } catch (SQLException e) {
+            // Columna ya existe, ignorar
+          }
+
+          try {
+            stmt.executeUpdate(
+                "ALTER TABLE " + tableName + " ADD COLUMN maxPoints INTEGER DEFAULT 0");
+            TowersForPGM.getInstance()
+                .getLogger()
+                .info("Columna maxPoints agregada a tabla '" + tableName + "'");
+          } catch (SQLException e) {
+            // Columna ya existe, ignorar
+          }
+
+          try {
+            stmt.executeUpdate("ALTER TABLE " + tableName + " ADD COLUMN wlRatio REAL DEFAULT 0");
+            TowersForPGM.getInstance()
+                .getLogger()
+                .info("Columna wlRatio agregada a tabla '" + tableName + "'");
+          } catch (SQLException e) {
+            // Columna ya existe, ignorar
+          }
           return;
         }
 
@@ -73,9 +102,27 @@ public class SQLITETableManager {
           return;
         }
 
-        // En SQLite no hay columnas generadas como en MySQL
-        // Las columnas calculadas se crean como columnas normales
-        // Por ahora, simplemente verificamos que la tabla existe
+        // Verificar y agregar columnas maxKills y maxPoints si no existen
+        // try {
+        //   stmt.executeUpdate("ALTER TABLE " + tableName + " ADD COLUMN maxKills INTEGER DEFAULT
+        // 0");
+        //   TowersForPGM.getInstance()
+        //       .getLogger()
+        //       .info("Columna maxKills agregada a tabla '" + tableName + "'");
+        // } catch (SQLException e) {
+        //   // Columna ya existe, ignorar
+        // }
+
+        // try {
+        //   stmt.executeUpdate(
+        //       "ALTER TABLE " + tableName + " ADD COLUMN maxPoints INTEGER DEFAULT 0");
+        //   TowersForPGM.getInstance()
+        //       .getLogger()
+        //       .info("Columna maxPoints agregada a tabla '" + tableName + "'");
+        // } catch (SQLException e) {
+        //   // Columna ya existe, ignorar
+        // }
+
         TowersForPGM.getInstance()
             .getLogger()
             .info("Tabla '" + tableName + "' verificada exitosamente");
@@ -196,11 +243,13 @@ public class SQLITETableManager {
     sql.append("CREATE TABLE IF NOT EXISTS ").append(tableName).append(" (");
     sql.append("username TEXT PRIMARY KEY, ");
     sql.append("kills INTEGER DEFAULT 0, ");
+    sql.append("maxKills INTEGER DEFAULT 0, ");
     sql.append("deaths INTEGER DEFAULT 0, ");
     sql.append("assists INTEGER DEFAULT 0, ");
     sql.append("damageDone REAL DEFAULT 0, ");
     sql.append("damageTaken REAL DEFAULT 0, ");
     sql.append("points INTEGER DEFAULT 0, ");
+    sql.append("maxPoints INTEGER DEFAULT 0, ");
     sql.append("games INTEGER DEFAULT 0, ");
     sql.append("wins INTEGER DEFAULT 0, ");
     sql.append("winstreak INTEGER DEFAULT 0, ");
@@ -212,7 +261,8 @@ public class SQLITETableManager {
     sql.append("damageTakenPerGame REAL DEFAULT 0, ");
     sql.append("pointsPerGame REAL DEFAULT 0, ");
     sql.append("kdRatio REAL DEFAULT 0, ");
-    sql.append("winrate INTEGER DEFAULT 0");
+    sql.append("winrate INTEGER DEFAULT 0, ");
+    sql.append("wlRatio REAL DEFAULT 0");
 
     if (isRanked) {
       sql.append(", elo INTEGER DEFAULT 0, ");

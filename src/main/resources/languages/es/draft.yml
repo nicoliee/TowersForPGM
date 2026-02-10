@@ -26,9 +26,39 @@ captains:
   suggestions: "§7Sugerencias: {suggestions}"
   teamsHeader: "§m-----------§r §b§lEquipos §f§m-----------"
   timeRemaining: "§cTienes §4{time} §cpara elegir un jugador."
-  tip: "§bUsa la estrella para elegir a un jugador."
   turn: "{teamcolor}{captain} §festá eligiendo ahora."
+  title: "§lTu turno"
+  subtitle: "§fUsa §b§lla estrella §rpara elegir a un jugador"
   usage: "§cUso: /captains <nick1> <nick2>"
+
+reroll:
+  actionBar: "§bUsa el §6polvo de blaze§b si no estás conforme con los capitanes."
+  waiting: "§e⚠ Haz click derecho en el Polvo de Blaze para solicitar un reroll de capitanes."
+  requested: "{player}§r ha solicitado un reroll. §7({current}/{min})"
+  approved: "§bReroll aprobado."
+  item:
+    name: "§e§lSolicitar Reroll"
+    lore:
+      - "§7Click derecho para solicitar un reroll"
+      - "§7de los capitanes actuales."
+      - ""
+      - "§eRequiere §6{percentage}% §ede los jugadores"
+  bossbar:
+    title: "Reroll. §bTiempo restante: §a{time}"
+  usage: "§cUso: /captains <nick1> <nick2>"
+  voting:
+    title: "§6§lElige Nuevos Capitanes"
+    bossbar: "Votación ({current}/{total}). §bTiempo Restante: §a{time}"
+    option1: "§eOpción 1: §bMejor Promedio Puntos"
+    option2: "§eOpción 2: §bMejor Promedio Kills"
+    option3: "§eOpción 3: §bAleatorio"
+    stats:
+      avgPoints: "  §7Promedio Puntos: §f{value}"
+      avgKills: "  §7Promedio Kills: §f{value}"
+    votes:
+      header: "§aVotos:"
+      none: "§7Sin votos"
+    clickToVote: "§eClick para votar"
 
 picks:
   choosing: "§eSeleccionando jugadores..."
@@ -40,17 +70,16 @@ picks:
   notInList: "§c{player} no está disponible para elegir."
   notTurn: "§cNo es tu turno de elegir."
   notCaptain: "§cNo eres un capitán."
+  itemLore: "§7Clic derecho para abrir el menú de draft."
 
 substitute:
-  usage: "§cUso: /sub <capitan_actual> <nuevo_capitan>"
+  usage: "§cUso: /sub <nombre_equipo> <nuevo_capitan>"
   notConnected: "§cEl jugador {player} no está conectado"
   notCaptain: "§cEl jugador especificado no es un capitán"
+  invalidTeam: "§cEl equipo '{team}' no es válido. Usa uno de los nombres de equipo."
   enemyTeam: "§cNo puedes sustituir con un jugador del equipo contrario"
   notAvailable: "§cEl jugador especificado no está disponible para la sustitución"
   success: "§a{player} ahora es capitán del equipo {team}"
-
-# Alias de nivel raíz para compatibilidad con código que busca "draft.itemLore"
-itemLore: "§7Clic derecho para abrir el menú de draft."
 
 balance:
   usage: "§cUso: /balance <nick1> <nick2>"
@@ -65,6 +94,8 @@ join:
   team: "Estás en el equipo {team}."
 
 config:
+  rerollEnabled: "§aLa opción de reroll de capitanes ha sido §2activada§a."
+  rerollDisabled: "§cLa opción de reroll de capitanes ha sido §4desactivada§c."
   clickToPick: "§eHaz clic para elegir."
   suggestions: "§aSugerencias de draft activadas."
   noSuggestions: "§cSugerencias de draft desactivadas."

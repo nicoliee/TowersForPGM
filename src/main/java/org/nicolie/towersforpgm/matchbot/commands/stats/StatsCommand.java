@@ -1,15 +1,18 @@
 package org.nicolie.towersforpgm.matchbot.commands.stats;
 
+import java.io.File;
 import java.util.List;
 import me.tbg.match.bot.configs.DiscordBot;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
 import org.nicolie.towersforpgm.matchbot.embeds.StatsEmbed;
+import org.nicolie.towersforpgm.utils.EloChartGenerator;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class StatsCommand extends ListenerAdapter {
@@ -78,7 +81,43 @@ public class StatsCommand extends ListenerAdapter {
               .queue();
           return;
         }
-        hook.editOriginalEmbeds(StatsEmbed.create(table, player, stats).build()).queue();
+
+        // Crear el embed de stats
+        var statsEmbed = StatsEmbed.create(table, player, stats);
+
+        // Obtener el historial de ELO
+        StatsManager.getEloHistory(player, table).whenComplete((eloHistory, eloThrowable) -> {
+          if (eloThrowable != null || eloHistory == null || eloHistory.isEmpty()) {
+            // Si hay error o no hay historial, enviar solo el embed de stats
+            hook.editOriginalEmbeds(statsEmbed.build()).queue();
+            return;
+          }
+
+          // Generar la gráfica
+          String chartPath = "charts/" + table + "/" + player + "_elo.png";
+          File chartFile = EloChartGenerator.generateEloChart(eloHistory, player, chartPath);
+
+          if (chartFile != null && chartFile.exists()) {
+            // Agregar la imagen al embed
+            statsEmbed.setImage("attachment://elo_chart.png");
+            hook.editOriginalEmbeds(statsEmbed.build())
+                .setFiles(FileUpload.fromData(chartFile, "elo_chart.png"))
+                .queue(
+                    success -> {
+                      // Eliminar el archivo temporal después de enviarlo
+                      chartFile.delete();
+                    },
+                    error -> {
+                      // Si falla, intentar enviar sin imagen
+                      statsEmbed.setImage(null);
+                      hook.editOriginalEmbeds(statsEmbed.build()).queue();
+                      chartFile.delete();
+                    });
+          } else {
+            // Si no se pudo generar la gráfica, enviar solo el embed de stats
+            hook.editOriginalEmbeds(statsEmbed.build()).queue();
+          }
+        });
       });
     });
   }

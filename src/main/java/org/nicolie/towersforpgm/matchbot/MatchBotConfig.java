@@ -1,12 +1,12 @@
 package org.nicolie.towersforpgm.matchbot;
 
 import java.util.List;
-import me.tbg.match.bot.configs.BotConfig;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.nicolie.towersforpgm.TowersForPGM;
 
 public class MatchBotConfig {
   private static final TowersForPGM plugin = TowersForPGM.getInstance();
+  private static boolean commands;
   // tables
   private static List<String> tables;
 
@@ -34,8 +34,8 @@ public class MatchBotConfig {
   private static String diamondRoleId;
 
   public static void loadConfig(FileConfiguration config) {
+    commands = config.getBoolean("commands", true);
     tables = config.getStringList("tables");
-
     // stats
     statsPointsEnabled = config.getBoolean("stats.points", true);
 
@@ -59,7 +59,7 @@ public class MatchBotConfig {
     emeraldRoleId = config.getString("ranked.roles.emerald", "");
     diamondRoleId = config.getString("ranked.roles.diamond", "");
 
-    BotConfig.addBlacklist(plugin.config().ranked().getRankedMaps());
+    // BotConfig.addBlacklist(plugin.config().ranked().getRankedMaps());
   }
 
   private static void saveToFile(String path, Object value) {
@@ -74,6 +74,10 @@ public class MatchBotConfig {
       loadConfig(cfg);
     } catch (Exception ignored) {
     }
+  }
+
+  public static boolean isCommandsEnabled() {
+    return commands;
   }
 
   // tables

@@ -1,8 +1,11 @@
 package org.nicolie.towersforpgm.matchbot.embeds;
 
+import java.util.List;
 import java.util.Map;
 import me.tbg.match.bot.configs.DiscordBot;
 import me.tbg.match.bot.configs.MessagesConfig;
+import me.tbg.match.bot.stats.GetStats;
+import me.tbg.match.bot.stats.Stats;
 import org.nicolie.towersforpgm.TowersForPGM;
 import tc.oc.pgm.api.map.Gamemode;
 import tc.oc.pgm.api.match.Match;
@@ -17,6 +20,7 @@ public class MatchInfo {
   private final int durationSeconds;
   private final String winnersText;
   private final long finishedAt;
+  private final Map<String, List<Stats>> playerStats;
 
   private MatchInfo(
       String duration,
@@ -25,7 +29,8 @@ public class MatchInfo {
       boolean hasScorebox,
       int durationSeconds,
       String winnersText,
-      long finishedAt) {
+      long finishedAt,
+      Map<String, List<Stats>> playerStats) {
     this.duration = duration;
     this.mapName = mapName;
     this.scoresText = scoresText;
@@ -33,6 +38,7 @@ public class MatchInfo {
     this.durationSeconds = durationSeconds;
     this.winnersText = winnersText;
     this.finishedAt = finishedAt;
+    this.playerStats = playerStats;
   }
 
   public static MatchInfo getMatchInfo(Match match) {
@@ -45,7 +51,8 @@ public class MatchInfo {
     boolean hasScorebox = false;
     int durationSeconds = (int) match.getDuration().getSeconds();
     long finishedAt = java.time.Instant.now().getEpochSecond();
-
+    Map<String, List<Stats>> playerStats =
+        TowersForPGM.getInstance().isMatchBotEnabled() ? GetStats.getPlayerStats(match) : null;
     // Calcular winnersText
     String winnersText = match.getWinners().stream()
         .map(Competitor::getDefaultName)
@@ -70,7 +77,14 @@ public class MatchInfo {
     }
 
     return new MatchInfo(
-        duration, mapName, scoresText, hasScorebox, durationSeconds, winnersText, finishedAt);
+        duration,
+        mapName,
+        scoresText,
+        hasScorebox,
+        durationSeconds,
+        winnersText,
+        finishedAt,
+        playerStats);
   }
 
   public String getDuration() {
@@ -103,5 +117,9 @@ public class MatchInfo {
 
   public String getScoresFieldTitle() {
     return "🏆 " + MessagesConfig.message("embeds.finish.score");
+  }
+
+  public Map<String, List<Stats>> getPlayerStats() {
+    return playerStats;
   }
 }

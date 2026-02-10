@@ -139,19 +139,22 @@ public class RankedGUI implements Listener {
     gui.setItem(MATCHMAKING_SLOT, matchmakingItem);
 
     // ===== TABLE MANAGEMENT =====
-    // Default Table
+    // Current Profile Table (Read-only)
     ItemStack defaultTableItem = new ItemStack(Material.ENCHANTED_BOOK);
     ItemMeta defaultTableMeta = defaultTableItem.getItemMeta();
     defaultTableMeta.setDisplayName(LanguageManager.message("gui.ranked.default_table.title"));
     List<String> defaultTableLore = new ArrayList<>();
     String defaultTable = plugin.config().databaseTables().getRankedDefaultTable();
+    String activeProfileName = plugin.config().ranked().getActiveProfileName();
     defaultTableLore.add(LanguageManager.message("gui.ranked.default_table.current")
         .replace(
             "{table}",
             defaultTable != null ? defaultTable : LanguageManager.message("gui.status.none")));
     defaultTableLore.add("§7");
-    defaultTableLore.add(LanguageManager.message("gui.ranked.default_table.lore1"));
-    defaultTableLore.add(LanguageManager.message("gui.ranked.default_table.lore2"));
+    defaultTableLore.add("§7"
+        + LanguageManager.message("gui.ranked.default_table.profile")
+            .replace("{profile}", activeProfileName));
+    defaultTableLore.add("§7" + LanguageManager.message("gui.ranked.default_table.readonly"));
     defaultTableMeta.setLore(defaultTableLore);
     defaultTableItem.setItemMeta(defaultTableMeta);
     gui.setItem(DEFAULT_TABLE_SLOT, defaultTableItem);
@@ -296,11 +299,6 @@ public class RankedGUI implements Listener {
           rankedConfig.matchmaking(player, !plugin.config().ranked().isRankedMatchmaking());
           openRankedMenu(player); // Refresh the GUI
           break;
-        case DEFAULT_TABLE_SLOT: // Set Default Table
-          player.closeInventory();
-          player.sendMessage(LanguageManager.message("gui.ranked.default_table.input"));
-          waitingForInput.put(player.getUniqueId(), "default_table");
-          break;
         case ADD_TABLE_SLOT: // Add Table
           player.closeInventory();
           player.sendMessage(LanguageManager.message("gui.ranked.add_table.input"));
@@ -353,9 +351,6 @@ public class RankedGUI implements Listener {
             break;
           case "order":
             rankedConfig.draftOrder(player, input);
-            break;
-          case "default_table":
-            rankedConfig.setDefaultTable(player, input);
             break;
           case "add_table":
             rankedConfig.addTable(player, input);

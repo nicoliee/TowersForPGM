@@ -30,17 +30,52 @@ public class SQLITEStatsManager {
     boolean isRanked = tableInfo != null && tableInfo.isRanked();
 
     try (Connection conn = plugin.getDatabaseConnection()) {
+      // PASO 1: Leer todos los datos actuales ANTES de abrir la transacción de escritura
+      java.util.Map<String, Stats> existingStats = new java.util.HashMap<>();
+
+      try (PreparedStatement ps =
+          conn.prepareStatement("SELECT * FROM " + table + " WHERE username = ?")) {
+        for (Stats stat : playerStatsList) {
+          ps.setString(1, stat.getUsername());
+          try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+              Stats oldStat = new Stats(
+                  rs.getString("username"),
+                  rs.getInt("kills"),
+                  rs.getInt("maxKills"),
+                  rs.getInt("deaths"),
+                  rs.getInt("assists"),
+                  rs.getDouble("damageDone"),
+                  rs.getDouble("damageTaken"),
+                  rs.getInt("points"),
+                  rs.getInt("maxPoints"),
+                  rs.getInt("wins"),
+                  rs.getInt("games"),
+                  rs.getInt("winstreak"),
+                  rs.getInt("maxWinstreak"),
+                  0,
+                  0,
+                  0);
+              existingStats.put(stat.getUsername(), oldStat);
+            }
+          }
+        }
+      }
+
+      // PASO 2: Abrir transacción de escritura
       conn.setAutoCommit(false);
 
       // Columnas básicas + winstreaks + ratios
       List<String> columns = new ArrayList<>(Arrays.asList(
           "username",
           "kills",
+          "maxKills",
           "deaths",
           "assists",
           "damageDone",
           "damageTaken",
           "points",
+          "maxPoints",
           "games",
           "wins",
           "winstreak",
@@ -52,7 +87,8 @@ public class SQLITEStatsManager {
           "damageTakenPerGame",
           "pointsPerGame",
           "kdRatio",
-          "winrate"));
+          "winrate",
+          "wlRatio"));
 
       if (isRanked) {
         columns.addAll(Arrays.asList("elo", "lastElo", "maxElo"));
@@ -68,37 +104,45 @@ public class SQLITEStatsManager {
         int batchSize = 0;
         for (Stats stat : playerStatsList) {
 
-          // Leer valores actuales si existen
-          int oldKills = 0, oldDeaths = 0, oldAssists = 0, oldPoints = 0, oldGames = 0, oldWins = 0;
+          // Obtener valores antiguos del mapa precargado
+          Stats oldStat = existingStats.get(stat.getUsername());
+          int oldKills = 0,
+              oldMaxKills = 0,
+              oldDeaths = 0,
+              oldAssists = 0,
+              oldPoints = 0,
+              oldMaxPoints = 0,
+              oldGames = 0,
+              oldWins = 0;
           double oldDamageDone = 0, oldDamageTaken = 0;
           int oldWinstreak = 0, oldMaxWinstreak = 0;
           boolean exists = false;
 
-          try (PreparedStatement ps =
-              conn.prepareStatement("SELECT * FROM " + table + " WHERE username = ?")) {
-            ps.setString(1, stat.getUsername());
-            try (ResultSet rs = ps.executeQuery()) {
-              if (rs.next()) {
-                exists = true;
-                oldKills = rs.getInt("kills");
-                oldDeaths = rs.getInt("deaths");
-                oldAssists = rs.getInt("assists");
-                oldPoints = rs.getInt("points");
-                oldGames = rs.getInt("games");
-                oldWins = rs.getInt("wins");
-                oldDamageDone = rs.getDouble("damageDone");
-                oldDamageTaken = rs.getDouble("damageTaken");
-                oldWinstreak = rs.getInt("winstreak");
-                oldMaxWinstreak = rs.getInt("maxWinstreak");
-              }
-            }
+          if (oldStat != null) {
+            exists = true;
+            oldKills = oldStat.getKills();
+            oldMaxKills = oldStat.getMaxKills();
+            oldDeaths = oldStat.getDeaths();
+            oldAssists = oldStat.getAssists();
+            oldPoints = oldStat.getPoints();
+            oldMaxPoints = oldStat.getMaxPoints();
+            oldGames = oldStat.getGames();
+            oldWins = oldStat.getWins();
+            oldDamageDone = oldStat.getDamageDone();
+            oldDamageTaken = oldStat.getDamageTaken();
+            oldWinstreak = oldStat.getWinstreak();
+            oldMaxWinstreak = oldStat.getMaxWinstreak();
           }
 
           // Sumar estadísticas
           int kills = stat.getKills() + oldKills;
+          int maxKills =
+              Math.max(stat.getKills(), oldMaxKills); // Delta de esta partida vs histórico
           int deaths = stat.getDeaths() + oldDeaths;
           int assists = stat.getAssists() + oldAssists;
           int points = stat.getPoints() + oldPoints;
+          int maxPoints =
+              Math.max(stat.getPoints(), oldMaxPoints); // Delta de esta partida vs histórico
           int games = stat.getGames() + oldGames;
           int wins = stat.getWins() + oldWins;
           double damageDone = stat.getDamageDone() + oldDamageDone;
@@ -121,16 +165,20 @@ public class SQLITEStatsManager {
           double pointsPerGame = games > 0 ? (double) points / games : 0;
           double kdRatio = deaths > 0 ? (double) kills / deaths : kills;
           double winrate = games > 0 ? (double) wins * 100 / games : 0;
+          int losses = games - wins;
+          double wlRatio = losses > 0 ? (double) wins / losses : wins;
 
           // Preparar statement
           int idx = 1;
           stmt.setString(idx++, stat.getUsername());
           stmt.setInt(idx++, kills);
+          stmt.setInt(idx++, maxKills);
           stmt.setInt(idx++, deaths);
           stmt.setInt(idx++, assists);
           stmt.setDouble(idx++, damageDone);
           stmt.setDouble(idx++, damageTaken);
           stmt.setInt(idx++, points);
+          stmt.setInt(idx++, maxPoints);
           stmt.setInt(idx++, games);
           stmt.setInt(idx++, wins);
           stmt.setInt(idx++, winstreak);
@@ -143,6 +191,7 @@ public class SQLITEStatsManager {
           stmt.setDouble(idx++, pointsPerGame);
           stmt.setDouble(idx++, kdRatio);
           stmt.setDouble(idx++, winrate);
+          stmt.setDouble(idx++, wlRatio);
 
           if (isRanked) {
             PlayerEloChange elo = eloChangeList.stream()
@@ -211,11 +260,13 @@ public class SQLITEStatsManager {
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
           int kills = hasColumn(rs, "kills") ? rs.getInt("kills") : -9999;
+          int maxKills = hasColumn(rs, "maxKills") ? rs.getInt("maxKills") : -9999;
           int deaths = hasColumn(rs, "deaths") ? rs.getInt("deaths") : -9999;
           int assists = hasColumn(rs, "assists") ? rs.getInt("assists") : -9999;
           double damageDone = hasColumn(rs, "damageDone") ? rs.getDouble("damageDone") : -9999.0;
           double damageTaken = hasColumn(rs, "damageTaken") ? rs.getDouble("damageTaken") : -9999.0;
           int points = hasColumn(rs, "points") ? rs.getInt("points") : -9999;
+          int maxPoints = hasColumn(rs, "maxPoints") ? rs.getInt("maxPoints") : -9999;
           int wins = hasColumn(rs, "wins") ? rs.getInt("wins") : -9999;
           int games = hasColumn(rs, "games") ? rs.getInt("games") : -9999;
           int winstreak = hasColumn(rs, "winstreak") ? rs.getInt("winstreak") : -9999;
@@ -227,12 +278,13 @@ public class SQLITEStatsManager {
           return new Stats(
               rs.getString("username"),
               kills,
+              maxKills,
               deaths,
               assists,
               damageDone,
               damageTaken,
-              0,
               points,
+              maxPoints,
               wins,
               games,
               winstreak,
@@ -567,5 +619,206 @@ public class SQLITEStatsManager {
           .getLogger()
           .warning("Error applying sanction (SQLite): " + e.getMessage());
     }
+  }
+
+  /**
+   * Transfiere las estadísticas de una cuenta antigua a una cuenta nueva.
+   *
+   * <p>Este método: 1. Obtiene las estadísticas de ambas cuentas 2. Fusiona las estadísticas usando
+   * StatsMerger (suma acumulables, máximos para records) 3. Actualiza la cuenta destino con las
+   * estadísticas fusionadas 4. Elimina la cuenta origen de la base de datos
+   *
+   * @param table La tabla de estadísticas donde realizar la transferencia
+   * @param oldAccount El nombre de usuario de la cuenta origen
+   * @param newAccount El nombre de usuario de la cuenta destino
+   * @return StatsTransferResult con el resultado de la operación
+   */
+  public static org.nicolie.towersforpgm.database.models.StatsTransferResult transferStats(
+      String table, String oldAccount, String newAccount) {
+    // Validaciones básicas
+    if (table == null
+        || table.isEmpty()
+        || oldAccount == null
+        || oldAccount.isEmpty()
+        || newAccount == null
+        || newAccount.isEmpty()) {
+      return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+          "Parámetros inválidos");
+    }
+
+    if (oldAccount.equalsIgnoreCase(newAccount)) {
+      return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+          "La cuenta origen y destino no pueden ser la misma");
+    }
+
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    boolean validTable = tableInfo != null || MatchBotConfig.getTables().contains(table);
+    if (!validTable) {
+      return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+          "Tabla no válida: " + table);
+    }
+
+    try (Connection conn = plugin.getDatabaseConnection()) {
+      // Paso 1: Obtener estadísticas de ambas cuentas
+      Stats oldStats = getStats(table, oldAccount);
+      if (oldStats == null) {
+        return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+            "La cuenta origen no existe en la tabla: " + oldAccount);
+      }
+
+      Stats newStats = getStats(table, newAccount);
+
+      // Paso 2: Fusionar estadísticas
+      Stats mergedStats = (newStats == null)
+          ? org.nicolie.towersforpgm.database.models.StatsMerger.createFromOld(oldStats, newAccount)
+          : org.nicolie.towersforpgm.database.models.StatsMerger.merge(oldStats, newStats);
+
+      // Paso 3: Actualizar la cuenta destino en una transacción
+      conn.setAutoCommit(false);
+
+      try {
+        // Preparar SQL de inserción/reemplazo
+        String replaceSql = "INSERT OR REPLACE INTO " + table
+            + " (username, kills, maxKills, deaths, assists, damageDone, damageTaken, "
+            + "points, maxPoints, wins, games, winstreak, maxWinstreak, elo, lastElo, maxElo, "
+            + "killsPerGame, deathsPerGame, assistsPerGame, damageDonePerGame, damageTakenPerGame, "
+            + "pointsPerGame, kdRatio, winrate, wlRatio) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement updateStmt = conn.prepareStatement(replaceSql)) {
+          // Calcular estadísticas derivadas
+          int games = mergedStats.getGames();
+          double killsPerGame = games > 0 ? (double) mergedStats.getKills() / games : 0;
+          double deathsPerGame = games > 0 ? (double) mergedStats.getDeaths() / games : 0;
+          double assistsPerGame = games > 0 ? (double) mergedStats.getAssists() / games : 0;
+          double damageDonePerGame = games > 0 ? mergedStats.getDamageDone() / games : 0;
+          double damageTakenPerGame = games > 0 ? mergedStats.getDamageTaken() / games : 0;
+          double pointsPerGame = games > 0 ? (double) mergedStats.getPoints() / games : 0;
+          double kdRatio = mergedStats.getDeaths() > 0
+              ? (double) mergedStats.getKills() / mergedStats.getDeaths()
+              : mergedStats.getKills();
+          double winrate = games > 0 ? (double) mergedStats.getWins() * 100 / games : 0;
+          int losses = games - mergedStats.getWins();
+          double wlRatio =
+              losses > 0 ? (double) mergedStats.getWins() / losses : mergedStats.getWins();
+
+          updateStmt.setString(1, mergedStats.getUsername());
+          updateStmt.setInt(2, mergedStats.getKills());
+          updateStmt.setInt(3, mergedStats.getMaxKills());
+          updateStmt.setInt(4, mergedStats.getDeaths());
+          updateStmt.setInt(5, mergedStats.getAssists());
+          updateStmt.setDouble(6, mergedStats.getDamageDone());
+          updateStmt.setDouble(7, mergedStats.getDamageTaken());
+          updateStmt.setInt(8, mergedStats.getPoints());
+          updateStmt.setInt(9, mergedStats.getMaxPoints());
+          updateStmt.setInt(10, mergedStats.getWins());
+          updateStmt.setInt(11, mergedStats.getGames());
+          updateStmt.setInt(12, mergedStats.getWinstreak());
+          updateStmt.setInt(13, mergedStats.getMaxWinstreak());
+          updateStmt.setInt(14, mergedStats.getElo());
+          updateStmt.setInt(15, mergedStats.getLastElo());
+          updateStmt.setInt(16, mergedStats.getMaxElo());
+          updateStmt.setDouble(17, killsPerGame);
+          updateStmt.setDouble(18, deathsPerGame);
+          updateStmt.setDouble(19, assistsPerGame);
+          updateStmt.setDouble(20, damageDonePerGame);
+          updateStmt.setDouble(21, damageTakenPerGame);
+          updateStmt.setDouble(22, pointsPerGame);
+          updateStmt.setDouble(23, kdRatio);
+          updateStmt.setDouble(24, winrate);
+          updateStmt.setDouble(25, wlRatio);
+          updateStmt.executeUpdate();
+        }
+
+        // Paso 4: Eliminar la cuenta origen
+        String deleteSql = "DELETE FROM " + table + " WHERE username = ?";
+        try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+          deleteStmt.setString(1, oldAccount);
+          int rowsDeleted = deleteStmt.executeUpdate();
+
+          if (rowsDeleted == 0) {
+            conn.rollback();
+            return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+                "No se pudo eliminar la cuenta origen");
+          }
+        }
+
+        // Commit de la transacción
+        conn.commit();
+
+        plugin
+            .getLogger()
+            .info("[+] transferStats exitoso: " + oldAccount + " -> " + newAccount + " en tabla "
+                + table);
+
+        return org.nicolie.towersforpgm.database.models.StatsTransferResult.success(
+            "Transferencia completada exitosamente de " + oldAccount + " a " + newAccount,
+            mergedStats);
+
+      } catch (SQLException e) {
+        conn.rollback();
+        plugin
+            .getLogger()
+            .severe("[-] Error en transferStats, rollback realizado: " + e.getMessage());
+        throw e;
+      }
+
+    } catch (SQLException e) {
+      plugin.getLogger().log(Level.SEVERE, "Error al transferir estadísticas (SQLite)", e);
+      return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+          "Error en la base de datos: " + e.getMessage());
+    }
+  }
+
+  public static List<Integer> getEloHistory(String username, String table) {
+    List<Integer> eloHistory = new ArrayList<>();
+
+    // Query para obtener el elo_delta de todas las partidas del jugador, ordenadas por finished_at
+    String sql = "SELECT mph.elo_delta "
+        + "FROM match_players_history mph "
+        + "INNER JOIN matches_history mh ON mph.match_id = mh.match_id "
+        + "WHERE mph.username = ? AND mh.table_name = ? "
+        + "ORDER BY mh.finished_at ASC";
+
+    try (Connection conn = plugin.getDatabaseConnection();
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+
+      ps.setString(1, username);
+      ps.setString(2, table);
+
+      try (ResultSet rs = ps.executeQuery()) {
+        int currentElo = 0; // El jugador empieza con 0 de ELO
+        boolean hasNonZeroDelta = false; // Flag para verificar si hay algún delta diferente de 0
+        while (rs.next()) {
+          int eloDelta = rs.getInt("elo_delta");
+          if (eloDelta != 0) {
+            hasNonZeroDelta = true;
+          }
+          currentElo += eloDelta; // Acumular el delta
+          eloHistory.add(currentElo);
+        }
+
+        // Si todos los deltas son 0, retornar lista vacía
+        if (!hasNonZeroDelta && !eloHistory.isEmpty()) {
+          plugin
+              .getLogger()
+              .info("[+] getEloHistory (SQLite): " + username + " en " + table
+                  + " - Todos los deltas son 0, retornando vacío");
+          return new ArrayList<>();
+        }
+      }
+
+      plugin
+          .getLogger()
+          .info("[+] getEloHistory (SQLite): " + username + " en " + table + ", "
+              + eloHistory.size() + " partidas");
+
+    } catch (SQLException e) {
+      plugin
+          .getLogger()
+          .log(Level.SEVERE, "Error al obtener historial de ELO (SQLite): " + e.getMessage(), e);
+    }
+
+    return eloHistory;
   }
 }

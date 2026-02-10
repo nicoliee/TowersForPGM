@@ -17,6 +17,8 @@ import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 public class MatchHistoryManager {
 
   private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+  private static final String SERVER_ID =
+      TowersForPGM.getInstance().config().database().getId();
 
   private static final ConcurrentHashMap<String, AtomicInteger> counters =
       new ConcurrentHashMap<>();
@@ -76,13 +78,14 @@ public class MatchHistoryManager {
                 .getLogger()
                 .warning("MatchHistoryManager: counters map unusually large: " + counters.size());
           }
-          return table + "-" + datePart + "-" + next;
+          return SERVER_ID + "-" + table + "-" + datePart + "-" + next;
         },
         DB_EXECUTOR);
   }
 
   public static int getCountForDay(String table, String datePart) {
-    String prefix = table + "-" + datePart + "-"; // Ej: ranked-10/11/2025-
+    String prefix =
+        SERVER_ID + "-" + table + "-" + datePart + "-"; // Ej: ranked1-AmistosoPGM-10/11/2025-
     try (java.sql.Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
       String sql = "SELECT COUNT(*) FROM matches_history WHERE match_id LIKE ?";
       try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -102,7 +105,8 @@ public class MatchHistoryManager {
   }
 
   private static int getNextSequenceForDay(String table, String datePart) {
-    String prefix = table + "-" + datePart + "-"; // Ej: ranked-10/11/2025-
+    String prefix =
+        SERVER_ID + "-" + table + "-" + datePart + "-"; // Ej: ranked1-AmistosoPGM-10/11/2025-
     try (java.sql.Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
       String sql = "SELECT COUNT(*) FROM matches_history WHERE match_id LIKE ?";
       try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {

@@ -36,8 +36,8 @@ public class SQLStatsManager {
     }
 
     String sql = "INSERT INTO " + table
-        + " (username, kills, deaths, assists, damageDone, damageTaken, points, wins, games, winstreak, maxWinstreak) "
-        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0) "
+        + " (username, kills, deaths, assists, damageDone, damageTaken, points, wins, games, winstreak, maxWinstreak, maxKills, maxPoints) "
+        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?) "
         + "ON DUPLICATE KEY UPDATE "
         + "kills = kills + VALUES(kills), "
         + "deaths = deaths + VALUES(deaths), "
@@ -48,7 +48,9 @@ public class SQLStatsManager {
         + "wins = wins + VALUES(wins), "
         + "games = games + VALUES(games), "
         + "winstreak = IF(VALUES(winstreak) = 1, winstreak + 1, 0), "
-        + "maxWinstreak = GREATEST(maxWinstreak, winstreak)";
+        + "maxWinstreak = GREATEST(maxWinstreak, winstreak), "
+        + "maxKills = GREATEST(maxKills, VALUES(maxKills)), "
+        + "maxPoints = GREATEST(maxPoints, VALUES(maxPoints))";
 
     String rankedSql =
         "UPDATE " + table + " SET elo = ?, lastElo = ?, maxElo = ? WHERE username = ?";
@@ -115,6 +117,8 @@ public class SQLStatsManager {
         stmt.setInt(8, playerStat.getWins());
         stmt.setInt(9, playerStat.getGames());
         stmt.setInt(10, playerStat.getWinstreak());
+        stmt.setInt(11, playerStat.getKills()); // maxKills = delta de kills de esta partida
+        stmt.setInt(12, playerStat.getPoints()); // maxPoints = delta de points de esta partida
         stmt.addBatch();
         batchSize++;
         if (batchSize % 100 == 0) {
@@ -206,11 +210,13 @@ public class SQLStatsManager {
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
           int kills = hasColumn(rs, "kills") ? rs.getInt("kills") : -9999;
+          int maxKills = hasColumn(rs, "maxKills") ? rs.getInt("maxKills") : -9999;
           int deaths = hasColumn(rs, "deaths") ? rs.getInt("deaths") : -9999;
           int assists = hasColumn(rs, "assists") ? rs.getInt("assists") : -9999;
           double damageDone = hasColumn(rs, "damageDone") ? rs.getDouble("damageDone") : -9999.0;
           double damageTaken = hasColumn(rs, "damageTaken") ? rs.getDouble("damageTaken") : -9999.0;
           int points = hasColumn(rs, "points") ? rs.getInt("points") : -9999;
+          int maxPoints = hasColumn(rs, "maxPoints") ? rs.getInt("maxPoints") : -9999;
           int wins = hasColumn(rs, "wins") ? rs.getInt("wins") : -9999;
           int games = hasColumn(rs, "games") ? rs.getInt("games") : -9999;
           int winstreak = hasColumn(rs, "winstreak") ? rs.getInt("winstreak") : -9999;
@@ -222,12 +228,13 @@ public class SQLStatsManager {
           return new Stats(
               rs.getString("username"),
               kills,
+              maxKills,
               deaths,
               assists,
               damageDone,
               damageTaken,
-              0,
               points,
+              maxPoints,
               wins,
               games,
               winstreak,
@@ -530,14 +537,16 @@ public class SQLStatsManager {
 
     // Construir una consulta UNION ALL para todas las tablas con filtro
     StringBuilder sqlBuilder = new StringBuilder();
-    sqlBuilder.append("SELECT DISTINCT username FROM (");
+    sqlBuilder.append(
+        "SELECT DISTINCT CONVERT(username USING utf8mb4) COLLATE utf8mb4_unicode_ci AS username FROM (");
 
     for (int i = 0; i < tables.size(); i++) {
       if (i > 0) {
         sqlBuilder.append(" UNION ALL ");
       }
       sqlBuilder
-          .append("SELECT username FROM ")
+          .append(
+              "SELECT CONVERT(username USING utf8mb4) COLLATE utf8mb4_unicode_ci AS username FROM ")
           .append(tables.get(i))
           .append(" WHERE username LIKE ?");
     }
@@ -608,5 +617,196 @@ public class SQLStatsManager {
           .getLogger()
           .warning("Error applying sanction (MySQL): " + e.getMessage());
     }
+  }
+
+  public static org.nicolie.towersforpgm.database.models.StatsTransferResult transferStats(
+      String table, String oldAccount, String newAccount) {
+    // Validaciones básicas
+    if (table == null
+        || table.isEmpty()
+        || oldAccount == null
+        || oldAccount.isEmpty()
+        || newAccount == null
+        || newAccount.isEmpty()) {
+      return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+          "Parámetros inválidos");
+    }
+
+    if (oldAccount.equalsIgnoreCase(newAccount)) {
+      return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+          "La cuenta origen y destino no pueden ser la misma");
+    }
+
+    TableInfo tableInfo = plugin.config().databaseTables().getTableInfo(table);
+    boolean validTable = tableInfo != null || MatchBotConfig.getTables().contains(table);
+    if (!validTable) {
+      return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+          "Tabla no válida: " + table);
+    }
+
+    SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
+    if (dbManager == null || !dbManager.isConnected()) {
+      return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+          "No hay conexión a la base de datos MySQL");
+    }
+
+    try (Connection conn = dbManager.getConnection()) {
+      // Paso 1: Obtener estadísticas de ambas cuentas
+      Stats oldStats = getStats(table, oldAccount);
+      if (oldStats == null) {
+        return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+            "La cuenta origen no existe en la tabla: " + oldAccount);
+      }
+
+      Stats newStats = getStats(table, newAccount);
+
+      // Paso 2: Fusionar estadísticas
+      Stats mergedStats = (newStats == null)
+          ? org.nicolie.towersforpgm.database.models.StatsMerger.createFromOld(oldStats, newAccount)
+          : org.nicolie.towersforpgm.database.models.StatsMerger.merge(oldStats, newStats);
+
+      // Paso 3: Actualizar la cuenta destino en una transacción
+      conn.setAutoCommit(false);
+
+      try {
+        // Construir SQL de actualización/inserción
+        String upsertSql = "INSERT INTO " + table
+            + " (username, kills, maxKills, deaths, assists, damageDone, damageTaken, "
+            + "points, maxPoints, wins, games, winstreak, maxWinstreak, elo, lastElo, maxElo) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            + "ON DUPLICATE KEY UPDATE "
+            + "kills = VALUES(kills), "
+            + "maxKills = VALUES(maxKills), "
+            + "deaths = VALUES(deaths), "
+            + "assists = VALUES(assists), "
+            + "damageDone = VALUES(damageDone), "
+            + "damageTaken = VALUES(damageTaken), "
+            + "points = VALUES(points), "
+            + "maxPoints = VALUES(maxPoints), "
+            + "wins = VALUES(wins), "
+            + "games = VALUES(games), "
+            + "winstreak = VALUES(winstreak), "
+            + "maxWinstreak = VALUES(maxWinstreak), "
+            + "elo = VALUES(elo), "
+            + "lastElo = VALUES(lastElo), "
+            + "maxElo = VALUES(maxElo)";
+
+        try (PreparedStatement updateStmt = conn.prepareStatement(upsertSql)) {
+          updateStmt.setString(1, mergedStats.getUsername());
+          updateStmt.setInt(2, mergedStats.getKills());
+          updateStmt.setInt(3, mergedStats.getMaxKills());
+          updateStmt.setInt(4, mergedStats.getDeaths());
+          updateStmt.setInt(5, mergedStats.getAssists());
+          updateStmt.setDouble(6, mergedStats.getDamageDone());
+          updateStmt.setDouble(7, mergedStats.getDamageTaken());
+          updateStmt.setInt(8, mergedStats.getPoints());
+          updateStmt.setInt(9, mergedStats.getMaxPoints());
+          updateStmt.setInt(10, mergedStats.getWins());
+          updateStmt.setInt(11, mergedStats.getGames());
+          updateStmt.setInt(12, mergedStats.getWinstreak());
+          updateStmt.setInt(13, mergedStats.getMaxWinstreak());
+          updateStmt.setInt(14, mergedStats.getElo());
+          updateStmt.setInt(15, mergedStats.getLastElo());
+          updateStmt.setInt(16, mergedStats.getMaxElo());
+          updateStmt.executeUpdate();
+        }
+
+        // Paso 4: Eliminar la cuenta origen
+        String deleteSql = "DELETE FROM " + table + " WHERE username = ?";
+        try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+          deleteStmt.setString(1, oldAccount);
+          int rowsDeleted = deleteStmt.executeUpdate();
+
+          if (rowsDeleted == 0) {
+            conn.rollback();
+            return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+                "No se pudo eliminar la cuenta origen");
+          }
+        }
+
+        // Commit de la transacción
+        conn.commit();
+
+        plugin
+            .getLogger()
+            .info("[+] transferStats exitoso: " + oldAccount + " -> " + newAccount + " en tabla "
+                + table);
+
+        return org.nicolie.towersforpgm.database.models.StatsTransferResult.success(
+            "Transferencia completada exitosamente de " + oldAccount + " a " + newAccount,
+            mergedStats);
+
+      } catch (SQLException e) {
+        conn.rollback();
+        plugin
+            .getLogger()
+            .severe("[-] Error en transferStats, rollback realizado: " + e.getMessage());
+        throw e;
+      }
+
+    } catch (SQLException e) {
+      plugin.getLogger().log(Level.SEVERE, "Error al transferir estadísticas (MySQL)", e);
+      return org.nicolie.towersforpgm.database.models.StatsTransferResult.failure(
+          "Error en la base de datos: " + e.getMessage());
+    }
+  }
+
+  public static List<Integer> getEloHistory(String username, String table) {
+    List<Integer> eloHistory = new ArrayList<>();
+
+    SQLDatabaseManager dbManager = plugin.getMySQLDatabaseManager();
+    if (dbManager == null || !dbManager.isConnected()) {
+      String errorMessage = LanguageManager.message("errors.database.connectionClosed");
+      plugin.getLogger().log(Level.SEVERE, errorMessage);
+      return eloHistory;
+    }
+
+    // Query para obtener el elo_delta de todas las partidas del jugador, ordenadas por finished_at
+    String sql = "SELECT mph.elo_delta "
+        + "FROM match_players_history mph "
+        + "INNER JOIN matches_history mh ON mph.match_id = mh.match_id "
+        + "WHERE mph.username = ? AND mh.table_name = ? "
+        + "ORDER BY mh.finished_at ASC";
+
+    try (Connection conn = dbManager.getConnection();
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+
+      ps.setString(1, username);
+      ps.setString(2, table);
+
+      try (ResultSet rs = ps.executeQuery()) {
+        int currentElo = 0; // El jugador empieza con 0 de ELO
+        boolean hasNonZeroDelta = false; // Flag para verificar si hay algún delta diferente de 0
+        while (rs.next()) {
+          int eloDelta = rs.getInt("elo_delta");
+          if (eloDelta != 0) {
+            hasNonZeroDelta = true;
+          }
+          currentElo += eloDelta; // Acumular el delta
+          eloHistory.add(currentElo);
+        }
+
+        // Si todos los deltas son 0, retornar lista vacía
+        if (!hasNonZeroDelta && !eloHistory.isEmpty()) {
+          plugin
+              .getLogger()
+              .info("[+] getEloHistory (MySQL): " + username + " en " + table
+                  + " - Todos los deltas son 0, retornando vacío");
+          return new ArrayList<>();
+        }
+      }
+
+      plugin
+          .getLogger()
+          .info("[+] getEloHistory (MySQL): " + username + " en " + table + ", " + eloHistory.size()
+              + " partidas");
+
+    } catch (SQLException e) {
+      plugin
+          .getLogger()
+          .log(Level.SEVERE, "Error al obtener historial de ELO (MySQL): " + e.getMessage(), e);
+    }
+
+    return eloHistory;
   }
 }

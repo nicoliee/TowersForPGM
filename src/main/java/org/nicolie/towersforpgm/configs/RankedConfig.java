@@ -1,119 +1,332 @@
 package org.nicolie.towersforpgm.configs;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.nicolie.towersforpgm.rankeds.RankedProfile;
+import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.map.MapInfo;
+import tc.oc.pgm.rotation.MapPoolManager;
 
 public class RankedConfig {
   private final JavaPlugin plugin;
-  private int disconnectTime;
-  private int rankedMinSize;
-  private int rankedMaxSize;
-  private String rankedOrder;
-  private List<String> rankedMaps;
-  private boolean rankedMatchmaking;
+  private String activeProfileName;
+  private Map<String, RankedProfile> profiles;
+  private RankedProfile activeProfile;
 
   public RankedConfig(JavaPlugin plugin) {
     this.plugin = plugin;
+    this.profiles = new HashMap<>();
     load();
   }
 
   public void load() {
-    disconnectTime = plugin.getConfig().getInt("rankeds.disconnectTime", 60);
-    rankedMinSize = plugin.getConfig().getInt("rankeds.size.min", 4);
-    rankedMaxSize = plugin.getConfig().getInt("rankeds.size.max", 8);
-    rankedOrder = plugin.getConfig().getString("rankeds.order", "");
-    rankedMaps = plugin.getConfig().getStringList("rankeds.maps");
-    rankedMatchmaking = plugin.getConfig().getBoolean("rankeds.matchmaking", false);
+    profiles.clear();
+    activeProfileName = plugin.getConfig().getString("rankeds.activeProfile", "default");
+
+    ConfigurationSection profilesSection =
+        plugin.getConfig().getConfigurationSection("rankeds.profiles");
+    if (profilesSection != null) {
+      for (String profileName : profilesSection.getKeys(false)) {
+        String basePath = "rankeds.profiles." + profileName;
+
+        int min = plugin.getConfig().getInt(basePath + ".min", 4);
+        int max = plugin.getConfig().getInt(basePath + ".max", 6);
+        int timerWaiting = plugin.getConfig().getInt(basePath + ".timer.waiting", 30);
+        int timerMinReached = plugin.getConfig().getInt(basePath + ".timer.minReached", 15);
+        int timerFull = plugin.getConfig().getInt(basePath + ".timer.full", 5);
+        int timerDisconnect = plugin.getConfig().getInt(basePath + ".timer.disconnect", 30);
+        boolean matchmaking = plugin.getConfig().getBoolean(basePath + ".matchmaking", false);
+        String order = plugin.getConfig().getString(basePath + ".order", "ABBAAB");
+        boolean reroll = plugin.getConfig().getBoolean(basePath + ".reroll", false);
+        String table = plugin.getConfig().getString(basePath + ".table", "");
+        String mapPool = plugin.getConfig().getString(basePath + ".mapPool", "default");
+
+        RankedProfile profile = new RankedProfile(
+            profileName,
+            min,
+            max,
+            timerWaiting,
+            timerMinReached,
+            timerFull,
+            timerDisconnect,
+            matchmaking,
+            order,
+            reroll,
+            table,
+            mapPool);
+
+        profiles.put(profileName, profile);
+      }
+    }
+
+    // Set active profile
+    activeProfile = profiles.get(activeProfileName);
+    if (activeProfile == null && !profiles.isEmpty()) {
+      // If the configured profile doesn't exist, use the first available one
+      activeProfile = profiles.values().iterator().next();
+      activeProfileName = activeProfile.getName();
+    }
   }
 
   private void save() {
     plugin.saveConfig();
   }
 
+  // Active Profile Management
+  public RankedProfile getActiveProfile() {
+    return activeProfile;
+  }
+
+  public String getActiveProfileName() {
+    return activeProfileName;
+  }
+
+  public void setActiveProfile(String profileName) {
+    if (profiles.containsKey(profileName)) {
+      this.activeProfile = profiles.get(profileName);
+      this.activeProfileName = profileName;
+      plugin.getConfig().set("rankeds.activeProfile", profileName);
+      save();
+    }
+  }
+
+  public Set<String> getProfileNames() {
+    return profiles.keySet();
+  }
+
+  public RankedProfile getProfile(String name) {
+    return profiles.get(name);
+  }
+
+  public boolean profileExists(String name) {
+    return profiles.containsKey(name);
+  }
+
+  // Getter methods for active profile (backward compatibility)
   public int getDisconnectTime() {
-    return disconnectTime;
+    return activeProfile != null ? activeProfile.getTimerDisconnect() : 30;
   }
 
   public void setDisconnectTime(int disconnectTime) {
-    this.disconnectTime = disconnectTime;
-    plugin.getConfig().set("rankeds.disconnectTime", disconnectTime);
+    plugin
+        .getConfig()
+        .set("rankeds.profiles." + activeProfileName + ".timer.disconnect", disconnectTime);
     save();
+    load();
   }
 
   public int getRankedMinSize() {
-    return rankedMinSize;
+    return activeProfile != null ? activeProfile.getMin() : 4;
   }
 
   public void setRankedMinSize(int rankedMinSize) {
-    this.rankedMinSize = rankedMinSize;
-    plugin.getConfig().set("rankeds.size.min", rankedMinSize);
+    plugin.getConfig().set("rankeds.profiles." + activeProfileName + ".min", rankedMinSize);
     save();
+    load();
   }
 
   public int getRankedMaxSize() {
-    return rankedMaxSize;
+    return activeProfile != null ? activeProfile.getMax() : 6;
   }
 
   public void setRankedMaxSize(int rankedMaxSize) {
-    this.rankedMaxSize = rankedMaxSize;
-    plugin.getConfig().set("rankeds.size.max", rankedMaxSize);
+    plugin.getConfig().set("rankeds.profiles." + activeProfileName + ".max", rankedMaxSize);
     save();
+    load();
   }
 
   public String getRankedOrder() {
-    return rankedOrder;
+    return activeProfile != null ? activeProfile.getOrder() : "ABBAAB";
   }
 
   public void setRankedOrder(String rankedOrder) {
-    this.rankedOrder = rankedOrder;
-    plugin.getConfig().set("rankeds.order", rankedOrder);
+    plugin.getConfig().set("rankeds.profiles." + activeProfileName + ".order", rankedOrder);
     save();
+    load();
   }
 
+  public String getMapPool() {
+    return activeProfile != null ? activeProfile.getMapPool() : "default";
+  }
+
+  public String getTable() {
+    return activeProfile != null ? activeProfile.getTable() : "";
+  }
+
+  // Map-related methods for backward compatibility
+  // These now get maps from the active map pool in PGM
   public List<String> getRankedMaps() {
-    return rankedMaps;
+    if (activeProfile == null) {
+      return new ArrayList<>();
+    }
+
+    String poolName = activeProfile.getMapPool();
+    if (poolName == null || poolName.isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    // Get maps from PGM's MapPoolManager
+    if (PGM.get().getMapOrder() instanceof MapPoolManager) {
+      MapPoolManager mapPoolManager = (MapPoolManager) PGM.get().getMapOrder();
+      try {
+        // Find the pool by name
+        var pool = mapPoolManager.getMapPools().stream()
+            .filter(p -> p.getName().equalsIgnoreCase(poolName))
+            .findFirst()
+            .orElse(null);
+
+        if (pool != null) {
+          return pool.getMaps().stream().map(MapInfo::getName).collect(Collectors.toList());
+        }
+      } catch (Exception e) {
+        plugin
+            .getLogger()
+            .warning("Error getting maps from pool '" + poolName + "': " + e.getMessage());
+      }
+    }
+
+    return new ArrayList<>();
   }
 
+  public boolean isMapRanked(String mapName) {
+    return getRankedMaps().stream().anyMatch(map -> map.equalsIgnoreCase(mapName));
+  }
+
+  // Get maps from a specific pool name
+  public List<String> getMapsFromPool(String poolName) {
+    if (poolName == null || poolName.isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    // Get maps from PGM's MapPoolManager
+    if (PGM.get().getMapOrder() instanceof MapPoolManager) {
+      MapPoolManager mapPoolManager = (MapPoolManager) PGM.get().getMapOrder();
+      try {
+        // Find the pool by name
+        var pool = mapPoolManager.getMapPools().stream()
+            .filter(p -> p.getName().equalsIgnoreCase(poolName))
+            .findFirst()
+            .orElse(null);
+
+        if (pool != null) {
+          return pool.getMaps().stream().map(MapInfo::getName).collect(Collectors.toList());
+        }
+      } catch (Exception e) {
+        plugin
+            .getLogger()
+            .warning("Error getting maps from pool '" + poolName + "': " + e.getMessage());
+      }
+    }
+
+    return new ArrayList<>();
+  }
+
+  // Set the map pool for the active profile
+  public boolean setPool(String poolName) {
+    if (activeProfile == null) {
+      return false;
+    }
+
+    // Validate that the pool exists in PGM
+    if (PGM.get().getMapOrder() instanceof MapPoolManager) {
+      MapPoolManager mapPoolManager = (MapPoolManager) PGM.get().getMapOrder();
+      boolean poolExists = mapPoolManager.getMapPools().stream()
+          .anyMatch(p -> p.getName().equalsIgnoreCase(poolName));
+
+      if (!poolExists) {
+        plugin.getLogger().warning("Map pool '" + poolName + "' not found in PGM");
+        return false;
+      }
+    }
+
+    // Set the pool for the active profile in config
+    plugin.getConfig().set("rankeds.profiles." + activeProfileName + ".mapPool", poolName);
+    save();
+
+    // Update the active profile in memory
+    activeProfile.setMapPool(poolName);
+
+    return true;
+  }
+
+  // Deprecated methods kept for backward compatibility
+  @Deprecated
   public void addMap(String map) {
-    rankedMaps.add(map);
-    plugin.getConfig().set("rankeds.maps", rankedMaps);
-    save();
+    plugin.getLogger().info("addMap() is deprecated. Use setPool() instead.");
   }
 
+  @Deprecated
   public void removeMap(String map) {
-    rankedMaps.remove(map);
-    plugin.getConfig().set("rankeds.maps", rankedMaps);
-    save();
-  }
-
-  public boolean isMapRanked(String map) {
-    return rankedMaps.contains(map);
-  }
-
-  public void setRankedMatchmaking(boolean rankedMatchmaking) {
-    this.rankedMatchmaking = rankedMatchmaking;
-    plugin.getConfig().set("rankeds.matchmaking", rankedMatchmaking);
-    save();
+    plugin.getLogger().info("removeMap() is deprecated. Use setPool() instead.");
   }
 
   public boolean isRankedMatchmaking() {
-    return rankedMatchmaking;
+    return activeProfile != null ? activeProfile.isMatchmaking() : false;
   }
 
-  public void setRankedMatchmaking(Boolean rankedMatchmaking) {
-    this.rankedMatchmaking = rankedMatchmaking;
-    plugin.getConfig().set("rankeds.matchmaking", rankedMatchmaking);
+  public void setRankedMatchmaking(boolean rankedMatchmaking) {
+    plugin
+        .getConfig()
+        .set("rankeds.profiles." + activeProfileName + ".matchmaking", rankedMatchmaking);
     save();
+    load();
+  }
+
+  public int getOnTimerWaiting() {
+    return activeProfile != null ? activeProfile.getTimerWaiting() : 30;
+  }
+
+  public void setOnTimerWaiting(int onTimerWaiting) {
+    plugin
+        .getConfig()
+        .set("rankeds.profiles." + activeProfileName + ".timer.waiting", onTimerWaiting);
+    save();
+    load();
+  }
+
+  public int getOnTimerMinReached() {
+    return activeProfile != null ? activeProfile.getTimerMinReached() : 15;
+  }
+
+  public void setOnTimerMinReached(int onTimerMinReached) {
+    plugin
+        .getConfig()
+        .set("rankeds.profiles." + activeProfileName + ".timer.minReached", onTimerMinReached);
+    save();
+    load();
+  }
+
+  public int getOnTimerFull() {
+    return activeProfile != null ? activeProfile.getTimerFull() : 5;
+  }
+
+  public void setOnTimerFull(int onTimerFull) {
+    plugin.getConfig().set("rankeds.profiles." + activeProfileName + ".timer.full", onTimerFull);
+    save();
+    load();
+  }
+
+  public boolean isReroll() {
+    return activeProfile != null ? activeProfile.isReroll() : false;
+  }
+
+  public void setReroll(boolean reroll) {
+    plugin.getConfig().set("rankeds.profiles." + activeProfileName + ".reroll", reroll);
+    save();
+    load();
   }
 
   @Override
   public String toString() {
-    return "RankedConfig{" + "disconnectTime="
-        + disconnectTime + ", rankedMinSize="
-        + rankedMinSize + ", rankedMaxSize="
-        + rankedMaxSize + ", rankedOrder='"
-        + rankedOrder + '\'' + ", rankedMaps="
-        + rankedMaps + ", rankedMatchmaking="
-        + rankedMatchmaking + '}';
+    return "RankedConfig{"
+        + "activeProfile='" + activeProfileName + '\''
+        + ", profiles=" + profiles.keySet()
+        + '}';
   }
 }

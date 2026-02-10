@@ -9,9 +9,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.nicolie.towersforpgm.commands.ForfeitCommand;
-import org.nicolie.towersforpgm.commands.RankedCommand;
-import org.nicolie.towersforpgm.commands.TagCommand;
+import org.nicolie.towersforpgm.commands.ranked.ForfeitCommand;
+import org.nicolie.towersforpgm.commands.ranked.RankedCommand;
+import org.nicolie.towersforpgm.commands.ranked.TagCommand;
+import org.nicolie.towersforpgm.commands.ranked.UnlinkCommand;
 import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.database.MatchHistoryManager;
 import org.nicolie.towersforpgm.database.TableManager;
@@ -42,6 +43,7 @@ import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.Commands;
 import org.nicolie.towersforpgm.utils.Events;
 import org.nicolie.towersforpgm.utils.LanguageManager;
+import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public final class TowersForPGM extends JavaPlugin {
@@ -140,6 +142,12 @@ public final class TowersForPGM extends JavaPlugin {
         new PicksGUI(this, this.ConfigManager, draft, captains, availablePlayers, teams);
     getServer().getPluginManager().registerEvents(pickInventory, this);
 
+    // Registrar listeners para reroll
+    getServer()
+        .getPluginManager()
+        .registerEvents(new org.nicolie.towersforpgm.listeners.RerollItemListener(), this);
+    getServer().getPluginManager().registerEvents(draft.getRerollOptionsGUI(), this);
+
     // Inicializar el matchmaking
     Matchmaking matchmaking =
         new Matchmaking(this.ConfigManager, availablePlayers, captains, teams, utilities);
@@ -149,6 +157,7 @@ public final class TowersForPGM extends JavaPlugin {
     getCommand("ranked").setExecutor(new RankedCommand(queue, utilities));
     getCommand("forfeit").setExecutor(new ForfeitCommand(teams));
     getCommand("tag").setExecutor(new TagCommand());
+    getCommand("unlink").setExecutor(new UnlinkCommand());
     // Registrar comandos
     Commands commandManager = new Commands(this);
     commandManager.registerCommands(
@@ -182,12 +191,14 @@ public final class TowersForPGM extends JavaPlugin {
 
       if (database) {
         TableManager.createDCAccountsTable();
-        StatsCommand.register();
-        TopCommand.register();
-        TopPaginationListener.register();
-        org.nicolie.towersforpgm.matchbot.commands.history.HistoryCommand.register();
-        org.nicolie.towersforpgm.matchbot.commands.link.LinkCommand.register();
-        AutocompleteHandler.register();
+        if (MatchBotConfig.isCommandsEnabled()) {
+          StatsCommand.register();
+          TopCommand.register();
+          TopPaginationListener.register();
+          org.nicolie.towersforpgm.matchbot.commands.history.HistoryCommand.register();
+          org.nicolie.towersforpgm.matchbot.commands.link.LinkCommand.register();
+          AutocompleteHandler.register();
+        }
 
         // Registrar listener del queue de voz
         QueueJoinListener.register();
@@ -224,6 +235,10 @@ public final class TowersForPGM extends JavaPlugin {
 
   public void giveitem(World world) {
     pickInventory.giveItemToPlayers(world);
+  }
+
+  public void giveItemToMatch(Match match) {
+    pickInventory.giveItemToMatch(match);
   }
 
   public void removeItem(World world) {

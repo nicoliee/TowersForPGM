@@ -54,3 +54,10 @@ register:
   discord-label: "Discord:"
   link-error: "Error al vincular las cuentas. Inténtalo de nuevo más tarde."
   internal-error: "Error interno. Inténtalo de nuevo más tarde."
+unlink:
+  usage: "§cUso: /unlink <uuid|discordId>"
+  processing: "§eProcesando desvinculación de cuenta..."
+  success: "§aCuenta desvinculada exitosamente: {identifier}"
+  notFound: "§cNo se encontró cuenta vinculada para: {identifier}"
+  error: "§cOcurrió un error al desvincular la cuenta."
+  database-disabled: "§cLa base de datos no está habilitada. No se pueden desvincular cuentas."

@@ -22,3 +22,11 @@ reload:
 sudo:
   usage: "§cUso: /sudo <jugador> <mensaje/comando>"
   playerOffline: "§cEl jugador {player} no está en línea."
+
+commands:
+  protectedInRanked: "No puedes hacer eso en una ranked."
+  protectedInDraft: "No puedes hacer eso en un draft."
+  teamChangeBlocked: "No puedes hacer eso en una ranked."
+
+ranked:
+  activeMatch: "Partida activa en: §b{table}"

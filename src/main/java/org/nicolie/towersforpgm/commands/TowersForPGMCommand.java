@@ -9,6 +9,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
@@ -73,7 +74,9 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
         return true;
       case "test":
         // For testing purposes only, may change depending on what is being added/tested
-        System.out.println(plugin.config().preparationTime().toString());
+        StatsManager.getEloHistory("nicolieeee", "RankedT6").thenAccept(eloHistory -> {
+          sender.sendMessage("§8[§bTowersForPGM§8] §7ELO History: " + eloHistory);
+        });
         return true;
       default:
         sender.sendMessage(

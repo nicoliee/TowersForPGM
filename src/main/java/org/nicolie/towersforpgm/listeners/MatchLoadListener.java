@@ -3,7 +3,7 @@ package org.nicolie.towersforpgm.listeners;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.commands.ForfeitCommand;
+import org.nicolie.towersforpgm.commands.ranked.ForfeitCommand;
 import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.DisconnectManager;

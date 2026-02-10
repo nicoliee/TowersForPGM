@@ -136,4 +136,58 @@ public class SQLITEDiscordManager {
         },
         SQL_EXECUTOR);
   }
+
+  public static CompletableFuture<Boolean> deleteByUuid(UUID playerUuid) {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          String acc_table = MatchBotConfig.getAccountsTable();
+          try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
+            String deleteSQL = "DELETE FROM " + acc_table + " WHERE uuid = ?";
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSQL)) {
+              deleteStmt.setString(1, playerUuid.toString());
+
+              int affected = deleteStmt.executeUpdate();
+              if (affected > 0) {
+                TowersForPGM.getInstance()
+                    .getLogger()
+                    .info("Cuenta desvinculada exitosamente: UUID=" + playerUuid);
+                return true;
+              }
+            }
+          } catch (SQLException e) {
+            TowersForPGM.getInstance()
+                .getLogger()
+                .log(Level.SEVERE, "Error eliminando cuenta por UUID: " + playerUuid, e);
+          }
+          return false;
+        },
+        SQL_EXECUTOR);
+  }
+
+  public static CompletableFuture<Boolean> deleteByDiscordId(String discordId) {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          String acc_table = MatchBotConfig.getAccountsTable();
+          try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
+            String deleteSQL = "DELETE FROM " + acc_table + " WHERE discordId = ?";
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSQL)) {
+              deleteStmt.setString(1, discordId);
+
+              int affected = deleteStmt.executeUpdate();
+              if (affected > 0) {
+                TowersForPGM.getInstance()
+                    .getLogger()
+                    .info("Cuenta desvinculada exitosamente: DiscordID=" + discordId);
+                return true;
+              }
+            }
+          } catch (SQLException e) {
+            TowersForPGM.getInstance()
+                .getLogger()
+                .log(Level.SEVERE, "Error eliminando cuenta por Discord ID: " + discordId, e);
+          }
+          return false;
+        },
+        SQL_EXECUTOR);
+  }
 }

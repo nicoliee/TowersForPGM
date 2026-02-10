@@ -26,7 +26,7 @@ public class MatchAfterLoadListener implements Listener {
       setPrivateMatch(match);
     }
     if (Queue.getQueueSize() >= plugin.config().ranked().getRankedMinSize()) {
-      queue.startRanked(match);
+      queue.startCountdown(match);
     }
   }
 

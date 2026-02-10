@@ -27,9 +27,38 @@ captains:
   suggestions: "§7Suggestions: {suggestions}"
   teamsHeader: "§m-----------§r §b§lTeams §f§m-----------"
   timeRemaining: "§cYou have §4{time} §cto choose a player."
-  tip: "§bUse the star to pick a player."
   turn: "{teamcolor}{captain} §fis now choosing."
   usage: "§cUsage: /captains <nick1> <nick2>"
+  title: "§lYour turn"
+  subtitle: "§fUse §b§lthe star §rto pick a player"
+
+reroll:
+  actionBar: "§bUse the §6blaze powder§b if you are not satisfied with the captains."
+  waiting: "§e⚠ Right-click the Blaze Powder to request a captain reroll."
+  requested: "{player}§r has requested a reroll. §7({current}/{min})"
+  approved: "§bReroll approved."
+  item:
+    name: "§e§lRequest Reroll"
+    lore:
+      - "§7Right-click to request a reroll"
+      - "§7of the current captains."
+      - ""
+      - "§eRequires §6{percentage}% §eof players"
+  bossbar:
+    title: "Reroll. §bTime remaining: §a{time}"
+  voting:
+    title: "§6§lChoose New Captains"
+    bossbar: "Voting ({current}/{total}). §bTime Remaining: §a{time}"
+    option1: "§eOption 1: §bBest Average Points"
+    option2: "§eOption 2: §bBest Average Kills"
+    option3: "§eOption 3: §bRandom"
+    stats:
+      avgPoints: "  §7Average Points: §f{value}"
+      avgKills: "  §7Average Kills: §f{value}"
+    votes:
+      header: "§aVotes:"
+      none: "§7No votes"
+    clickToVote: "§eClick to vote"
 
 picks:
   choosing: "§eSelecting players..."
@@ -41,27 +70,20 @@ picks:
   notInList: "§c{player} is not available to pick."
   notTurn: "§cIt's not your turn to pick."
   notCaptain: "§cYou are not a captain."
+  itemLore: "§7Right-click to open the draft menu."
 
 substitute:
-  usage: "§cUsage: /sub <current_captain> <new_captain>"
+  usage: "§cUsage: /sub <team_name> <new_captain>"
   notConnected: "§cThe player {player} is not connected"
   notCaptain: "§cThe specified player is not a captain"
+  invalidTeam: "§cThe team '{team}' is invalid. Use one of the team names."
   enemyTeam: "§cYou cannot substitute with a player from the opposing team"
   notAvailable: "§cThe specified player is not available for substitution"
   success: "§a{player} is now captain of the {team} team"
-
-substitute:
-  usage: "§cUsage: /sub <current_captain> <new_captain>"
-  notConnected: "§cThe player {player} is not connected"
-  notCaptain: "§cThe specified player is not a captain"
-  enemyTeam: "§cYou cannot substitute with a player from the opposing team"
-  notAvailable: "§cThe specified player is not available for substitution"
-  success: "§a{player} is now captain of the {team} team"
-
-# Root-level alias to support code that requests "draft.itemLore"
-itemLore: "§7Right-click to open the draft menu."
 
 config:
+  rerollEnabled: "§aCaptain reroll option has been §2enabled§a."
+  rerollDisabled: "§cCaptain reroll option has been §4disabled§c."
   clickToPick: "§eClick to pick."
   invalidOrder: "§c Invalid order. Example usage: ABBAAB"
   itemLore: "§7Right-click to open the draft menu."

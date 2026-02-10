@@ -31,19 +31,6 @@ public class QueueJoinListener extends ListenerAdapter {
       return;
     }
 
-    String channelJoinedId = event.getChannelJoined().getId();
-    String queueChannelId = MatchBotConfig.getQueueID();
-    String team1ChannelId = MatchBotConfig.getTeam1ID();
-    String team2ChannelId = MatchBotConfig.getTeam2ID();
-    String inactiveChannelId = MatchBotConfig.getInactiveID();
-
-    if (!channelJoinedId.equals(queueChannelId)
-        && !channelJoinedId.equals(team1ChannelId)
-        && !channelJoinedId.equals(team2ChannelId)
-        && !channelJoinedId.equals(inactiveChannelId)) {
-      return;
-    }
-
     if (event.getChannelJoined() != null) {
       handleVoiceJoin(event);
     }
@@ -54,9 +41,19 @@ public class QueueJoinListener extends ListenerAdapter {
   }
 
   private void handleVoiceJoin(GuildVoiceUpdateEvent event) {
-    String discordId = event.getMember().getId();
     String channelJoinedId = event.getChannelJoined().getId();
     String queueChannelId = MatchBotConfig.getQueueID();
+    String team1ChannelId = MatchBotConfig.getTeam1ID();
+    String team2ChannelId = MatchBotConfig.getTeam2ID();
+
+    String inactiveChannelId = MatchBotConfig.getInactiveID();
+    if (!channelJoinedId.equals(queueChannelId)
+        && !channelJoinedId.equals(team1ChannelId)
+        && !channelJoinedId.equals(team2ChannelId)
+        && !channelJoinedId.equals(inactiveChannelId)) {
+      return;
+    }
+    String discordId = event.getMember().getId();
 
     DiscordManager.getDiscordPlayer(discordId)
         .thenAccept(discordPlayer -> {
@@ -67,7 +64,10 @@ public class QueueJoinListener extends ListenerAdapter {
               String playerName =
                   Bukkit.getOfflinePlayer(discordPlayer.getPlayerUuid()).getName();
 
-              if (match.isRunning() && teams.isPlayerInAnyTeam(playerName)) {
+              if (playerName != null
+                  && match.isRunning()
+                  && teams.isPlayerInAnyTeam(playerName)
+                  && Queue.isRanked()) {
                 if (teams.isPlayerInTeam(playerName, 1)) {
                   RankedListener.movePlayerToTeam1(discordPlayer.getPlayerUuid());
                 } else {
@@ -75,7 +75,7 @@ public class QueueJoinListener extends ListenerAdapter {
                 }
               } else {
                 if (channelJoinedId.equals(queueChannelId)) {
-                  Queue.getQueue().processVoiceJoin(discordPlayer.getPlayerUuid(), null);
+                  Queue.getQueue().addPlayer(discordPlayer.getPlayerUuid(), match);
                 }
               }
             });
@@ -105,7 +105,8 @@ public class QueueJoinListener extends ListenerAdapter {
     }
   }
 
-  public static void reloadQueueFromVoice(Queue queue) {
+  public static void reloadQueueFromVoice() {
+    Queue queue = Queue.getQueue();
     if (!MatchBotConfig.isVoiceChatEnabled()) {
       return;
     }
@@ -123,7 +124,7 @@ public class QueueJoinListener extends ListenerAdapter {
       DiscordManager.getDiscordPlayer(member.getId())
           .thenAccept(discordPlayer -> {
             if (discordPlayer != null) {
-              queue.processVoiceJoin(discordPlayer.getPlayerUuid(), null);
+              queue.addPlayer(discordPlayer.getPlayerUuid(), MatchManager.getMatch());
             }
           })
           .exceptionally(e -> null);

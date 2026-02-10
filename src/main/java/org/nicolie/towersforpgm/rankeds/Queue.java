@@ -39,9 +39,7 @@ public class Queue {
     if (queueManager.addPlayer(player)) {
       queueMessaging.sendQueueMessage(player.getMatch(), player.getPrefixedName(), false);
 
-      if (queueState.getQueueSize() >= plugin.config().ranked().getRankedMinSize()
-          && !queueState.isRanked()
-          && !queueState.isCountdownActive()) {
+      if (shouldStartCountdown()) {
         countdownManager.startRankedCountdown(player.getMatch());
       }
     }
@@ -53,13 +51,17 @@ public class Queue {
       if (playerName != null) {
         queueMessaging.sendQueueMessage(match, playerName, false);
 
-        if (queueState.getQueueSize() >= plugin.config().ranked().getRankedMinSize()
-            && !queueState.isRanked()
-            && !queueState.isCountdownActive()) {
+        if (shouldStartCountdown()) {
           countdownManager.startRankedCountdown(match);
         }
       }
     }
+  }
+
+  private boolean shouldStartCountdown() {
+    return queueState.getQueueSize() >= plugin.config().ranked().getRankedMinSize()
+        && !queueState.isRanked()
+        && !queueState.isCountdownActive();
   }
 
   public void removePlayer(MatchPlayer player) {
@@ -80,38 +82,21 @@ public class Queue {
     return false;
   }
 
-  public boolean processVoiceJoin(UUID playerUUID, Match match) {
-    if (match == null) {
-      match = org.nicolie.towersforpgm.utils.MatchManager.getMatch();
-    }
-
-    boolean added = queueManager.processVoiceJoin(playerUUID, match);
-
-    if (added) {
-      String playerName = getPlayerNameForDisplay(playerUUID);
-      if (playerName != null && match != null) {
-        queueMessaging.sendQueueMessage(match, playerName, false);
-
-        // Start countdown if conditions are met
-        if (queueState.getQueueSize() >= plugin.config().ranked().getRankedMinSize()
-            && !queueState.isRanked()
-            && !queueState.isCountdownActive()) {
-          countdownManager.startRankedCountdown(match);
-        }
-      }
-    }
-
-    return added;
-  }
-
-  public void startRanked(Match match) {
-    if (queueState.isRanked() && !queueState.isCountdownActive()) {
+  public void startCountdown(Match match) {
+    if (queueState.isRanked()
+        && !queueState.isCountdownActive()
+        && getQueueSize() < plugin.config().ranked().getRankedMinSize()) {
       plugin
           .getLogger()
           .info("[-] Queue: startRanked blocked, draft/matchmaking active, "
-              + queueState.getQueueSize() + " in queue");
+              + queueState.getQueueSize() + "/" + queueManager.getValidRankedSize(match)
+              + " in queue");
     }
     countdownManager.startRankedCountdown(match);
+  }
+
+  public void stopCountdown(Match match) {
+    countdownManager.cancelCountdown(match);
   }
 
   public static void sendRankedStartEmbed(MatchStartEvent event) {
@@ -146,25 +131,8 @@ public class Queue {
     QueueState.getInstance().setRanked(value);
   }
 
-  public static void resetRankedState() {
-    QueueState.getInstance().reset();
-    TowersForPGM.getInstance().getLogger().info("[+] Queue: ranked state reset");
-  }
-
   public static Queue getQueue() {
     return instance;
-  }
-
-  public boolean startManualRanked(Match match, int customTime) {
-    return countdownManager.startManualRankedCountdown(match, customTime);
-  }
-
-  public boolean cancelManualRanked(Match match) {
-    return countdownManager.cancelCountdown(match);
-  }
-
-  public static boolean isCountdownActive() {
-    return QueueState.getInstance().isCountdownActive();
   }
 
   private String getPlayerNameForDisplay(UUID playerUUID) {

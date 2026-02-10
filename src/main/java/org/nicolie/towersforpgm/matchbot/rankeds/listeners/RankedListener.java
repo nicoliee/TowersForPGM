@@ -49,158 +49,61 @@ public class RankedListener implements Listener {
 
     java.util.concurrent.CompletableFuture.allOf(
             discordPlayerFutures.toArray(new java.util.concurrent.CompletableFuture[0]))
-        .thenRun(() -> {
-          var moveActions =
-              new java.util.ArrayList<net.dv8tion.jda.api.requests.RestAction<Void>>();
+        .thenRun(() -> discordPlayerFutures.stream()
+            .map(future -> future.getNow(null))
+            .filter(discordPlayer -> discordPlayer != null)
+            .map(discordPlayer -> guild.getMemberById(discordPlayer.getDiscordId()))
+            .filter(member -> member != null && member.getVoiceState() != null)
+            .filter(member -> member.getVoiceState().getChannel() != null)
+            .forEach(member -> guild.moveVoiceMember(member, targetChannel).queue()));
+  }
 
-          for (var future : discordPlayerFutures) {
-            try {
-              var discordPlayer = future.getNow(null);
-              if (discordPlayer == null) continue;
+  private static void movePlayerToChannel(UUID minecraftUUID, String channelId) {
+    if (!MatchBotConfig.isVoiceChatEnabled() || channelId == null || channelId.isEmpty()) return;
 
-              Member member = guild.getMemberById(discordPlayer.getDiscordId());
-              if (member == null || member.getVoiceState() == null) continue;
+    JDA jda = DiscordBot.getJDA();
+    if (jda == null) return;
 
-              var currentChannel = member.getVoiceState().getChannel();
-              if (currentChannel == null) continue;
+    Guild guild = getBotGuild(jda);
+    VoiceChannel targetChannel = jda.getVoiceChannelById(channelId);
+    if (guild == null || targetChannel == null) return;
 
-              moveActions.add(guild.moveVoiceMember(member, targetChannel));
-            } catch (Exception e) {
-            }
-          }
+    DiscordManager.getDiscordPlayer(minecraftUUID)
+        .thenAccept(discordPlayer -> {
+          if (discordPlayer == null) return;
 
-          if (!moveActions.isEmpty()) {
-            net.dv8tion.jda.api.requests.RestAction.allOf(moveActions).queue();
-          }
-        });
+          Member member = guild.getMemberById(discordPlayer.getDiscordId());
+          if (member == null
+              || member.getVoiceState() == null
+              || member.getVoiceState().getChannel() == null) return;
+
+          guild.moveVoiceMember(member, targetChannel).queue();
+        })
+        .exceptionally(ex -> null);
   }
 
   public static void movePlayerToInactive(UUID minecraftUUID) {
-    if (!MatchBotConfig.isVoiceChatEnabled()) return;
-
-    JDA jda = DiscordBot.getJDA();
-    if (jda == null) return;
-
-    Guild guild = getBotGuild(jda);
-    if (guild == null) return;
-
-    if (INACTIVE_ID == null || INACTIVE_ID.isEmpty()) return;
-
-    VoiceChannel inactiveChannel = jda.getVoiceChannelById(INACTIVE_ID);
-    if (inactiveChannel == null) return;
-
-    DiscordManager.getDiscordPlayer(minecraftUUID)
-        .thenAccept(discordPlayer -> {
-          if (discordPlayer == null) return;
-
-          String discordId = discordPlayer.getDiscordId();
-          Member member = guild.getMemberById(discordId);
-          if (member == null || member.getVoiceState() == null) return;
-
-          var currentChannel = member.getVoiceState().getChannel();
-          if (currentChannel == null) return;
-
-          guild.moveVoiceMember(member, inactiveChannel).queue();
-        })
-        .exceptionally(ex -> null);
+    movePlayerToChannel(minecraftUUID, INACTIVE_ID);
   }
 
   public static void movePlayerToQueue(UUID minecraftUUID) {
-    if (!MatchBotConfig.isVoiceChatEnabled()) return;
-
-    JDA jda = DiscordBot.getJDA();
-    if (jda == null) return;
-
-    Guild guild = getBotGuild(jda);
-    if (guild == null) return;
-
-    if (QUEUE_ID == null || QUEUE_ID.isEmpty()) return;
-
-    VoiceChannel queueChannel = jda.getVoiceChannelById(QUEUE_ID);
-    if (queueChannel == null) return;
-
-    DiscordManager.getDiscordPlayer(minecraftUUID)
-        .thenAccept(discordPlayer -> {
-          if (discordPlayer == null) return;
-
-          String discordId = discordPlayer.getDiscordId();
-          Member member = guild.getMemberById(discordId);
-          if (member == null || member.getVoiceState() == null) return;
-
-          var currentChannel = member.getVoiceState().getChannel();
-          if (currentChannel == null) return;
-
-          guild.moveVoiceMember(member, queueChannel).queue();
-        })
-        .exceptionally(ex -> null);
+    movePlayerToChannel(minecraftUUID, QUEUE_ID);
   }
 
   public static void movePlayerToTeam1(UUID minecraftUUID) {
-    if (!MatchBotConfig.isVoiceChatEnabled()) return;
-
-    JDA jda = DiscordBot.getJDA();
-    if (jda == null) return;
-
-    Guild guild = getBotGuild(jda);
-    if (guild == null) return;
-
-    if (CHANNEL1_ID == null || CHANNEL1_ID.isEmpty()) return;
-
-    VoiceChannel team1Channel = jda.getVoiceChannelById(CHANNEL1_ID);
-    if (team1Channel == null) return;
-
-    DiscordManager.getDiscordPlayer(minecraftUUID)
-        .thenAccept(discordPlayer -> {
-          if (discordPlayer == null) return;
-
-          String discordId = discordPlayer.getDiscordId();
-          Member member = guild.getMemberById(discordId);
-          if (member == null || member.getVoiceState() == null) return;
-
-          var currentChannel = member.getVoiceState().getChannel();
-          if (currentChannel == null) return;
-
-          guild.moveVoiceMember(member, team1Channel).queue();
-        })
-        .exceptionally(ex -> null);
+    movePlayerToChannel(minecraftUUID, CHANNEL1_ID);
   }
 
   public static void movePlayerToTeam2(UUID minecraftUUID) {
-    if (!MatchBotConfig.isVoiceChatEnabled()) return;
-
-    JDA jda = DiscordBot.getJDA();
-    if (jda == null) return;
-
-    Guild guild = getBotGuild(jda);
-    if (guild == null) return;
-
-    if (CHANNEL2_ID == null || CHANNEL2_ID.isEmpty()) return;
-
-    VoiceChannel team2Channel = jda.getVoiceChannelById(CHANNEL2_ID);
-    if (team2Channel == null) return;
-
-    DiscordManager.getDiscordPlayer(minecraftUUID)
-        .thenAccept(discordPlayer -> {
-          if (discordPlayer == null) return;
-
-          String discordId = discordPlayer.getDiscordId();
-          Member member = guild.getMemberById(discordId);
-          if (member == null || member.getVoiceState() == null) return;
-
-          var currentChannel = member.getVoiceState().getChannel();
-          if (currentChannel == null) return;
-
-          guild.moveVoiceMember(member, team2Channel).queue();
-        })
-        .exceptionally(ex -> null);
+    movePlayerToChannel(minecraftUUID, CHANNEL2_ID);
   }
 
   @EventHandler
   public void onDraftStart(DraftStartEvent event) {
-    if (!shouldProcessEvent(event.getMatch().getMap().getName())) return;
+    if (!shouldProcessEvent()) return;
 
     JDA jda = DiscordBot.getJDA();
-    if (jda == null || CHANNEL1_ID == null || CHANNEL1_ID.isEmpty()) return;
+    if (jda == null) return;
 
     VoiceChannel channel1 = jda.getVoiceChannelById(CHANNEL1_ID);
     if (channel1 == null) return;
@@ -215,11 +118,11 @@ public class RankedListener implements Listener {
 
   @EventHandler
   public void onDraftEnd(DraftEndEvent event) {
-    if (!shouldProcessEvent(event.getMatch().getMap().getName())) return;
+    if (!shouldProcessEvent()) return;
 
     JDA jda = DiscordBot.getJDA();
-    if (jda == null || CHANNEL2_ID == null || CHANNEL2_ID.isEmpty()) return;
-
+    if (jda == null) return;
+    DiscordBot.setBlacklistCurrentMap(true);
     VoiceChannel channel2 = jda.getVoiceChannelById(CHANNEL2_ID);
     if (channel2 == null) return;
 
@@ -236,11 +139,11 @@ public class RankedListener implements Listener {
 
   @EventHandler
   public void onMatchmakingEnd(MatchmakingEndEvent event) {
-    if (!shouldProcessEvent(event.getMatch().getMap().getName())) return;
+    if (!shouldProcessEvent()) return;
 
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
-
+    DiscordBot.setBlacklistCurrentMap(true);
     VoiceChannel channel1 = jda.getVoiceChannelById(CHANNEL1_ID);
     VoiceChannel channel2 = jda.getVoiceChannelById(CHANNEL2_ID);
     if (channel1 == null || channel2 == null) return;
@@ -261,7 +164,7 @@ public class RankedListener implements Listener {
     movePlayersToChannel(team2UUIDs, channel2);
   }
 
-  private boolean shouldProcessEvent(String mapName) {
+  private boolean shouldProcessEvent() {
     if (!MatchBotConfig.isVoiceChatEnabled()) return false;
 
     Boolean ranked = Queue.isRanked();

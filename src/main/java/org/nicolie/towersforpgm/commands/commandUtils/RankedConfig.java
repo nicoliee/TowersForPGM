@@ -1,13 +1,13 @@
 package org.nicolie.towersforpgm.commands.commandUtils;
 
+import java.util.List;
 import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.TableManager;
+import org.nicolie.towersforpgm.rankeds.RankedProfile;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
-import tc.oc.pgm.api.PGM;
-import tc.oc.pgm.api.match.Match;
 
 public class RankedConfig {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
@@ -40,6 +40,14 @@ public class RankedConfig {
       SendMessage.sendToPlayer(
           sender, LanguageManager.message("ranked.config.minSize.invalidFormat"));
     }
+  }
+
+  public void setRerollOption(CommandSender sender, boolean isEnabled) {
+    plugin.config().ranked().setReroll(isEnabled);
+    String message = isEnabled
+        ? LanguageManager.message("ranked.config.rerollEnabled")
+        : LanguageManager.message("ranked.config.rerollDisabled");
+    SendMessage.sendToPlayer(sender, message);
   }
 
   public void maxSize(CommandSender sender, String size) {
@@ -120,29 +128,40 @@ public class RankedConfig {
   }
 
   public void addMap(CommandSender sender) {
-    Match match = PGM.get().getMatchManager().getMatch(sender);
-    String map = match.getMap().getName();
-    if (plugin.config().ranked().getRankedMaps().contains(map)) {
-      SendMessage.sendToPlayer(
-          sender, LanguageManager.message("ranked.config.map.exists").replace("{map}", map));
-      return;
-    }
-    plugin.config().ranked().addMap(map);
-    String message = LanguageManager.message("ranked.config.map.added").replace("{map}", map);
-    SendMessage.sendToPlayer(sender, message);
+    SendMessage.sendToPlayer(
+        sender, "§cEste comando está obsoleto. Usa /towers ranked setpool <pool>");
   }
 
   public void removeMap(CommandSender sender) {
-    Match match = PGM.get().getMatchManager().getMatch(sender);
-    String map = match.getMap().getName();
-    if (!plugin.config().ranked().getRankedMaps().contains(map)) {
+    SendMessage.sendToPlayer(
+        sender, "§cEste comando está obsoleto. Usa /towers ranked setpool <pool>");
+  }
+
+  public void setPool(CommandSender sender, String poolName) {
+    if (poolName == null || poolName.isEmpty()) {
+      // Show current pool
+      String currentPool = plugin.config().ranked().getMapPool();
       SendMessage.sendToPlayer(
-          sender, LanguageManager.message("ranked.config.map.notFound").replace("{map}", map));
+          sender,
+          LanguageManager.message("ranked.config.pool.current").replace("{pool}", currentPool));
+      showPoolMaps(sender, currentPool);
       return;
     }
-    plugin.config().ranked().removeMap(map);
-    String message = LanguageManager.message("ranked.config.map.deleted").replace("{map}", map);
-    SendMessage.sendToPlayer(sender, message);
+
+    // Set new pool
+    boolean success = plugin.config().ranked().setPool(poolName);
+    if (success) {
+      List<String> maps = plugin.config().ranked().getMapsFromPool(poolName);
+      String message = LanguageManager.message("ranked.config.pool.set")
+          .replace("{pool}", poolName)
+          .replace("{count}", String.valueOf(maps.size()));
+      SendMessage.sendToPlayer(sender, message);
+      showPoolMaps(sender, poolName);
+    } else {
+      SendMessage.sendToPlayer(
+          sender,
+          LanguageManager.message("ranked.config.pool.notFound").replace("{pool}", poolName));
+    }
   }
 
   public void matchmaking(CommandSender sender, Boolean isEnabled) {
@@ -163,18 +182,45 @@ public class RankedConfig {
     SendMessage.sendToPlayer(sender, message);
   }
 
-  public void setDefaultTable(CommandSender sender, String table) {
-    TableInfo tableInfo = TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
-    boolean isRankedTable = tableInfo != null && tableInfo.isRanked();
-    if (!isRankedTable) {
-      SendMessage.sendToPlayer(
-          sender,
-          LanguageManager.message("ranked.config.table.notFound").replace("{table}", table));
+  public void showProfile(CommandSender sender, String profileName) {
+    RankedProfile profile = (profileName == null || profileName.isEmpty())
+        ? plugin.config().ranked().getActiveProfile()
+        : plugin.config().ranked().getProfile(profileName);
+
+    if (profile == null) {
+      String message = (profileName == null || profileName.isEmpty())
+          ? LanguageManager.message("ranked.noProfile")
+          : LanguageManager.message("ranked.profileNotFound").replace("{profile}", profileName);
+      SendMessage.sendToPlayer(sender, message);
       return;
     }
-    plugin.config().databaseTables().setRankedDefaultTable(table);
-    String message =
-        LanguageManager.message("ranked.config.table.success").replace("{table}", table);
-    SendMessage.sendToPlayer(sender, message);
+
+    sender.sendMessage(profile.getFormattedInfo());
+    showPoolMaps(sender, profile.getMapPool());
+  }
+
+  private void showPoolMaps(CommandSender sender, String poolName) {
+    List<String> maps = plugin.config().ranked().getMapsFromPool(poolName);
+    if (!maps.isEmpty()) {
+      SendMessage.sendToPlayer(sender, LanguageManager.message("ranked.config.pool.maps"));
+      for (String map : maps) {
+        sender.sendMessage("  §8- §f" + map);
+      }
+    }
+  }
+
+  public void setProfile(CommandSender sender, String profileName) {
+    if (!sender.hasPermission("towers.admin")) {
+      SendMessage.sendToPlayer(sender, LanguageManager.message("errors.noPermission"));
+      return;
+    }
+
+    plugin.config().ranked().setActiveProfile(profileName);
+    RankedProfile profile = plugin.config().ranked().getActiveProfile();
+
+    SendMessage.sendToPlayer(
+        sender, LanguageManager.message("ranked.profileSet").replace("{profile}", profileName));
+    sender.sendMessage(profile.getFormattedInfo());
+    showPoolMaps(sender, profile.getMapPool());
   }
 }

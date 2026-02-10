@@ -8,6 +8,7 @@ import org.nicolie.towersforpgm.draft.core.Utilities;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.rankeds.RankedItem;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import tc.oc.pgm.api.match.event.MatchStartEvent;
 
@@ -34,6 +35,7 @@ public class MatchStartListener implements Listener {
     }
 
     DisconnectManager.checkOfflinePlayersOnMatchStart(event.getMatch());
+    RankedItem.clearAllPlayersGoingToQueue();
 
     refillManager.startRefillTask(worldName);
     if (plugin.config().preparationTime().isPreparationEnabled()) {

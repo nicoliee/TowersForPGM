@@ -22,3 +22,11 @@ reload:
 sudo:
   usage: "§cUsage: /sudo <player> <message/command>"
   playerOffline: "§cPlayer {player} is not online."
+
+commands:
+  protectedInRanked: "You can't do that in a ranked match."
+  protectedInDraft: "You can't do that in a draft match."
+  teamChangeBlocked: "You can't do that in a ranked match."
+
+ranked:
+  activeMatch: "Active match in: §b{table}"

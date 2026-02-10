@@ -228,10 +228,12 @@ ranked:
     current: "§7Tablas: §a{count}"
     item: "§7- §a{table}"
   default_table:
-    title: "§e§lTabla Predeterminada"
-    current: "§7Actual: §a{table}"
-    lore1: "§7Haz clic para cambiar la tabla"
-    lore2: "§7predeterminada para ranked"
+    title: "§e§lTabla del Perfil Activo"
+    current: "§7Tabla: §a{table}"
+    profile: "Perfil: §b{profile}"
+    readonly: "Esta tabla se define en el perfil activo"
+    lore1: "§7Esta tabla viene del perfil activo"
+    lore2: "§7Usa /towers ranked profile para ver perfiles"
     input: "§eIngresa el nombre de la tabla predeterminada:"
   maps:
     title: "§e§lMapas de Ranked"

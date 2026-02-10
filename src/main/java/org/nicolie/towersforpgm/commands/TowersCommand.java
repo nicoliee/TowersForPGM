@@ -65,11 +65,16 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
       case "draft":
         if (args.length == 1) {
           sender.sendMessage(
-              "§c/towers draft <min|order|private|secondpickbalance|suggestions|timer>");
+              "§c/towers draft <min|order|private|secondpickbalance|suggestions|timer|reroll>");
           return true;
         }
 
         switch (args[1].toLowerCase()) {
+          case "reroll":
+            boolean newRerollValue =
+                !TowersForPGM.getInstance().config().draft().isReroll();
+            draftConfig.setRerollOption(sender, newRerollValue);
+            break;
           case "min":
             if (args.length < 3) {
               sender.sendMessage("§c/towers draft min <size>");
@@ -201,10 +206,17 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
       case "ranked":
         if (args.length == 1) {
           sender.sendMessage(
-              "§c/towers ranked <minsize|maxsize|order|matchmaking|addmap|removemap|addtable|removetable>");
+              "§c/towers ranked <minsize|maxsize|order|matchmaking|setpool|addtable|removetable|profile>");
           return true;
         }
         switch (args[1].toLowerCase()) {
+            // TODO: quitar addMap y hacer de mejor forma las GUIS, ya que están desactualizadas.
+            // TODO: al cambiar de pool automaticamente cambiar profile.
+          case "reroll":
+            boolean newRerollValue =
+                !TowersForPGM.getInstance().config().ranked().isReroll();
+            rankedConfig.setRerollOption(sender, newRerollValue);
+            break;
           case "minsize":
             String minSizeArg = args.length >= 3 ? args[2] : null;
             rankedConfig.minSize(sender, minSizeArg);
@@ -218,6 +230,11 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
           case "order":
             String orderArg = args.length >= 3 ? args[2] : null;
             rankedConfig.draftOrder(sender, orderArg);
+            return true;
+
+          case "setpool":
+            String poolArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.setPool(sender, poolArg);
             return true;
 
           case "addmap":
@@ -253,9 +270,25 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
             rankedConfig.matchmaking(sender, matchmakingArg);
             return true;
 
+          case "profile":
+            if (args.length < 3) {
+              // Show current active profile
+              rankedConfig.showProfile(sender, null);
+            } else {
+              // Set active profile
+              String profileArg = args[2];
+              if (TowersForPGM.getInstance().config().ranked().profileExists(profileArg)) {
+                rankedConfig.setProfile(sender, profileArg);
+              } else {
+                sender.sendMessage(LanguageManager.message("ranked.profileNotFound")
+                    .replace("{profile}", profileArg));
+              }
+            }
+            return true;
+
           default:
             sender.sendMessage(
-                "§c/towers ranked <size|order|addmap|removemap|addtable|removetable|matchmaking>");
+                "§c/towers ranked <minsize|maxsize|order|setpool|addtable|removetable|matchmaking|profile>");
         }
         break;
       case "refill":
@@ -413,8 +446,8 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
     switch (first) {
       case "draft":
         if (args.length == 2) {
-          List<String> options =
-              Arrays.asList("min", "order", "private", "secondpickbalance", "suggestions", "timer");
+          List<String> options = Arrays.asList(
+              "min", "order", "private", "reroll", "secondpickbalance", "suggestions", "timer");
           return filterPrefix(options, args[1]);
         }
         if (args.length == 3) {
@@ -453,12 +486,20 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
               "minsize",
               "maxsize",
               "order",
+              "setpool",
               "addmap",
               "removemap",
               "addtable",
               "removetable",
-              "matchmaking");
+              "reroll",
+              "matchmaking",
+              "profile");
           return filterPrefix(options, args[1]);
+        }
+        if (args.length == 3 && args[1].equalsIgnoreCase("profile")) {
+          // Autocompletar nombres de perfiles
+          Set<String> profiles = TowersForPGM.getInstance().config().ranked().getProfileNames();
+          return filterPrefix(profiles, args[2]);
         }
       case "refill":
         if (args.length == 2) {

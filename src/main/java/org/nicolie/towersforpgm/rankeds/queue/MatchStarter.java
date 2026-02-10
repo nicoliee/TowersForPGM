@@ -41,9 +41,8 @@ public class MatchStarter {
   }
 
   public void startMatch(Match match, String table) {
-    removeDisconnectedPlayersFromQueue(match);
-
     int validSize = queueManager.getValidRankedSize(match);
+    removeDisconnectedPlayersFromQueue(match, validSize);
     int currentSize = queueState.getQueueSize();
     if (currentSize % 2 != 0) currentSize--;
     int finalSize = Math.min(validSize, currentSize);
@@ -73,7 +72,7 @@ public class MatchStarter {
 
     if (!plugin.isMatchBotEnabled() || !rankedTable || !ranked) return;
 
-    List<String> usernames = event.getMatch().getPlayers().stream()
+    List<String> usernames = event.getMatch().getParticipants().stream()
         .map(MatchPlayer::getNameLegacy)
         .collect(Collectors.toList());
 
@@ -84,9 +83,11 @@ public class MatchStarter {
     eloFuture
         .thenAccept(eloChanges -> {
           EmbedBuilder embed = RankedStart.create(event.getMatch(), eloChanges);
-          DiscordBot.setEmbedThumbnail(event.getMatch().getMap(), embed);
           DiscordBot.sendMatchEmbed(
-              embed, event.getMatch(), MatchBotConfig.getDiscordChannel(), null);
+              embed,
+              MatchBotConfig.getDiscordChannel(),
+              null,
+              DiscordBot.setEmbedThumbnail(event.getMatch().getMap(), embed));
           queueState.removeEloCache(table);
         })
         .exceptionally(throwable -> {
@@ -98,8 +99,11 @@ public class MatchStarter {
         });
   }
 
-  private void removeDisconnectedPlayersFromQueue(Match match) {
-    List<UUID> disconnectedUUIDs = queueState.getQueuePlayers().stream()
+  private void removeDisconnectedPlayersFromQueue(Match match, int validSize) {
+    List<UUID> queuePlayers = queueState.getQueuePlayers();
+    int sizeToCheck = Math.min(validSize, queuePlayers.size());
+
+    List<UUID> disconnectedUUIDs = queuePlayers.subList(0, sizeToCheck).stream()
         .filter(uuid -> PGM.get().getMatchManager().getPlayer(uuid) == null)
         .collect(Collectors.toList());
 
@@ -173,13 +177,15 @@ public class MatchStarter {
           pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers(), match);
     } else {
       boolean randomizeOrder = !pair.is2v2();
+      boolean allowReroll = plugin.config().ranked().isReroll();
       draft.setCustomOrderPattern(plugin.config().ranked().getRankedOrder(), 0);
       draft.startDraft(
           pair.getCaptain1(),
           pair.getCaptain2(),
           pair.getRemainingPlayers(),
           match,
-          randomizeOrder);
+          randomizeOrder,
+          allowReroll);
     }
   }
 

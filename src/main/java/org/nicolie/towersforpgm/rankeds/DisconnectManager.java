@@ -26,7 +26,6 @@ public class DisconnectManager {
 
   public static void checkOfflinePlayersOnMatchStart(Match match) {
     if (!isValidRankedMatch(match) || teams == null) return;
-    // Check both teams for offline players
     for (int teamNumber = 1; teamNumber <= 2; teamNumber++) {
       for (String playerName : teams.getTeamOfflinePlayers(teamNumber)) {
         startDisconnectTimer(match, playerName, teamNumber);
@@ -159,7 +158,7 @@ public class DisconnectManager {
     if (teams == null) return;
     tc.oc.pgm.teams.Team team = teams.getTeam(teamNumber);
     if (team != null) {
-      org.nicolie.towersforpgm.commands.ForfeitCommand.resetTeamForfeits(team);
+      org.nicolie.towersforpgm.commands.ranked.ForfeitCommand.resetTeamForfeits(team);
     }
   }
 
@@ -214,11 +213,11 @@ public class DisconnectManager {
     return String.format("%02d:%02d", minutes, seconds);
   }
 
-  private static class Sanction {
-    private final String playerName;
-    private final int teamNumber;
+  static class Sanction {
+    final String playerName;
+    final int teamNumber;
 
-    private Sanction(String playerName, int teamNumber) {
+    Sanction(String playerName, int teamNumber) {
       this.playerName = playerName;
       this.teamNumber = teamNumber;
     }

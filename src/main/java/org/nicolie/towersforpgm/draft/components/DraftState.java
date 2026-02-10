@@ -4,7 +4,7 @@ import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class DraftState {
-  private boolean draftActive = false;
+  private DraftPhase currentPhase = DraftPhase.IDLE;
   private BossBar pickTimerBar;
   private BukkitRunnable draftTimer;
 
@@ -14,12 +14,13 @@ public class DraftState {
   private boolean usingCustomPattern = false;
   private boolean firstCaptainTurn = false;
 
-  public boolean isDraftActive() {
-    return draftActive;
+  public DraftPhase getCurrentPhase() {
+    return currentPhase;
   }
 
-  public void setDraftActive(boolean draftActive) {
-    this.draftActive = draftActive;
+  public void setCurrentPhase(DraftPhase phase) {
+    this.currentPhase = phase;
+    System.out.println("Draft phase changed to: " + phase);
   }
 
   public BossBar getPickTimerBar() {
@@ -84,5 +85,12 @@ public class DraftState {
     this.customOrderMinPlayers = 6;
     this.currentPatternIndex = 0;
     this.firstCaptainTurn = false;
+  }
+
+  public void reset() {
+    resetPattern();
+    this.currentPhase = DraftPhase.IDLE;
+    this.pickTimerBar = null;
+    this.draftTimer = null;
   }
 }

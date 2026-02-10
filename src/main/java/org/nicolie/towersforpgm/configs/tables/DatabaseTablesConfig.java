@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.MatchManager;
 
 public class DatabaseTablesConfig {
@@ -17,7 +18,6 @@ public class DatabaseTablesConfig {
   private final Map<String, TableInfo> tables = new HashMap<>();
   private String defaultTable;
   private String tempTable;
-  private String rankedDefaultTable;
 
   public DatabaseTablesConfig(JavaPlugin plugin) {
     this.plugin = plugin;
@@ -52,8 +52,6 @@ public class DatabaseTablesConfig {
     for (String rankedTableName : rankedTableNames) {
       tables.putIfAbsent(rankedTableName, new TableInfo(new ArrayList<>(), true));
     }
-
-    rankedDefaultTable = plugin.getConfig().getString("rankeds.defaultTable", "RankedT0");
   }
 
   private void save() {
@@ -87,13 +85,10 @@ public class DatabaseTablesConfig {
   }
 
   public String getRankedDefaultTable() {
-    return rankedDefaultTable;
-  }
-
-  public void setRankedDefaultTable(String table) {
-    this.rankedDefaultTable = table;
-    plugin.getConfig().set("rankeds.defaultTable", table);
-    save();
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    org.nicolie.towersforpgm.rankeds.RankedProfile activeProfile =
+        plugin.config().ranked().getActiveProfile();
+    return activeProfile != null ? activeProfile.getTable() : null;
   }
 
   private void updateRankedTablesConfig() {

@@ -2,16 +2,12 @@ package org.nicolie.towersforpgm.listeners;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import me.tbg.match.bot.configs.DiscordBot;
-import net.dv8tion.jda.api.EmbedBuilder;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.draft.core.Draft;
-import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.MatchInfo;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedFinish;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
@@ -100,6 +96,7 @@ public class MatchFinishListener implements Listener {
         playerStatsList.add(new Stats(
             player.getNameLegacy(),
             playerStats != null ? playerStats.getKills() : 0, // Kills
+            0, // maxKills (not used)
             playerStats != null ? playerStats.getDeaths() : 0, // Deaths
             playerStats != null ? playerStats.getAssists() : 0, // Assists
             playerStats != null
@@ -108,8 +105,8 @@ public class MatchFinishListener implements Listener {
             playerStats != null
                 ? ((playerStats.getDamageTaken() + playerStats.getBowDamageTaken()) / 2)
                 : 0, // Damage taken
-            0, // bowAccuracy (not used)
             totalPoints, // Points
+            0, // Max Points (not used)
             isWinner ? 1 : 0, // Wins
             1, // Games played
             isWinner ? 1 : 0, // Winstreak
@@ -142,7 +139,6 @@ public class MatchFinishListener implements Listener {
       List<MatchPlayer> winners,
       List<MatchPlayer> losers,
       List<Stats> playerStatsList) {
-    Map<String, List<Stats>> basicStats = RankedFinish.getPlayerStats(match, allPlayers);
     Elo.addWin(winners, losers).thenAccept(eloChanges -> {
       saveMatchHistory(table, matchInfo, true, playerStatsList, eloChanges);
 
@@ -152,9 +148,7 @@ public class MatchFinishListener implements Listener {
       }
 
       if (TowersForPGM.getInstance().isMatchBotEnabled()) {
-        Map<String, List<Stats>> statsWithElo = RankedFinish.addElo(basicStats, eloChanges);
-        EmbedBuilder embed = RankedFinish.create(matchInfo, table, statsWithElo);
-        DiscordBot.sendMatchEmbed(embed, match, MatchBotConfig.getDiscordChannel(), null);
+        RankedFinish.onRankedFinish(matchInfo, table, eloChanges);
       }
 
       StatsManager.updateStats(table, playerStatsList, eloChanges);

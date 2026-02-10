@@ -9,6 +9,7 @@ public class DraftConfig {
   private boolean secondPickBalance;
   private String order;
   private int minOrder;
+  private boolean reroll;
 
   public DraftConfig(JavaPlugin plugin) {
     this.plugin = plugin;
@@ -21,6 +22,7 @@ public class DraftConfig {
     secondPickBalance = plugin.getConfig().getBoolean("draft.secondPickBalance", false);
     order = plugin.getConfig().getString("draft.order", "");
     minOrder = plugin.getConfig().getInt("draft.minOrder", 0);
+    reroll = plugin.getConfig().getBoolean("draft.reroll", false);
   }
 
   private void save() {
@@ -77,6 +79,16 @@ public class DraftConfig {
     save();
   }
 
+  public boolean isReroll() {
+    return reroll;
+  }
+
+  public void setReroll(boolean reroll) {
+    this.reroll = reroll;
+    plugin.getConfig().set("draft.reroll", reroll);
+    save();
+  }
+
   @Override
   public String toString() {
     return "DraftConfig{" + "draftSuggestions="
@@ -84,6 +96,7 @@ public class DraftConfig {
         + draftTimer + ", secondPickBalance="
         + secondPickBalance + ", order='"
         + order + '\'' + ", minOrder="
-        + minOrder + '}';
+        + minOrder + ", reroll="
+        + reroll + '}';
   }
 }

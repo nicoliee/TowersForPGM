@@ -27,6 +27,14 @@ public class DraftConfig {
     SendMessage.sendToPlayer(sender, message);
   }
 
+  public void setRerollOption(CommandSender sender, boolean isEnabled) {
+    plugin.config().draft().setReroll(isEnabled);
+    String message = isEnabled
+        ? LanguageManager.message("draft.config.rerollEnabled")
+        : LanguageManager.message("draft.config.rerollDisabled");
+    SendMessage.sendToPlayer(sender, message);
+  }
+
   public void handleDraftTimerCommand(CommandSender sender, Boolean isEnabled) {
     if (isEnabled == null) {
       boolean isDraftTimer = plugin.config().draft().isDraftTimer();

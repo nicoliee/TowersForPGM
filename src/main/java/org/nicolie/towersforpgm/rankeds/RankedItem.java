@@ -31,6 +31,8 @@ public class RankedItem implements Listener {
 
   private static final long QUEUE_COOLDOWN_MS = 15_000L;
   private static final Map<UUID, Long> queueCooldowns = new ConcurrentHashMap<>();
+  private static final Map<UUID, Boolean> playersGoingToQueue = new ConcurrentHashMap<>();
+  private static final Map<String, Boolean> discordIdsGoingToQueue = new ConcurrentHashMap<>();
 
   public RankedItem(Queue queue) {
     this.queue = queue;
@@ -57,6 +59,15 @@ public class RankedItem implements Listener {
       long last = queueCooldowns.getOrDefault(uuid, 0L);
       if (now - last >= QUEUE_COOLDOWN_MS) {
         queueCooldowns.put(uuid, now);
+        playersGoingToQueue.put(uuid, true);
+
+        org.nicolie.towersforpgm.database.DiscordManager.getDiscordPlayer(uuid)
+            .thenAccept(discordPlayer -> {
+              if (discordPlayer != null) {
+                discordIdsGoingToQueue.put(discordPlayer.getDiscordId(), true);
+              }
+            });
+
         player.sendMessage(Component.text(LanguageManager.message("ranked.prefix")
             + LanguageManager.message("ranked.queue.joining")));
         RankedListener.movePlayerToQueue(uuid);
@@ -114,6 +125,36 @@ public class RankedItem implements Listener {
     if (!RANKED_AVAILABLE) return;
     for (MatchPlayer player : players) {
       player.getBukkit().getInventory().setItem(4, new ItemStack(Material.AIR));
+      UUID uuid = player.getId();
+      clearPlayerGoingToQueue(uuid);
+
+      org.nicolie.towersforpgm.database.DiscordManager.getDiscordPlayer(uuid)
+          .thenAccept(discordPlayer -> {
+            if (discordPlayer != null) {
+              clearDiscordIdGoingToQueue(discordPlayer.getDiscordId());
+            }
+          });
     }
+  }
+
+  public static boolean isPlayerGoingToQueue(UUID uuid) {
+    return playersGoingToQueue.getOrDefault(uuid, false);
+  }
+
+  public static boolean isDiscordIdGoingToQueue(String discordId) {
+    return discordIdsGoingToQueue.getOrDefault(discordId, false);
+  }
+
+  public static void clearPlayerGoingToQueue(UUID uuid) {
+    playersGoingToQueue.remove(uuid);
+  }
+
+  public static void clearDiscordIdGoingToQueue(String discordId) {
+    discordIdsGoingToQueue.remove(discordId);
+  }
+
+  public static void clearAllPlayersGoingToQueue() {
+    playersGoingToQueue.clear();
+    discordIdsGoingToQueue.clear();
   }
 }

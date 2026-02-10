@@ -41,7 +41,7 @@ public class Events {
       PreparationListener preparationListener) {
     PluginManager pluginManager = plugin.getServer().getPluginManager();
 
-    pluginManager.registerEvents(new CommandListener(captains), plugin);
+    pluginManager.registerEvents(new CommandListener(captains, availablePlayers, teams), plugin);
     pluginManager.registerEvents(new PreparationListener(), plugin);
     pluginManager.registerEvents(
         new MatchLoadListener(refillManager, preparationListener, draft), plugin);

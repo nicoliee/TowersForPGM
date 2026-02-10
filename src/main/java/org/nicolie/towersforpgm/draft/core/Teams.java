@@ -21,10 +21,10 @@ public class Teams {
   private Team team2;
 
   public Teams() {
-    onlineTeams.put(1, new HashSet<>());
-    onlineTeams.put(2, new HashSet<>());
-    offlineTeams.put(1, new HashSet<>());
-    offlineTeams.put(2, new HashSet<>());
+    onlineTeams.put(1, new LinkedHashSet<>());
+    onlineTeams.put(2, new LinkedHashSet<>());
+    offlineTeams.put(1, new LinkedHashSet<>());
+    offlineTeams.put(2, new LinkedHashSet<>());
   }
 
   public static boolean validateTeamsForDraft(Match match) {
@@ -96,6 +96,9 @@ public class Teams {
   }
 
   public boolean isPlayerInTeam(String playerName, int teamNumber) {
+    if (playerName == null) {
+      return false;
+    }
     Player player = Bukkit.getPlayer(playerName);
     MatchPlayer matchPlayer =
         player != null ? PGM.get().getMatchManager().getMatch(player).getPlayer(player) : null;
@@ -116,7 +119,7 @@ public class Teams {
   }
 
   public Set<String> getAllTeam(int teamNumber) {
-    Set<String> allPlayers = new HashSet<>(offlineTeams.get(teamNumber));
+    Set<String> allPlayers = new LinkedHashSet<>(offlineTeams.get(teamNumber));
     for (MatchPlayer mp : onlineTeams.get(teamNumber)) {
       allPlayers.add(mp.getPlayer().getNameLegacy());
     }
