@@ -20,7 +20,6 @@ public class DraftState {
 
   public void setCurrentPhase(DraftPhase phase) {
     this.currentPhase = phase;
-    System.out.println("Draft phase changed to: " + phase);
   }
 
   public BossBar getPickTimerBar() {

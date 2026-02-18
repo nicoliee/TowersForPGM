@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.listeners;
+package org.nicolie.towersforpgm.rankeds.listeners;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

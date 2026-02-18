@@ -23,26 +23,27 @@ public class StatsCommand extends ListenerAdapter {
     if (jda != null) {
       jda.addEventListener(new StatsCommand());
 
-      var command = jda.upsertCommand(NAME, LanguageManager.message("matchbot.stats.description"))
+      var command = jda.upsertCommand(
+              NAME, LanguageManager.message("matchbot.cmd.stats.description"))
           .addOption(
               net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
-              LanguageManager.message("matchbot.stats.player"),
-              LanguageManager.message("matchbot.stats.desc-player"),
+              LanguageManager.message("matchbot.cmd.stats.player"),
+              LanguageManager.message("matchbot.cmd.stats.desc-player"),
               true,
               true);
 
       if (AutocompleteHandler.shouldUseAutocompleteForTables()) {
         command.addOption(
             net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
-            LanguageManager.message("matchbot.stats.table"),
-            LanguageManager.message("matchbot.stats.desc-table"),
+            LanguageManager.message("matchbot.cmd.stats.table"),
+            LanguageManager.message("matchbot.cmd.stats.desc-table"),
             false,
             true);
       } else {
         var tableOption = new net.dv8tion.jda.api.interactions.commands.build.OptionData(
             net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
-            LanguageManager.message("matchbot.stats.table"),
-            LanguageManager.message("matchbot.stats.desc-table"),
+            LanguageManager.message("matchbot.cmd.stats.table"),
+            LanguageManager.message("matchbot.cmd.stats.desc-table"),
             false);
         tableOption.addChoices(AutocompleteHandler.getTableChoices());
         command.addOptions(tableOption);
@@ -56,8 +57,8 @@ public class StatsCommand extends ListenerAdapter {
   public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
     if (!event.getName().equals(NAME)) return;
 
-    OptionMapping playerOpt = event.getOption(LanguageManager.message("matchbot.stats.player"));
-    OptionMapping tableOpt = event.getOption(LanguageManager.message("matchbot.stats.table"));
+    OptionMapping playerOpt = event.getOption(LanguageManager.message("matchbot.cmd.stats.player"));
+    OptionMapping tableOpt = event.getOption(LanguageManager.message("matchbot.cmd.stats.table"));
 
     String player = playerOpt.getAsString();
     List<String> tables = MatchBotConfig.getTables();
@@ -66,7 +67,8 @@ public class StatsCommand extends ListenerAdapter {
 
     if (tables != null && !tables.contains(table)) {
       event
-          .reply(LanguageManager.message("matchbot.stats.invalid-table").replace("{table}", table))
+          .reply(
+              LanguageManager.message("matchbot.cmd.stats.invalid-table").replace("{table}", table))
           .setEphemeral(true)
           .queue();
       return;
@@ -76,7 +78,7 @@ public class StatsCommand extends ListenerAdapter {
       StatsManager.getStats(table, player).whenComplete((stats, throwable) -> {
         if (throwable != null) {
           hook.editOriginalEmbeds(StatsEmbed.createError(
-                      table, player, LanguageManager.message("matchbot.stats.error"))
+                      table, player, LanguageManager.message("matchbot.cmd.stats.error"))
                   .build())
               .queue();
           return;

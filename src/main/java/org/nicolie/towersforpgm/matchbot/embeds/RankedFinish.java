@@ -45,9 +45,7 @@ public class RankedFinish {
             matchInfo.getDuration(),
             true);
 
-    if (matchInfo.hasScorebox()) {
-      embed.addField(matchInfo.getScoresFieldTitle(), matchInfo.getScoresText(), true);
-    }
+    embed.addField(matchInfo.getScoresFieldTitle(), matchInfo.getScoresText(), true);
 
     addTeamStatsFields(
         embed, "🏆", MessagesConfig.message("embeds.finish.winner"), winners, eloChanges);

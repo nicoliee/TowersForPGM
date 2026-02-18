@@ -1,31 +1,33 @@
-stats:
-  description: "Muestra las estadísticas de un jugador."
-  player: "jugador"
-  desc-player: "Nombre del jugador."
-  table: "tabla"
-  desc-table: "Tabla de estadísticas a consultar."
-  invalid-table: "La tabla `{table}` no es válida."
-  error: "Hubo un error al obtener las estadísticas."
-top:
-  description: "Muestra el top de jugadores basado en una estadística específica."
-  stat: "estadística"
-  desc-stat: "Estadística para ordenar el top."
-  table: "tabla"
-  desc-table: "Tabla de estadísticas a consultar."
-  per-game: "por_partida"
-  desc-per-game: "Mostrar estadísticas por partida?"
-  perGame-restriction: "La estadística `{stat}` no se puede mostrar por partida."
-  invalid-column: "La estadística `{stat}` no está disponible en la tabla `{table}`."
-  error: "Hubo un error al obtener el top. {error}"
-history:
-  description: "Muestra información detallada sobre una partida específica."
-  matchid: "matchid"
-  desc-matchid: "ID de la partida (ej: ranked-10/11/2025-1)"
-  title: "Historial de Partida"
-  embed-description: "Terminada el <t:{timestamp}:f>, <t:{timestamp}:R>. En la tabla: **{table}**."
-  error-title: "Error"
-  error: "Hubo un error al obtener el historial de la partida."
-  notfound: "No se encontró la partida `{matchid}` en el historial."
+# Opciones de comandos
+cmd:
+  stats:
+    description: "Muestra las estadísticas de un jugador."
+    player: "jugador"
+    desc-player: "Nombre del jugador."
+    table: "tabla"
+    desc-table: "Tabla de estadísticas a consultar."
+    invalid-table: "La tabla `{table}` no es válida."
+    error: "Hubo un error al obtener las estadísticas."
+  top:
+    description: "Muestra el top de jugadores basado en una estadística específica."
+    stat: "estadística"
+    desc-stat: "Estadística para ordenar el top."
+    table: "tabla"
+    desc-table: "Tabla de estadísticas a consultar."
+    per-game: "por_partida"
+    desc-per-game: "Mostrar estadísticas por partida?"
+    perGame-restriction: "La estadística `{stat}` no se puede mostrar por partida."
+    invalid-column: "La estadística `{stat}` no está disponible en la tabla `{table}`."
+    error: "Hubo un error al obtener el top. {error}"
+  history:
+    description: "Muestra información detallada sobre una partida específica."
+    matchid: "matchid"
+    desc-matchid: "ID de la partida (ej: ranked-10/11/2025-1)"
+    title: "Historial de Partida"
+    embed-description: "Terminada el <t:{timestamp}:f>, <t:{timestamp}:R>. En la tabla: **{table}**."
+    error-title: "Error"
+    error: "Hubo un error al obtener el historial de la partida."
+    notfound: "No se encontró la partida `{matchid}` en el historial."
 embeds:
   finish:
     map: "Mapa"
@@ -61,3 +63,49 @@ unlink:
   notFound: "§cNo se encontró cuenta vinculada para: {identifier}"
   error: "§cOcurrió un error al desvincular la cuenta."
   database-disabled: "§cLa base de datos no está habilitada. No se pueden desvincular cuentas."
+
+# Mensajes de configuración
+commands:
+  toggle: "§aLos comandos de MatchBot han sido {status}."
+stats:
+  points:
+    toggle: "§aLa visualización de puntos en stats ha sido {status}."
+discord:
+  channel:
+    set: "§aCanal de Discord configurado a: {channel}"
+ranked:
+  role:
+    set: "§aRol de ranked configurado a: {role}"
+accounts:
+  table:
+    set: "§aTabla de cuentas configurada a: {table}"
+voicechat:
+  toggle: "§aVoice chat ha sido {status}."
+  private:
+    toggle: "§aCanales privados han sido {status}."
+  inactive:
+    set: "§aCanal de voz inactivo configurado a: {channel}"
+  queue:
+    set: "§aCanal de voz de cola configurado a: {channel}"
+  team1:
+    set: "§aCanal de voz del equipo 1 configurado a: {channel}"
+  team2:
+    set: "§aCanal de voz del equipo 2 configurado a: {channel}"
+roles:
+  registered:
+    set: "§aRol de registrado configurado a: {role}"
+  bronze:
+    set: "§aRol de bronce configurado a: {role}"
+  silver:
+    set: "§aRol de plata configurado a: {role}"
+  gold:
+    set: "§aRol de oro configurado a: {role}"
+  emerald:
+    set: "§aRol de esmeralda configurado a: {role}"
+  diamond:
+    set: "§aRol de diamante configurado a: {role}"
+tables:
+  add: "§aLa tabla '{table}' ha sido agregada a MatchBot."
+  remove: "§aLa tabla '{table}' ha sido eliminada de MatchBot."
+  empty: "§cNo hay tablas configuradas en MatchBot."
+  list: "§6Tablas de MatchBot:"

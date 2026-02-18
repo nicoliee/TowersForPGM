@@ -193,17 +193,43 @@ public class SQLITETableManager {
             + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
             + "match_id TEXT NOT NULL,"
             + "username TEXT NOT NULL,"
+            // K/D stats
             + "kills INTEGER DEFAULT 0,"
             + "deaths INTEGER DEFAULT 0,"
             + "assists INTEGER DEFAULT 0,"
-            + "damageDone REAL DEFAULT 0,"
-            + "damageTaken REAL DEFAULT 0,"
+            + "killstreak INTEGER DEFAULT 0,"
+            + "max_killstreak INTEGER DEFAULT 0,"
+            // Bow stats
+            + "longest_bow_kill INTEGER DEFAULT 0,"
+            + "bow_damage REAL DEFAULT 0,"
+            + "bow_damage_taken REAL DEFAULT 0,"
+            + "shots_taken INTEGER DEFAULT 0,"
+            + "shots_hit INTEGER DEFAULT 0,"
+            // Damage stats
+            + "damage_done REAL DEFAULT 0,"
+            + "damage_taken REAL DEFAULT 0,"
+            // Objective stats
+            + "destroyable_pieces_broken INTEGER DEFAULT 0,"
+            + "monuments_destroyed INTEGER DEFAULT 0,"
+            + "flags_captured INTEGER DEFAULT 0,"
+            + "flag_pickups INTEGER DEFAULT 0,"
+            + "cores_leaked INTEGER DEFAULT 0,"
+            + "wools_captured INTEGER DEFAULT 0,"
+            + "wools_touched INTEGER DEFAULT 0,"
+            + "longest_flag_hold_millis INTEGER DEFAULT 0,"
             + "points INTEGER DEFAULT 0,"
+            // Match info
             + "win INTEGER DEFAULT 0,"
             + "game INTEGER DEFAULT 1,"
             + "winstreak_delta INTEGER DEFAULT 0,"
             + "elo_delta INTEGER DEFAULT 0,"
             + "maxElo_after INTEGER DEFAULT 0,"
+            // Team info
+            + "team_name TEXT,"
+            + "team_color_hex TEXT,"
+            + "team_score INTEGER,"
+            + "elo_before INTEGER,"
+            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
             + "FOREIGN KEY (match_id) REFERENCES matches_history(match_id) ON DELETE CASCADE"
             + ")";
         stmt.executeUpdate(createMatches);
@@ -216,6 +242,10 @@ public class SQLITETableManager {
             "CREATE INDEX IF NOT EXISTS idx_match_players_match ON match_players_history(match_id)");
         stmt.executeUpdate(
             "CREATE INDEX IF NOT EXISTS idx_match_players_user ON match_players_history(username)");
+        stmt.executeUpdate(
+            "CREATE INDEX IF NOT EXISTS idx_team_name ON match_players_history(team_name)");
+        stmt.executeUpdate(
+            "CREATE INDEX IF NOT EXISTS idx_elo_before ON match_players_history(elo_before)");
 
       } catch (SQLException e) {
         TowersForPGM.getInstance()

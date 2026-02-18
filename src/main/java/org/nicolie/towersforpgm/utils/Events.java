@@ -7,20 +7,35 @@ import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.draft.core.Teams;
+import org.nicolie.towersforpgm.draft.listeners.DraftMatchFinishListener;
+import org.nicolie.towersforpgm.draft.listeners.DraftMatchLoadListener;
+import org.nicolie.towersforpgm.draft.listeners.DraftMatchStartListener;
+import org.nicolie.towersforpgm.draft.listeners.DraftObserverKitListener;
+import org.nicolie.towersforpgm.draft.listeners.DraftPlayerJoinListener;
+import org.nicolie.towersforpgm.draft.listeners.PlayerParticipationStartListener;
+import org.nicolie.towersforpgm.draft.listeners.PlayerPartyChangeListener;
 import org.nicolie.towersforpgm.listeners.CommandListener;
-import org.nicolie.towersforpgm.listeners.MatchAfterLoadListener;
 import org.nicolie.towersforpgm.listeners.MatchFinishListener;
 import org.nicolie.towersforpgm.listeners.MatchLoadListener;
-import org.nicolie.towersforpgm.listeners.MatchStartListener;
-import org.nicolie.towersforpgm.listeners.MatchStatsListener;
-import org.nicolie.towersforpgm.listeners.ObserversKitApplyListener;
-import org.nicolie.towersforpgm.listeners.PlayerJoinListener;
-import org.nicolie.towersforpgm.listeners.PlayerParticipationListener;
 import org.nicolie.towersforpgm.listeners.PlayerQuitListener;
+import org.nicolie.towersforpgm.listeners.PrivateMatchListener;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
+import org.nicolie.towersforpgm.preparationTime.listeners.PreparationMatchFinishListener;
+import org.nicolie.towersforpgm.preparationTime.listeners.PreparationMatchLoadListener;
+import org.nicolie.towersforpgm.preparationTime.listeners.PreparationMatchStartListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.rankeds.RankedItem;
+import org.nicolie.towersforpgm.rankeds.listeners.MatchStatsListener;
+import org.nicolie.towersforpgm.rankeds.listeners.RankedMatchLoadListener;
+import org.nicolie.towersforpgm.rankeds.listeners.RankedMatchStartListener;
+import org.nicolie.towersforpgm.rankeds.listeners.RankedObserverKitListener;
+import org.nicolie.towersforpgm.rankeds.listeners.RankedPlayerJoinListener;
+import org.nicolie.towersforpgm.rankeds.listeners.RankedPlayerParticipationListener;
+import org.nicolie.towersforpgm.rankeds.listeners.RankedPlayerQuitListener;
 import org.nicolie.towersforpgm.refill.RefillManager;
+import org.nicolie.towersforpgm.refill.listeners.RefillMatchFinishListener;
+import org.nicolie.towersforpgm.refill.listeners.RefillMatchLoadListener;
+import org.nicolie.towersforpgm.refill.listeners.RefillMatchStartListener;
 
 public class Events {
 
@@ -43,20 +58,35 @@ public class Events {
 
     pluginManager.registerEvents(new CommandListener(captains, availablePlayers, teams), plugin);
     pluginManager.registerEvents(new PreparationListener(), plugin);
-    pluginManager.registerEvents(
-        new MatchLoadListener(refillManager, preparationListener, draft), plugin);
-    pluginManager.registerEvents(new MatchAfterLoadListener(queue), plugin);
-    pluginManager.registerEvents(
-        new MatchStartListener(preparationListener, refillManager, captains), plugin);
-    pluginManager.registerEvents(
-        new MatchFinishListener(preparationListener, refillManager, draft), plugin);
-    pluginManager.registerEvents(new ObserversKitApplyListener(pickInventory), plugin);
-    pluginManager.registerEvents(
-        new PlayerJoinListener(plugin, availablePlayers, teams, captains), plugin);
-    pluginManager.registerEvents(new PlayerParticipationListener(teams, captains), plugin);
-    pluginManager.registerEvents(new PlayerQuitListener(plugin, queue), plugin);
-    // pluginManager.registerEvents(new CompetitorScoreChangeListener(), plugin);
-    pluginManager.registerEvents(new MatchStatsListener(), plugin);
+    pluginManager.registerEvents(new MatchLoadListener(), plugin);
+    pluginManager.registerEvents(new PrivateMatchListener(queue), plugin);
+    pluginManager.registerEvents(new MatchFinishListener(), plugin);
+    pluginManager.registerEvents(new PlayerQuitListener(plugin), plugin);
     pluginManager.registerEvents(new RankedItem(queue), plugin);
+
+    pluginManager.registerEvents(new DraftMatchLoadListener(draft), plugin);
+    pluginManager.registerEvents(new DraftMatchStartListener(captains), plugin);
+    pluginManager.registerEvents(new DraftMatchFinishListener(draft), plugin);
+    pluginManager.registerEvents(
+        new DraftPlayerJoinListener(availablePlayers, teams, captains), plugin);
+    pluginManager.registerEvents(new PlayerPartyChangeListener(teams, captains), plugin);
+    pluginManager.registerEvents(new PlayerParticipationStartListener(teams, captains), plugin);
+    pluginManager.registerEvents(new DraftObserverKitListener(pickInventory), plugin);
+
+    pluginManager.registerEvents(new RankedMatchLoadListener(), plugin);
+    pluginManager.registerEvents(new RankedMatchStartListener(), plugin);
+    pluginManager.registerEvents(new RankedPlayerJoinListener(plugin), plugin);
+    pluginManager.registerEvents(new RankedPlayerParticipationListener(), plugin);
+    pluginManager.registerEvents(new RankedPlayerQuitListener(queue), plugin);
+    pluginManager.registerEvents(new MatchStatsListener(), plugin);
+    pluginManager.registerEvents(new RankedObserverKitListener(), plugin);
+
+    pluginManager.registerEvents(new RefillMatchLoadListener(refillManager), plugin);
+    pluginManager.registerEvents(new RefillMatchStartListener(refillManager), plugin);
+    pluginManager.registerEvents(new RefillMatchFinishListener(refillManager), plugin);
+
+    pluginManager.registerEvents(new PreparationMatchLoadListener(preparationListener), plugin);
+    pluginManager.registerEvents(new PreparationMatchStartListener(preparationListener), plugin);
+    pluginManager.registerEvents(new PreparationMatchFinishListener(preparationListener), plugin);
   }
 }

@@ -31,21 +31,13 @@ public class EloChartGenerator {
       series.add(0, 0);
 
       for (int i = 0; i < eloHistory.size(); i++) {
-        series.add(i + 1, eloHistory.get(i)); 
+        series.add(i + 1, eloHistory.get(i));
       }
 
       XYSeriesCollection dataset = new XYSeriesCollection(series);
 
       JFreeChart chart = ChartFactory.createXYAreaChart(
-          null,
-          null,
-          "ELO",
-          dataset,
-          PlotOrientation.VERTICAL,
-          false, 
-          true, 
-          false
-          );
+          null, null, "ELO", dataset, PlotOrientation.VERTICAL, false, true, false);
 
       customizeChart(chart);
 
@@ -141,7 +133,7 @@ public class EloChartGenerator {
   }
 
   private static void addRankBands(XYPlot plot) {
-    Color backgroundColor = new Color(31, 41, 55); 
+    Color backgroundColor = new Color(31, 41, 55);
 
     for (Rank rank : Rank.values()) {
       Color rankColor = rank.getEmbedColor();

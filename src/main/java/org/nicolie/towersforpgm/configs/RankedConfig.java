@@ -65,10 +65,8 @@ public class RankedConfig {
       }
     }
 
-    // Set active profile
     activeProfile = profiles.get(activeProfileName);
     if (activeProfile == null && !profiles.isEmpty()) {
-      // If the configured profile doesn't exist, use the first available one
       activeProfile = profiles.values().iterator().next();
       activeProfileName = activeProfile.getName();
     }
@@ -78,7 +76,6 @@ public class RankedConfig {
     plugin.saveConfig();
   }
 
-  // Active Profile Management
   public RankedProfile getActiveProfile() {
     return activeProfile;
   }
@@ -108,7 +105,6 @@ public class RankedConfig {
     return profiles.containsKey(name);
   }
 
-  // Getter methods for active profile (backward compatibility)
   public int getDisconnectTime() {
     return activeProfile != null ? activeProfile.getTimerDisconnect() : 30;
   }
@@ -159,8 +155,6 @@ public class RankedConfig {
     return activeProfile != null ? activeProfile.getTable() : "";
   }
 
-  // Map-related methods for backward compatibility
-  // These now get maps from the active map pool in PGM
   public List<String> getRankedMaps() {
     if (activeProfile == null) {
       return new ArrayList<>();
@@ -171,11 +165,9 @@ public class RankedConfig {
       return new ArrayList<>();
     }
 
-    // Get maps from PGM's MapPoolManager
     if (PGM.get().getMapOrder() instanceof MapPoolManager) {
       MapPoolManager mapPoolManager = (MapPoolManager) PGM.get().getMapOrder();
       try {
-        // Find the pool by name
         var pool = mapPoolManager.getMapPools().stream()
             .filter(p -> p.getName().equalsIgnoreCase(poolName))
             .findFirst()
@@ -198,17 +190,14 @@ public class RankedConfig {
     return getRankedMaps().stream().anyMatch(map -> map.equalsIgnoreCase(mapName));
   }
 
-  // Get maps from a specific pool name
   public List<String> getMapsFromPool(String poolName) {
     if (poolName == null || poolName.isEmpty()) {
       return new ArrayList<>();
     }
 
-    // Get maps from PGM's MapPoolManager
     if (PGM.get().getMapOrder() instanceof MapPoolManager) {
       MapPoolManager mapPoolManager = (MapPoolManager) PGM.get().getMapOrder();
       try {
-        // Find the pool by name
         var pool = mapPoolManager.getMapPools().stream()
             .filter(p -> p.getName().equalsIgnoreCase(poolName))
             .findFirst()
@@ -227,13 +216,11 @@ public class RankedConfig {
     return new ArrayList<>();
   }
 
-  // Set the map pool for the active profile
   public boolean setPool(String poolName) {
     if (activeProfile == null) {
       return false;
     }
 
-    // Validate that the pool exists in PGM
     if (PGM.get().getMapOrder() instanceof MapPoolManager) {
       MapPoolManager mapPoolManager = (MapPoolManager) PGM.get().getMapOrder();
       boolean poolExists = mapPoolManager.getMapPools().stream()
@@ -245,25 +232,12 @@ public class RankedConfig {
       }
     }
 
-    // Set the pool for the active profile in config
     plugin.getConfig().set("rankeds.profiles." + activeProfileName + ".mapPool", poolName);
     save();
 
-    // Update the active profile in memory
     activeProfile.setMapPool(poolName);
 
     return true;
-  }
-
-  // Deprecated methods kept for backward compatibility
-  @Deprecated
-  public void addMap(String map) {
-    plugin.getLogger().info("addMap() is deprecated. Use setPool() instead.");
-  }
-
-  @Deprecated
-  public void removeMap(String map) {
-    plugin.getLogger().info("removeMap() is deprecated. Use setPool() instead.");
   }
 
   public boolean isRankedMatchmaking() {

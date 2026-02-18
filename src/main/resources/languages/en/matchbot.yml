@@ -1,31 +1,33 @@
-stats:
-  description: "Shows a player's statistics."
-  player: "player"
-  desc-player: "Player's name."
-  table: "table"
-  desc-table: "Statistics table to query."
-  invalid-table: "The table `{table}` is not valid."
-  error: "There was an error retrieving the statistics."
-top:
-  description: "Shows the top players based on a specific statistic."
-  stat: "statistic"
-  desc-stat: "Statistic to sort the top."
-  table: "table"
-  desc-table: "Statistics table to query."
-  per-game: "per_game"
-  desc-per-game: "Show statistics per game?"
-  perGame-restriction: "The statistic `{stat}` cannot be shown per game."
-  invalid-column: "The statistic `{stat}` is not available in the table `{table}`."
-  error: "There was an error retrieving the top. {error}"
-history:
-  description: "Shows detailed information about a specific match."
-  matchid: "matchid"
-  desc-matchid: "Match ID (e.g., ranked-10/11/2025-1)"
-  title: "Match History"
-  embed-description: "Finished at <t:{timestamp}:f>, <t:{timestamp}:R>. In table: **{table}**."
-  error-title: "Error"
-  error: "There was an error retrieving the match history."
-  notfound: "Match `{matchid}` not found in history."
+# Command options
+cmd:
+  stats:
+    description: "Shows a player's statistics."
+    player: "player"
+    desc-player: "Player's name."
+    table: "table"
+    desc-table: "Statistics table to query."
+    invalid-table: "The table `{table}` is not valid."
+    error: "There was an error retrieving the statistics."
+  top:
+    description: "Shows the top players based on a specific statistic."
+    stat: "statistic"
+    desc-stat: "Statistic to sort the top."
+    table: "table"
+    desc-table: "Statistics table to query."
+    per-game: "per_game"
+    desc-per-game: "Show statistics per game?"
+    perGame-restriction: "The statistic `{stat}` cannot be shown per game."
+    invalid-column: "The statistic `{stat}` is not available in the table `{table}`."
+    error: "There was an error retrieving the top. {error}"
+  history:
+    description: "Shows detailed information about a specific match."
+    matchid: "matchid"
+    desc-matchid: "Match ID (e.g., ranked-10/11/2025-1)"
+    title: "Match History"
+    embed-description: "Finished at <t:{timestamp}:f>, <t:{timestamp}:R>. In table: **{table}**."
+    error-title: "Error"
+    error: "There was an error retrieving the match history."
+    notfound: "Match `{matchid}` not found in history."
 embeds:
   finish:
     map: "Map"
@@ -61,3 +63,49 @@ unlink:
   notFound: "§cNo linked account found for: {identifier}"
   error: "§cAn error occurred while unlinking the account."
   database-disabled: "§cDatabase is not enabled. Cannot unlink accounts."
+
+# Configuration messages
+commands:
+  toggle: "§aMatchBot commands have been {status}."
+stats:
+  points:
+    toggle: "§aStats points display has been {status}."
+discord:
+  channel:
+    set: "§aDiscord channel set to: {channel}"
+ranked:
+  role:
+    set: "§aRanked role set to: {role}"
+accounts:
+  table:
+    set: "§aAccounts table set to: {table}"
+voicechat:
+  toggle: "§aVoice chat has been {status}."
+  private:
+    toggle: "§aPrivate channels has been {status}."
+  inactive:
+    set: "§aInactive voice channel set to: {channel}"
+  queue:
+    set: "§aQueue voice channel set to: {channel}"
+  team1:
+    set: "§aTeam 1 voice channel set to: {channel}"
+  team2:
+    set: "§aTeam 2 voice channel set to: {channel}"
+roles:
+  registered:
+    set: "§aRegistered role set to: {role}"
+  bronze:
+    set: "§aBronze role set to: {role}"
+  silver:
+    set: "§aSilver role set to: {role}"
+  gold:
+    set: "§aGold role set to: {role}"
+  emerald:
+    set: "§aEmerald role set to: {role}"
+  diamond:
+    set: "§aDiamond role set to: {role}"
+tables:
+  add: "§aTable '{table}' has been added to MatchBot."
+  remove: "§aTable '{table}' has been removed from MatchBot."
+  empty: "§cNo tables configured in MatchBot."
+  list: "§6MatchBot Tables:"

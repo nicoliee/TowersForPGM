@@ -48,10 +48,13 @@ public class TopEmbed {
           Rank playerRank = Rank.getRankByElo((int) entry.getValue());
           rankingText.append(String.format(
               "%d. %s %s: %s\n",
-              rank, playerRank.getPrefixedRank(false), entry.getUsername().replace("_", "\\_"), formattedValue));
+              rank,
+              playerRank.getPrefixedRank(false),
+              entry.getUsername().replace("_", "\\_"),
+              formattedValue));
         } else {
-          rankingText.append(
-              String.format("%d. %s: %s\n", rank, entry.getUsername().replace("_", "\\_"), formattedValue));
+          rankingText.append(String.format(
+              "%d. %s: %s\n", rank, entry.getUsername().replace("_", "\\_"), formattedValue));
         }
       }
 

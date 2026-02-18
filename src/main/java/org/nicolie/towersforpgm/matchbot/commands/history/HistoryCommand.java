@@ -17,11 +17,12 @@ public class HistoryCommand extends ListenerAdapter {
     if (jda != null) {
       jda.addEventListener(new HistoryCommand());
 
-      var command = jda.upsertCommand(NAME, LanguageManager.message("matchbot.history.description"))
+      var command = jda.upsertCommand(
+              NAME, LanguageManager.message("matchbot.cmd.history.description"))
           .addOption(
               net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
-              LanguageManager.message("matchbot.history.matchid"),
-              LanguageManager.message("matchbot.history.desc-matchid"),
+              LanguageManager.message("matchbot.cmd.history.matchid"),
+              LanguageManager.message("matchbot.cmd.history.desc-matchid"),
               true,
               true);
 
@@ -33,21 +34,22 @@ public class HistoryCommand extends ListenerAdapter {
   public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
     if (!event.getName().equals(NAME)) return;
 
-    OptionMapping matchIdOpt = event.getOption(LanguageManager.message("matchbot.history.matchid"));
+    OptionMapping matchIdOpt =
+        event.getOption(LanguageManager.message("matchbot.cmd.history.matchid"));
     String matchId = matchIdOpt.getAsString();
 
     event.deferReply().queue(hook -> {
       MatchHistoryManager.getMatch(matchId).whenComplete((history, throwable) -> {
         if (throwable != null) {
           hook.editOriginalEmbeds(HistoryEmbed.createError(
-                      matchId, LanguageManager.message("matchbot.history.error"))
+                      matchId, LanguageManager.message("matchbot.cmd.history.error"))
                   .build())
               .queue();
           return;
         }
         if (history == null) {
           hook.editOriginalEmbeds(HistoryEmbed.createError(
-                      matchId, LanguageManager.message("matchbot.history.notfound"))
+                      matchId, LanguageManager.message("matchbot.cmd.history.notfound"))
                   .build())
               .queue();
           return;

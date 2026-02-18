@@ -74,6 +74,26 @@ public class HelpConfig {
         "§6/towers §branked §adefault <tabla> §7- Establece una tabla para rankeds por defecto.");
   }
 
+  public static void sendMatchBotHelp(CommandSender sender) {
+    sender.sendMessage("§6§m--------------------§6§lMatchBot §6§m--------------------");
+    sender.sendMessage("§6/towers §bmatchbot §acommands §7- Activa/desactiva comandos de Discord.");
+    sender.sendMessage(
+        "§6/towers §bmatchbot §astatspoints §7- Activa/desactiva puntos en estadísticas.");
+    sender.sendMessage(
+        "§6/towers §bmatchbot §achannel <id> §7- Configura el canal de Discord para ranked.");
+    sender.sendMessage("§6/towers §bmatchbot §arankedrole <id> §7- Configura el rol de ranked.");
+    sender.sendMessage(
+        "§6/towers §bmatchbot §aaccountstable <name> §7- Configura la tabla de cuentas.");
+    sender.sendMessage("§6/towers §bmatchbot §avoicechat §7- Activa/desactiva voice chat.");
+    sender.sendMessage(
+        "§6/towers §bmatchbot §avoice <inactive|queue|team1|team2> <id> §7- Configura canales de voz.");
+    sender.sendMessage(
+        "§6/towers §bmatchbot §aroles <type> <id> §7- Configura roles de rango (bronze, silver, etc).");
+    sender.sendMessage(
+        "§6/towers §bmatchbot §atables <add|remove|list> §7- Gestiona tablas de MatchBot.");
+    sender.sendMessage("§6/towers §bmatchbot §ashow §7- Muestra la configuración actual.");
+  }
+
   public static void sendGeneralHelp(CommandSender sender) {
     sender.sendMessage("§6§m--------------------§6§lTowers §6§m--------------------");
     sender.sendMessage("§6Uso general de /towers:");
@@ -81,7 +101,8 @@ public class HelpConfig {
     sender.sendMessage("§6/towers §bpreparation §7- Configuraciones de preparación del mapa.");
     sender.sendMessage("§6/towers §bstats §7- Gestión de tablas y estadísticas.");
     sender.sendMessage("§6/towers §branked §7- Configuraciones de partidas rankeadas.");
+    sender.sendMessage("§6/towers §bmatchbot §7- Configuraciones de integración con Discord.");
     sender.sendMessage(
-        "§6/towers §bhelp <suggestions|preparation|stats|ranked> §7- Muestra ayuda detallada.");
+        "§6/towers §bhelp <draft|preparation|stats|ranked|matchbot> §7- Muestra ayuda detallada.");
   }
 }

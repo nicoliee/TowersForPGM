@@ -14,10 +14,9 @@ ranked:
 ## IDs de los canales de voz de Discord y rol para rankeds.
   voice-chat:
     enabled: true
+    privateChannels: false # Si es true, los canales tendrán límite de usuarios y no se podrá entrar al canal del otro equipo
     inactive: ""
     queue: ""
-    team1: ""
-    team2: ""
   roles:
     registered: ""
     bronze: ""

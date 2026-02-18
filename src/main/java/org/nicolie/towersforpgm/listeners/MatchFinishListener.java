@@ -1,20 +1,22 @@
 package org.nicolie.towersforpgm.listeners;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.database.MatchHistoryManager;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.models.Stats;
-import org.nicolie.towersforpgm.draft.core.Draft;
+import org.nicolie.towersforpgm.database.models.history.MatchStats;
+import org.nicolie.towersforpgm.database.models.history.TeamInfo;
 import org.nicolie.towersforpgm.matchbot.embeds.MatchInfo;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedFinish;
-import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.Elo;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.map.Gamemode;
@@ -24,25 +26,15 @@ import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.score.ScoreMatchModule;
 import tc.oc.pgm.stats.PlayerStats;
 import tc.oc.pgm.stats.StatsMatchModule;
+import tc.oc.pgm.teams.TeamMatchModule;
 
 public class MatchFinishListener implements Listener {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
-  private final PreparationListener preparationListener;
-  private final RefillManager refillManager;
-  private final Draft draft;
 
-  public MatchFinishListener(
-      PreparationListener preparationListener, RefillManager refillManager, Draft draft) {
-    this.preparationListener = preparationListener;
-    this.refillManager = refillManager;
-    this.draft = draft;
-  }
+  public MatchFinishListener() {}
 
   @EventHandler
   public void onMatchFinish(MatchFinishEvent event) {
-    preparationListener.stopProtection(null, event.getMatch());
-    refillManager.clearWorldData(event.getMatch().getWorld().getName());
-    draft.cleanLists();
     if (!plugin.getIsDatabaseActivated()) return;
     if (plugin.isStatsCancel()) {
       cancelStats(event);
@@ -69,6 +61,15 @@ public class MatchFinishListener implements Listener {
     String map = match.getMap().getName();
     ScoreMatchModule scoreMatchModule = match.getModule(ScoreMatchModule.class);
     StatsMatchModule statsModule = match.getModule(StatsMatchModule.class);
+    TeamMatchModule teamsModule = match.getModule(TeamMatchModule.class);
+
+    if (teamsModule == null) {
+      TowersForPGM.getInstance()
+          .getLogger()
+          .info("[-] Stats cancelled for match-" + event.getMatch().getId() + ": " + map
+              + " (FFA mode - no teams module)");
+      return;
+    }
 
     if (scoreMatchModule != null && statsModule != null) {
       List<Stats> playerStatsList = new ArrayList<>();
@@ -79,6 +80,10 @@ public class MatchFinishListener implements Listener {
 
       List<MatchPlayer> winners = new ArrayList<>();
       List<MatchPlayer> losers = new ArrayList<>();
+
+      List<TeamInfo> teams = MatchHistoryManager.extractTeamInfo(match);
+      Map<String, TeamInfo> playerTeamMap = MatchHistoryManager.createPlayerTeamMap(match);
+      Map<String, MatchStats> playerMatchStats = new HashMap<>();
 
       for (MatchPlayer player : allPlayers) {
         PlayerStats playerStats = statsModule.getPlayerStat(player);
@@ -92,6 +97,12 @@ public class MatchFinishListener implements Listener {
         } else {
           losers.add(player);
         }
+        String teamName =
+            player.getCompetitor() != null ? player.getCompetitor().getDefaultName() : null;
+
+        MatchStats matchStats = MatchHistoryManager.createMatchStats(
+            playerStats, player.getNameLegacy(), totalPoints, teamName);
+        playerMatchStats.put(player.getNameLegacy(), matchStats);
 
         playerStatsList.add(new Stats(
             player.getNameLegacy(),
@@ -123,9 +134,20 @@ public class MatchFinishListener implements Listener {
         MatchInfo matchInfo = MatchInfo.getMatchInfo(match);
 
         if (ranked && rankedTable) {
-          handleRankedMatch(match, table, matchInfo, allPlayers, winners, losers, playerStatsList);
+          handleRankedMatch(
+              match,
+              table,
+              matchInfo,
+              allPlayers,
+              winners,
+              losers,
+              playerStatsList,
+              teams,
+              playerTeamMap,
+              playerMatchStats);
         } else {
-          handleUnrankedMatch(table, matchInfo, playerStatsList);
+          handleUnrankedMatch(
+              table, matchInfo, playerStatsList, teams, playerTeamMap, playerMatchStats);
         }
       }
     }
@@ -138,9 +160,20 @@ public class MatchFinishListener implements Listener {
       List<MatchPlayer> allPlayers,
       List<MatchPlayer> winners,
       List<MatchPlayer> losers,
-      List<Stats> playerStatsList) {
+      List<Stats> playerStatsList,
+      List<TeamInfo> teams,
+      Map<String, TeamInfo> playerTeamMap,
+      Map<String, MatchStats> playerMatchStats) {
     Elo.addWin(winners, losers).thenAccept(eloChanges -> {
-      saveMatchHistory(table, matchInfo, true, playerStatsList, eloChanges);
+      saveMatchHistory(
+          table,
+          matchInfo,
+          true,
+          playerStatsList,
+          eloChanges,
+          teams,
+          playerTeamMap,
+          playerMatchStats);
 
       for (PlayerEloChange eloChange : eloChanges) {
         eloChange.sendMessage();
@@ -155,8 +188,15 @@ public class MatchFinishListener implements Listener {
     });
   }
 
-  private void handleUnrankedMatch(String table, MatchInfo matchInfo, List<Stats> playerStatsList) {
-    saveMatchHistory(table, matchInfo, false, playerStatsList, null);
+  private void handleUnrankedMatch(
+      String table,
+      MatchInfo matchInfo,
+      List<Stats> playerStatsList,
+      List<TeamInfo> teams,
+      Map<String, TeamInfo> playerTeamMap,
+      Map<String, MatchStats> playerMatchStats) {
+    saveMatchHistory(
+        table, matchInfo, false, playerStatsList, null, teams, playerTeamMap, playerMatchStats);
     StatsManager.updateStats(table, playerStatsList, null);
   }
 
@@ -165,10 +205,21 @@ public class MatchFinishListener implements Listener {
       MatchInfo matchInfo,
       boolean ranked,
       List<Stats> playerStatsList,
-      List<PlayerEloChange> eloChanges) {
-    org.nicolie.towersforpgm.database.MatchHistoryManager.generateMatchId(table)
-        .thenCompose(matchId -> org.nicolie.towersforpgm.database.MatchHistoryManager.saveMatch(
-            matchId, table, matchInfo, ranked, playerStatsList, eloChanges))
+      List<PlayerEloChange> eloChanges,
+      List<TeamInfo> teams,
+      Map<String, TeamInfo> playerTeamMap,
+      Map<String, MatchStats> playerMatchStats) {
+    MatchHistoryManager.generateMatchId(table)
+        .thenCompose(matchId -> MatchHistoryManager.saveMatch(
+            matchId,
+            table,
+            matchInfo,
+            ranked,
+            playerStatsList,
+            eloChanges,
+            teams,
+            playerTeamMap,
+            playerMatchStats))
         .exceptionally(ex -> {
           TowersForPGM.getInstance()
               .getLogger()

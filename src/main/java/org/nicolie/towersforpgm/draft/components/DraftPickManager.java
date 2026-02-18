@@ -218,11 +218,11 @@ public class DraftPickManager {
     }
 
     String newCaptainName = newCaptain.getName();
-    
+
     // El capitán actual puede estar conectado o desconectado
     Player currentCaptain = Bukkit.getPlayer(currentCaptainUUID);
-    String currentCaptainName = currentCaptain != null 
-        ? currentCaptain.getName() 
+    String currentCaptainName = currentCaptain != null
+        ? currentCaptain.getName()
         : Bukkit.getOfflinePlayer(currentCaptainUUID).getName();
 
     // Verificar que el nuevo capitán no esté en el equipo enemigo

@@ -3,69 +3,19 @@ package org.nicolie.towersforpgm.listeners;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.commands.ranked.ForfeitCommand;
-import org.nicolie.towersforpgm.draft.core.Draft;
-import org.nicolie.towersforpgm.preparationTime.PreparationListener;
-import org.nicolie.towersforpgm.rankeds.DisconnectManager;
-import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.refill.RefillManager;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.MatchManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
-import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.event.MatchLoadEvent;
 
 public class MatchLoadListener implements Listener {
-  private final TowersForPGM plugin = TowersForPGM.getInstance();
-  private final RefillManager refillManager;
-  private final PreparationListener preparationListener;
-  private final Draft draft;
-
-  public MatchLoadListener(
-      RefillManager refillManager, PreparationListener preparationListener, Draft draft) {
-    this.refillManager = refillManager;
-    this.preparationListener = preparationListener;
-    this.draft = draft;
-  }
 
   @EventHandler
   public void onMatchLoad(MatchLoadEvent event) {
-    Match match = event.getMatch();
-    String map = match.getMap().getName();
-    String world = match.getWorld().getName();
+    MatchManager.setCurrentMatch(event.getMatch());
 
-    clearData();
-    MatchManager.setCurrentMatch(
-        match); // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM
-    // (10/03/2025)
-    refillManager.loadChests(map, world);
-    preparationSetup(map);
-    if (!plugin.config().ranked().getRankedMaps().contains(map) && Queue.getQueueSize() > 0) {
-      Queue.clearQueue();
-    }
-  }
+    TowersForPGM.getInstance().getDisconnectedPlayers().clear();
 
-  private void preparationSetup(String map) {
-    if (preparationListener.isMapInConfig(map)
-        && plugin.config().preparationTime().isPreparationEnabled()) {
-      SendMessage.sendToAdmins(
-          LanguageManager.message("preparation.isAvailable").replace("{map}", map));
-    } else if (preparationListener.isMapInConfig(map)
-        && !plugin.config().preparationTime().isPreparationEnabled()) {
-      SendMessage.sendToAdmins(
-          LanguageManager.message("preparation.isAvailableButDisabled").replace("{map}", map));
-    }
-  }
+    TowersForPGM.getInstance().setStatsCancel(false);
 
-  private void clearData() {
-    TowersForPGM plugin = TowersForPGM.getInstance();
-
-    draft.cleanLists();
-    Queue.setRanked(false);
-    plugin.getDisconnectedPlayers().clear();
-    ForfeitCommand.forfeitedPlayers.clear();
-    plugin.setStatsCancel(false);
-    plugin.config().databaseTables().removeTempTable();
-    DisconnectManager.clearAll();
+    TowersForPGM.getInstance().config().databaseTables().removeTempTable();
   }
 }

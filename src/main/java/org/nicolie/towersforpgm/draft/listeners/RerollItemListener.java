@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.listeners;
+package org.nicolie.towersforpgm.draft.listeners;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

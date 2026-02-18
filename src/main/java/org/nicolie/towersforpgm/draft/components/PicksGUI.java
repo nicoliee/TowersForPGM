@@ -25,7 +25,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.configs.ConfigManager;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.core.Captains;
@@ -41,7 +40,6 @@ import tc.oc.pgm.api.player.MatchPlayer;
 public class PicksGUI implements Listener {
 
   private final TowersForPGM plugin;
-  private final ConfigManager configManager;
   private final Draft draft;
   private final Captains captains;
   private final AvailablePlayers availablePlayers;
@@ -52,13 +50,11 @@ public class PicksGUI implements Listener {
 
   public PicksGUI(
       TowersForPGM plugin,
-      ConfigManager configManager,
       Draft draft,
       Captains captains,
       AvailablePlayers availablePlayers,
       Teams teams) {
     this.plugin = plugin;
-    this.configManager = configManager;
     this.draft = draft;
     this.captains = captains;
     this.availablePlayers = availablePlayers;
@@ -217,20 +213,23 @@ public class PicksGUI implements Listener {
           + rank.getColor() + elo);
       lore.add(" ");
     }
-    lore.add(LanguageManager.message("stats.kills") + ": §a" + stats.getKills());
-    lore.add(LanguageManager.message("stats.deaths") + ": §a" + stats.getDeaths());
-    lore.add(LanguageManager.message("stats.assists") + ": §a" + stats.getAssists());
-    lore.add(LanguageManager.message("stats.damageDone") + ": §a"
-        + String.format(
-            "%.1f", stats.getGames() > 0 ? stats.getDamageDone() / stats.getGames() : 0.0));
-    lore.add(LanguageManager.message("stats.damageTaken") + ": §a"
-        + String.format(
-            "%.1f", stats.getGames() > 0 ? stats.getDamageTaken() / stats.getGames() : 0.0));
-    lore.add(LanguageManager.message("stats.points") + ": §a" + stats.getPoints());
-    lore.add(LanguageManager.message("stats.wins") + ": §a" + stats.getWins());
-    lore.add(LanguageManager.message("stats.games") + ": §a" + stats.getGames());
-    lore.add(LanguageManager.message("stats.winstreak") + ": §a" + stats.getWinstreak()
-        + " §7(Max: §a" + stats.getMaxWinstreak() + "§7)");
+    double kd =
+        stats.getDeaths() > 0 ? (double) stats.getKills() / stats.getDeaths() : stats.getKills();
+    lore.add("§7" + LanguageManager.message("stats.kills") + ": §a" + stats.getKills() + " §7"
+        + LanguageManager.message("stats.deaths") + ": §c" + stats.getDeaths() + " §7KD: §a"
+        + String.format("%.2f", kd));
+
+    lore.add("§7" + LanguageManager.message("stats.games") + ": §a" + stats.getGames() + " §7"
+        + LanguageManager.message("stats.wins") + ": §a" + stats.getWins() + " §7"
+        + LanguageManager.message("stats.winstreak") + ": §a" + stats.getWinstreak());
+
+    double avgDamageDone = stats.getGames() > 0 ? stats.getDamageDone() / stats.getGames() : 0.0;
+    double avgDamageTaken = stats.getGames() > 0 ? stats.getDamageTaken() / stats.getGames() : 0.0;
+    lore.add("§7" + LanguageManager.message("stats.damageDone") + ": §a"
+        + String.format("%.1f", avgDamageDone) + " ❤ §7"
+        + LanguageManager.message("stats.damageTaken") + ": §c"
+        + String.format("%.1f", avgDamageTaken) + " ❤");
+    lore.add("§7" + LanguageManager.message("stats.points") + ": §6" + stats.getPoints());
     lore.add(" ");
     lore.add(LanguageManager.message("draft.config.clickToPick"));
     meta.setLore(lore);
@@ -329,11 +328,10 @@ public class PicksGUI implements Listener {
     UUID playerId = player.getUniqueId();
 
     if (openInventories.containsKey(playerId)) {
-      openInventories.remove(playerId); // Limpiar el inventario del jugador
+      openInventories.remove(playerId);
     }
   }
 
-  // Limpieza cuando un jugador se va del servidor
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
     openInventories.remove(event.getPlayer().getUniqueId());
@@ -342,8 +340,8 @@ public class PicksGUI implements Listener {
   public void updateInventory(Player player) {
     Inventory inv = openInventories.get(player.getUniqueId());
     if (inv != null) {
-      inv.clear(); // Limpiar el inventario antes de volver a llenarlo
-      openInventory(player); // Volver a abrir el inventario
+      inv.clear();
+      openInventory(player);
     }
   }
 
@@ -404,32 +402,28 @@ public class PicksGUI implements Listener {
   public void onPlayerInteract(PlayerInteractEvent event) {
     Player player = event.getPlayer();
 
-    // Verificar si el jugador tiene el ítem especial y si hizo clic derecho
     if (event.getAction() == Action.RIGHT_CLICK_AIR
         || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
       ItemStack item;
-      // Compatibilidad con versiones antiguas y nuevas
       try {
-        item = player.getInventory().getItemInMainHand(); // Método para versiones nuevas
+        item = player.getInventory().getItemInMainHand();
       } catch (NoSuchMethodError e) {
-        item = player.getItemInHand(); // Método para versiones antiguas
+        item = player.getItemInHand();
       }
 
       if (item != null && item.hasItemMeta()) {
         ItemMeta meta = item.getItemMeta();
 
-        // Draft Menu (NETHER_STAR)
         if (item.getType() == Material.NETHER_STAR
             && meta != null
             && "§6Draft Menu".equals(meta.getDisplayName())) {
-          // Si el draft no está activo, mostrar mensaje
           if (Draft.getPhase() == DraftPhase.IDLE) {
             SendMessage.sendToPlayer(player, LanguageManager.message("draft.picks.noDraft"));
             player.getInventory().remove(Material.NETHER_STAR);
             return;
           }
-          openInventory(player); // Abrir el inventario
-          event.setCancelled(true); // Cancelar cualquier otra acción
+          openInventory(player);
+          event.setCancelled(true);
         }
       }
     }

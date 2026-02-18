@@ -5,7 +5,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.nicolie.towersforpgm.TowersForPGM;
 
 public class MatchBotConfig {
-  private static final TowersForPGM plugin = TowersForPGM.getInstance();
   private static boolean commands;
   // tables
   private static List<String> tables;
@@ -20,6 +19,7 @@ public class MatchBotConfig {
 
   // ranked.voice-chat
   private static boolean voiceChatEnabled;
+  private static boolean privateChannels;
   private static String inactiveID;
   private static String queueID;
   private static String team1ID;
@@ -46,6 +46,7 @@ public class MatchBotConfig {
 
     // voice-chat
     voiceChatEnabled = config.getBoolean("ranked.voice-chat.enabled", false);
+    privateChannels = config.getBoolean("ranked.voice-chat.privateChannels", false);
     inactiveID = config.getString("ranked.voice-chat.inactive", "");
     queueID = config.getString("ranked.voice-chat.queue", "");
     team1ID = config.getString("ranked.voice-chat.team1", "");
@@ -78,6 +79,11 @@ public class MatchBotConfig {
 
   public static boolean isCommandsEnabled() {
     return commands;
+  }
+
+  public static void setCommandsEnabled(boolean enabled) {
+    commands = enabled;
+    saveToFile("commands", enabled);
   }
 
   // tables
@@ -117,6 +123,11 @@ public class MatchBotConfig {
   public static void setVoiceChatEnabled(boolean enabled) {
     voiceChatEnabled = enabled;
     saveToFile("ranked.voice-chat.enabled", enabled);
+  }
+
+  public static void setPrivateChannels(boolean enabled) {
+    privateChannels = enabled;
+    saveToFile("ranked.voice-chat.privateChannels", enabled);
   }
 
   public static void setAccountsTable(String table) {
@@ -197,6 +208,10 @@ public class MatchBotConfig {
 
   public static boolean isVoiceChatEnabled() {
     return voiceChatEnabled;
+  }
+
+  public static boolean isPrivateChannels() {
+    return privateChannels;
   }
 
   public static String getAccountsTable() {

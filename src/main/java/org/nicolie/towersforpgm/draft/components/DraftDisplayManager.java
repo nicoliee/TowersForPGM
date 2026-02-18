@@ -18,7 +18,6 @@ import tc.oc.pgm.util.bukkit.Sounds;
 
 public class DraftDisplayManager {
   private final ConfigManager configManager;
-  private final DraftState state;
   private final Captains captains;
   private final Teams teams;
   private final Utilities utilities;
@@ -31,13 +30,11 @@ public class DraftDisplayManager {
   public DraftDisplayManager(
       TowersForPGM plugin,
       ConfigManager configManager,
-      DraftState state,
       Captains captains,
       Teams teams,
       Utilities utilities) {
     this.plugin = plugin;
     this.configManager = configManager;
-    this.state = state;
     this.captains = captains;
     this.teams = teams;
     this.utilities = utilities;

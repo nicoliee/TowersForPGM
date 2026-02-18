@@ -59,7 +59,7 @@ public class MatchInfo {
         .reduce((a, b) -> a + ", " + b)
         .orElse("");
 
-    if (match.getMap().getGamemodes().contains(Gamemode.SCOREBOX)) {
+    if (!match.getMap().getGamemodes().contains(Gamemode.FREE_FOR_ALL)) {
       hasScorebox = true;
       StringBuilder scores = new StringBuilder();
       for (Map.Entry<Competitor, Double> entry :

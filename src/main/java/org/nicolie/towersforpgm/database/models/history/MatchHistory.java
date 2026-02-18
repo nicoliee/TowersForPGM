@@ -12,7 +12,10 @@ public class MatchHistory {
   private final String winnersText;
   private final List<PlayerHistory> players;
   private final long finishedAt;
+  // Nuevo campo - nullable para retrocompatibilidad
+  private final List<TeamInfo> teams;
 
+  /** Constructor retrocompatible - mantiene la firma original. */
   public MatchHistory(
       String matchId,
       String tableName,
@@ -23,6 +26,31 @@ public class MatchHistory {
       String winnersText,
       List<PlayerHistory> players,
       long finishedAt) {
+    this(
+        matchId,
+        tableName,
+        mapName,
+        durationSeconds,
+        ranked,
+        scoresText,
+        winnersText,
+        players,
+        finishedAt,
+        null);
+  }
+
+  /** Constructor completo con información de teams. */
+  public MatchHistory(
+      String matchId,
+      String tableName,
+      String mapName,
+      int durationSeconds,
+      boolean ranked,
+      String scoresText,
+      String winnersText,
+      List<PlayerHistory> players,
+      long finishedAt,
+      List<TeamInfo> teams) {
     this.matchId = matchId;
     this.tableName = tableName;
     this.mapName = mapName;
@@ -32,6 +60,7 @@ public class MatchHistory {
     this.winnersText = winnersText;
     this.players = players;
     this.finishedAt = finishedAt;
+    this.teams = teams;
   }
 
   public String getMatchId() {
@@ -68,5 +97,33 @@ public class MatchHistory {
 
   public long getFinishedAt() {
     return finishedAt;
+  }
+
+  public List<TeamInfo> getTeams() {
+    return teams;
+  }
+
+  /** Obtiene los jugadores de un team específico por nombre. */
+  public List<PlayerHistory> getPlayersByTeam(String teamName) {
+    if (players == null || teamName == null) {
+      return List.of();
+    }
+    return players.stream().filter(p -> teamName.equals(p.getTeamName())).toList();
+  }
+
+  /** Obtiene los jugadores ganadores. */
+  public List<PlayerHistory> getWinners() {
+    if (players == null) {
+      return List.of();
+    }
+    return players.stream().filter(p -> p.getWin() == 1).toList();
+  }
+
+  /** Obtiene los jugadores perdedores. */
+  public List<PlayerHistory> getLosers() {
+    if (players == null) {
+      return List.of();
+    }
+    return players.stream().filter(p -> p.getWin() == 0).toList();
   }
 }

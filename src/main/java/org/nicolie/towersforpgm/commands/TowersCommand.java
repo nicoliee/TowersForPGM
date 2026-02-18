@@ -13,11 +13,11 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.commandUtils.DraftConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.HelpConfig;
+import org.nicolie.towersforpgm.commands.commandUtils.MatchBotConfigs;
 import org.nicolie.towersforpgm.commands.commandUtils.PreparationConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.RankedConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.RefillConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
-import org.nicolie.towersforpgm.commands.gui.TowersConfigGUI;
 import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
@@ -34,7 +34,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
   private final PreparationConfig preparationConfig;
   private final RefillConfig refillConfig;
   private final RankedConfig rankedConfig;
-  private static TowersConfigGUI configGUI;
+  private final MatchBotConfigs matchBotConfig;
 
   public TowersCommand() {
     this.draftConfig = new DraftConfig();
@@ -42,20 +42,14 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
     this.preparationConfig = new PreparationConfig();
     this.refillConfig = new RefillConfig();
     this.rankedConfig = new RankedConfig();
-
-    // Solo crear una instancia del GUI si no existe
-    if (configGUI == null) {
-      configGUI = new TowersConfigGUI();
-    }
+    this.matchBotConfig = new MatchBotConfigs();
   }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (args.length == 0) {
       if (sender instanceof Player) {
-        configGUI.openMainMenu((Player) sender);
-      } else {
-        sender.sendMessage("§c/towers <draft|preparation|refill|stats|help>");
+        sender.sendMessage("§c/towers <draft|preparation|refill|stats|matchbot|help>");
       }
       return true;
     }
@@ -261,7 +255,6 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
             String removeTableName = args[2];
             rankedConfig.deleteTable(sender, removeTableName);
             return true;
-
           case "matchmaking":
             Boolean matchmakingArg = null;
             if (args.length >= 3) {
@@ -397,6 +390,185 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
             });
         return true;
 
+      case "matchbot":
+        // Early return si MatchBot no está habilitado
+        if (!TowersForPGM.getInstance().isMatchBotEnabled()) {
+          return true;
+        }
+
+        if (args.length == 1) {
+          sender.sendMessage(
+              "§c/towers matchbot <toggle|stats|channel|rankedrole|accounts|voice|roles|tables|config>");
+          return true;
+        }
+        switch (args[1].toLowerCase()) {
+          case "toggle":
+            matchBotConfig.toggleCommands(sender);
+            break;
+          case "stats":
+            matchBotConfig.toggleStatsPoints(sender);
+            break;
+          case "channel":
+            if (args.length < 3) {
+              sender.sendMessage("§c/towers matchbot channel <channelId>");
+              return true;
+            }
+            matchBotConfig.setDiscordChannel(sender, args[2]);
+            break;
+          case "rankedrole":
+            if (args.length < 3) {
+              sender.sendMessage("§c/towers matchbot rankedrole <roleId>");
+              return true;
+            }
+            matchBotConfig.setRankedRole(sender, args[2]);
+            break;
+          case "accounts":
+            if (args.length < 3) {
+              sender.sendMessage("§c/towers matchbot accounts <table>");
+              return true;
+            }
+            matchBotConfig.setAccountsTable(sender, args[2]);
+            break;
+          case "voice":
+            if (args.length < 3) {
+              sender.sendMessage(
+                  "§c/towers matchbot voice <toggle|private|inactive|queue|team1|team2>");
+              return true;
+            }
+            switch (args[2].toLowerCase()) {
+              case "toggle":
+                matchBotConfig.toggleVoiceChat(sender);
+                break;
+              case "private":
+                matchBotConfig.togglePrivateChannels(sender);
+                break;
+              case "inactive":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot voice inactive <channelId>");
+                  return true;
+                }
+                matchBotConfig.setVoiceChannelInactive(sender, args[3]);
+                break;
+              case "queue":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot voice queue <channelId>");
+                  return true;
+                }
+                matchBotConfig.setVoiceChannelQueue(sender, args[3]);
+                break;
+              case "team1":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot voice team1 <channelId>");
+                  return true;
+                }
+                matchBotConfig.setVoiceChannelTeam1(sender, args[3]);
+                break;
+              case "team2":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot voice team2 <channelId>");
+                  return true;
+                }
+                matchBotConfig.setVoiceChannelTeam2(sender, args[3]);
+                break;
+              default:
+                sender.sendMessage(
+                    "§c/towers matchbot voice <toggle|private|inactive|queue|team1|team2>");
+                break;
+            }
+            break;
+          case "roles":
+            if (args.length < 3) {
+              sender.sendMessage(
+                  "§c/towers matchbot roles <registered|bronze|silver|gold|emerald|diamond> <roleId>");
+              return true;
+            }
+            switch (args[2].toLowerCase()) {
+              case "registered":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot roles registered <roleId>");
+                  return true;
+                }
+                matchBotConfig.setRegisteredRole(sender, args[3]);
+                break;
+              case "bronze":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot roles bronze <roleId>");
+                  return true;
+                }
+                matchBotConfig.setBronzeRole(sender, args[3]);
+                break;
+              case "silver":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot roles silver <roleId>");
+                  return true;
+                }
+                matchBotConfig.setSilverRole(sender, args[3]);
+                break;
+              case "gold":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot roles gold <roleId>");
+                  return true;
+                }
+                matchBotConfig.setGoldRole(sender, args[3]);
+                break;
+              case "emerald":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot roles emerald <roleId>");
+                  return true;
+                }
+                matchBotConfig.setEmeraldRole(sender, args[3]);
+                break;
+              case "diamond":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot roles diamond <roleId>");
+                  return true;
+                }
+                matchBotConfig.setDiamondRole(sender, args[3]);
+                break;
+              default:
+                sender.sendMessage(
+                    "§c/towers matchbot roles <registered|bronze|silver|gold|emerald|diamond> <roleId>");
+                break;
+            }
+            break;
+          case "tables":
+            if (args.length < 3) {
+              sender.sendMessage("§c/towers matchbot tables <add|remove|list>");
+              return true;
+            }
+            switch (args[2].toLowerCase()) {
+              case "add":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot tables add <table>");
+                  return true;
+                }
+                matchBotConfig.addTable(sender, args[3]);
+                break;
+              case "remove":
+                if (args.length < 4) {
+                  sender.sendMessage("§c/towers matchbot tables remove <table>");
+                  return true;
+                }
+                matchBotConfig.removeTable(sender, args[3]);
+                break;
+              case "list":
+                matchBotConfig.listTables(sender);
+                break;
+              default:
+                sender.sendMessage("§c/towers matchbot tables <add|remove|list>");
+                break;
+            }
+            break;
+          case "config":
+            matchBotConfig.showConfig(sender);
+            break;
+          default:
+            sender.sendMessage(
+                "§c/towers matchbot <toggle|stats|channel|rankedrole|accounts|voice|roles|tables|config>");
+            break;
+        }
+        break;
+
       case "help":
         if (args.length == 2) {
           switch (args[1].toLowerCase()) {
@@ -435,8 +607,8 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
   public List<String> onTabComplete(
       CommandSender sender, Command command, String alias, String[] args) {
     if (args.length == 1) {
-      List<String> base =
-          Arrays.asList("draft", "preparation", "ranked", "rollback", "refill", "stats", "help");
+      List<String> base = Arrays.asList(
+          "draft", "preparation", "ranked", "rollback", "refill", "stats", "matchbot", "help");
       String input = args[0].toLowerCase();
       return base.stream().filter(s -> s.startsWith(input)).collect(Collectors.toList());
     }
@@ -528,6 +700,50 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
             Set<String> tables =
                 TowersForPGM.getInstance().config().databaseTables().getTables(TableType.ALL);
             return filterPrefix(tables, args[2]);
+          }
+        }
+        break;
+
+      case "matchbot":
+        if (args.length == 2) {
+          List<String> options = Arrays.asList(
+              "toggle",
+              "stats",
+              "channel",
+              "rankedrole",
+              "accounts",
+              "voice",
+              "roles",
+              "tables",
+              "config");
+          return filterPrefix(options, args[1]);
+        }
+        if (args.length == 3) {
+          String sub = args[1].toLowerCase();
+          if (sub.equals("voice")) {
+            List<String> voiceOptions =
+                Arrays.asList("toggle", "private", "inactive", "queue", "team1", "team2");
+            return filterPrefix(voiceOptions, args[2]);
+          } else if (sub.equals("roles")) {
+            List<String> roleOptions =
+                Arrays.asList("registered", "bronze", "silver", "gold", "emerald", "diamond");
+            return filterPrefix(roleOptions, args[2]);
+          } else if (sub.equals("tables")) {
+            List<String> tableOptions = Arrays.asList("add", "remove", "list");
+            return filterPrefix(tableOptions, args[2]);
+          } else if (sub.equals("accounts")) {
+            Set<String> tables =
+                TowersForPGM.getInstance().config().databaseTables().getTables(TableType.ALL);
+            return filterPrefix(tables, args[2]);
+          }
+        }
+        if (args.length == 4) {
+          String sub = args[1].toLowerCase();
+          String subsub = args[2].toLowerCase();
+          if (sub.equals("tables") && (subsub.equals("add") || subsub.equals("remove"))) {
+            Set<String> tables =
+                TowersForPGM.getInstance().config().databaseTables().getTables(TableType.ALL);
+            return filterPrefix(tables, args[3]);
           }
         }
         break;

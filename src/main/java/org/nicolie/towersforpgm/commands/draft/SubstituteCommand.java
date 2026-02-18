@@ -62,9 +62,8 @@ public class SubstituteCommand implements CommandExecutor, TabCompleter {
     }
 
     if (teamNumber == -1) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.message("draft.substitute.invalidTeam")
-              .replace("{team}", teamName)));
+      matchPlayer.sendWarning(Component.text(
+          LanguageManager.message("draft.substitute.invalidTeam").replace("{team}", teamName)));
       return true;
     }
 
@@ -77,8 +76,7 @@ public class SubstituteCommand implements CommandExecutor, TabCompleter {
       return true;
     }
 
-    SubstituteResult result =
-        draft.substituteCaptainByTeam(teamNumber, newCaptain.getUniqueId());
+    SubstituteResult result = draft.substituteCaptainByTeam(teamNumber, newCaptain.getUniqueId());
 
     switch (result) {
       case SUCCESS:
@@ -148,10 +146,9 @@ public class SubstituteCommand implements CommandExecutor, TabCompleter {
 
     // Sugerir jugadores del mismo equipo (excepto el capitán actual)
     UUID currentCaptainUUID = draft.getCaptainByTeam(teamNumber);
-    String currentCaptainName = currentCaptainUUID != null 
-        ? Bukkit.getOfflinePlayer(currentCaptainUUID).getName() 
-        : null;
-    
+    String currentCaptainName =
+        currentCaptainUUID != null ? Bukkit.getOfflinePlayer(currentCaptainUUID).getName() : null;
+
     draft.getTeams().getAllTeam(teamNumber).stream()
         .filter(name -> !name.equals(currentCaptainName))
         .filter(name -> name.toLowerCase().startsWith(input.toLowerCase()))

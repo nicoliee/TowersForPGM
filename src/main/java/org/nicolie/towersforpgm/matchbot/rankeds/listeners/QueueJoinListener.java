@@ -11,6 +11,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.DiscordManager;
 import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
+import org.nicolie.towersforpgm.matchbot.rankeds.NicknameManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.match.Match;
@@ -58,6 +59,9 @@ public class QueueJoinListener extends ListenerAdapter {
     DiscordManager.getDiscordPlayer(discordId)
         .thenAccept(discordPlayer -> {
           if (discordPlayer != null) {
+            // Actualizar nickname del jugador
+            NicknameManager.updateNicknameToMinecraftUsername(discordPlayer.getPlayerUuid());
+
             Bukkit.getScheduler().runTask(plugin, () -> {
               Match match = MatchManager.getMatch();
               Teams teams = plugin.getDraft().getTeams();

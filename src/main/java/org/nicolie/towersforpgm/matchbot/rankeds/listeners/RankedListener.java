@@ -17,14 +17,17 @@ import org.nicolie.towersforpgm.draft.events.DraftEndEvent;
 import org.nicolie.towersforpgm.draft.events.DraftStartEvent;
 import org.nicolie.towersforpgm.draft.events.MatchmakingEndEvent;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
+import org.nicolie.towersforpgm.matchbot.rankeds.VoiceChannelManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.utils.MatchManager;
+import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.party.Party;
 
 public class RankedListener implements Listener {
   private static final TowersForPGM plugin = TowersForPGM.getInstance();
 
   private static final String QUEUE_ID = MatchBotConfig.getQueueID();
-  private static final String CHANNEL1_ID = MatchBotConfig.getTeam1ID();
-  private static final String CHANNEL2_ID = MatchBotConfig.getTeam2ID();
   private static final String INACTIVE_ID = MatchBotConfig.getInactiveID();
 
   private static Guild getBotGuild(JDA jda) {
@@ -58,15 +61,14 @@ public class RankedListener implements Listener {
             .forEach(member -> guild.moveVoiceMember(member, targetChannel).queue()));
   }
 
-  private static void movePlayerToChannel(UUID minecraftUUID, String channelId) {
-    if (!MatchBotConfig.isVoiceChatEnabled() || channelId == null || channelId.isEmpty()) return;
+  private static void movePlayerToChannel(UUID minecraftUUID, VoiceChannel targetChannel) {
+    if (!MatchBotConfig.isVoiceChatEnabled() || targetChannel == null) return;
 
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
 
     Guild guild = getBotGuild(jda);
-    VoiceChannel targetChannel = jda.getVoiceChannelById(channelId);
-    if (guild == null || targetChannel == null) return;
+    if (guild == null) return;
 
     DiscordManager.getDiscordPlayer(minecraftUUID)
         .thenAccept(discordPlayer -> {
@@ -83,19 +85,27 @@ public class RankedListener implements Listener {
   }
 
   public static void movePlayerToInactive(UUID minecraftUUID) {
-    movePlayerToChannel(minecraftUUID, INACTIVE_ID);
+    JDA jda = DiscordBot.getJDA();
+    if (jda == null) return;
+    VoiceChannel channel = jda.getVoiceChannelById(INACTIVE_ID);
+    if (channel != null) movePlayerToChannel(minecraftUUID, channel);
   }
 
   public static void movePlayerToQueue(UUID minecraftUUID) {
-    movePlayerToChannel(minecraftUUID, QUEUE_ID);
+    JDA jda = DiscordBot.getJDA();
+    if (jda == null) return;
+    VoiceChannel channel = jda.getVoiceChannelById(QUEUE_ID);
+    if (channel != null) movePlayerToChannel(minecraftUUID, channel);
   }
 
   public static void movePlayerToTeam1(UUID minecraftUUID) {
-    movePlayerToChannel(minecraftUUID, CHANNEL1_ID);
+    VoiceChannel channel = VoiceChannelManager.getTeam1Channel();
+    if (channel != null) movePlayerToChannel(minecraftUUID, channel);
   }
 
   public static void movePlayerToTeam2(UUID minecraftUUID) {
-    movePlayerToChannel(minecraftUUID, CHANNEL2_ID);
+    VoiceChannel channel = VoiceChannelManager.getTeam2Channel();
+    if (channel != null) movePlayerToChannel(minecraftUUID, channel);
   }
 
   @EventHandler
@@ -105,15 +115,48 @@ public class RankedListener implements Listener {
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
 
-    VoiceChannel channel1 = jda.getVoiceChannelById(CHANNEL1_ID);
-    if (channel1 == null) return;
+    // Obtener nombres de los equipos de PGM
+    Match match = MatchManager.getMatch();
+    if (match == null) return;
 
-    var uuidsToMove = new java.util.ArrayList<UUID>();
-    uuidsToMove.add(event.getCaptain1());
-    uuidsToMove.add(event.getCaptain2());
-    event.getPlayers().forEach(matchPlayer -> uuidsToMove.add(matchPlayer.getId()));
+    String team1Name = "Team 1";
+    String team2Name = "Team 2";
 
-    movePlayersToChannel(uuidsToMove, channel1);
+    try {
+      java.util.Collection<? extends Party> parties = match.getCompetitors();
+      if (parties.size() >= 2) {
+        java.util.Iterator<? extends Party> iterator = parties.iterator();
+        Party party1 = iterator.next();
+        Party party2 = iterator.next();
+        team1Name =
+            net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText()
+                .serialize(party1.getName());
+        team2Name =
+            net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText()
+                .serialize(party2.getName());
+      }
+    } catch (Exception e) {
+      // Usar nombres por defecto
+    }
+
+    // Calcular tamaño de equipos (capitanes + jugadores disponibles / 2)
+    int totalPlayers = 2 + event.getPlayers().size();
+    int team1Size = (totalPlayers + 1) / 2; // Redondear hacia arriba
+    int team2Size = totalPlayers / 2;
+
+    // Crear canales dinámicos
+    VoiceChannelManager.createTeamChannels(team1Name, team2Name, team1Size, team2Size)
+        .thenRun(() -> {
+          VoiceChannel channel1 = VoiceChannelManager.getTeam1Channel();
+          if (channel1 == null) return;
+
+          var uuidsToMove = new java.util.ArrayList<UUID>();
+          uuidsToMove.add(event.getCaptain1());
+          uuidsToMove.add(event.getCaptain2());
+          event.getPlayers().forEach(matchPlayer -> uuidsToMove.add(matchPlayer.getId()));
+
+          movePlayersToChannel(uuidsToMove, channel1);
+        });
   }
 
   @EventHandler
@@ -123,7 +166,7 @@ public class RankedListener implements Listener {
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
     DiscordBot.setBlacklistCurrentMap(true);
-    VoiceChannel channel2 = jda.getVoiceChannelById(CHANNEL2_ID);
+    VoiceChannel channel2 = VoiceChannelManager.getTeam2Channel();
     if (channel2 == null) return;
 
     // Recolectar todos los UUIDs del equipo 2
@@ -144,24 +187,87 @@ public class RankedListener implements Listener {
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
     DiscordBot.setBlacklistCurrentMap(true);
-    VoiceChannel channel1 = jda.getVoiceChannelById(CHANNEL1_ID);
-    VoiceChannel channel2 = jda.getVoiceChannelById(CHANNEL2_ID);
-    if (channel1 == null || channel2 == null) return;
 
-    var team1UUIDs = new java.util.ArrayList<UUID>();
-    event.getTeam1().forEach(playerName -> {
-      Player player = Bukkit.getPlayer(playerName);
-      if (player != null) team1UUIDs.add(player.getUniqueId());
-    });
+    // Si los canales no existen (matchmaking sin draft), crearlos ahora
+    if (VoiceChannelManager.getTeam1Channel() == null
+        || VoiceChannelManager.getTeam2Channel() == null) {
+      // Obtener nombres de los equipos de PGM
+      String team1Name = "Team 1";
+      String team2Name = "Team 2";
 
-    var team2UUIDs = new java.util.ArrayList<UUID>();
-    event.getTeam2().forEach(playerName -> {
-      Player player = Bukkit.getPlayer(playerName);
-      if (player != null) team2UUIDs.add(player.getUniqueId());
-    });
+      try {
+        java.util.List<String> team1List = event.getTeam1();
+        if (!team1List.isEmpty()) {
+          Player player = Bukkit.getPlayer(team1List.get(0));
+          if (player != null) {
+            tc.oc.pgm.api.match.Match match = PGM.get().getMatchManager().getMatch(player);
+            if (match != null) {
+              java.util.Collection<? extends Party> parties = match.getCompetitors();
+              if (parties.size() >= 2) {
+                java.util.Iterator<? extends Party> iterator = parties.iterator();
+                Party party1 = iterator.next();
+                Party party2 = iterator.next();
+                team1Name =
+                    net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+                        .plainText()
+                        .serialize(party1.getName());
+                team2Name =
+                    net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+                        .plainText()
+                        .serialize(party2.getName());
+              }
+            }
+          }
+        }
+      } catch (Exception e) {
+        // Usar nombres por defecto
+      }
 
-    movePlayersToChannel(team1UUIDs, channel1);
-    movePlayersToChannel(team2UUIDs, channel2);
+      int team1Size = event.getTeam1().size();
+      int team2Size = event.getTeam2().size();
+
+      VoiceChannelManager.createTeamChannels(team1Name, team2Name, team1Size, team2Size)
+          .thenRun(() -> {
+            VoiceChannel channel1 = VoiceChannelManager.getTeam1Channel();
+            VoiceChannel channel2 = VoiceChannelManager.getTeam2Channel();
+            if (channel1 == null || channel2 == null) return;
+
+            var team1UUIDs = new java.util.ArrayList<UUID>();
+            event.getTeam1().forEach(playerName -> {
+              Player player = Bukkit.getPlayer(playerName);
+              if (player != null) team1UUIDs.add(player.getUniqueId());
+            });
+
+            var team2UUIDs = new java.util.ArrayList<UUID>();
+            event.getTeam2().forEach(playerName -> {
+              Player player = Bukkit.getPlayer(playerName);
+              if (player != null) team2UUIDs.add(player.getUniqueId());
+            });
+
+            movePlayersToChannel(team1UUIDs, channel1);
+            movePlayersToChannel(team2UUIDs, channel2);
+          });
+    } else {
+      // Los canales ya existen (draft terminado)
+      VoiceChannel channel1 = VoiceChannelManager.getTeam1Channel();
+      VoiceChannel channel2 = VoiceChannelManager.getTeam2Channel();
+      if (channel1 == null || channel2 == null) return;
+
+      var team1UUIDs = new java.util.ArrayList<UUID>();
+      event.getTeam1().forEach(playerName -> {
+        Player player = Bukkit.getPlayer(playerName);
+        if (player != null) team1UUIDs.add(player.getUniqueId());
+      });
+
+      var team2UUIDs = new java.util.ArrayList<UUID>();
+      event.getTeam2().forEach(playerName -> {
+        Player player = Bukkit.getPlayer(playerName);
+        if (player != null) team2UUIDs.add(player.getUniqueId());
+      });
+
+      movePlayersToChannel(team1UUIDs, channel1);
+      movePlayersToChannel(team2UUIDs, channel2);
+    }
   }
 
   private boolean shouldProcessEvent() {

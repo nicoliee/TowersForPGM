@@ -11,11 +11,11 @@ import tc.oc.pgm.api.match.event.MatchAfterLoadEvent;
 import tc.oc.pgm.teams.Team;
 import tc.oc.pgm.teams.TeamMatchModule;
 
-public class MatchAfterLoadListener implements Listener {
+public class PrivateMatchListener implements Listener {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
   private final Queue queue;
 
-  public MatchAfterLoadListener(Queue queue) {
+  public PrivateMatchListener(Queue queue) {
     this.queue = queue;
   }
 

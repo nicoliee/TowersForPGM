@@ -123,7 +123,7 @@ public final class TowersForPGM extends JavaPlugin {
         utilities,
         draftTurnManager);
     DraftDisplayManager draftDisplayManager =
-        new DraftDisplayManager(this, this.ConfigManager, draftState, captains, teams, utilities);
+        new DraftDisplayManager(this, this.ConfigManager, captains, teams, utilities);
     draftPickManager.setDisplayManager(draftDisplayManager);
     draftDisplayManager.setPickManager(draftPickManager);
 
@@ -138,14 +138,13 @@ public final class TowersForPGM extends JavaPlugin {
         availablePlayers,
         teams,
         utilities);
-    pickInventory =
-        new PicksGUI(this, this.ConfigManager, draft, captains, availablePlayers, teams);
+    pickInventory = new PicksGUI(this, draft, captains, availablePlayers, teams);
     getServer().getPluginManager().registerEvents(pickInventory, this);
 
     // Registrar listeners para reroll
     getServer()
         .getPluginManager()
-        .registerEvents(new org.nicolie.towersforpgm.listeners.RerollItemListener(), this);
+        .registerEvents(new org.nicolie.towersforpgm.draft.listeners.RerollItemListener(), this);
     getServer().getPluginManager().registerEvents(draft.getRerollOptionsGUI(), this);
 
     // Inicializar el matchmaking
@@ -206,6 +205,16 @@ public final class TowersForPGM extends JavaPlugin {
         // Registrar listeners de gestión de canales de voz para ranked
         getServer().getPluginManager().registerEvents(new RankedListener(), this);
         getServer().getPluginManager().registerEvents(new RankedFinishListener(), this);
+
+        // Limpiar canales de voz [Ranked] al iniciar
+        org.bukkit.Bukkit.getScheduler()
+            .runTaskLater(
+                this,
+                () -> {
+                  org.nicolie.towersforpgm.matchbot.rankeds.VoiceChannelManager
+                      .cleanupRankedChannelsOnStartup();
+                },
+                40L);
       }
     }
   }
@@ -216,6 +225,12 @@ public final class TowersForPGM extends JavaPlugin {
 
   @Override
   public void onDisable() {
+    // Limpiar canales de voz [Ranked] al cerrar el plugin
+    if (isMatchBotEnabled && MatchBotConfig.isVoiceChatEnabled()) {
+      org.nicolie.towersforpgm.matchbot.rankeds.VoiceChannelManager
+          .cleanupRankedChannelsOnStartup();
+    }
+
     // Desconectar de las bases de datos
     if (mysqlDatabaseManager != null) {
       mysqlDatabaseManager.disconnect();

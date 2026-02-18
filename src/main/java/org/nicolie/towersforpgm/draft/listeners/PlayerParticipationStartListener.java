@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.listeners;
+package org.nicolie.towersforpgm.draft.listeners;
 
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
@@ -8,53 +8,23 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.draft.core.Teams;
-import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.events.PlayerParticipationStartEvent;
-import tc.oc.pgm.events.PlayerParticipationStopEvent;
-import tc.oc.pgm.events.PlayerPartyChangeEvent;
 import tc.oc.pgm.join.JoinRequest;
-import tc.oc.pgm.teams.Team;
 
-public class PlayerParticipationListener implements Listener {
+public class PlayerParticipationStartListener implements Listener {
   private final Teams teams;
   private final Captains captains;
   private final TowersForPGM plugin = TowersForPGM.getInstance();
 
-  public PlayerParticipationListener(Teams teams, Captains captains) {
+  public PlayerParticipationStartListener(Teams teams, Captains captains) {
     this.teams = teams;
     this.captains = captains;
   }
 
-  // Manejar el cambio de equipo con comando en teams
-  @EventHandler
-  public void onTeamChange(PlayerPartyChangeEvent event) {
-    if (event.getMatch().isFinished()) return;
-    if (captains.isMatchWithCaptains()) {
-      JoinRequest request =
-          event.getRequest() instanceof JoinRequest ? (JoinRequest) event.getRequest() : null;
-      if (request == null || !request.isForcedOr(JoinRequest.Flag.FORCE)) return;
-
-      String playerName = event.getPlayer().getBukkit().getName();
-
-      // Pasa cuando una persona se desconecta, no hacer nada en este caso.
-      if (event.getNewParty() == null) return;
-
-      if (event.getNewParty() instanceof Team) {
-        Team newTeam = (Team) event.getNewParty();
-        int teamNumber = teams.getTeamNumber(newTeam);
-        if (teamNumber != -1) {
-          teams.forceTeam(event.getPlayer(), teamNumber);
-        } else if (newTeam.isObserving() && event.getOldParty() != null) {
-          teams.removeFromAnyTeam(playerName);
-        }
-      }
-    }
-  }
-
   // Meterlo a su team si hay draft
   @EventHandler
-  public void onParticipate(PlayerParticipationStartEvent event) {
+  public void onPlayerParticipationStart(PlayerParticipationStartEvent event) {
     if (captains.isMatchWithCaptains()) {
       JoinRequest request = null;
       if (event.getRequest() instanceof JoinRequest) {
@@ -96,25 +66,6 @@ public class PlayerParticipationListener implements Listener {
         event.cancel(Component.text(LanguageManager.message("draft.join.notAllowed")));
         return;
       }
-    }
-  }
-
-  // No dejar que un jugador se salga si es ranked
-  @EventHandler
-  public void onPlayerLeave(PlayerParticipationStopEvent event) {
-    JoinRequest request = null;
-
-    // Verifica si la solicitud es de tipo JoinRequest
-    if (event.getRequest() instanceof JoinRequest) {
-      request = (JoinRequest) event.getRequest();
-    }
-
-    if (request.isForcedOr(JoinRequest.Flag.FORCE)) {
-      return;
-    }
-    if (Queue.isRanked() && event.getMatch().isRunning()) {
-      event.cancel(Component.text(LanguageManager.message("ranked.notAllowed")));
-      return;
     }
   }
 }
