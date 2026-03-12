@@ -11,6 +11,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.nicolie.towersforpgm.TowersForPGM;
@@ -18,6 +20,9 @@ import org.nicolie.towersforpgm.database.DiscordManager;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.RegisterCodeManager;
+import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.bukkit.Sounds;
 
 public class LinkCommand extends ListenerAdapter {
 
@@ -41,14 +46,6 @@ public class LinkCommand extends ListenerAdapter {
   @Override
   public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
     if (!event.getName().equals(NAME)) return;
-
-    // if (!MatchBotConfig.isVoiceChatEnabled()) {
-    //   event
-    //       .reply("❌ " + LanguageManager.message("matchbot.register.system-disabled"))
-    //       .setEphemeral(true)
-    //       .queue();
-    //   return;
-    // }
 
     OptionMapping codeOption = event.getOption(OPTION_CODE);
     if (codeOption == null) {
@@ -169,6 +166,7 @@ public class LinkCommand extends ListenerAdapter {
                                   "<@" + discordId + ">",
                                   true);
                           hook.editOriginalEmbeds(embed.build()).queue();
+                          sendPlayerMessage(playerUuid, event.getUser().getGlobalName());
                         } else {
                           hook.editOriginal(
                                   "❌ " + LanguageManager.message("matchbot.register.link-error"))
@@ -233,6 +231,17 @@ public class LinkCommand extends ListenerAdapter {
       TowersForPGM.getInstance()
           .getLogger()
           .warning("Error al intentar cambiar apodo: " + e.getMessage());
+    }
+  }
+
+  private void sendPlayerMessage(UUID minecraftPlayer, String discordPlayer) {
+    MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(minecraftPlayer);
+    if (matchPlayer != null) {
+      matchPlayer.sendMessage(Component.translatable(
+              "matchbot.register.linkedAccountMessage",
+              Component.text("[@" + discordPlayer + "]").color(NamedTextColor.AQUA))
+          .color(NamedTextColor.GREEN));
+      matchPlayer.playSound(Sounds.RAINDROPS);
     }
   }
 }

@@ -1,6 +1,5 @@
 package org.nicolie.towersforpgm.commands;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,7 +8,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
@@ -48,21 +46,6 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(LanguageManager.message("system.languageSet"));
         return true;
 
-      case "reloadmessages":
-        File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        sender.sendMessage(LanguageManager.message("system.reload.start"));
-
-        if (messagesFile.exists()) {
-          if (!messagesFile.delete()) {
-            sender.sendMessage(LanguageManager.message("system.reload.error"));
-            return true;
-          }
-        }
-        plugin.saveResource("messages.yml", false);
-        LanguageManager.reload();
-        sender.sendMessage(LanguageManager.message("system.reload.success"));
-        return true;
-
       case "dbreload":
         sender.sendMessage("§8[§bTowersForPGM§8] §7Reloading database connection...");
         if (plugin.reloadDatabase()) {
@@ -74,9 +57,6 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
         return true;
       case "test":
         // For testing purposes only, may change depending on what is being added/tested
-        StatsManager.getEloHistory("nicolieeee", "RankedT6").thenAccept(eloHistory -> {
-          sender.sendMessage("§8[§bTowersForPGM§8] §7ELO History: " + eloHistory);
-        });
         return true;
       default:
         sender.sendMessage(
@@ -90,7 +70,7 @@ public class TowersForPGMCommand implements CommandExecutor, TabCompleter {
       CommandSender sender, Command command, String alias, String[] args) {
     if (args.length == 1) {
       // Lista de opciones posibles
-      List<String> options = Arrays.asList("setlanguage", "reloadmessages", "dbreload");
+      List<String> options = Arrays.asList("setlanguage", "dbreload");
 
       // Filtrar las opciones que comienzan con el texto ingresado por el usuario
       String input = args[0].toLowerCase();

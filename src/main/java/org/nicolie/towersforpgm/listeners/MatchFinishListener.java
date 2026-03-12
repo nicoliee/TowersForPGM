@@ -30,8 +30,11 @@ import tc.oc.pgm.teams.TeamMatchModule;
 
 public class MatchFinishListener implements Listener {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
+  private final MatchStatsListener matchStatsListener;
 
-  public MatchFinishListener() {}
+  public MatchFinishListener(MatchStatsListener matchStatsListener) {
+    this.matchStatsListener = matchStatsListener;
+  }
 
   @EventHandler
   public void onMatchFinish(MatchFinishEvent event) {
@@ -210,16 +213,19 @@ public class MatchFinishListener implements Listener {
       Map<String, TeamInfo> playerTeamMap,
       Map<String, MatchStats> playerMatchStats) {
     MatchHistoryManager.generateMatchId(table)
-        .thenCompose(matchId -> MatchHistoryManager.saveMatch(
-            matchId,
-            table,
-            matchInfo,
-            ranked,
-            playerStatsList,
-            eloChanges,
-            teams,
-            playerTeamMap,
-            playerMatchStats))
+        .thenCompose(matchId -> {
+          matchStatsListener.setMatchURL(matchId);
+          return MatchHistoryManager.saveMatch(
+              matchId,
+              table,
+              matchInfo,
+              ranked,
+              playerStatsList,
+              eloChanges,
+              teams,
+              playerTeamMap,
+              playerMatchStats);
+        })
         .exceptionally(ex -> {
           TowersForPGM.getInstance()
               .getLogger()

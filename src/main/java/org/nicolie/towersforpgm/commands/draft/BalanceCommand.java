@@ -11,10 +11,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.core.Matchmaking;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
 
 public class BalanceCommand implements CommandExecutor {
   private final Matchmaking matchmaking;
@@ -25,37 +25,37 @@ public class BalanceCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (!(sender instanceof Player)) {
-      sender.sendMessage(LanguageManager.message("errors.noPlayer"));
+      audience.sendWarning(Component.translatable("command.onlyPlayers"));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
-    MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     if (match.isRunning() || match.isFinished()) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.message("draft.captains.matchStarted")));
+      audience.sendWarning(Component.translatable("admin.start.matchRunning"));
       return true;
     }
 
     if (args.length < 2) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.balance.usage")));
+      audience.sendWarning(Component.translatable(
+          "command.incorrectUsage", Component.text("/balance <playerName1> <playerName2>")));
       return true;
     }
     if (Bukkit.getOnlinePlayers().size() < 2) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.message("draft.captains.notEnoughPlayers")));
+      audience.sendWarning(Component.translatable("draft.notEnoughPlayers"));
       return true;
     }
     if (args[0].equalsIgnoreCase(args[1])) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.usage")));
+      audience.sendWarning(Component.translatable(
+          "command.incorrectUsage", Component.text("/balance <playerName1> <playerName2>")));
       return true;
     }
     if (Bukkit.getPlayer(args[0]) == null || Bukkit.getPlayer(args[1]) == null) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.offline")));
+      audience.sendWarning(Component.translatable("draft.captains.offline"));
       return true;
     }
     if (Queue.isRanked()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.notAllowed")));
+      audience.sendWarning(Component.translatable("ranked.notAllowed"));
       return true;
     }
 

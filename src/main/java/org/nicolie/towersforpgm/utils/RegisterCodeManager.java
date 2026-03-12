@@ -8,7 +8,7 @@ public class RegisterCodeManager {
 
   private static final Map<UUID, String> activeCodes = new ConcurrentHashMap<>();
   private static final Map<UUID, Long> codeExpiry = new ConcurrentHashMap<>();
-  private static final long CODE_EXPIRY_MINUTES = 10;
+  public static final long CODE_EXPIRY_MINUTES = 2;
 
   public static void storeCode(UUID playerUuid, String code) {
     activeCodes.put(playerUuid, code);

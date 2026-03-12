@@ -1,7 +1,7 @@
 package org.nicolie.towersforpgm.commands.ranked;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -9,11 +9,13 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.models.top.Top;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.rankeds.Rank;
-import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
 import tc.oc.pgm.util.bukkit.Sounds;
 import tc.oc.pgm.util.text.TextFormatter;
 
@@ -22,20 +24,22 @@ public class EloCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!(sender instanceof Player)) {
-      sender.sendMessage(
-          LanguageManager.message("ranked.prefix") + LanguageManager.message("errors.noPlayer"));
+    Audience audience = Audience.get(sender);
+
+    if (!(sender instanceof Player) && args.length == 0) {
+      audience.sendWarning(Queue.RANKED_PREFIX
+          .append(Component.space())
+          .append(Component.translatable("command.specifyPlayer")));
       return true;
     }
-    MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
-    Match match = matchPlayer.getMatch();
-    String map = match.getMap().getName();
-    boolean isRankedMap = plugin.config().ranked().isMapRanked(map);
-    boolean matchInProgress = match != null && match.isRunning() && matchPlayer.isParticipating();
 
-    if (!isRankedMap || matchInProgress) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.prefix")
-          + LanguageManager.message("system.notAvailable")));
+    Match match = MatchManager.getMatch();
+    boolean isRankedMap =
+        match != null && plugin.config().ranked().isMapRanked(match.getMap().getName());
+
+    if (!isRankedMap) {
+      audience.sendWarning(Queue.RANKED_PREFIX.append(
+          Component.space().append(Component.translatable("command.emptyResult"))));
       return true;
     }
     String table = plugin.config().databaseTables().getRankedDefaultTable();
@@ -48,20 +52,25 @@ public class EloCommand implements CommandExecutor {
           page = 1;
         }
       }
-      sendEloTop(sender, matchPlayer, table, page);
+      sendEloTop(sender, table, page);
     } else {
-      sendEloMessage(sender, matchPlayer, table, args);
+      sendEloMessage(audience, sender, table, args);
     }
     return true;
   }
 
   private void sendEloMessage(
-      CommandSender sender, MatchPlayer matchPlayer, String table, String[] args) {
-    matchPlayer.playSound(Sounds.INVENTORY_CLICK);
+      Audience audience, CommandSender sender, String table, String[] args) {
+    MatchPlayer matchPlayer =
+        sender instanceof Player ? PGM.get().getMatchManager().getPlayer((Player) sender) : null;
+
+    audience.playSound(Sounds.INVENTORY_CLICK);
     String targetName = args.length > 0 ? args[0] : matchPlayer.getNameLegacy();
     StatsManager.getStats(table, targetName).thenAccept(stats -> {
       if (stats == null) {
-        matchPlayer.sendWarning(Component.text(LanguageManager.message("stats.noStats")));
+        audience.sendWarning(Queue.RANKED_PREFIX
+            .append(Component.space())
+            .append(Component.translatable("command.playerNotFound")));
         return;
       }
 
@@ -75,26 +84,36 @@ public class EloCommand implements CommandExecutor {
       String eloMessage = rank.getPrefixedRank(true) + " " + headingName + "§8: " + rank.getColor()
           + stats.getElo() + " §8[" + maxRank.getColor() + stats.getMaxElo() + "§8]";
 
-      matchPlayer.sendMessage(Component.text(eloMessage));
+      audience.sendMessage(Component.text(eloMessage));
     });
   }
 
-  private void sendEloTop(CommandSender sender, MatchPlayer matchPlayer, String table, int page) {
-    matchPlayer.playSound(Sounds.INVENTORY_CLICK);
+  private void sendEloTop(CommandSender sender, String table, int page) {
+    Audience audience = Audience.get(sender);
+    audience.playSound(Sounds.INVENTORY_CLICK);
     final int PAGE_SIZE = 5;
     StatsManager.getTop(table, "elo", PAGE_SIZE, page).thenAccept(topResult -> {
       if (topResult == null
           || topResult.getData() == null
           || topResult.getData().isEmpty()) {
-        matchPlayer.sendWarning(Component.text(
-            LanguageManager.message("ranked.prefix") + LanguageManager.message("stats.noPage")));
+        audience.sendWarning(Queue.RANKED_PREFIX
+            .append(Component.space())
+            .append(Component.translatable("command.emptyResult")));
         return;
       }
-      matchPlayer.sendMessage(TextFormatter.horizontalLineHeading(
+      int totalPages = topResult.getTotalPages(PAGE_SIZE);
+      audience.sendMessage(TextFormatter.horizontalLineHeading(
           sender,
-          Component.text("Top " + LanguageManager.message("stats.elo") + " §8[§f" + page + "§6/§f"
-              + topResult.getTotalPages(PAGE_SIZE) + "§8]"),
-          TextColor.color(0xFFFFFF),
+          Component.text("Top Elo")
+              .append(Component.space())
+              .append(Component.text("(").color(NamedTextColor.DARK_AQUA))
+              .append(Component.translatable(
+                      "command.simplePageHeader",
+                      Component.text(page).color(NamedTextColor.AQUA),
+                      Component.text(totalPages).color(NamedTextColor.AQUA))
+                  .color(NamedTextColor.DARK_AQUA))
+              .append(Component.text(")").color(NamedTextColor.DARK_AQUA)),
+          NamedTextColor.WHITE,
           TextFormatter.GUARANTEED_NO_WRAP_CHAT_PAGE_WIDTH * 3));
 
       int startIndex = (page - 1) * PAGE_SIZE;
@@ -110,10 +129,10 @@ public class EloCommand implements CommandExecutor {
         int position = startIndex + (++index);
         String line = String.format(
             "%d. %s§8: " + rank.getColor() + "%d", position, user, entry.getValueAsInt());
-        matchPlayer.sendMessage(Component.text(line));
+        audience.sendMessage(Component.text(line));
       }
-      matchPlayer.sendMessage(TextFormatter.horizontalLine(
-          TextColor.color(0xFFFFFF), TextFormatter.GUARANTEED_NO_WRAP_CHAT_PAGE_WIDTH * 3));
+      audience.sendMessage(TextFormatter.horizontalLine(
+          NamedTextColor.WHITE, TextFormatter.GUARANTEED_NO_WRAP_CHAT_PAGE_WIDTH * 3));
     });
   }
 }

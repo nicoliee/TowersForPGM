@@ -17,9 +17,9 @@ import org.nicolie.towersforpgm.draft.core.Matchmaking;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedStart;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.rankeds.RankedItem;
 import org.nicolie.towersforpgm.rankeds.RankedPlayers;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.event.MatchStartEvent;
@@ -49,8 +49,9 @@ public class MatchStarter {
 
     if (currentSize < plugin.config().ranked().getRankedMinSize()) {
       queueState.setRanked(false);
-      match.sendWarning(
-          Component.text(getRankedPrefix() + LanguageManager.message("ranked.cancelled")));
+      match.sendWarning(Queue.RANKED_PREFIX
+          .append(Component.space())
+          .append(Component.translatable("broadcast.startCancel")));
       return;
     }
 
@@ -149,11 +150,10 @@ public class MatchStarter {
     eloFuture
         .thenAccept(eloList -> startDraftOrMatchmaking(match, eloList, rankedMatchPlayers))
         .exceptionally(throwable -> {
-          plugin
-              .getLogger()
-              .severe(LanguageManager.message("ranked.error.getElo") + throwable.getMessage());
-          match.sendWarning(
-              Component.text(getRankedPrefix() + LanguageManager.message("ranked.error.getData")));
+          plugin.getLogger().severe("Error al obtener ELO: " + throwable.getMessage());
+          match.sendWarning(Queue.RANKED_PREFIX
+              .append(Component.space())
+              .append(Component.translatable("command.emptyResult")));
           queueState.removeEloCache(table);
           return null;
         });
@@ -187,9 +187,5 @@ public class MatchStarter {
           randomizeOrder,
           allowReroll);
     }
-  }
-
-  private String getRankedPrefix() {
-    return LanguageManager.message("ranked.prefix");
   }
 }

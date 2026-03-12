@@ -3,9 +3,9 @@ package org.nicolie.towersforpgm.draft.core;
 import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
@@ -57,12 +57,14 @@ public class Utilities {
       topPlayers = topPlayers.subList(
           0, Math.min(topPlayers.size(), 1)); // Limitar a los 1 mejores jugadores
     }
-    StringBuilder suggestionsBuilder = buildLists(topPlayers, "§b", true);
+    Component suggestionsComponent = buildLists(topPlayers, NamedTextColor.AQUA, true);
     if (currentCaptain != null) {
-      String suggestions = LanguageManager.message("draft.captains.suggestions")
-          .replace("{suggestions}", suggestionsBuilder.toString());
-      currentCaptain.playSound(Sounds.RAINDROPS);
-      currentCaptain.sendMessage(Component.text(suggestions));
+
+      Component suggestions = Component.translatable(
+              "draft.captains.suggestion", suggestionsComponent)
+          .color(NamedTextColor.GRAY);
+      currentCaptain.playSound(Sounds.ITEM_PICKUP);
+      currentCaptain.sendMessage(suggestions);
     }
   }
 
@@ -92,23 +94,35 @@ public class Utilities {
     return topPlayers.get(0); // Devolver el primer jugador de la lista aleatoria
   }
 
-  public StringBuilder buildLists(List<String> players, String color, boolean useOr) {
-    StringBuilder suggestionsBuilder = new StringBuilder();
-    for (int i = 0; i < players.size(); i++) {
-      suggestionsBuilder.append(color).append(players.get(i));
-      if (i < players.size() - 2) {
-        suggestionsBuilder.append("§8, ");
-      } else if (i == players.size() - 2) {
-        suggestionsBuilder.append(" §8");
-        if (useOr) {
-          suggestionsBuilder.append(LanguageManager.message("system.or"));
-        } else {
-          suggestionsBuilder.append(LanguageManager.message("system.and"));
-        }
-        suggestionsBuilder.append(" §b");
+  public Component buildLists(List<String> players, NamedTextColor color, boolean useOr) {
+    if (players.isEmpty()) {
+      return Component.empty();
+    }
+
+    if (players.size() == 1) {
+      return Component.text(players.get(0), color);
+    }
+
+    if (players.size() == 2) {
+      String key = useOr ? "misc.or" : "misc.list.pair";
+      return Component.translatable(
+          key, Component.text(players.get(0), color), Component.text(players.get(1), color));
+    }
+
+    // Para 3 o más elementos
+    Component result = Component.text(players.get(0), color);
+    for (int i = 1; i < players.size(); i++) {
+      if (i == players.size() - 1) {
+        // Último elemento
+        String key = useOr ? "misc.or" : "misc.list.end";
+        result = Component.translatable(key, result, Component.text(players.get(i), color));
+      } else {
+        // Elementos del medio
+        result = Component.translatable(
+            "misc.list.middle", result, Component.text(players.get(i), color));
       }
     }
-    return suggestionsBuilder;
+    return result;
   }
 
   private static final int DEFAULT_DURATION = 20;
@@ -131,14 +145,16 @@ public class Utilities {
   private static BukkitRunnable readyReminderTask;
 
   public void readyReminder(int delay, int period) {
-    String readyMessage = LanguageManager.message("draft.captains.ready");
+    Component readyMessage = Component.translatable("draft.ready.tip", Component.text("/ready"))
+        .color(NamedTextColor.GOLD)
+        .color(NamedTextColor.AQUA);
     MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
     MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
     if (captain1 != null) {
-      captain1.sendActionBar(Component.text(readyMessage));
+      captain1.sendActionBar(readyMessage);
     }
     if (captain2 != null) {
-      captain2.sendActionBar(Component.text(readyMessage));
+      captain2.sendActionBar(readyMessage);
     }
     readyReminderTask = new BukkitRunnable() {
       @Override
@@ -150,11 +166,11 @@ public class Utilities {
         MatchPlayer currentCaptain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
         MatchPlayer currentCaptain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
         if (!captains.isReady1() && currentCaptain1 != null) {
-          currentCaptain1.sendMessage(Component.text(readyMessage));
+          currentCaptain1.sendMessage(readyMessage);
           currentCaptain1.playSound(Sounds.DIRECT_MESSAGE);
         }
         if (!captains.isReady2() && currentCaptain2 != null) {
-          currentCaptain2.sendMessage(Component.text(readyMessage));
+          currentCaptain2.sendMessage(readyMessage);
           currentCaptain2.playSound(Sounds.DIRECT_MESSAGE);
         }
       }

@@ -2,7 +2,7 @@ package org.nicolie.towersforpgm.draft.components;
 
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.title.Title;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.nicolie.towersforpgm.TowersForPGM;
@@ -10,13 +10,13 @@ import org.nicolie.towersforpgm.configs.ConfigManager;
 import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.draft.core.Utilities;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.util.bukkit.Sounds;
 
-public class DraftDisplayManager {
+public class BossbarTimer {
   private final ConfigManager configManager;
   private final Captains captains;
   private final Teams teams;
@@ -27,7 +27,7 @@ public class DraftDisplayManager {
   private BossBar currentBar;
   private BukkitTask currentTimer;
 
-  public DraftDisplayManager(
+  public BossbarTimer(
       TowersForPGM plugin,
       ConfigManager configManager,
       Captains captains,
@@ -50,22 +50,11 @@ public class DraftDisplayManager {
     return String.format("%02d:%02d", minutes, seconds);
   }
 
-  public static void sendTitle(MatchPlayer player) {
-    Title title = Title.title(
-        Component.text(LanguageManager.message("draft.captains.title")),
-        Component.text(LanguageManager.message("draft.captains.subtitle")),
-        Title.Times.times(
-            java.time.Duration.ofMillis(500),
-            java.time.Duration.ofMillis(3000),
-            java.time.Duration.ofMillis(500)));
-    player.showTitle(title);
-  }
-
   public void startTimer(
-      int duration, String message, BossBar.Color color, Runnable onTick, Runnable onComplete) {
+      int duration, Component message, BossBar.Color color, Runnable onTick, Runnable onComplete) {
     cancelTimer();
 
-    currentBar = BossBar.bossBar(Component.text(message), 1f, color, BossBar.Overlay.PROGRESS);
+    currentBar = BossBar.bossBar(message, 1f, color, BossBar.Overlay.PROGRESS);
     MatchManager.getMatch().showBossBar(currentBar);
 
     int[] timeLeft = {duration};
@@ -87,9 +76,9 @@ public class DraftDisplayManager {
     }.runTaskTimer(plugin, 0, 20);
   }
 
-  public void updateBarMessage(String message) {
+  public void updateBarMessage(Component message) {
     if (currentBar != null) {
-      currentBar.name(Component.text(message));
+      currentBar.name(message);
     }
   }
 
@@ -108,23 +97,23 @@ public class DraftDisplayManager {
     if (!configManager.draft().isDraftTimer()) return;
 
     int duration = utilities.timerDuration();
-    MatchPlayer currentCaptain =
-        PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
-    String captainName = currentCaptain != null
-        ? (captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name())
-        : teams.getTeamName(captains.isCaptain1Turn() ? 1 : 2);
-    String captainColor = teams.getTeamColor(captains.isCaptain1Turn() ? 1 : 2);
-    String baseMessage = LanguageManager.message("draft.captains.bossbar")
-        .replace("{captain}", captainColor + captainName);
-
     int[] timeLeft = {duration};
+
     startTimer(
         duration,
-        baseMessage.replace("{time}", formatTime(duration)),
+        Component.translatable(
+            "draft.picks.bossbar",
+            captainName(),
+            Component.text(formatTime(duration)).color(NamedTextColor.GREEN)),
         BossBar.Color.YELLOW,
         () -> {
           timeLeft[0]--;
-          updateBarMessage(baseMessage.replace("{time}", formatTime(timeLeft[0])));
+          updateBarMessage(Component.translatable("draft.picks.bossbar", captainName())
+              .append(Component.space())
+              .append(Component.translatable(
+                      "misc.timeRemaining",
+                      Component.text(formatTime(timeLeft[0])).color(NamedTextColor.GREEN))
+                  .color(NamedTextColor.AQUA)));
 
           if (timeLeft[0] == duration - 5) utilities.suggestPicksForCaptains();
 
@@ -144,5 +133,16 @@ public class DraftDisplayManager {
 
   public void removeBossbar() {
     cancelTimer();
+  }
+
+  private Component captainName() {
+    int currentCaptainNumber = captains.isCaptain1Turn() ? 1 : 2;
+    Party team = teams.getTeam(currentCaptainNumber);
+    MatchPlayer currentCaptain =
+        PGM.get().getMatchManager().getPlayer(captains.getCurrentCaptain());
+    return currentCaptain != null
+        ? MatchManager.getPrefixedName(
+            captains.isCaptain1Turn() ? captains.getCaptain1Name() : captains.getCaptain2Name())
+        : team.getName();
   }
 }

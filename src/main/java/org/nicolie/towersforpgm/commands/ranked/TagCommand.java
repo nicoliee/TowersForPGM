@@ -13,11 +13,11 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedNotify;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
 
 public class TagCommand implements CommandExecutor {
   private static long lastExecution = 0;
@@ -25,11 +25,12 @@ public class TagCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (!TowersForPGM.getInstance().isMatchBotEnabled()) {
       return true;
     }
     if (!(sender instanceof Player)) {
-      SendMessage.sendToConsole(LanguageManager.message("errors.noPlayer"));
+      audience.sendWarning(Component.translatable("command.onlyPlayers"));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
@@ -37,13 +38,13 @@ public class TagCommand implements CommandExecutor {
     MatchPlayer player = match.getPlayer((Player) sender);
     boolean isRankedMap = TowersForPGM.getInstance().config().ranked().isMapRanked(map);
     if (!isRankedMap) {
-      player.sendWarning(Component.text(LanguageManager.message("ranked.prefix")
-          + LanguageManager.message("ranked.notRankedMap")));
+      audience.sendWarning(Queue.RANKED_PREFIX
+          .append(Component.space())
+          .append(Component.translatable("ranked.notRankedMap"), Component.text(map)));
       return true;
     }
     if (player.isParticipating()) {
-      player.sendWarning(
-          Component.text(LanguageManager.message("ranked.matchbot.tagNotAvailable")));
+      player.sendWarning(Component.translatable("ranked.matchbot.tagNotAvailable"));
       return true;
     }
 
@@ -51,8 +52,9 @@ public class TagCommand implements CommandExecutor {
     int onlinePlayers = match.getPlayers().size();
     int minSize = TowersForPGM.getInstance().config().ranked().getRankedMinSize();
     if (onlinePlayers >= minSize) {
-      player.sendWarning(Component.text(LanguageManager.message("ranked.prefix")
-          + LanguageManager.message("ranked.matchbot.tagNotNeeded")));
+      player.sendWarning(Queue.RANKED_PREFIX
+          .append(Component.space())
+          .append(Component.translatable("ranked.matchbot.tagNotNeeded")));
       return true;
     }
     long now = System.currentTimeMillis();
@@ -61,8 +63,7 @@ public class TagCommand implements CommandExecutor {
       long min = remaining / 60;
       long sec = remaining % 60;
       String time = String.format("%d:%02d", min, sec);
-      player.sendWarning(Component.text(
-          LanguageManager.message("ranked.matchbot.tagCooldown").replace("{time}", time)));
+      player.sendWarning(Component.translatable("command.cooldown", Component.text(time)));
       return true;
     }
     lastExecution = now;
@@ -87,9 +88,10 @@ public class TagCommand implements CommandExecutor {
           org.bukkit.Bukkit.getScheduler()
               .runTask(
                   TowersForPGM.getInstance(),
-                  () -> match.sendMessage(Component.text(LanguageManager.message("ranked.prefix")
-                      + LanguageManager.message("ranked.matchbot.tagSent")
-                          .replace("{name}", player.getPrefixedName()))));
+                  () -> match.sendMessage(Queue.RANKED_PREFIX
+                      .append(Component.space())
+                      .append(
+                          Component.translatable("ranked.matchbot.tagSent", player.getName()))));
         })
         .exceptionally(throwable -> {
           return null;

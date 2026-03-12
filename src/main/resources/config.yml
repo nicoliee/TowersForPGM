@@ -10,6 +10,9 @@ database:
   user: "root" 
   password: "password" 
   id: "server1"  # Identificador único del servidor
+  # AVANZADO
+  link: "https://example.com/torneo/" # Después de el link puesto <id>-<tabla>-<fecha>-<num>
+  # Ejemplo: https://example.com/torneo/server1-TorneoT1-20240630-1
   tables:         # Tablas disponibles en la base de datos
     # <Tabla>:
       # - <Mapa>
@@ -18,7 +21,6 @@ database:
     TorneoT1:
       - Mini Towers:TE
   defaultTable: Amistoso  # Tabla por defecto
-
 draft:
   suggestions: true    # Los capitanes recibirán sugerencias de jugadores para elegir
   timer: true         # Los capitanes tendrán un tiempo límite para elegir

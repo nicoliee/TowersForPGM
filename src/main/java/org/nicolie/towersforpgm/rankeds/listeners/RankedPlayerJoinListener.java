@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.rankeds.listeners;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -9,6 +10,7 @@ import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.player.MatchPlayer;
 
 public class RankedPlayerJoinListener implements Listener {
   private final TowersForPGM plugin;
@@ -22,6 +24,7 @@ public class RankedPlayerJoinListener implements Listener {
     Player player = event.getPlayer();
 
     if (plugin.getDisconnectedPlayers().get(player.getName()) != null) {
+      MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
       plugin.getDisconnectedPlayers().remove(player.getName());
 
       Match match = PGM.get().getMatchManager().getMatch(player);
@@ -31,12 +34,9 @@ public class RankedPlayerJoinListener implements Listener {
           && Queue.isRanked()
           && !DisconnectManager.isSanctionActive(match)) {
         DisconnectManager.cancelDisconnectTimer(player.getName());
-
-        String msg = org.nicolie.towersforpgm.utils.LanguageManager.message("ranked.prefix")
-            + org.nicolie.towersforpgm.utils.LanguageManager.message(
-                    "ranked.disconnect.reconnected")
-                .replace("{player}", player.getName());
-        match.sendMessage(net.kyori.adventure.text.Component.text(msg));
+        Component message =
+            Component.translatable("ranked.disconnect.reconnected", matchPlayer.getName());
+        match.sendMessage(message);
       }
     }
   }

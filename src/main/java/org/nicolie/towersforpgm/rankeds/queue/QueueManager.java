@@ -10,7 +10,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
-import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -34,20 +34,23 @@ public class QueueManager {
     if (player.isParticipating()
         || match.isRunning()
         || teams.isPlayerInAnyTeam(player.getNameLegacy())) {
-      player.sendWarning(
-          Component.text(getRankedPrefix() + LanguageManager.message("ranked.matchInProgress")));
+      player.sendWarning(Queue.RANKED_PREFIX
+          .append(Component.space())
+          .append(Component.translatable("join.err.afterStart")));
       return false;
     }
 
     if (queueState.containsPlayer(playerUUID)) {
-      player.sendWarning(
-          Component.text(getRankedPrefix() + LanguageManager.message("ranked.alreadyInQueue")));
+      player.sendWarning(Queue.RANKED_PREFIX
+          .append(Component.space())
+          .append(Component.translatable("ranked.alreadyInQueue")));
       return false;
     }
 
     if (!plugin.config().ranked().isMapRanked(map)) {
-      player.sendWarning(Component.text(getRankedPrefix()
-          + LanguageManager.message("ranked.notRankedMap").replace("{map}", map)));
+      player.sendWarning(Queue.RANKED_PREFIX
+          .append(Component.space())
+          .append(Component.translatable("ranked.notRankedMap"), Component.text(map)));
       return false;
     }
 
@@ -100,8 +103,9 @@ public class QueueManager {
     UUID playerUUID = player.getId();
 
     if (!queueState.containsPlayer(playerUUID)) {
-      player.sendWarning(
-          Component.text(getRankedPrefix() + LanguageManager.message("ranked.notInQueue")));
+      player.sendWarning(Queue.RANKED_PREFIX
+          .append(Component.space())
+          .append(Component.translatable("ranked.notInQueue")));
       return false;
     }
 
@@ -148,8 +152,10 @@ public class QueueManager {
   public void removeDisconnectedPlayers(Match match, List<UUID> disconnectedPlayerUUIDs) {
     for (UUID playerUUID : disconnectedPlayerUUIDs) {
       if (playerUUID != null && queueState.containsPlayer(playerUUID)) {
+        String playerName = Bukkit.getOfflinePlayer(playerUUID).getName();
         queueState.removePlayer(playerUUID);
         RankedListener.movePlayerToInactive(playerUUID);
+        Queue.getQueueMessaging().sendQueueMessage(match, playerName, true);
       }
     }
   }
@@ -169,9 +175,5 @@ public class QueueManager {
 
   private Match getDefaultMatch() {
     return org.nicolie.towersforpgm.utils.MatchManager.getMatch();
-  }
-
-  private String getRankedPrefix() {
-    return LanguageManager.message("ranked.prefix");
   }
 }

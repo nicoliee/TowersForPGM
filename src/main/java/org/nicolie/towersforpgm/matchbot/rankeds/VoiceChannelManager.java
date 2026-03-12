@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 
 public class VoiceChannelManager {
-  private static final String RANKED_PREFIX = "[Ranked] ";
+  private static final String DEFAULT_RANKED_PREFIX = "[Ranked] ";
   private static VoiceChannel team1Channel = null;
   private static VoiceChannel team2Channel = null;
 
@@ -30,8 +30,10 @@ public class VoiceChannelManager {
     VoiceChannel inactiveChannel = jda.getVoiceChannelById(MatchBotConfig.getInactiveID());
 
     List<VoiceChannel> channelsToDelete = new ArrayList<>();
+    String prefix = MatchBotConfig.getVoiceChannelPrefix();
+    if (prefix == null || prefix.isEmpty()) prefix = DEFAULT_RANKED_PREFIX;
     for (VoiceChannel channel : category.getVoiceChannels()) {
-      if (channel.getName().startsWith(RANKED_PREFIX)) {
+      if (channel.getName().startsWith(prefix)) {
         channelsToDelete.add(channel);
       }
     }
@@ -75,8 +77,10 @@ public class VoiceChannelManager {
     boolean privateChannels = MatchBotConfig.isPrivateChannels();
 
     // Crear canal del equipo 1
+    String prefix = MatchBotConfig.getVoiceChannelPrefix();
+    if (prefix == null || prefix.isEmpty()) prefix = DEFAULT_RANKED_PREFIX;
     category
-        .createVoiceChannel(RANKED_PREFIX + team1Name)
+        .createVoiceChannel(prefix + team1Name)
         .queue(
             channel -> {
               if (privateChannels && team1Size > 0) {
@@ -101,7 +105,7 @@ public class VoiceChannelManager {
 
     // Crear canal del equipo 2
     category
-        .createVoiceChannel(RANKED_PREFIX + team2Name)
+        .createVoiceChannel(prefix + team2Name)
         .queue(
             channel -> {
               if (privateChannels && team2Size > 0) {

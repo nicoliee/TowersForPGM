@@ -31,6 +31,19 @@ captains:
   subtitle: "§fUsa §b§lla estrella §rpara elegir a un jugador"
   usage: "§cUso: /captains <nick1> <nick2>"
 
+suggestions:
+  activated: "§aHaz pedido sugerencias a tu team."
+  notActive: "Las sugerencias no están activas."
+  invalidTeam: "No puedes sugerir jugadores del equipo contrario."
+  suggests: "{advisor}§7 sugiere al jugador: {suggestion}§7."
+  title: "§6§lSugerencias de Capitanes"
+  subtitle: "§eHaz clic en la estrella para sugerir un jugador"
+  item:
+    name: "§e§lSugerir Jugador"
+    lore:
+      - ""
+      - "§7Click para pedir sugerencias a tu equipo."
+
 reroll:
   actionBar: "§bUsa el §6polvo de blaze§b si no estás conforme con los capitanes."
   waiting: "§e⚠ Haz click derecho en el Polvo de Blaze para solicitar un reroll de capitanes."
@@ -92,6 +105,10 @@ ready:
 join:
   notAllowed: "No puedes unirte a la partida."
   team: "Estás en el equipo {team}."
+
+leave:
+  notAllowed: "No puedes salir del equipo."
+  team: "Has salido del equipo {team}."
 
 config:
   rerollEnabled: "§aLa opción de reroll de capitanes ha sido §2activada§a."

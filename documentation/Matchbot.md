@@ -6,6 +6,8 @@
 > [!NOTE]  
 > **Configuration access**: You will only be able to access these configurations once the plugin has detected MatchBot working
 
+> [!TIP]  
+> **Language Support**: Change embeds language with `/towers language <en|es>`
 ---
 
 ## Configuration in `matchbot.yml`

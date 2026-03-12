@@ -1,56 +1,55 @@
 package org.nicolie.towersforpgm.commands.draft;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.components.DraftPhase;
-import org.nicolie.towersforpgm.draft.components.PicksGUI;
 import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class AddCommand implements CommandExecutor {
   private final AvailablePlayers availablePlayers;
   private final Captains captains;
   private final Teams teams;
-  private final PicksGUI pickInventory;
 
-  public AddCommand(
-      AvailablePlayers availablePlayers, Captains captains, Teams teams, PicksGUI pickInventory) {
+  public AddCommand(AvailablePlayers availablePlayers, Captains captains, Teams teams) {
     this.availablePlayers = availablePlayers;
     this.captains = captains;
     this.teams = teams;
-    this.pickInventory = pickInventory;
   }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (!(sender instanceof Player)) {
-      SendMessage.sendToConsole(LanguageManager.message("errors.noPlayer"));
+      audience.sendWarning(Component.translatable("command.onlyPlayers"));
       return true;
     }
-    MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     if (Draft.getPhase() == DraftPhase.IDLE) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.noDraft")));
+      audience.sendWarning(Component.translatable("draft.inactive"));
       return true;
     }
 
     if (Queue.isRanked()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.notAllowed")));
+      audience.sendWarning(Component.translatable("ranked.notAllowed"));
       return true;
     }
 
     if (args.length < 1) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.add.usage")));
+      audience.sendWarning(Component.translatable(
+          "command.incorrectUsage", Component.text("/draft add <playerName>")));
       return true;
     }
 
@@ -61,10 +60,10 @@ public class AddCommand implements CommandExecutor {
     }
 
     availablePlayers.addPlayer(playerName);
-    pickInventory.updateAllInventories();
-    SendMessage.broadcast(
-        LanguageManager.message("draft.picks.add").replace("{player}", playerName));
-    PGM.get().getMatchManager().getMatch(sender).getMatch().playSound(Sounds.ALERT);
+    Match match = PGM.get().getMatchManager().getMatch(sender).getMatch();
+    match.sendMessage(Component.translatable("draft.add", MatchManager.getPrefixedName(playerName))
+        .color(NamedTextColor.GRAY));
+    match.playSound(Sounds.ALERT);
     return true;
   }
 
@@ -74,19 +73,19 @@ public class AddCommand implements CommandExecutor {
             && captains.getCaptain1Name().equalsIgnoreCase(playerName))
         || (captains.getCaptain2Name() != null
             && captains.getCaptain2Name().equalsIgnoreCase(playerName))) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.add.captain")));
+      matchPlayer.sendWarning(Component.translatable("draft.add.captain"));
       return true;
     }
 
     if (teams.isPlayerInAnyTeam(playerName)) {
       matchPlayer.sendWarning(
-          Component.text(LanguageManager.message("draft.captains.alreadyInTeam")));
+          Component.translatable("draft.alreadyInTeam", MatchManager.getPrefixedName(playerName)));
       return true;
     }
 
     if (availablePlayers.getAllAvailablePlayers().contains(playerName)) {
       matchPlayer.sendWarning(
-          Component.text(LanguageManager.message("draft.captains.alreadyInDraft")));
+          Component.translatable("draft.alreadyInDraft", MatchManager.getPrefixedName(playerName)));
       return true;
     }
     return false;

@@ -1,226 +1,208 @@
 package org.nicolie.towersforpgm.commands.commandUtils;
 
 import java.util.List;
-import org.bukkit.command.CommandSender;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.rankeds.RankedProfile;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class RankedConfig {
+
   private final TowersForPGM plugin = TowersForPGM.getInstance();
 
-  public void minSize(CommandSender sender, String size) {
-    if (size == null || size.isEmpty()) {
-      String message = LanguageManager.message("ranked.config.minSize.current")
-          .replace("{size}", String.valueOf(plugin.config().ranked().getRankedMinSize()));
-      SendMessage.sendToPlayer(sender, message);
-      return;
-    }
+  public void minSize(Audience audience, String size) {
 
-    try {
+    int state = plugin.config().ranked().getRankedMinSize();
+
+    if (size != null) {
+
       int newSize = Integer.parseInt(size);
+
       if (newSize < 2 || newSize % 2 != 0) {
-        SendMessage.sendToPlayer(sender, LanguageManager.message("ranked.config.minSize.invalid"));
+        audience.sendMessage(Component.translatable("ranked.config.minSize.invalid"));
         return;
       }
-      int maxSize = plugin.config().ranked().getRankedMaxSize();
-      if (maxSize > 0 && newSize > maxSize) {
-        SendMessage.sendToPlayer(
-            sender, LanguageManager.message("ranked.config.minSize.greaterThanMax"));
+
+      int max = plugin.config().ranked().getRankedMaxSize();
+
+      if (max > 0 && newSize > max) {
+        audience.sendMessage(Component.translatable("ranked.config.minSize.greaterThanMax"));
         return;
       }
+
       plugin.config().ranked().setRankedMinSize(newSize);
-      String message = LanguageManager.message("ranked.config.minSize.set")
-          .replace("{size}", String.valueOf(newSize));
-      SendMessage.sendToPlayer(sender, message);
-    } catch (NumberFormatException e) {
-      SendMessage.sendToPlayer(
-          sender, LanguageManager.message("ranked.config.minSize.invalidFormat"));
-    }
-  }
-
-  public void setRerollOption(CommandSender sender, boolean isEnabled) {
-    plugin.config().ranked().setReroll(isEnabled);
-    String message = isEnabled
-        ? LanguageManager.message("ranked.config.rerollEnabled")
-        : LanguageManager.message("ranked.config.rerollDisabled");
-    SendMessage.sendToPlayer(sender, message);
-  }
-
-  public void maxSize(CommandSender sender, String size) {
-    if (size == null || size.isEmpty()) {
-      String message = LanguageManager.message("ranked.config.maxSize.current")
-          .replace("{size}", String.valueOf(plugin.config().ranked().getRankedMaxSize()));
-      SendMessage.sendToPlayer(sender, message);
-      return;
+      state = newSize;
     }
 
-    try {
+    audience.sendMessage(Component.translatable(
+        size != null ? "ranked.config.minSize.set" : "ranked.config.minSize.current",
+        Component.text(state)));
+  }
+
+  public void maxSize(Audience audience, String size) {
+
+    int state = plugin.config().ranked().getRankedMaxSize();
+
+    if (size != null) {
+
       int newSize = Integer.parseInt(size);
+
       if (newSize < 2 || newSize % 2 != 0) {
-        SendMessage.sendToPlayer(sender, LanguageManager.message("ranked.config.maxSize.invalid"));
+        audience.sendMessage(Component.translatable("ranked.config.maxSize.invalid"));
         return;
       }
-      int minSize = plugin.config().ranked().getRankedMinSize();
-      if (minSize > 0 && newSize < minSize) {
-        SendMessage.sendToPlayer(
-            sender, LanguageManager.message("ranked.config.maxSize.lessThanMin"));
+
+      int min = plugin.config().ranked().getRankedMinSize();
+
+      if (min > 0 && newSize < min) {
+        audience.sendMessage(Component.translatable("ranked.config.maxSize.lessThanMin"));
         return;
       }
+
       plugin.config().ranked().setRankedMaxSize(newSize);
-      String message = LanguageManager.message("ranked.config.maxSize.set")
-          .replace("{size}", String.valueOf(newSize));
-      SendMessage.sendToPlayer(sender, message);
-    } catch (NumberFormatException e) {
-      SendMessage.sendToPlayer(
-          sender, LanguageManager.message("ranked.config.maxSize.invalidFormat"));
+      state = newSize;
+    }
+
+    audience.sendMessage(Component.translatable(
+        size != null ? "ranked.config.maxSize.set" : "ranked.config.maxSize.current",
+        Component.text(state)));
+  }
+
+  public void reroll(Audience audience, Boolean enabled) {
+
+    boolean state = enabled != null ? enabled : plugin.config().ranked().isReroll();
+
+    if (enabled != null) {
+      plugin.config().ranked().setReroll(enabled);
+    }
+
+    audience.sendMessage(Component.translatable(
+        state ? "ranked.config.rerollEnabled" : "ranked.config.rerollDisabled"));
+  }
+
+  public void order(Audience audience, String order) {
+
+    String state = plugin.config().ranked().getRankedOrder();
+
+    if (order != null) {
+
+      if (!order.matches("A[AB]+")) {
+        audience.sendMessage(Component.translatable("ranked.config.order.invalid"));
+        return;
+      }
+
+      plugin.config().ranked().setRankedOrder(order);
+      state = order;
+    }
+
+    audience.sendMessage(Component.translatable(
+        order != null ? "ranked.config.order.set" : "ranked.config.order.current",
+        Component.text(state)));
+  }
+
+  public void pool(Audience audience, String poolName) {
+
+    String state = plugin.config().ranked().getMapPool();
+
+    if (poolName != null) {
+
+      boolean success = plugin.config().ranked().setPool(poolName);
+
+      if (!success) {
+        audience.sendMessage(
+            Component.translatable("ranked.config.pool.notFound", Component.text(poolName)));
+        return;
+      }
+
+      state = poolName;
+    }
+
+    List<String> maps = plugin.config().ranked().getMapsFromPool(state);
+
+    audience.sendMessage(Component.translatable(
+        poolName != null ? "ranked.config.pool.set" : "ranked.config.pool.current",
+        Component.text(state),
+        Component.text(maps.size())));
+
+    for (String map : maps) {
+      audience.sendMessage(Component.text("§8- §f" + map));
     }
   }
 
-  public void draftOrder(CommandSender sender, String order) {
-    if (order == null || order.isEmpty()) {
-      String message = LanguageManager.message("ranked.config.order.current")
-          .replace("{order}", plugin.config().ranked().getRankedOrder());
-      SendMessage.sendToPlayer(sender, message);
-      return;
+  public void matchmaking(Audience audience, Boolean enabled) {
+
+    boolean state = enabled != null ? enabled : plugin.config().ranked().isRankedMatchmaking();
+
+    if (enabled != null) {
+      plugin.config().ranked().setRankedMatchmaking(enabled);
     }
 
-    if (!order.matches("A[AB]+")) {
-      String errorMessage = LanguageManager.message("ranked.config.order.invalid");
-      SendMessage.sendToPlayer(sender, errorMessage);
-      return;
-    }
-
-    plugin.config().ranked().setRankedOrder(order);
-    String message = LanguageManager.message("ranked.config.order.set").replace("{order}", order);
-    SendMessage.sendToPlayer(sender, message);
+    audience.sendMessage(Component.translatable(
+        state ? "ranked.config.matchmaking.enabled" : "ranked.config.matchmaking.disabled"));
   }
 
-  public void addTable(CommandSender sender, String table) {
-    TableInfo tableInfo = TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
-    boolean isRankedTable = tableInfo != null && tableInfo.isRanked();
-    if (isRankedTable) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("ranked.config.table.exists"));
+  public void tableAdd(Audience audience, String table) {
+
+    TableInfo info = plugin.config().databaseTables().getTableInfo(table);
+
+    if (info != null && info.isRanked()) {
+      audience.sendMessage(Component.translatable("ranked.config.table.exists"));
       return;
     }
 
     plugin.config().databaseTables().addTable(table, true);
     TableManager.createTable(table);
-    String message = LanguageManager.message("ranked.config.table.added").replace("{table}", table);
-    SendMessage.sendToPlayer(sender, message);
+
+    audience.sendMessage(
+        Component.translatable("ranked.config.table.added", Component.text(table)));
   }
 
-  public void deleteTable(CommandSender sender, String table) {
+  public void tableRemove(Audience audience, String table) {
+
     if (plugin.config().databaseTables().getTableInfo(table) == null) {
-      SendMessage.sendToPlayer(
-          sender,
-          LanguageManager.message("ranked.config.table.notFound").replace("{table}", table));
+      audience.sendMessage(
+          Component.translatable("ranked.config.table.notFound", Component.text(table)));
       return;
     }
 
     plugin.config().databaseTables().removeTable(table);
-    String message =
-        LanguageManager.message("ranked.config.table.deleted").replace("{table}", table);
-    SendMessage.sendToPlayer(sender, message);
+
+    audience.sendMessage(
+        Component.translatable("ranked.config.table.deleted", Component.text(table)));
   }
 
-  public void addMap(CommandSender sender) {
-    SendMessage.sendToPlayer(
-        sender, "§cEste comando está obsoleto. Usa /towers ranked setpool <pool>");
-  }
+  public void profile(Audience audience, String profileName) {
 
-  public void removeMap(CommandSender sender) {
-    SendMessage.sendToPlayer(
-        sender, "§cEste comando está obsoleto. Usa /towers ranked setpool <pool>");
-  }
-
-  public void setPool(CommandSender sender, String poolName) {
-    if (poolName == null || poolName.isEmpty()) {
-      // Show current pool
-      String currentPool = plugin.config().ranked().getMapPool();
-      SendMessage.sendToPlayer(
-          sender,
-          LanguageManager.message("ranked.config.pool.current").replace("{pool}", currentPool));
-      showPoolMaps(sender, currentPool);
-      return;
-    }
-
-    // Set new pool
-    boolean success = plugin.config().ranked().setPool(poolName);
-    if (success) {
-      List<String> maps = plugin.config().ranked().getMapsFromPool(poolName);
-      String message = LanguageManager.message("ranked.config.pool.set")
-          .replace("{pool}", poolName)
-          .replace("{count}", String.valueOf(maps.size()));
-      SendMessage.sendToPlayer(sender, message);
-      showPoolMaps(sender, poolName);
-    } else {
-      SendMessage.sendToPlayer(
-          sender,
-          LanguageManager.message("ranked.config.pool.notFound").replace("{pool}", poolName));
-    }
-  }
-
-  public void matchmaking(CommandSender sender, Boolean isEnabled) {
-    if (isEnabled == null) {
-      boolean isRankedMatchmaking = plugin.config().ranked().isRankedMatchmaking();
-      String status = isRankedMatchmaking
-          ? LanguageManager.message("ranked.config.matchmaking.statusEnabled")
-          : LanguageManager.message("ranked.config.matchmaking.statusDisabled");
-      String message =
-          LanguageManager.message("ranked.config.matchmaking.status").replace("{status}", status);
-      SendMessage.sendToPlayer(sender, message);
-      return;
-    }
-    plugin.config().ranked().setRankedMatchmaking(isEnabled);
-    String message = isEnabled
-        ? LanguageManager.message("ranked.config.matchmaking.enabled")
-        : LanguageManager.message("ranked.config.matchmaking.disabled");
-    SendMessage.sendToPlayer(sender, message);
-  }
-
-  public void showProfile(CommandSender sender, String profileName) {
-    RankedProfile profile = (profileName == null || profileName.isEmpty())
+    RankedProfile profile = profileName == null
         ? plugin.config().ranked().getActiveProfile()
         : plugin.config().ranked().getProfile(profileName);
 
     if (profile == null) {
-      String message = (profileName == null || profileName.isEmpty())
-          ? LanguageManager.message("ranked.noProfile")
-          : LanguageManager.message("ranked.profileNotFound").replace("{profile}", profileName);
-      SendMessage.sendToPlayer(sender, message);
+      audience.sendMessage(Component.translatable(
+          profileName == null ? "ranked.noProfile" : "ranked.profileNotFound",
+          Component.text(profileName)));
       return;
     }
 
-    sender.sendMessage(profile.getFormattedInfo());
-    showPoolMaps(sender, profile.getMapPool());
-  }
+    audience.sendMessage(Component.text(profile.getFormattedInfo()));
 
-  private void showPoolMaps(CommandSender sender, String poolName) {
-    List<String> maps = plugin.config().ranked().getMapsFromPool(poolName);
-    if (!maps.isEmpty()) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("ranked.config.pool.maps"));
-      for (String map : maps) {
-        sender.sendMessage("  §8- §f" + map);
-      }
+    List<String> maps = plugin.config().ranked().getMapsFromPool(profile.getMapPool());
+
+    for (String map : maps) {
+      audience.sendMessage(Component.text("§8- §f" + map));
     }
   }
 
-  public void setProfile(CommandSender sender, String profileName) {
-    if (!sender.hasPermission("towers.admin")) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("errors.noPermission"));
-      return;
-    }
+  public void setProfile(Audience audience, String profileName) {
 
     plugin.config().ranked().setActiveProfile(profileName);
+
     RankedProfile profile = plugin.config().ranked().getActiveProfile();
 
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("ranked.profileSet").replace("{profile}", profileName));
-    sender.sendMessage(profile.getFormattedInfo());
-    showPoolMaps(sender, profile.getMapPool());
+    audience.sendMessage(Component.translatable("ranked.profileSet", Component.text(profileName)));
+
+    audience.sendMessage(Component.text(profile.getFormattedInfo()));
   }
 }

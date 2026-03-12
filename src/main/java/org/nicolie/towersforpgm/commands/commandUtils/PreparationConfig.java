@@ -1,181 +1,177 @@
 package org.nicolie.towersforpgm.commands.commandUtils;
 
 import java.util.Map;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.preparationTime.Region;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
-import tc.oc.pgm.api.PGM;
+import org.nicolie.towersforpgm.utils.MatchManager;
 
 public class PreparationConfig {
+
   private final TowersForPGM plugin = TowersForPGM.getInstance();
 
-  public void togglePreparation(CommandSender sender) {
-    boolean newState = !plugin.config().preparationTime().isPreparationEnabled();
-    plugin.config().preparationTime().setPreparationEnabled(newState);
-    String messageKey = newState ? "preparation.enabled" : "preparation.disabled";
-    SendMessage.sendToPlayer(sender, LanguageManager.message(messageKey));
+  public void enabled(Audience audience, Boolean enabled) {
+    boolean state =
+        enabled != null ? enabled : plugin.config().preparationTime().isPreparationEnabled();
+
+    if (enabled != null) {
+      plugin.config().preparationTime().setPreparationEnabled(enabled);
+    }
+
+    String key = state ? "preparation.enabled" : "preparation.disabled";
+    audience.sendMessage(Component.translatable(key));
   }
 
-  public void handleAddCommand(CommandSender sender) {
-    String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
+  public void add(Audience audience) {
+    String mapName = MatchManager.getMatch().getMap().getName();
 
-    // Verificar si ya existe la región
     if (plugin.config().preparationTime().hasRegion(mapName)) {
-      SendMessage.sendToPlayer(
-          sender, LanguageManager.message("region.mapAlreadyAdded").replace("{map}", mapName));
+      audience.sendMessage(
+          Component.translatable("region.mapAlreadyAdded", Component.text(mapName)));
       return;
     }
 
-    // Asignar valores por defecto a la región
-    Location p1 = new Location(Bukkit.getWorld(mapName), 0, 64, 0); // Coordenadas P1 por defecto
-    Location p2 =
-        new Location(Bukkit.getWorld(mapName), 100, 64, 100); // Coordenadas P2 por defecto
-    int timer = 1; // Temporizador por defecto (1 minuto)
-    int haste = 1; // Haste por defecto (1 minuto)
+    Location p1 = new Location(Bukkit.getWorld(mapName), 0, 64, 0);
+    Location p2 = new Location(Bukkit.getWorld(mapName), 100, 64, 100);
 
-    // Crear la región
-    Region region = new Region(p1, p2, timer, haste);
+    Region region = new Region(p1, p2, 1, 1);
 
-    // Agregar la región (actualiza tanto config.yml como memoria)
     plugin.config().preparationTime().addRegion(mapName, region);
 
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("region.mapSuccess").replace("{map}", mapName));
+    audience.sendMessage(Component.translatable("region.mapSuccess", Component.text(mapName)));
   }
 
-  public void handleRemoveCommand(CommandSender sender) {
-    String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
+  public void remove(Audience audience) {
+    String mapName = MatchManager.getMatch().getMap().getName();
 
-    // Verificar si existe la región
     if (!plugin.config().preparationTime().hasRegion(mapName)) {
-      SendMessage.sendToPlayer(
-          sender, LanguageManager.message("region.mapError").replace("{map}", mapName));
+      audience.sendMessage(Component.translatable("region.mapError", Component.text(mapName)));
       return;
     }
 
-    // Eliminar la región (actualiza tanto config.yml como memoria)
     plugin.config().preparationTime().removeRegion(mapName);
 
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("region.mapDeleted").replace("{map}", mapName));
+    audience.sendMessage(Component.translatable("region.mapDeleted", Component.text(mapName)));
   }
 
-  public void handleCoordinates(CommandSender sender, boolean isMax, int x, int y, int z) {
-    String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
-    World world = PGM.get().getMatchManager().getMatch(sender).getWorld();
+  public void min(Audience audience, String coordinates) {
+    setLocation(audience, coordinates, false);
+  }
 
-    // Verificar si existe la región
+  public void max(Audience audience, String coordinates) {
+    setLocation(audience, coordinates, true);
+  }
+
+  private void setLocation(Audience audience, String coordinates, boolean max) {
+
+    String mapName = MatchManager.getMatch().getMap().getName();
+    World world = MatchManager.getMatch().getWorld();
+
     if (!plugin.config().preparationTime().hasRegion(mapName)) {
-      SendMessage.sendToPlayer(
-          sender, LanguageManager.message("preparation.noRegion").replace("{map}", mapName));
+      audience.sendMessage(Component.translatable("preparation.noRegion", Component.text(mapName)));
       return;
     }
 
-    Location newLocation = new Location(world, x, y, z);
+    Region region = plugin.config().preparationTime().getRegion(mapName);
 
-    // Actualizar las coordenadas usando los métodos que sincronizan config.yml y memoria
-    if (isMax) {
-      plugin.config().preparationTime().updateRegionP2(mapName, newLocation);
-    } else {
-      plugin.config().preparationTime().updateRegionP1(mapName, newLocation);
+    Location state = max ? region.getP2() : region.getP1();
+
+    if (coordinates != null) {
+
+      String[] split = coordinates.split(",");
+
+      int x = Integer.parseInt(split[0]);
+      int y = Integer.parseInt(split[1]);
+      int z = Integer.parseInt(split[2]);
+
+      Location newLocation = new Location(world, x, y, z);
+
+      if (max) {
+        plugin.config().preparationTime().updateRegionP2(mapName, newLocation);
+      } else {
+        plugin.config().preparationTime().updateRegionP1(mapName, newLocation);
+      }
+
+      state = newLocation;
     }
 
-    String message = isMax ? "region.maxSet" : "region.minSet";
-    SendMessage.sendToPlayer(
-        sender,
-        LanguageManager.message(message)
-            .replace("{map}", mapName)
-            .replace("{x}", String.valueOf(x))
-            .replace("{y}", String.valueOf(y))
-            .replace("{z}", String.valueOf(z)));
+    String key = max ? "region.maxSet" : "region.minSet";
+
+    audience.sendMessage(Component.translatable(
+        key, Component.text(mapName), Component.text(formatLocation(state))));
   }
 
-  public void handleTimerCommand(CommandSender sender, int timer) {
-    String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
+  public void timer(Audience audience, int timerValue) {
 
-    // Verificar si existe la región
+    String mapName = MatchManager.getMatch().getMap().getName();
+
     if (!plugin.config().preparationTime().hasRegion(mapName)) {
-      SendMessage.sendToPlayer(
-          sender, LanguageManager.message("region.mapError").replace("{map}", mapName));
-      return;
-    }
-    if (timer <= 0) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
+      audience.sendMessage(Component.translatable("region.mapError", Component.text(mapName)));
       return;
     }
 
-    // Actualizar el timer (sincroniza config.yml y memoria)
-    plugin.config().preparationTime().updateRegionTimer(mapName, timer);
+    int state = plugin.config().preparationTime().getRegion(mapName).getTimer();
 
-    SendMessage.sendToPlayer(
-        sender,
-        LanguageManager.message("region.timerSet")
-            .replace("{map}", mapName)
-            .replace("{timer}", SendMessage.formatTime(timer * 60)));
+    if (timerValue != -1) {
+      plugin.config().preparationTime().updateRegionTimer(mapName, timerValue);
+      state = timerValue;
+    }
+
+    audience.sendMessage(
+        Component.translatable("region.timerSet", Component.text(mapName), Component.text(state)));
   }
 
-  public void handleHasteCommand(CommandSender sender, int haste) {
-    String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
+  public void haste(Audience audience, int hasteValue) {
 
-    // Verificar si existe la región
+    String mapName = MatchManager.getMatch().getMap().getName();
+
     if (!plugin.config().preparationTime().hasRegion(mapName)) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("region.mapError"));
-      return;
-    }
-    if (haste <= 0) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
+      audience.sendMessage(Component.translatable("region.mapError", Component.text(mapName)));
       return;
     }
 
-    // Actualizar el haste (sincroniza config.yml y memoria)
-    plugin.config().preparationTime().updateRegionHaste(mapName, haste);
+    int state = plugin.config().preparationTime().getRegion(mapName).getHaste();
 
-    SendMessage.sendToPlayer(
-        sender,
-        LanguageManager.message("region.hasteSet")
-            .replace("{map}", mapName)
-            .replace("{timer}", SendMessage.formatTime(haste * 60)));
+    if (hasteValue != -1) {
+      int haste = hasteValue;
+      plugin.config().preparationTime().updateRegionHaste(mapName, haste);
+      state = haste;
+    }
+
+    audience.sendMessage(
+        Component.translatable("region.hasteSet", Component.text(mapName), Component.text(state)));
   }
 
-  public void handleListCommand(CommandSender sender) {
+  public void list(Audience audience) {
+
     Map<String, Region> regions = plugin.config().preparationTime().getRegions();
 
     if (regions.isEmpty()) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("region.mapsNotFound"));
+      audience.sendMessage(Component.translatable("region.mapsNotFound"));
       return;
     }
 
-    SendMessage.sendToPlayer(sender, LanguageManager.message("region.header"));
+    audience.sendMessage(Component.translatable("region.header"));
+
     for (Map.Entry<String, Region> entry : regions.entrySet()) {
+
       String mapName = entry.getKey();
       Region region = entry.getValue();
-      String database = plugin.config().databaseTables().getTable(mapName);
 
-      // Formatear coordenadas de las ubicaciones
-      String p1 = formatLocation(region.getP1());
-      String p2 = formatLocation(region.getP2());
-
-      sender.sendMessage(ChatColor.GREEN + mapName);
-      sender.sendMessage(ChatColor.AQUA + "  Base de datos: " + ChatColor.WHITE + database);
-      sender.sendMessage(ChatColor.AQUA + "  Coordenadas mínimas: " + ChatColor.WHITE + p1);
-      sender.sendMessage(ChatColor.AQUA + "  Coordenadas máximas: " + ChatColor.WHITE + p2);
-      sender.sendMessage(ChatColor.AQUA + "  Temporizador: " + ChatColor.WHITE
-          + (region.getTimer() > 0 ? region.getTimer() + " minutos" : "No definido"));
-      sender.sendMessage(ChatColor.AQUA + "  Temporizador de haste: " + ChatColor.WHITE
-          + (region.getHaste() > 0 ? region.getHaste() + " minutos" : "No definido"));
+      audience.sendMessage(Component.text("§a" + mapName));
+      audience.sendMessage(Component.text("§b  Min: §f" + formatLocation(region.getP1())));
+      audience.sendMessage(Component.text("§b  Max: §f" + formatLocation(region.getP2())));
+      audience.sendMessage(Component.text("§b  Timer: §f" + region.getTimer()));
+      audience.sendMessage(Component.text("§b  Haste: §f" + region.getHaste()));
     }
   }
 
   private String formatLocation(Location location) {
-    if (location == null) {
-      return "No definido";
-    }
+    if (location == null) return "Not set";
     return location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ();
   }
 }

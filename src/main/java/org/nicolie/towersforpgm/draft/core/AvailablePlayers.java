@@ -17,7 +17,20 @@ import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class AvailablePlayers {
-  private final TowersForPGM plugin = TowersForPGM.getInstance();
+  private final java.util.Set<String> suggestedAdvisors = new java.util.HashSet<>();
+
+  public boolean hasAlreadySuggested(String advisorName) {
+    return suggestedAdvisors.contains(advisorName);
+  }
+
+  public void recordSuggestion(String advisorName) {
+    suggestedAdvisors.add(advisorName);
+  }
+
+  public void clearSuggestions() {
+    suggestedAdvisors.clear();
+  }
+
   private final org.nicolie.towersforpgm.configs.ConfigManager configManager;
   private final List<MatchPlayer> availablePlayers = new ArrayList<>();
   private final List<String> availableOfflinePlayers = new ArrayList<>();
@@ -34,26 +47,20 @@ public class AvailablePlayers {
     Match match = PGM.get().getMatchManager().getMatch(player);
     MatchPlayer matchPlayer = match != null ? match.getPlayer(player) : null;
 
-    // Verificar si el jugador y matchPlayer no son null antes de continuar
     if (match != null && player != null && matchPlayer != null && player.isOnline()) {
-      // Si el jugador no está en availablePlayers, lo agregamos
       if (availablePlayers.stream()
           .noneMatch(p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()))) {
         availablePlayers.add(matchPlayer);
       }
-      // Eliminar de availableOfflinePlayers si está presente
       availableOfflinePlayers.removeIf(name -> name.equalsIgnoreCase(playerName));
       if (TowersForPGM.getInstance().getIsDatabaseActivated()) {
         loadStatsForPlayer(playerName);
       }
     } else {
-      // Verificar si el jugador está offline y agregarlo a availableOfflinePlayers si
-      // no está allí
       if (availableOfflinePlayers.stream().noneMatch(name -> name.equalsIgnoreCase(playerName))) {
         availableOfflinePlayers.add(playerName);
       }
 
-      // Solo eliminar de availablePlayers si matchPlayer no es null
       if (matchPlayer != null) {
         availablePlayers.removeIf(
             p -> p.getNameLegacy().equalsIgnoreCase(matchPlayer.getNameLegacy()));
@@ -206,10 +213,8 @@ public class AvailablePlayers {
       playersWithRating.add(new AbstractMap.SimpleEntry<>(playerName, rating));
     }
 
-    // Ordenar la lista por puntuación (de mayor a menor)
     playersWithRating.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
 
-    // Actualizar la lista de mejores jugadores
     topPlayers.clear();
     for (Map.Entry<String, Double> entry : playersWithRating) {
       topPlayers.add(entry.getKey());

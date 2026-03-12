@@ -21,6 +21,7 @@ import org.nicolie.towersforpgm.database.models.history.TeamInfo;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.stats.PlayerStats;
+import tc.oc.pgm.util.Audience;
 
 /**
  * Gestor principal del historial de partidas. Coordina la generación de IDs únicos y delega las
@@ -94,7 +95,8 @@ public class MatchHistoryManager {
           });
 
           int next = counter.getAndIncrement();
-          return SERVER_ID + "-" + table + "-" + datePart + "-" + next;
+          String matchId = SERVER_ID + "-" + table + "-" + datePart + "-" + next;
+          return matchId;
         },
         DB_EXECUTOR);
   }
@@ -176,16 +178,8 @@ public class MatchHistoryManager {
     return historyService.getRecentMatchIds(userInput);
   }
 
-  /**
-   * Realiza un rollback de un match.
-   *
-   * @param sender Quien ejecuta el rollback
-   * @param history Historial del match a revertir
-   * @return CompletableFuture que se completa cuando termina el rollback
-   */
-  public static CompletableFuture<Void> rollbackMatch(
-      org.bukkit.command.CommandSender sender, MatchHistory history) {
-    return historyService.rollbackMatch(sender, history);
+  public static CompletableFuture<Void> rollbackMatch(Audience audience, MatchHistory history) {
+    return historyService.rollbackMatch(audience, history);
   }
 
   /**

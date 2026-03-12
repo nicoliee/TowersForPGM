@@ -1,51 +1,59 @@
 package org.nicolie.towersforpgm.commands.ranked;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.DiscordManager;
-import org.nicolie.towersforpgm.utils.LanguageManager;
+import tc.oc.pgm.util.Audience;
 
 public class UnlinkCommand implements CommandExecutor {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (!sender.hasPermission("towers.admin")) {
-      sender.sendMessage(LanguageManager.message("errors.noPermission"));
-      return true;
-    }
-
-    if (!plugin.getIsDatabaseActivated()) {
-      sender.sendMessage(LanguageManager.message("matchbot.unlink.database-disabled"));
+      audience.sendMessage(Component.translatable("misc.noPermission"));
       return true;
     }
 
     if (args.length < 1) {
-      sender.sendMessage(LanguageManager.message("matchbot.unlink.usage"));
+      audience.sendMessage(Component.translatable(
+          "command.incorrectUsage", Component.text("/unlink <playerName|discordId>")));
       return true;
     }
 
     String identifier = args[0];
-    sender.sendMessage(LanguageManager.message("matchbot.unlink.processing"));
-
     DiscordManager.unlinkPlayer(identifier)
         .thenAccept(success -> {
           if (success) {
-            sender.sendMessage(LanguageManager.message("matchbot.unlink.success")
-                .replace("{identifier}", identifier));
+            audience.sendMessage(
+                Component.translatable("matchbot.unlink.success", formatIdentifier(identifier))
+                    .color(NamedTextColor.GREEN));
           } else {
-            sender.sendMessage(LanguageManager.message("matchbot.unlink.notFound")
-                .replace("{identifier}", identifier));
+            audience.sendMessage(
+                Component.translatable("matchbot.unlink.notFound", formatIdentifier(identifier))
+                    .color(NamedTextColor.RED));
           }
         })
         .exceptionally(e -> {
-          sender.sendMessage(LanguageManager.message("matchbot.unlink.error"));
+          audience.sendMessage(Component.translatable("matchbot.unlink.error"));
           plugin.getLogger().severe("Error unlinking player: " + e.getMessage());
           return null;
         });
 
     return true;
+  }
+
+  private Component formatIdentifier(String identifier) {
+    Component idComponent = Component.text("[")
+        .color(NamedTextColor.DARK_GRAY)
+        .append(Component.text(identifier)
+            .color(NamedTextColor.GOLD)
+            .append(Component.text("]").color(NamedTextColor.DARK_GRAY)));
+    return idComponent;
   }
 }

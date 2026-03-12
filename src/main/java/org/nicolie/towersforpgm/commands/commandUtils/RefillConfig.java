@@ -1,85 +1,110 @@
 package org.nicolie.towersforpgm.commands.commandUtils;
 
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.refill.RefillManager;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class RefillConfig {
+
   private final TowersForPGM plugin = TowersForPGM.getInstance();
 
-  public void addRefillLocation(CommandSender sender, String mapName, Location loc) {
-    FileConfiguration refillConfig = plugin.config().refill().config();
+  public void chest(Audience audience, String mapName, Location location) {
 
-    // Verificar si las coordenadas corresponden a un cofre
-    Block block = loc.getBlock();
-    String coords = loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ();
-    if (!(block.getState() instanceof Chest)) {
-      SendMessage.sendToPlayer(
-          sender, LanguageManager.message("refill.chestNotFound").replace("{coords}", coords));
+    FileConfiguration config = plugin.config().refill().config();
+
+    if (location == null) {
+      audience.sendMessage(Component.translatable("refill.usage"));
       return;
     }
 
-    // Verificar si el cofre ya está en la configuración
-    for (int i = 1; refillConfig.contains("refill." + mapName + ".c" + i); i++) {
-      String storedCoords = refillConfig.getString("refill." + mapName + ".c" + i);
-      if (storedCoords.equals(coords)) {
-        SendMessage.sendToPlayer(
-            sender,
-            LanguageManager.message("refill.chestAlreadyExists").replace("{coords}", coords));
+    Block block = location.getBlock();
+
+    String coords =
+        location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ();
+
+    if (!(block.getState() instanceof Chest)) {
+      audience.sendMessage(Component.translatable("refill.chestNotFound", Component.text(coords)));
+      return;
+    }
+
+    for (int i = 1; config.contains("refill." + mapName + ".c" + i); i++) {
+
+      String stored = config.getString("refill." + mapName + ".c" + i);
+
+      if (stored.equals(coords)) {
+
+        audience.sendMessage(
+            Component.translatable("refill.chestAlreadyExists", Component.text(coords)));
         return;
       }
     }
 
-    // Si el mapa no tiene una sección, crearla
-    if (!refillConfig.contains("refill." + mapName)) {
-      refillConfig.createSection("refill." + mapName);
+    if (!config.contains("refill." + mapName)) {
+      config.createSection("refill." + mapName);
     }
 
-    // Contar cuántas coordenadas hay para este mapa (c1, c2, ...)
     int i = 1;
-    while (refillConfig.contains("refill." + mapName + ".c" + i)) {
+
+    while (config.contains("refill." + mapName + ".c" + i)) {
       i++;
     }
 
-    // Agregar la nueva coordenada
-    refillConfig.set("refill." + mapName + ".c" + i, coords);
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("refill.chestSet").replace("{coords}", coords));
+    config.set("refill." + mapName + ".c" + i, coords);
+
     plugin.config().refill().save();
     plugin.config().refill().reload();
+
+    audience.sendMessage(Component.translatable("refill.chestSet", Component.text(coords)));
   }
 
-  public void removeRefillLocation(CommandSender sender, String mapName, Location loc) {
-    FileConfiguration refillConfig = plugin.config().refill().config();
-    String coords = loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ();
+  public void remove(Audience audience, String mapName, Location location) {
+
+    FileConfiguration config = plugin.config().refill().config();
+
+    if (location == null) {
+      audience.sendMessage(Component.translatable("refill.usage"));
+      return;
+    }
+
+    String coords =
+        location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ();
+
     boolean found = false;
-    for (int i = 1; refillConfig.contains("refill." + mapName + ".c" + i); i++) {
-      String storedCoords = refillConfig.getString("refill." + mapName + ".c" + i);
-      if (storedCoords.equals(coords)) {
-        refillConfig.set("refill." + mapName + ".c" + i, null);
+
+    for (int i = 1; config.contains("refill." + mapName + ".c" + i); i++) {
+
+      String stored = config.getString("refill." + mapName + ".c" + i);
+
+      if (stored.equals(coords)) {
+
+        config.set("refill." + mapName + ".c" + i, null);
+
         plugin.config().refill().save();
         plugin.config().refill().reload();
-        SendMessage.sendToPlayer(
-            sender, LanguageManager.message("refill.chestDeleted").replace("{coords}", coords));
+
+        audience.sendMessage(Component.translatable("refill.chestDeleted", Component.text(coords)));
+
         found = true;
         break;
       }
     }
 
     if (!found) {
-      SendMessage.sendToPlayer(
-          sender, LanguageManager.message("refill.chestNotFound").replace("{coords}", coords));
+      audience.sendMessage(Component.translatable("refill.chestNotFound", Component.text(coords)));
     }
   }
 
-  public void testRefill(CommandSender sender, String mapName, String world) {
-    RefillManager refillManager = TowersForPGM.getInstance().getRefillManager();
+  public void test(Audience audience, String mapName, String world) {
+
+    RefillManager refillManager = plugin.getRefillManager();
+
     refillManager.loadChests(mapName, world);
+
+    audience.sendMessage(Component.translatable("refill.test"));
   }
 }

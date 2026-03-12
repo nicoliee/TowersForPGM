@@ -5,13 +5,17 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.MatchPhase;
 import tc.oc.pgm.util.bukkit.Sounds;
+import tc.oc.pgm.util.text.TextFormatter;
 
 public class CountdownManager {
   private final TowersForPGM plugin;
@@ -57,8 +61,7 @@ public class CountdownManager {
     queueState.setCountdownTask(null);
     queueState.setRanked(false);
 
-    match.sendWarning(
-        Component.text(getRankedPrefix() + LanguageManager.message("ranked.cancelled")));
+    match.playSound(Sounds.WARNING);
 
     return true;
   }
@@ -72,9 +75,12 @@ public class CountdownManager {
 
   private BukkitTask createCountdownTask(
       Match match, AtomicInteger countdown, int maxSize, int minSize) {
-    match.sendMessage(Component.text(getRankedPrefix()
-        + LanguageManager.message("ranked.countdown")
-            .replace("{time}", String.valueOf(countdown.get()))));
+    Component message = Queue.RANKED_PREFIX
+        .append(Component.space())
+        .append(Component.translatable(
+                "ranked.countdown", Component.text(countdown.get()).color(NamedTextColor.AQUA))
+            .color(NamedTextColor.DARK_AQUA));
+    match.sendMessage(message);
     return Bukkit.getScheduler()
         .runTaskTimer(
             plugin, () -> handleCountdownTick(match, countdown, maxSize, minSize), 0L, 20L);
@@ -82,8 +88,12 @@ public class CountdownManager {
 
   private void handleCountdownTick(Match match, AtomicInteger countdown, int maxSize, int minSize) {
     int timeLeft = countdown.get();
+    int timer = getCountdownTime(match);
+    if (timer < timeLeft) {
+      countdown.set(timer);
+      timeLeft = timer;
+    }
     List<UUID> disconnectedPlayerUUIDs = queueManager.getDisconnectedPlayersInQueue();
-
     if (timeLeft <= 0) {
       handleCountdownEnd(match, disconnectedPlayerUUIDs, minSize);
       return;
@@ -118,8 +128,9 @@ public class CountdownManager {
   }
 
   private void sendCountdownMessage(Match match, int timeLeft, List<UUID> disconnectedPlayers) {
-    String message = getRankedPrefix()
-        + LanguageManager.message("ranked.countdown").replace("{time}", String.valueOf(timeLeft));
+    Component message = Queue.RANKED_PREFIX
+        .append(Component.space())
+        .append(Component.text(SendMessage.formatTime(timeLeft)).color(NamedTextColor.AQUA));
 
     if (!disconnectedPlayers.isEmpty()) {
       List<String> disconnectedNames = disconnectedPlayers.stream()
@@ -127,18 +138,27 @@ public class CountdownManager {
           .filter(name -> name != null)
           .collect(Collectors.toList());
 
-      message += " | "
-          + LanguageManager.message("ranked.waitingFor")
-              .replace("{player}", String.join(", ", disconnectedNames));
+      List<Component> disconnectedNameComponents = disconnectedNames.stream()
+          .map(name -> Component.text(name, NamedTextColor.DARK_AQUA))
+          .collect(Collectors.toList());
+
+      Component disconnectedNamesList =
+          TextFormatter.list(disconnectedNameComponents, NamedTextColor.DARK_GRAY);
+
+      Component waiting = Component.space()
+          .append(Component.text("|").color(NamedTextColor.DARK_GRAY))
+          .append(Component.space())
+          .append(Component.translatable("ranked.waitingFor", disconnectedNamesList)
+              .color(NamedTextColor.AQUA));
+      message = message.append(waiting);
     }
 
-    match.sendActionBar(Component.text(message));
+    match.sendActionBar(message.decorate(TextDecoration.ITALIC));
     match.playSound(Sounds.INVENTORY_CLICK);
   }
 
   private int getCountdownTime(Match match) {
     int minSize = plugin.config().ranked().getRankedMinSize();
-    int maxSize = plugin.config().ranked().getRankedMaxSize();
     int TimerWaiting = plugin.config().ranked().getOnTimerWaiting();
     int TimerMinReached = plugin.config().ranked().getOnTimerMinReached();
     int TimerFull = plugin.config().ranked().getOnTimerFull();
@@ -147,15 +167,11 @@ public class CountdownManager {
       return TimerWaiting;
     }
 
-    if (queueState.getQueueSize() >= maxSize) {
+    if (queueState.getQueueSize() >= queueManager.getValidRankedSize(match)) {
       return TimerFull;
     }
 
     int playerCount = match.getPlayers().size();
     return (playerCount == minSize || playerCount == minSize + 1) ? TimerFull : TimerMinReached;
-  }
-
-  private String getRankedPrefix() {
-    return LanguageManager.message("ranked.prefix");
   }
 }

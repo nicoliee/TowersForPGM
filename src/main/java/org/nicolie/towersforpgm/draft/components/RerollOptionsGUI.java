@@ -3,6 +3,8 @@ package org.nicolie.towersforpgm.draft.components;
 import java.util.*;
 import java.util.stream.Collectors;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -28,7 +30,7 @@ public class RerollOptionsGUI implements Listener {
   private static final int MIN_VOTES_FAST_TIMER = 5;
   private static String GUI_TITLE;
 
-  private final DraftDisplayManager displayManager;
+  private final BossbarTimer displayManager;
   private final AvailablePlayers availablePlayers;
   private final Teams teams;
 
@@ -78,7 +80,7 @@ public class RerollOptionsGUI implements Listener {
       TowersForPGM plugin,
       AvailablePlayers availablePlayers,
       Teams teams,
-      DraftDisplayManager displayManager) {
+      BossbarTimer displayManager) {
     this.displayManager = displayManager;
     this.availablePlayers = availablePlayers;
     this.teams = teams;
@@ -406,15 +408,14 @@ public class RerollOptionsGUI implements Listener {
   }
 
   private void startVotingTimer() {
-    String baseMessage = LanguageManager.message("draft.reroll.voting.bossbar");
     displayManager.startTimer(
         remainingSeconds[0],
-        formatMessage(baseMessage),
+        formatMessage(),
         BossBar.Color.GREEN,
         () -> {
           checkFastTimer();
           remainingSeconds[0]--;
-          displayManager.updateBarMessage(formatMessage(baseMessage));
+          displayManager.updateBarMessage(formatMessage());
         },
         this::completeVoting);
   }
@@ -431,11 +432,12 @@ public class RerollOptionsGUI implements Listener {
     }
   }
 
-  private String formatMessage(String baseMessage) {
-    return baseMessage
-        .replace("{time}", DraftDisplayManager.formatTime(remainingSeconds[0]))
-        .replace("{current}", String.valueOf(votes.size()))
-        .replace("{total}", String.valueOf(totalEligibleVoters));
+  private Component formatMessage() {
+    return Component.translatable(
+        "draft.reroll.voting.bossbar",
+        Component.text(votes.size()),
+        Component.text(totalEligibleVoters),
+        Component.text(BossbarTimer.formatTime(remainingSeconds[0])).color(NamedTextColor.GREEN));
   }
 
   private void completeVoting() {

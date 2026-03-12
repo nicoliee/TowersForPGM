@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.draft.listeners;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -9,6 +10,8 @@ import org.bukkit.inventory.ItemStack;
 import org.nicolie.towersforpgm.draft.components.DraftPhase;
 import org.nicolie.towersforpgm.draft.components.DraftReroll;
 import org.nicolie.towersforpgm.draft.core.Draft;
+import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.player.MatchPlayer;
 
 public class RerollItemListener implements Listener {
 
@@ -40,12 +43,12 @@ public class RerollItemListener implements Listener {
     event.setCancelled(true);
 
     DraftPhase currentPhase = draft.getState().getCurrentPhase();
-
+    MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player.getUniqueId());
     // CAPTAINS phase: Vote for reroll
     if (currentPhase == DraftPhase.CAPTAINS) {
       boolean success = draft.getRerollManager().onPlayerRequestReroll(player.getUniqueId());
       if (!success) {
-        player.sendMessage("§cNo puedes solicitar un reroll en este momento.");
+        matchPlayer.sendWarning(Component.translatable("draft.reroll.denied"));
       }
       return;
     }

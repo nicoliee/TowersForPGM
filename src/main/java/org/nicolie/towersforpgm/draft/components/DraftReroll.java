@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -28,7 +29,7 @@ public class DraftReroll {
   public static final int CAPTAIN_PICK_TIMER = 35;
   public static final double MIN_VOTE_PERCENTAGE = 0.70;
 
-  private final DraftDisplayManager displayManager;
+  private final BossbarTimer displayManager;
   private final Captains captains;
   private final AvailablePlayers availablePlayers;
 
@@ -48,7 +49,7 @@ public class DraftReroll {
       Captains captains,
       AvailablePlayers availablePlayers,
       Teams teams,
-      DraftDisplayManager displayManager) {
+      BossbarTimer displayManager) {
     this.displayManager = displayManager;
     this.captains = captains;
     this.availablePlayers = availablePlayers;
@@ -61,7 +62,7 @@ public class DraftReroll {
 
     initializeEligibleVoters(match);
     giveRerollItem(match);
-    match.sendActionBar(Component.text(LanguageManager.message("draft.reroll.actionBar")));
+    match.sendActionBar(Component.translatable("draft.reroll.actionBar"));
     startRerollTimer();
   }
 
@@ -74,15 +75,29 @@ public class DraftReroll {
   }
 
   private void startRerollTimer() {
-    String baseMessage = LanguageManager.message("draft.reroll.bossbar.title");
+    Component title = Component.translatable(
+            "draft.reroll.bossbar", Component.text(BossbarTimer.formatTime(remainingSeconds[0])))
+        .append(Component.space())
+        .append(Component.translatable(
+                "misc.timeRemaining",
+                Component.text(BossbarTimer.formatTime(remainingSeconds[0]))
+                    .color(NamedTextColor.GREEN))
+            .color(NamedTextColor.AQUA));
     displayManager.startTimer(
         remainingSeconds[0],
-        baseMessage.replace("{time}", DraftDisplayManager.formatTime(remainingSeconds[0])),
+        title,
         BossBar.Color.YELLOW,
         () -> {
           remainingSeconds[0]--;
-          displayManager.updateBarMessage(
-              baseMessage.replace("{time}", DraftDisplayManager.formatTime(remainingSeconds[0])));
+          displayManager.updateBarMessage(Component.translatable(
+                  "draft.reroll.bossbar",
+                  Component.text(BossbarTimer.formatTime(remainingSeconds[0])))
+              .append(Component.space())
+              .append(Component.translatable(
+                      "misc.timeRemaining",
+                      Component.text(BossbarTimer.formatTime(remainingSeconds[0]))
+                          .color(NamedTextColor.GREEN))
+                  .color(NamedTextColor.AQUA)));
         },
         () -> completeReroll(false));
   }
@@ -95,12 +110,13 @@ public class DraftReroll {
     MatchPlayer player = PGM.get().getMatchManager().getPlayer(playerId);
     int minRequired = getMinimumRerollVotes();
     int current = rerollRequesters.size();
-
-    MatchManager.getMatch()
-        .sendWarning(Component.text(LanguageManager.message("draft.reroll.requested")
-            .replace("{player}", player != null ? player.getPrefixedName() : "Player")
-            .replace("{current}", String.valueOf(current))
-            .replace("{min}", String.valueOf(minRequired))));
+    player
+        .getMatch()
+        .sendWarning(Component.translatable(
+            "draft.reroll.requested",
+            player.getName(),
+            Component.text(current),
+            Component.text(minRequired)));
 
     if (!timerExtended && current == 1) {
       timerExtended = true;
@@ -117,7 +133,7 @@ public class DraftReroll {
     displayManager.cancelTimer();
     if (approved) {
       MatchManager.getMatch()
-          .sendWarning(Component.text(LanguageManager.message("draft.reroll.approved")));
+          .sendWarning(Component.translatable("draft.reroll.approved").color(NamedTextColor.AQUA));
     }
     if (callback != null) callback.onRerollComplete(approved);
   }

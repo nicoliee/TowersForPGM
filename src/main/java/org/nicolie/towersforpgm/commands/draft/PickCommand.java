@@ -9,43 +9,34 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.components.DraftPhase;
-import org.nicolie.towersforpgm.draft.components.PicksGUI;
 import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.draft.core.Teams;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
+import org.nicolie.towersforpgm.draft.picksMenu.PicksGUIManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
 
-// Comando para seleccionar un jugador en el draft
-// PGM actualmente solo soporta una partida a la vez, por lo que no se pueden realizar múltiples
-// drafts simultáneamente
 public class PickCommand implements CommandExecutor, TabCompleter {
   private Draft draft;
   private final Captains captains;
   private final AvailablePlayers availablePlayers;
   private final Teams teams;
-  private final PicksGUI pickInventory;
 
   public PickCommand(
-      Draft draft,
-      Captains captains,
-      AvailablePlayers availablePlayers,
-      Teams teams,
-      PicksGUI pickInventory) {
+      Draft draft, Captains captains, AvailablePlayers availablePlayers, Teams teams) {
     this.draft = draft;
     this.captains = captains;
     this.availablePlayers = availablePlayers;
     this.teams = teams;
-    this.pickInventory = pickInventory;
   }
 
   private String validatePlayerToPick(String inputName, Player player) {
     if (teams.isPlayerInAnyTeam(inputName)) {
-      return LanguageManager.message("draft.picks.alreadyPicked").replace("{player}", inputName);
+      return "draft.alreadyInTeam";
     }
 
     String pickedPlayerString = availablePlayers.getAvailablePlayers().stream()
@@ -58,7 +49,7 @@ public class PickCommand implements CommandExecutor, TabCompleter {
             .orElse(null));
 
     if (pickedPlayerString == null) {
-      return LanguageManager.message("draft.picks.notInList").replace("{player}", inputName);
+      return "draft.picks.notInDraft";
     }
 
     return null;
@@ -66,30 +57,30 @@ public class PickCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    // Comprobar si el comando fue ejecutado por un jugador
+    Audience audience = Audience.get(sender);
     if (!(sender instanceof Player)) {
-      sender.sendMessage(LanguageManager.message("errors.noPlayer"));
+      audience.sendWarning(Component.translatable("command.onlyPlayers"));
       return true;
     }
 
     Player player = (Player) sender;
-    MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
     // Comprobar si el draft está activo
-    if (Draft.getPhase() == DraftPhase.IDLE) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.noDraft")));
+    if (Draft.getPhase() == DraftPhase.IDLE || Draft.getPhase() == DraftPhase.ENDED) {
+      audience.sendWarning(Component.translatable("draft.inactive"));
       return true;
     }
 
     // Prevenir picks durante fase de reroll de capitanes
     if (Draft.getPhase() == DraftPhase.CAPTAINS || Draft.getPhase() == DraftPhase.REROLL) {
-      matchPlayer.sendWarning(
-          Component.text("§cNo puedes seleccionar jugadores durante la votación de capitanes."));
+      audience.sendWarning(Component.translatable("draft.picks.duringReroll"));
       return true;
     }
 
     if (args.length == 0) {
-      pickInventory.openInventory(player);
-      pickInventory.giveItemToPlayer(player);
+      MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
+      new PicksGUIManager(TowersForPGM.getInstance(), draft, captains, availablePlayers, teams)
+          .openMenu(matchPlayer);
+      PicksGUIManager.giveItem(player);
       return true;
     }
 
@@ -99,21 +90,21 @@ public class PickCommand implements CommandExecutor, TabCompleter {
       if (args.length == 1) {
         if ((captains.isCaptain1Turn() && captainNumber == 2)
             || (!captains.isCaptain1Turn() && captainNumber == 1)) {
-          matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.notTurn")));
+          audience.sendWarning(Component.translatable("draft.notTurn"));
           return true;
         }
 
         String inputName = args[0].toLowerCase();
         String validationError = validatePlayerToPick(inputName, player);
         if (validationError != null) {
-          matchPlayer.sendWarning(Component.text(validationError));
+          audience.sendWarning(Component.translatable(validationError, Component.text(inputName)));
           return true;
         }
 
         draft.pickPlayer(inputName);
       }
     } else {
-      SendMessage.sendToPlayer(player, LanguageManager.message("draft.picks.notCaptain"));
+      audience.sendWarning(Component.translatable("draft.notCaptain"));
       return true;
     }
     return true;

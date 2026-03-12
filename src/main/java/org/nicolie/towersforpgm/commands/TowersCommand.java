@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -12,16 +13,14 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.commandUtils.DraftConfig;
-import org.nicolie.towersforpgm.commands.commandUtils.HelpConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.MatchBotConfigs;
 import org.nicolie.towersforpgm.commands.commandUtils.PreparationConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.RankedConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.RefillConfig;
 import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
 import org.nicolie.towersforpgm.configs.tables.TableType;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.util.Audience;
 
 // Comando para configurar la mayoría de los aspectos del plugin, pensado para ser usado por
 // administradores
@@ -35,6 +34,32 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
   private final RefillConfig refillConfig;
   private final RankedConfig rankedConfig;
   private final MatchBotConfigs matchBotConfig;
+  List<String> MAIN_ARGS =
+      Arrays.asList("draft", "matchbot", "preparation", "ranked", "refill", "rollback", "stats");
+  List<String> DRAFT_ARGS =
+      Arrays.asList("min", "order", "private", "reroll", "secondpick", "suggestions", "timer");
+  List<String> MATCHBOT_ARGS = Arrays.asList(
+      "accounts", "channel", "config", "rankedrole", "roles", "stats", "toggle", "voice");
+  List<String> MATCHBOT_TABLE_ARGS = Arrays.asList("add", "remove", "list");
+  List<String> MATCHBOT_VOICE_ARGS =
+      Arrays.asList("inactive", "private", "queue", "reset", "toggle");
+  List<String> PREPARATION_ARGS =
+      Arrays.asList("add", "haste", "list", "max", "min", "remove", "timer", "toggle");
+  List<String> RANKED_ARGS = Arrays.asList(
+      "addmap",
+      "maxsize",
+      "minsize",
+      "matchmaking",
+      "order",
+      "profile",
+      "reroll",
+      "setpool",
+      "removemap");
+  List<String> REFILL_ARGS = Arrays.asList("add", "delete", "reload");
+  List<String> STATS_ARGS = Arrays.asList(
+      "add", "addMap", "addTemporary", "default", "list", "remove", "removeMap", "removeTemporary");
+  List<String> MATCHBOT_ROLES_ARGS =
+      Arrays.asList("registered", "bronze", "silver", "gold", "emerald", "diamond");
 
   public TowersCommand() {
     this.draftConfig = new DraftConfig();
@@ -47,10 +72,10 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (args.length == 0) {
-      if (sender instanceof Player) {
-        sender.sendMessage("§c/towers <draft|preparation|refill|stats|matchbot|help>");
-      }
+      audience.sendWarning(Component.translatable(
+          "command.incorrectUsage", Component.text("/towers " + getArgsFormatted(MAIN_ARGS))));
       return true;
     }
     String mainArg = args[0].toLowerCase();
@@ -58,546 +83,508 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
     switch (mainArg) {
       case "draft":
         if (args.length == 1) {
-          sender.sendMessage(
-              "§c/towers draft <min|order|private|secondpickbalance|suggestions|timer|reroll>");
+          audience.sendWarning(Component.translatable(
+              "command.incorrectUsage",
+              Component.text("/towers draft " + getArgsFormatted(DRAFT_ARGS))));
           return true;
         }
 
         switch (args[1].toLowerCase()) {
-          case "reroll":
-            boolean newRerollValue =
-                !TowersForPGM.getInstance().config().draft().isReroll();
-            draftConfig.setRerollOption(sender, newRerollValue);
-            break;
           case "min":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers draft min <size>");
-              return true;
-            }
+            int minArg = -1;
             try {
-              int size = Integer.parseInt(args[2]);
-              draftConfig.setMinDraftOrder(sender, size);
+              if (args.length >= 3) {
+                minArg = Integer.parseInt(args[2]);
+              }
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.message("draft.usage"));
+              audience.sendWarning(
+                  Component.translatable("command.numberExpected", Component.text(args[2])));
               return true;
             }
+            draftConfig.minOrder(audience, minArg);
             break;
 
           case "order":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers draft order <A[AB]+>");
-              return true;
-            }
-            String order = args[2];
-            draftConfig.setDraftOrder(sender, order);
+            String order = args.length >= 3 ? args[2] : null;
+            draftConfig.order(audience, order);
             break;
 
           case "private":
-            if (args.length < 3
-                || (!args[2].equalsIgnoreCase("true") && !args[2].equalsIgnoreCase("false"))) {
-              SendMessage.sendToPlayer(sender, "§c/towers draft private <true|false>");
-              return true;
-            }
-            boolean isPrivateMatch = Boolean.parseBoolean(args[2]);
-            draftConfig.setPrivateMatch(sender, isPrivateMatch);
+            Boolean privateArg =
+                args.length >= 3 && parseBoolean(args[2]) != null ? parseBoolean(args[2]) : false;
+            draftConfig.privateMatch(audience, privateArg);
             break;
-          case "secondpickbalance":
+
+          case "reroll":
+            Boolean rerollValue = args.length >= 3 ? parseBoolean(args[2]) : null;
+            draftConfig.reroll(audience, rerollValue);
+            break;
+
+          case "secondpick":
             Boolean secondPickValue = args.length >= 3 ? parseBoolean(args[2]) : null;
-            draftConfig.handleSecondGetsExtraPlayerCommand(sender, secondPickValue);
+            draftConfig.secondPick(audience, secondPickValue);
             break;
 
           case "suggestions":
             Boolean suggestionsValue = args.length >= 3 ? parseBoolean(args[2]) : null;
-            draftConfig.handleDraftSuggestionsCommand(sender, suggestionsValue);
+            draftConfig.suggestions(audience, suggestionsValue);
             break;
 
           case "timer":
             Boolean timerValue = args.length >= 3 ? parseBoolean(args[2]) : null;
-            draftConfig.handleDraftTimerCommand(sender, timerValue);
+            draftConfig.timer(audience, timerValue);
             break;
+
           default:
+            audience.sendWarning(Component.translatable(
+                "command.incorrectUsage",
+                Component.text("/towers draft " + getArgsFormatted(DRAFT_ARGS))));
             break;
         }
         break;
 
       case "preparation":
         if (args.length == 1) {
-          sender.sendMessage("§c/towers preparation <toggle|add|remove|max|min|timer|haste|list>");
+          audience.sendWarning(Component.translatable(
+              "command.incorrectUsage",
+              Component.text("/towers preparation " + getArgsFormatted(PREPARATION_ARGS))));
           return true;
         }
 
         switch (args[1].toLowerCase()) {
-          case "toggle":
-            preparationConfig.togglePreparation(sender);
-            break;
           case "add":
-            preparationConfig.handleAddCommand(sender);
+            preparationConfig.add(audience);
             break;
-          case "remove":
-            preparationConfig.handleRemoveCommand(sender);
-            break;
+
+          case "haste":
+            int haste = -1;
+            if (args.length >= 3) {
+              try {
+                haste = Integer.parseInt(args[2]);
+              } catch (NumberFormatException ignored) {
+                audience.sendWarning(Component.text("/towers preparation haste <level>"));
+              }
+            }
+            preparationConfig.haste(audience, haste);
+            return true;
+
+          case "list":
+            preparationConfig.list(audience);
+            return true;
+
           case "max":
             if (args.length < 5) {
-              sender.sendMessage("§c/towers preparation max <x> <y> <z>");
+              audience.sendWarning(Component.text("/towers preparation max <x> <y> <z>"));
               return true;
             }
             try {
               int x = Integer.parseInt(args[2]);
               int y = Integer.parseInt(args[3]);
               int z = Integer.parseInt(args[4]);
-              preparationConfig.handleCoordinates(sender, true, x, y, z);
+              preparationConfig.max(audience, x + "," + y + "," + z);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
+              audience.sendWarning(Component.text("/towers preparation max <x> <y> <z>"));
             }
             break;
+
           case "min":
             if (args.length < 5) {
-              sender.sendMessage("§c/towers preparation min <x> <y> <z>");
+              audience.sendWarning(Component.text("/towers preparation min <x> <y> <z>"));
               return true;
             }
             try {
               int x = Integer.parseInt(args[2]);
               int y = Integer.parseInt(args[3]);
               int z = Integer.parseInt(args[4]);
-              preparationConfig.handleCoordinates(sender, false, x, y, z);
+              preparationConfig.min(audience, x + "," + y + "," + z);
             } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
+              audience.sendWarning(Component.text("/towers preparation min <x> <y> <z>"));
             }
             break;
+
+          case "remove":
+            preparationConfig.remove(audience);
+            break;
+
           case "timer":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers preparation timer <mins>");
-              return true;
+            int timer = -1;
+            if (args.length >= 3) {
+              try {
+                timer = Integer.parseInt(args[2]);
+              } catch (NumberFormatException ignored) {
+                audience.sendWarning(Component.text("/towers preparation timer <mins>"));
+              }
             }
-            try {
-              int timer = Integer.parseInt(args[2]);
-              preparationConfig.handleTimerCommand(sender, timer);
-            } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
-              return true;
-            }
-            break;
-          case "haste":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers preparation haste <mins>");
-              return true;
-            }
-            try {
-              int haste = Integer.parseInt(args[2]);
-              preparationConfig.handleHasteCommand(sender, haste);
-            } catch (NumberFormatException e) {
-              SendMessage.sendToPlayer(sender, LanguageManager.message("region.usage"));
-              return true;
-            }
-            break;
-          case "list":
-            preparationConfig.handleListCommand(sender);
+            preparationConfig.timer(audience, timer);
             return true;
+
+          case "toggle":
+            Boolean toggleValue = args.length >= 3 ? parseBoolean(args[2]) : null;
+            preparationConfig.enabled(audience, toggleValue);
+            break;
+
           default:
+            audience.sendWarning(Component.translatable(
+                "command.incorrectUsage",
+                Component.text("/towers preparation " + getArgsFormatted(PREPARATION_ARGS))));
             break;
         }
         break;
       case "ranked":
         if (args.length == 1) {
-          sender.sendMessage(
-              "§c/towers ranked <minsize|maxsize|order|matchmaking|setpool|addtable|removetable|profile>");
+          audience.sendWarning(Component.translatable(
+              "command.incorrectUsage",
+              Component.text("/towers ranked " + getArgsFormatted(RANKED_ARGS))));
           return true;
         }
         switch (args[1].toLowerCase()) {
-            // TODO: quitar addMap y hacer de mejor forma las GUIS, ya que están desactualizadas.
-            // TODO: al cambiar de pool automaticamente cambiar profile.
-          case "reroll":
-            boolean newRerollValue =
-                !TowersForPGM.getInstance().config().ranked().isReroll();
-            rankedConfig.setRerollOption(sender, newRerollValue);
-            break;
-          case "minsize":
-            String minSizeArg = args.length >= 3 ? args[2] : null;
-            rankedConfig.minSize(sender, minSizeArg);
-            return true;
-
-          case "maxsize":
-            String maxSizeArg = args.length >= 3 ? args[2] : null;
-            rankedConfig.maxSize(sender, maxSizeArg);
-            return true;
-
-          case "order":
-            String orderArg = args.length >= 3 ? args[2] : null;
-            rankedConfig.draftOrder(sender, orderArg);
-            return true;
-
-          case "setpool":
-            String poolArg = args.length >= 3 ? args[2] : null;
-            rankedConfig.setPool(sender, poolArg);
-            return true;
-
-          case "addmap":
-            rankedConfig.addMap(sender);
-            return true;
-          case "removemap":
-            rankedConfig.removeMap(sender);
-            return true;
-
           case "addtable":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers ranked addtable <tabla>");
-              return true;
-            }
-            String tableName = args[2];
-            rankedConfig.addTable(sender, tableName);
+            String addTableArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.tableAdd(audience, addTableArg);
             return true;
 
-          case "removetable":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers ranked removetable <tabla>");
-              return true;
-            }
-            String removeTableName = args[2];
-            rankedConfig.deleteTable(sender, removeTableName);
-            return true;
           case "matchmaking":
             Boolean matchmakingArg = null;
             if (args.length >= 3) {
               matchmakingArg = parseBoolean(args[2]);
             }
-            rankedConfig.matchmaking(sender, matchmakingArg);
+            rankedConfig.matchmaking(audience, matchmakingArg);
+            return true;
+
+          case "maxsize":
+            String maxSizeArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.maxSize(audience, maxSizeArg);
+            return true;
+
+          case "minsize":
+            String minSizeArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.minSize(audience, minSizeArg);
+            return true;
+
+          case "order":
+            String orderArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.order(audience, orderArg);
             return true;
 
           case "profile":
-            if (args.length < 3) {
-              // Show current active profile
-              rankedConfig.showProfile(sender, null);
-            } else {
-              // Set active profile
-              String profileArg = args[2];
-              if (TowersForPGM.getInstance().config().ranked().profileExists(profileArg)) {
-                rankedConfig.setProfile(sender, profileArg);
-              } else {
-                sender.sendMessage(LanguageManager.message("ranked.profileNotFound")
-                    .replace("{profile}", profileArg));
-              }
+            String profileArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.profile(audience, profileArg);
+            return true;
+
+          case "removetable":
+            String removeTableArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.tableRemove(audience, removeTableArg);
+            return true;
+
+          case "reroll":
+            Boolean newRerollValue = null;
+
+            if (args.length >= 3) {
+              newRerollValue = Boolean.parseBoolean(args[2]);
             }
+            rankedConfig.reroll(audience, newRerollValue);
+            break;
+
+          case "setpool":
+            String poolArg = args.length >= 3 ? args[2] : null;
+            rankedConfig.pool(audience, poolArg);
             return true;
 
           default:
-            sender.sendMessage(
-                "§c/towers ranked <minsize|maxsize|order|setpool|addtable|removetable|matchmaking|profile>");
+            audience.sendWarning(Component.translatable(
+                "command.incorrectUsage",
+                Component.text("/towers ranked " + getArgsFormatted(RANKED_ARGS))));
         }
         break;
       case "refill":
         if (args.length == 1) {
-          sender.sendMessage("§c/towers refill <add|delete|reload>");
+          audience.sendWarning(Component.translatable(
+              "command.incorrectUsage",
+              Component.text("/towers refill " + getArgsFormatted(REFILL_ARGS))));
           return true;
         }
         Location loc = ((Player) sender).getLocation();
         String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
         switch (args[1].toLowerCase()) {
           case "add":
-            refillConfig.addRefillLocation(sender, mapName, loc);
+            refillConfig.chest(audience, mapName, loc);
             return true;
 
           case "delete":
-            refillConfig.removeRefillLocation(sender, mapName, loc);
+            refillConfig.remove(audience, mapName, loc);
             return true;
 
           case "reload":
             String worldName = ((Player) sender).getWorld().getName();
-            refillConfig.testRefill(sender, mapName, worldName);
+            refillConfig.test(audience, mapName, worldName);
             return true;
 
           default:
-            break;
+            audience.sendWarning(Component.translatable(
+                "command.incorrectUsage",
+                Component.text("/towers refill " + getArgsFormatted(REFILL_ARGS))));
+            return true;
         }
 
       case "stats":
         if (args.length == 1) {
-          sender.sendMessage("§c/towers stats <default|add|remove|list|addMap|removeMap>");
+          audience.sendWarning(Component.translatable(
+              "command.incorrectUsage",
+              Component.text("/towers stats " + getArgsFormatted(STATS_ARGS))));
           return true;
         }
 
         switch (args[1].toLowerCase()) {
-          case "default":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers stats default <tabla>");
-              return true;
-            }
-            String tableName = args[2];
-            statsConfig.setDefaultTable(sender, tableName);
-            break;
           case "add":
             if (args.length < 3) {
-              sender.sendMessage("§c/towers stats add <tabla>");
+              audience.sendWarning(Component.translatable(
+                  "command.incorrectUsage", Component.text("/towers stats add <tabla>")));
               return true;
             }
             String newTableName = args[2];
-            statsConfig.addTable(sender, newTableName);
+            statsConfig.tableAdd(audience, newTableName);
             break;
-          case "remove":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers stats remove <tabla>");
-              return true;
-            }
-            String removeTableName = args[2];
-            statsConfig.deleteTable(sender, removeTableName);
-            return true;
-          case "list":
-            statsConfig.listTables(sender);
-            return true;
+
           case "addmap":
             if (args.length < 3) {
-              sender.sendMessage("§c/towers stats addMap <tabla>");
+              audience.sendWarning(Component.translatable(
+                  "command.incorrectUsage", Component.text("/towers stats addMap <tabla>")));
               return true;
             }
             String addMapTableName = args[2];
-            statsConfig.addTableForMap(sender, addMapTableName);
+            statsConfig.map(audience, addMapTableName);
             return true;
-          case "removemap":
-            statsConfig.deleteTableForMap(sender);
-            break;
+
           case "addtemporary":
             if (args.length < 3) {
-              sender.sendMessage("§c/towers stats addTemporary <tabla>");
+              audience.sendWarning(Component.translatable(
+                  "command.incorrectUsage", Component.text("/towers stats addTemporary <tabla>")));
               return true;
             }
             String addTemporaryTableName = args[2];
-            statsConfig.addTempTable(sender, addTemporaryTableName);
+            statsConfig.temp(audience, addTemporaryTableName);
             return true;
-          case "removetemporary":
-            statsConfig.removeTempTable(sender);
-            return true;
-          default:
+
+          case "default":
+            String tableName = args.length >= 3 ? args[2] : null;
+            statsConfig.defaultTable(audience, tableName);
             break;
+
+          case "list":
+            statsConfig.tables(audience);
+            return true;
+
+          case "remove":
+            if (args.length < 3) {
+              audience.sendWarning(Component.translatable(
+                  "command.incorrectUsage", Component.text("/towers stats remove <tabla>")));
+              return true;
+            }
+            String removeTableName = args[2];
+            statsConfig.tableRemove(audience, removeTableName);
+            return true;
+
+          case "removemap":
+            statsConfig.mapRemove(audience);
+            return true;
+
+          case "removetemporary":
+            statsConfig.tempRemove(audience);
+            return true;
+
+          default:
+            audience.sendWarning(Component.translatable(
+                "command.incorrectUsage",
+                Component.text("/towers stats " + getArgsFormatted(STATS_ARGS))));
+            return true;
         }
         break;
 
       case "rollback":
         if (args.length < 2) {
-          sender.sendMessage("§c/towers rollback <matchID>");
+          audience.sendWarning(Component.translatable(
+              "command.incorrectUsage", Component.text("/towers rollback <matchID>")));
           return true;
         }
         String matchId = args[1];
         // Ejecutar rollback asincrónico
-        sender.sendMessage("§eIniciando rollback para " + matchId + "...");
         org.nicolie.towersforpgm.database.MatchHistoryManager.getMatch(matchId)
             .thenAccept(history -> {
               if (history == null) {
                 org.bukkit.Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
-                  sender.sendMessage("§cMatchID no encontrado");
+                  audience.sendMessage(
+                      Component.translatable("rollback.matchNotFound", Component.text(matchId)));
                 });
                 return;
               }
-              org.nicolie.towersforpgm.database.MatchHistoryManager.rollbackMatch(sender, history);
+              org.nicolie.towersforpgm.database.MatchHistoryManager.rollbackMatch(
+                  audience, history);
             });
         return true;
 
       case "matchbot":
-        // Early return si MatchBot no está habilitado
         if (!TowersForPGM.getInstance().isMatchBotEnabled()) {
+          audience.sendWarning(Component.translatable("matchbot.notEnabled"));
           return true;
         }
 
         if (args.length == 1) {
-          sender.sendMessage(
-              "§c/towers matchbot <toggle|stats|channel|rankedrole|accounts|voice|roles|tables|config>");
+          audience.sendWarning(Component.translatable(
+              "command.incorrectUsage",
+              Component.text("/towers matchbot " + getArgsFormatted(MATCHBOT_ARGS))));
           return true;
         }
         switch (args[1].toLowerCase()) {
-          case "toggle":
-            matchBotConfig.toggleCommands(sender);
-            break;
-          case "stats":
-            matchBotConfig.toggleStatsPoints(sender);
-            break;
-          case "channel":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers matchbot channel <channelId>");
-              return true;
-            }
-            matchBotConfig.setDiscordChannel(sender, args[2]);
-            break;
-          case "rankedrole":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers matchbot rankedrole <roleId>");
-              return true;
-            }
-            matchBotConfig.setRankedRole(sender, args[2]);
-            break;
           case "accounts":
-            if (args.length < 3) {
-              sender.sendMessage("§c/towers matchbot accounts <table>");
-              return true;
-            }
-            matchBotConfig.setAccountsTable(sender, args[2]);
+            String accountsTable = args.length >= 3 ? args[2] : null;
+            matchBotConfig.accounts(audience, accountsTable);
             break;
-          case "voice":
-            if (args.length < 3) {
-              sender.sendMessage(
-                  "§c/towers matchbot voice <toggle|private|inactive|queue|team1|team2>");
-              return true;
-            }
-            switch (args[2].toLowerCase()) {
-              case "toggle":
-                matchBotConfig.toggleVoiceChat(sender);
-                break;
-              case "private":
-                matchBotConfig.togglePrivateChannels(sender);
-                break;
-              case "inactive":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot voice inactive <channelId>");
-                  return true;
-                }
-                matchBotConfig.setVoiceChannelInactive(sender, args[3]);
-                break;
-              case "queue":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot voice queue <channelId>");
-                  return true;
-                }
-                matchBotConfig.setVoiceChannelQueue(sender, args[3]);
-                break;
-              case "team1":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot voice team1 <channelId>");
-                  return true;
-                }
-                matchBotConfig.setVoiceChannelTeam1(sender, args[3]);
-                break;
-              case "team2":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot voice team2 <channelId>");
-                  return true;
-                }
-                matchBotConfig.setVoiceChannelTeam2(sender, args[3]);
-                break;
-              default:
-                sender.sendMessage(
-                    "§c/towers matchbot voice <toggle|private|inactive|queue|team1|team2>");
-                break;
-            }
+
+          case "channel":
+            String valueStr = args.length >= 3 ? args[2] : null;
+            matchBotConfig.discordChannel(audience, valueStr);
             break;
+
+          case "config":
+            matchBotConfig.showConfig(audience);
+            break;
+
+          case "rankedrole":
+            String rankedRoleId = args.length >= 3 ? args[2] : null;
+            matchBotConfig.rankedRole(audience, rankedRoleId);
+            break;
+
           case "roles":
             if (args.length < 3) {
-              sender.sendMessage(
-                  "§c/towers matchbot roles <registered|bronze|silver|gold|emerald|diamond> <roleId>");
+              audience.sendWarning(Component.text(
+                  "/towers matchbot roles " + getArgsFormatted(MATCHBOT_ROLES_ARGS)));
               return true;
             }
             switch (args[2].toLowerCase()) {
-              case "registered":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot roles registered <roleId>");
-                  return true;
-                }
-                matchBotConfig.setRegisteredRole(sender, args[3]);
-                break;
               case "bronze":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot roles bronze <roleId>");
-                  return true;
-                }
-                matchBotConfig.setBronzeRole(sender, args[3]);
-                break;
-              case "silver":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot roles silver <roleId>");
-                  return true;
-                }
-                matchBotConfig.setSilverRole(sender, args[3]);
-                break;
-              case "gold":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot roles gold <roleId>");
-                  return true;
-                }
-                matchBotConfig.setGoldRole(sender, args[3]);
-                break;
-              case "emerald":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot roles emerald <roleId>");
-                  return true;
-                }
-                matchBotConfig.setEmeraldRole(sender, args[3]);
+                String bronzeRoleId = args.length >= 4 ? args[3] : null;
+                matchBotConfig.bronzeRole(audience, bronzeRoleId);
                 break;
               case "diamond":
-                if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot roles diamond <roleId>");
-                  return true;
-                }
-                matchBotConfig.setDiamondRole(sender, args[3]);
+                String diamondRoleId = args.length >= 4 ? args[3] : null;
+                matchBotConfig.diamondRole(audience, diamondRoleId);
+                break;
+              case "emerald":
+                String emeraldRoleId = args.length >= 4 ? args[3] : null;
+                matchBotConfig.emeraldRole(audience, emeraldRoleId);
+                break;
+              case "gold":
+                String goldRoleId = args.length >= 4 ? args[3] : null;
+                matchBotConfig.goldRole(audience, goldRoleId);
+                break;
+              case "registered":
+                String registeredRoleId = args.length >= 4 ? args[3] : null;
+                matchBotConfig.registeredRole(audience, registeredRoleId);
+                break;
+              case "silver":
+                String silverRoleId = args.length >= 4 ? args[3] : null;
+                matchBotConfig.silverRole(audience, silverRoleId);
                 break;
               default:
-                sender.sendMessage(
-                    "§c/towers matchbot roles <registered|bronze|silver|gold|emerald|diamond> <roleId>");
+                audience.sendWarning(Component.text(
+                    "/towers matchbot roles " + getArgsFormatted(MATCHBOT_ROLES_ARGS)));
                 break;
             }
             break;
+
+          case "stats":
+            Boolean value = args.length >= 3 ? parseBoolean(args[2]) : null;
+            matchBotConfig.statPoints(audience, value);
+            break;
+
           case "tables":
             if (args.length < 3) {
-              sender.sendMessage("§c/towers matchbot tables <add|remove|list>");
+              audience.sendWarning(Component.translatable(
+                  "command.incorrectUsage",
+                  Component.text(
+                      "/towers matchbot tables " + getArgsFormatted(MATCHBOT_TABLE_ARGS))));
               return true;
             }
             switch (args[2].toLowerCase()) {
               case "add":
                 if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot tables add <table>");
+                  audience.sendWarning(Component.translatable(
+                      "command.incorrectUsage",
+                      Component.text("/towers matchbot tables add <table>")));
                   return true;
                 }
-                matchBotConfig.addTable(sender, args[3]);
+                matchBotConfig.addTable(audience, args[3]);
+                break;
+              case "list":
+                matchBotConfig.listTables(audience);
                 break;
               case "remove":
                 if (args.length < 4) {
-                  sender.sendMessage("§c/towers matchbot tables remove <table>");
+                  audience.sendWarning(Component.translatable(
+                      "command.incorrectUsage",
+                      Component.text("/towers matchbot tables remove <table>")));
                   return true;
                 }
-                matchBotConfig.removeTable(sender, args[3]);
-                break;
-              case "list":
-                matchBotConfig.listTables(sender);
+                matchBotConfig.removeTable(audience, args[3]);
                 break;
               default:
-                sender.sendMessage("§c/towers matchbot tables <add|remove|list>");
+                audience.sendWarning(Component.translatable(
+                    "command.incorrectUsage",
+                    Component.text(
+                        "/towers matchbot tables " + getArgsFormatted(MATCHBOT_TABLE_ARGS))));
                 break;
             }
             break;
-          case "config":
-            matchBotConfig.showConfig(sender);
+
+          case "toggle":
+            Boolean toggleValue = args.length >= 3 ? parseBoolean(args[2]) : null;
+            matchBotConfig.toggle(audience, toggleValue);
             break;
+
+          case "voice":
+            if (args.length < 3) {
+              audience.sendWarning(Component.text(
+                  "/towers matchbot voice " + getArgsFormatted(MATCHBOT_VOICE_ARGS)));
+              break;
+            }
+            switch (args[2].toLowerCase()) {
+              case "inactive":
+                String inactiveChannelId = args.length >= 4 ? args[3] : null;
+                matchBotConfig.voiceChannelInactive(audience, inactiveChannelId);
+                break;
+              case "private":
+                Boolean privateChannelsEnabled = args.length >= 4 ? parseBoolean(args[3]) : null;
+                matchBotConfig.privateChannels(audience, privateChannelsEnabled);
+                break;
+              case "queue":
+                String queueChannelId = args.length >= 4 ? args[3] : null;
+                matchBotConfig.voiceChannelQueue(audience, queueChannelId);
+                break;
+              case "reset":
+                matchBotConfig.channelsRemove(audience);
+                break;
+              case "toggle":
+                Boolean voiceChatEnabled = args.length >= 4 ? parseBoolean(args[3]) : null;
+                matchBotConfig.voiceChat(audience, voiceChatEnabled);
+                break;
+              default:
+                audience.sendWarning(Component.text(
+                    "/towers matchbot voice " + getArgsFormatted(MATCHBOT_VOICE_ARGS)));
+                break;
+            }
+            break;
+
           default:
-            sender.sendMessage(
-                "§c/towers matchbot <toggle|stats|channel|rankedrole|accounts|voice|roles|tables|config>");
+            audience.sendWarning(Component.translatable(
+                "command.incorrectUsage",
+                Component.text("/towers matchbot " + getArgsFormatted(MATCHBOT_ARGS))));
             break;
         }
         break;
-
-      case "help":
-        if (args.length == 2) {
-          switch (args[1].toLowerCase()) {
-            case "draft":
-              HelpConfig.sendDraftHelp(sender);
-              break;
-            case "preparation":
-              HelpConfig.sendPreparationHelp(sender);
-              break;
-            case "refill":
-              HelpConfig.sendRefillHelp(sender);
-              break;
-            case "stats":
-              HelpConfig.sendStatsHelp(sender);
-              break;
-            case "ranked":
-              HelpConfig.sendRankedHelp(sender);
-              break;
-            default:
-              break;
-          }
-        } else {
-          HelpConfig.sendGeneralHelp(sender);
-        }
-        break;
-
       default:
-        sender.sendMessage("§c/towers help");
-        break;
+        audience.sendWarning(Component.translatable(
+            "command.incorrectUsage", Component.text("/towers " + getArgsFormatted(MAIN_ARGS))));
+        return true;
     }
 
     return true;
@@ -607,8 +594,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
   public List<String> onTabComplete(
       CommandSender sender, Command command, String alias, String[] args) {
     if (args.length == 1) {
-      List<String> base = Arrays.asList(
-          "draft", "preparation", "ranked", "rollback", "refill", "stats", "matchbot", "help");
+      List<String> base = MAIN_ARGS;
       String input = args[0].toLowerCase();
       return base.stream().filter(s -> s.startsWith(input)).collect(Collectors.toList());
     }
@@ -618,8 +604,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
     switch (first) {
       case "draft":
         if (args.length == 2) {
-          List<String> options = Arrays.asList(
-              "min", "order", "private", "reroll", "secondpickbalance", "suggestions", "timer");
+          List<String> options = DRAFT_ARGS;
           return filterPrefix(options, args[1]);
         }
         if (args.length == 3) {
@@ -639,8 +624,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
       case "preparation":
         if (args.length == 2) {
-          List<String> options =
-              Arrays.asList("toggle", "add", "remove", "max", "min", "timer", "haste", "list");
+          List<String> options = PREPARATION_ARGS;
           return filterPrefix(options, args[1]);
         }
         if (args.length >= 3) {
@@ -654,18 +638,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
         break;
       case "ranked":
         if (args.length == 2) {
-          List<String> options = Arrays.asList(
-              "minsize",
-              "maxsize",
-              "order",
-              "setpool",
-              "addmap",
-              "removemap",
-              "addtable",
-              "removetable",
-              "reroll",
-              "matchmaking",
-              "profile");
+          List<String> options = RANKED_ARGS;
           return filterPrefix(options, args[1]);
         }
         if (args.length == 3 && args[1].equalsIgnoreCase("profile")) {
@@ -682,15 +655,7 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
       case "stats":
         if (args.length == 2) {
-          List<String> options = Arrays.asList(
-              "default",
-              "add",
-              "remove",
-              "list",
-              "addMap",
-              "removeMap",
-              "addTemporary",
-              "removeTemporary");
+          List<String> options = STATS_ARGS;
           return filterPrefix(options, args[1]);
         }
         if (args.length == 3) {
@@ -706,27 +671,16 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
 
       case "matchbot":
         if (args.length == 2) {
-          List<String> options = Arrays.asList(
-              "toggle",
-              "stats",
-              "channel",
-              "rankedrole",
-              "accounts",
-              "voice",
-              "roles",
-              "tables",
-              "config");
+          List<String> options = MATCHBOT_ARGS;
           return filterPrefix(options, args[1]);
         }
         if (args.length == 3) {
           String sub = args[1].toLowerCase();
           if (sub.equals("voice")) {
-            List<String> voiceOptions =
-                Arrays.asList("toggle", "private", "inactive", "queue", "team1", "team2");
+            List<String> voiceOptions = MATCHBOT_VOICE_ARGS;
             return filterPrefix(voiceOptions, args[2]);
           } else if (sub.equals("roles")) {
-            List<String> roleOptions =
-                Arrays.asList("registered", "bronze", "silver", "gold", "emerald", "diamond");
+            List<String> roleOptions = MATCHBOT_ROLES_ARGS;
             return filterPrefix(roleOptions, args[2]);
           } else if (sub.equals("tables")) {
             List<String> tableOptions = Arrays.asList("add", "remove", "list");
@@ -745,14 +699,6 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
                 TowersForPGM.getInstance().config().databaseTables().getTables(TableType.ALL);
             return filterPrefix(tables, args[3]);
           }
-        }
-        break;
-
-      case "help":
-        if (args.length == 2) {
-          List<String> options =
-              Arrays.asList("draft", "preparation", "refill", "ranked", "rollback", "stats");
-          return filterPrefix(options, args[1]);
         }
         break;
     }
@@ -784,5 +730,13 @@ public class TowersCommand implements CommandExecutor, TabCompleter {
   private List<String> suggestNumbers(int argPosition) {
     List<String> numbers = Arrays.asList("0", "10", "25", "50", "100");
     return numbers;
+  }
+
+  private String getArgsFormatted(List<String> args) {
+    if (args == null || args.isEmpty()) {
+      return "<>";
+    }
+    String formatted = args.stream().map(arg -> arg).collect(Collectors.joining("|"));
+    return "<" + formatted + ">";
   }
 }

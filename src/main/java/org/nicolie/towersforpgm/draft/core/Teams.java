@@ -7,9 +7,8 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
-import tc.oc.pgm.join.JoinRequest;
-import tc.oc.pgm.join.JoinResult;
 import tc.oc.pgm.teams.Team;
 import tc.oc.pgm.teams.TeamMatchModule;
 
@@ -17,8 +16,8 @@ public class Teams {
 
   private final Map<Integer, Set<MatchPlayer>> onlineTeams = new HashMap<>();
   private final Map<Integer, Set<String>> offlineTeams = new HashMap<>();
-  private Team team1;
-  private Team team2;
+  private Party team1;
+  private Party team2;
 
   public Teams() {
     onlineTeams.put(1, new LinkedHashSet<>());
@@ -38,40 +37,49 @@ public class Teams {
 
   public boolean initializeTeamsFromMatch(Match match) {
     if (!validateTeamsForDraft(match)) return false;
-
     TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
-    if (teamModule == null) return false;
-
     List<Team> participatingTeams = teamModule.getTeams().stream().collect(Collectors.toList());
-
-    if (participatingTeams.size() != 2) return false;
 
     this.team1 = participatingTeams.get(0);
     this.team2 = participatingTeams.get(1);
     return true;
   }
 
-  public int getTeamNumber(Team team) {
+  public int getTeamNumber(Party team) {
     if (team == null) return -1;
     if (team.equals(team1)) return 1;
     if (team.equals(team2)) return 2;
     return -1;
   }
 
-  public Team getTeam(int teamNumber) {
+  public int getTeamNumber(String playerName) {
+    if (playerName == null) return -1;
+
+    if (onlineTeams.get(1).stream().anyMatch(mp -> mp.getNameLegacy().equalsIgnoreCase(playerName))
+        || offlineTeams.get(1).contains(playerName)) {
+      return 1;
+    }
+    if (onlineTeams.get(2).stream().anyMatch(mp -> mp.getNameLegacy().equalsIgnoreCase(playerName))
+        || offlineTeams.get(2).contains(playerName)) {
+      return 2;
+    }
+    return -1;
+  }
+
+  public Party getTeam(int teamNumber) {
     if (teamNumber == 1) return team1;
     if (teamNumber == 2) return team2;
     return null;
   }
 
   public String getTeamColor(int teamNumber) {
-    Team team = getTeam(teamNumber);
+    Party team = getTeam(teamNumber);
     if (team == null) return teamNumber == 1 ? "§4" : "§9"; // Fallback colors
     return team.getColor().toString();
   }
 
   public String getTeamName(int teamNumber) {
-    Team team = getTeam(teamNumber);
+    Party team = getTeam(teamNumber);
     return team != null ? team.getDefaultName() : "Team " + teamNumber;
   }
 
@@ -119,8 +127,15 @@ public class Teams {
   }
 
   public Set<String> getAllTeam(int teamNumber) {
-    Set<String> allPlayers = new LinkedHashSet<>(offlineTeams.get(teamNumber));
-    for (MatchPlayer mp : onlineTeams.get(teamNumber)) {
+    Set<String> offlineTeam = offlineTeams.get(teamNumber);
+    Set<MatchPlayer> onlineTeam = onlineTeams.get(teamNumber);
+
+    if (offlineTeam == null || onlineTeam == null) {
+      return Collections.emptySet();
+    }
+
+    Set<String> allPlayers = new LinkedHashSet<>(offlineTeam);
+    for (MatchPlayer mp : onlineTeam) {
       allPlayers.add(mp.getPlayer().getNameLegacy());
     }
     return allPlayers;
@@ -141,14 +156,12 @@ public class Teams {
     TeamMatchModule teamModule = match.needModule(TeamMatchModule.class);
     if (teamModule == null) return;
 
-    Team targetTeam = getTeam(teamNumber);
+    Party targetTeam = getTeam(teamNumber);
     if (targetTeam == null) return;
 
     MatchPlayer matchPlayer = match.getPlayer(player);
     if (matchPlayer != null) {
-      JoinRequest request = JoinRequest.fromPlayer(matchPlayer, targetTeam, JoinRequest.Flag.FORCE);
-      JoinResult result = teamModule.queryJoin(matchPlayer, request);
-      teamModule.join(matchPlayer, request, result);
+      match.setParty(matchPlayer, targetTeam);
     }
   }
 

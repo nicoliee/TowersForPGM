@@ -206,7 +206,7 @@ public class SQLStatsManager {
     try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
       stmt.setString(1, username);
-      stmt.setQueryTimeout(2); // Reducir timeout drásticamente
+      stmt.setQueryTimeout(2);
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
           int kills = hasColumn(rs, "kills") ? rs.getInt("kills") : -9999;

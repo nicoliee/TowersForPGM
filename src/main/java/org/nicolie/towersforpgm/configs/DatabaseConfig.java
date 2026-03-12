@@ -13,6 +13,7 @@ public class DatabaseConfig {
   private String user;
   private String password;
   private String id;
+  private String matchLink;
 
   public DatabaseConfig(FileConfiguration config) {
     this.config = config;
@@ -21,7 +22,7 @@ public class DatabaseConfig {
 
   public void reload() {
     this.enabled = config.getBoolean("database.enabled", false);
-
+    this.matchLink = config.getString("database.link", "");
     this.host = config.getString("database.host", "localhost");
     this.port = config.getInt("database.port", 3306);
     this.name = config.getString("database.name", "database");
@@ -32,6 +33,10 @@ public class DatabaseConfig {
 
   public boolean isEnabled() {
     return enabled;
+  }
+
+  public String getMatchLink() {
+    return matchLink;
   }
 
   public String getHost() {
@@ -66,6 +71,6 @@ public class DatabaseConfig {
         + port + ", name='"
         + name + '\'' + ", user='"
         + user + '\'' + ", id='"
-        + id + '\'' + '}';
+        + id + '\'' + ", matchLink='" + matchLink + '\'' + '}';
   }
 }

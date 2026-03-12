@@ -1,27 +1,22 @@
 package org.nicolie.towersforpgm.commands;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
-import tc.oc.pgm.api.PGM;
-import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
 
 public class SudoCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (args.length < 2) {
-      if (sender instanceof Player) {
-        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
-        matchPlayer.sendWarning(Component.text(LanguageManager.message("system.sudo.usage")));
-      } else {
-        SendMessage.sendToConsole(LanguageManager.message("system.sudo.usage"));
-      }
+      audience.sendWarning(Component.translatable(
+          "command.incorrectUsage", Component.text("/sudo <playerName> <command/message>")));
       return true;
     }
 
@@ -39,14 +34,9 @@ public class SudoCommand implements CommandExecutor {
     Player targetPlayer = Bukkit.getPlayerExact(targetPlayerName);
 
     if (targetPlayer == null) {
-      if (sender instanceof Player) {
-        MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
-        matchPlayer.sendWarning(Component.text(LanguageManager.message("system.sudo.playerOffline")
-            .replace("{player}", "§3" + targetPlayerName)));
-      } else {
-        SendMessage.sendToConsole(LanguageManager.message("system.sudo.playerOffline")
-            .replace("{player}", "§3" + targetPlayerName));
-      }
+      audience.sendWarning(Component.translatable(
+          "command.playerNotFound",
+          Component.text(targetPlayerName).color(NamedTextColor.DARK_AQUA)));
       return true;
     }
 

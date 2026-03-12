@@ -6,12 +6,15 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.database.models.history.MatchHistory;
 import org.nicolie.towersforpgm.database.models.history.MatchStats;
 import org.nicolie.towersforpgm.database.models.history.TeamInfo;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
+import tc.oc.pgm.util.Audience;
 
 public class MatchHistoryService {
 
@@ -258,8 +261,7 @@ public class MatchHistoryService {
             + plugin.getCurrentDatabaseType());
   }
 
-  public CompletableFuture<Void> rollbackMatch(
-      org.bukkit.command.CommandSender sender, MatchHistory history) {
+  public CompletableFuture<Void> rollbackMatch(Audience audience, MatchHistory history) {
     return CompletableFuture.runAsync(
         () -> {
           String table = history.getTableName();
@@ -272,11 +274,16 @@ public class MatchHistoryService {
             conn.commit();
 
             org.bukkit.Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
-              sender.sendMessage("§aRollback completado para " + history.getMatchId());
+              audience.sendMessage(Component.translatable(
+                      "rollback.success",
+                      Component.text(history.getMatchId()).color(NamedTextColor.DARK_GREEN))
+                  .color(NamedTextColor.GREEN));
             });
           } catch (Exception e) {
             org.bukkit.Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
-              sender.sendMessage("§cError en rollback: " + e.getMessage());
+              audience.sendMessage(
+                  Component.translatable("rollback.error", Component.text(e.getMessage()))
+                      .color(NamedTextColor.RED));
             });
           }
         },

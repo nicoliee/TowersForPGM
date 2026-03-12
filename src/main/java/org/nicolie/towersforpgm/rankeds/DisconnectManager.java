@@ -32,7 +32,7 @@ public class DisconnectManager {
       }
       for (MatchPlayer player : teams.getTeamOnlinePlayers(teamNumber)) {
         if (!player.getBukkit().isOnline()) {
-          startDisconnectTimer(match, player);
+          startDisconnectTimer(match, player.getNameLegacy(), teamNumber);
         }
       }
     }
@@ -40,7 +40,6 @@ public class DisconnectManager {
 
   public static void startDisconnectTimer(Match match, MatchPlayer player) {
     if (!isValidRankedMatch(match) || player == null || teams == null) return;
-
     String playerName = player.getNameLegacy();
     int teamNumber = getPlayerTeamNumber(player);
     if (teamNumber == -1) return;
@@ -134,7 +133,7 @@ public class DisconnectManager {
     if (teams == null || player.getParty() == null) return -1;
 
     if (player.getParty() instanceof tc.oc.pgm.teams.Team) {
-      tc.oc.pgm.teams.Team team = (tc.oc.pgm.teams.Team) player.getParty();
+      Party team = player.getParty();
       return teams.getTeamNumber(team);
     }
     return -1;
@@ -156,7 +155,7 @@ public class DisconnectManager {
 
   private static void resetTeamForfeits(Match match, int teamNumber) {
     if (teams == null) return;
-    tc.oc.pgm.teams.Team team = teams.getTeam(teamNumber);
+    Party team = teams.getTeam(teamNumber);
     if (team != null) {
       org.nicolie.towersforpgm.commands.ranked.ForfeitCommand.resetTeamForfeits(team);
     }
@@ -172,11 +171,8 @@ public class DisconnectManager {
     Sanction sanction = activeSanctions.get(match.getId());
     if (sanction == null) return false;
 
-    if (team instanceof tc.oc.pgm.teams.Team) {
-      int teamNumber = teams.getTeamNumber((tc.oc.pgm.teams.Team) team);
-      return teamNumber == sanction.teamNumber;
-    }
-    return false;
+    int teamNumber = teams.getTeamNumber(team);
+    return teamNumber == sanction.teamNumber;
   }
 
   public static String getSanctionedUsername(Match match) {

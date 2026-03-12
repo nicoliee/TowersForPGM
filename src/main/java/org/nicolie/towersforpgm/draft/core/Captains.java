@@ -14,6 +14,7 @@ public class Captains {
   private boolean isReadyActive = false;
   private boolean isMatchWithCaptains = false;
   private boolean isCaptain1Turn = true;
+  private boolean isPlayerSuggestions = false;
 
   public UUID getCaptain1() {
     return captain1;
@@ -125,6 +126,14 @@ public class Captains {
 
   public void toggleTurn() {
     this.isCaptain1Turn = !this.isCaptain1Turn;
+  }
+
+  public boolean isPlayerSuggestions() {
+    return isPlayerSuggestions;
+  }
+
+  public void setPlayerSuggestions(boolean value) {
+    isPlayerSuggestions = value;
   }
 
   public UUID getCurrentCaptain() {

@@ -18,12 +18,11 @@ public class MatchBotConfig {
   private static String accountsTable;
 
   // ranked.voice-chat
+  private static String voiceChannelPrefix = "";
   private static boolean voiceChatEnabled;
   private static boolean privateChannels;
   private static String inactiveID;
   private static String queueID;
-  private static String team1ID;
-  private static String team2ID;
 
   // ranked.roles
   private static String registeredRoleId;
@@ -49,8 +48,7 @@ public class MatchBotConfig {
     privateChannels = config.getBoolean("ranked.voice-chat.privateChannels", false);
     inactiveID = config.getString("ranked.voice-chat.inactive", "");
     queueID = config.getString("ranked.voice-chat.queue", "");
-    team1ID = config.getString("ranked.voice-chat.team1", "");
-    team2ID = config.getString("ranked.voice-chat.team2", "");
+    voiceChannelPrefix = config.getString("ranked.voice-chat.prefix", "");
 
     // roles
     registeredRoleId = config.getString("ranked.roles.registered", "");
@@ -146,16 +144,6 @@ public class MatchBotConfig {
     saveToFile("ranked.voice-chat.queue", id);
   }
 
-  public static void setTeam1ID(String id) {
-    team1ID = id;
-    saveToFile("ranked.voice-chat.team1", id);
-  }
-
-  public static void setTeam2ID(String id) {
-    team2ID = id;
-    saveToFile("ranked.voice-chat.team2", id);
-  }
-
   // ranked.roles
   public static void setRegisteredRoleId(String id) {
     registeredRoleId = id;
@@ -214,6 +202,10 @@ public class MatchBotConfig {
     return privateChannels;
   }
 
+  public static String getVoiceChannelPrefix() {
+    return voiceChannelPrefix;
+  }
+
   public static String getAccountsTable() {
     return accountsTable;
   }
@@ -225,14 +217,6 @@ public class MatchBotConfig {
 
   public static String getQueueID() {
     return queueID;
-  }
-
-  public static String getTeam1ID() {
-    return team1ID;
-  }
-
-  public static String getTeam2ID() {
-    return team2ID;
   }
 
   // roles

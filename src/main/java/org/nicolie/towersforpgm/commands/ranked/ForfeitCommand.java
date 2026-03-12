@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.UUID;
 import me.tbg.match.bot.configs.DiscordBot;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -20,12 +21,11 @@ import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Elo;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class ForfeitCommand implements CommandExecutor {
@@ -44,31 +44,26 @@ public class ForfeitCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (!(sender instanceof Player)) {
-      SendMessage.sendToConsole(LanguageManager.message("errors.noPlayer"));
+      audience.sendWarning(Component.translatable("command.onlyPlayers"));
       return true;
     }
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     if (!Queue.isRanked() || matchPlayer.isObserving()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.noForfeit")));
+      matchPlayer.sendWarning(Component.translatable("ranked.noForfeit"));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
     Party team = matchPlayer.getParty();
-    // Initialize teams from match if not already done
-    if (!teams.initializeTeamsFromMatch(match)) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.invalidTeams")));
-      return true;
-    }
 
     if (!forfeitedPlayers.add(matchPlayer.getId())) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.alreadyForfeited")));
+      matchPlayer.sendWarning(Component.translatable("ranked.alreadyForfeited"));
       return true;
     }
-
-    match.sendMessage(Component.text(LanguageManager.message("ranked.prefix")
-        + LanguageManager.message("ranked.forfeit")
-            .replace("{player}", matchPlayer.getPrefixedName())));
+    match.sendMessage(Queue.RANKED_PREFIX
+        .append(Component.space())
+        .append(Component.translatable("ranked.forfeit", matchPlayer.getName())));
     match.playSound(Sounds.ALERT);
 
     boolean allForfeited = team.getPlayers().stream()
@@ -76,7 +71,7 @@ public class ForfeitCommand implements CommandExecutor {
         .allMatch(mp -> forfeitedPlayers.contains(mp.getId()));
 
     // Get the opposing team name
-    int currentTeamNumber = teams.getTeamNumber((tc.oc.pgm.teams.Team) team);
+    int currentTeamNumber = teams.getTeamNumber(team);
     int opponentTeamNumber = currentTeamNumber == 1 ? 2 : 1;
     String winningTeam = teams.getTeamName(opponentTeamNumber);
     if (allForfeited) {
@@ -100,11 +95,14 @@ public class ForfeitCommand implements CommandExecutor {
                   String table =
                       plugin.config().databaseTables().getTable(match.getMap().getName());
                   StatsManager.applySanction(table, sanctionedUser, 2, penalty);
-
-                  match.sendMessage(Component.text(LanguageManager.message("ranked.prefix")
-                      + LanguageManager.message("ranked.forfeitSanctionApplied")
-                          .replace("{player}", sanctionedUser)
-                          .replace("{elo}", String.valueOf(Math.abs(penalty.getEloChange())))));
+                  match.sendMessage(Queue.RANKED_PREFIX
+                      .append(Component.space())
+                      .append(Component.translatable("ranked.forfeitSanctionApplied")
+                          .color(NamedTextColor.RED)
+                          .arguments(
+                              Component.text(sanctionedUser).color(NamedTextColor.GRAY),
+                              Component.text("-" + String.valueOf(Math.abs(penalty.getEloChange())))
+                                  .color(NamedTextColor.GRAY))));
                   TableInfo tableInfo =
                       TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
                   boolean isRankedTable = tableInfo != null && tableInfo.isRanked();

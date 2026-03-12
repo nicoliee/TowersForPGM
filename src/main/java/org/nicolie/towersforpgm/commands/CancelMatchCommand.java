@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.util.Audience;
 
 public class CancelMatchCommand implements CommandExecutor {
   private final StatsConfig statsConfig;
@@ -17,14 +18,14 @@ public class CancelMatchCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    statsConfig.toggleStats(sender);
+    Audience audience = Audience.get(sender);
+    statsConfig.enabled(audience, true);
     Match match = PGM.get().getMatchManager().getMatch(sender);
-    match.sendWarning(Component.text(
-        org.nicolie.towersforpgm.utils.LanguageManager.message("system.matchCancelled")));
     if (match.isRunning()) {
       sender.getServer().dispatchCommand(sender.getServer().getConsoleSender(), "end");
+      match.sendWarning(Component.translatable("system.matchCancelled"));
     } else {
-      sender.getServer().dispatchCommand(sender.getServer().getConsoleSender(), "cycle 5");
+      audience.sendWarning(Component.translatable("command.matchNotStarted"));
     }
     return true;
   }

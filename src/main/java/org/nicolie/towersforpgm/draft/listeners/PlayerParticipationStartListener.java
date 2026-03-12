@@ -2,13 +2,15 @@ package org.nicolie.towersforpgm.draft.listeners;
 
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.draft.core.Teams;
-import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.utils.MatchManager;
+import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.events.PlayerParticipationStartEvent;
 import tc.oc.pgm.join.JoinRequest;
 
@@ -48,9 +50,11 @@ public class PlayerParticipationStartListener implements Listener {
       }
 
       if (playerTeam != -1) {
-        String teamName = teams.getTeamName(playerTeam);
-        String message = LanguageManager.message("draft.join.team").replace("{team}", teamName);
-        event.cancel(Component.text(message));
+        Party team = teams.getTeam(playerTeam);
+        Component captainName = MatchManager.getPrefixedName(captains.getCaptain1Name());
+        Component message = Component.translatable("draft.join.team", captainName, team.getName())
+            .color(NamedTextColor.GRAY);
+        event.cancel(message);
 
         final int finalTeam = playerTeam;
         new BukkitRunnable() {
@@ -63,7 +67,7 @@ public class PlayerParticipationStartListener implements Listener {
       }
 
       if (!isInAnyTeam && captainNumber == -1) {
-        event.cancel(Component.text(LanguageManager.message("draft.join.notAllowed")));
+        event.cancel(Component.translatable("draft.join.notAllowed"));
         return;
       }
     }

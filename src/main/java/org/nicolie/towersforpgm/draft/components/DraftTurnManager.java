@@ -1,17 +1,23 @@
 package org.nicolie.towersforpgm.draft.components;
 
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.draft.core.Teams;
-import org.nicolie.towersforpgm.utils.LanguageManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
+import org.nicolie.towersforpgm.utils.MatchManager;
+import tc.oc.pgm.api.PGM;
+import tc.oc.pgm.api.player.MatchPlayer;
 
 public class DraftTurnManager {
+  private final AvailablePlayers availablePlayers;
   private final DraftState state;
   private final Captains captains;
   private final Teams teams;
 
-  public DraftTurnManager(DraftState state, Captains captains, Teams teams) {
+  public DraftTurnManager(
+      AvailablePlayers availablePlayers, DraftState state, Captains captains, Teams teams) {
+    this.availablePlayers = availablePlayers;
     this.state = state;
     this.captains = captains;
     this.teams = teams;
@@ -48,6 +54,8 @@ public class DraftTurnManager {
       if (state.getCurrentPatternIndex() >= state.getCustomOrderPattern().length()) {
         state.setUsingCustomPattern(false);
         captains.toggleTurn();
+        captains.setPlayerSuggestions(false);
+        availablePlayers.clearSuggestions();
       } else {
         // Obtener el siguiente capitán según el patrón
         char nextCaptain = state.getCustomOrderPattern().charAt(state.getCurrentPatternIndex());
@@ -64,21 +72,28 @@ public class DraftTurnManager {
         if ((shouldBeCaptain1Turn == captains.isCaptain1Turn())
             || (!shouldBeCaptain1Turn == !captains.isCaptain1Turn())) {
           int currentTeamNumber = captains.isCaptain1Turn() ? 1 : 2;
-          String message = LanguageManager.message("draft.captains.turn")
-              .replace("{teamcolor}", teams.getTeamColor(currentTeamNumber).replace("§", "&"))
-              .replace(
-                  "{captain}",
-                  Bukkit.getPlayer(
-                          captains.isCaptain1Turn()
-                              ? captains.getCaptain1()
-                              : captains.getCaptain2())
-                      .getName());
-          SendMessage.broadcast(message);
+          MatchPlayer currentCaptain = PGM.get()
+              .getMatchManager()
+              .getPlayer(
+                  captains.isCaptain1Turn() ? captains.getCaptain1() : captains.getCaptain2());
+          Component captainName = currentCaptain != null
+              ? currentCaptain.getName()
+              : teams.getTeam(currentTeamNumber).getName();
+
+          MatchManager.getMatch()
+              .sendMessage(Component.translatable(
+                      "draft.turn",
+                      captainName.color(teams.getTeam(currentTeamNumber).getTextColor()))
+                  .color(NamedTextColor.GRAY));
         }
         captains.setCaptain1Turn(shouldBeCaptain1Turn);
+        captains.setPlayerSuggestions(false);
+        availablePlayers.clearSuggestions();
       }
     } else {
       captains.toggleTurn();
+      captains.setPlayerSuggestions(false);
+      availablePlayers.clearSuggestions();
     }
   }
 }

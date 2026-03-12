@@ -15,10 +15,12 @@ import org.nicolie.towersforpgm.draft.components.DraftPhase;
 import org.nicolie.towersforpgm.draft.components.SubstituteResult;
 import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.draft.core.Teams;
-import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class SubstituteCommand implements CommandExecutor, TabCompleter {
@@ -32,8 +34,9 @@ public class SubstituteCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (!(sender instanceof Player)) {
-      sender.sendMessage(LanguageManager.message("errors.noPlayer"));
+      audience.sendWarning(Component.translatable("command.onlyPlayers"));
       return true;
     }
 
@@ -41,12 +44,13 @@ public class SubstituteCommand implements CommandExecutor, TabCompleter {
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
 
     if (Draft.getPhase() == DraftPhase.IDLE) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.picks.noDraft")));
+      audience.sendWarning(Component.translatable("draft.inactive"));
       return true;
     }
 
     if (args.length < 2) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.substitute.usage")));
+      matchPlayer.sendWarning(Component.translatable(
+          "command.incorrectUsage", Component.text("/sub <team> <newCaptain>")));
       return true;
     }
 
@@ -62,17 +66,16 @@ public class SubstituteCommand implements CommandExecutor, TabCompleter {
     }
 
     if (teamNumber == -1) {
-      matchPlayer.sendWarning(Component.text(
-          LanguageManager.message("draft.substitute.invalidTeam").replace("{team}", teamName)));
+      matchPlayer.sendWarning(
+          Component.translatable("draft.substitute.invalidTeam", Component.text(teamName)));
       return true;
     }
 
     Player newCaptain = Bukkit.getPlayerExact(newCaptainName);
 
     if (newCaptain == null) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.message("draft.substitute.notConnected")
-              .replace("{player}", newCaptainName)));
+      audience.sendWarning(Component.translatable(
+          "command.playerNotOnline", MatchManager.getPrefixedName(newCaptainName)));
       return true;
     }
 
@@ -80,23 +83,19 @@ public class SubstituteCommand implements CommandExecutor, TabCompleter {
 
     switch (result) {
       case SUCCESS:
-        String successMessage = LanguageManager.message("draft.substitute.success")
-            .replace("{player}", newCaptain.getName())
-            .replace("{team}", teams.getTeamName(teamNumber));
-        match.sendMessage(Component.text(successMessage));
+        Party team = teams.getTeam(teamNumber);
+        match.sendMessage(Component.translatable(
+            "draft.substitute.success", Component.text(newCaptain.getName()), team.getName()));
         match.playSound(Sounds.TIP);
         break;
       case NOT_CAPTAIN:
-        matchPlayer.sendWarning(
-            Component.text(LanguageManager.message("draft.substitute.notCaptain")));
+        matchPlayer.sendWarning(Component.translatable("draft.notCaptain"));
         break;
       case ENEMY_TEAM:
-        matchPlayer.sendWarning(
-            Component.text(LanguageManager.message("draft.substitute.enemyTeam")));
+        matchPlayer.sendWarning(Component.translatable("draft.substitute.enemy"));
         break;
       case NOT_AVAILABLE:
-        matchPlayer.sendWarning(
-            Component.text(LanguageManager.message("draft.substitute.notAvailable")));
+        matchPlayer.sendWarning(Component.translatable("draft.substitute.notAvailable"));
         break;
     }
 

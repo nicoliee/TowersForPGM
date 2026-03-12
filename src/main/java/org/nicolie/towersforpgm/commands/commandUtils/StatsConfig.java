@@ -1,134 +1,178 @@
 package org.nicolie.towersforpgm.commands.commandUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import org.bukkit.command.CommandSender;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.database.TableManager;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.MatchManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
-import tc.oc.pgm.api.PGM;
 
 public class StatsConfig {
+
   private final TowersForPGM plugin = TowersForPGM.getInstance();
 
-  public void toggleStats(CommandSender sender) {
-    boolean isStatsCancel = plugin.isStatsCancel();
-    plugin.setStatsCancel(!isStatsCancel);
-    String cancelStatsMessage = isStatsCancel
-        ? LanguageManager.message("stats.config.enabled")
-        : LanguageManager.message("stats.config.disabled");
-    SendMessage.sendToPlayer(sender, cancelStatsMessage);
-  }
+  public void enabled(Audience audience, Boolean enabled) {
 
-  public void setDefaultTable(CommandSender sender, String table) {
-    TableInfo tableInfo = TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
-    if (tableInfo == null) {
-      SendMessage.sendToPlayer(
-          sender,
-          LanguageManager.message("stats.config.tables.notFound").replace("{table}", table));
-      return;
+    boolean state = enabled != null ? enabled : !plugin.isStatsCancel();
+
+    if (enabled != null) {
+      plugin.setStatsCancel(!enabled);
     }
-    plugin.config().databaseTables().setDefaultTable(table);
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("stats.config.maps.success").replace("{table}", table));
+
+    audience.sendMessage(
+        Component.translatable(state ? "stats.config.enabled" : "stats.config.disabled"));
   }
 
-  public void addTable(CommandSender sender, String table) {
-    TableInfo tableInfo = TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
-    if (tableInfo != null) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("stats.config.tables.exists"));
+  public void defaultTable(Audience audience, String table) {
+
+    String state = plugin.config().databaseTables().getDefaultTable();
+
+    if (table != null) {
+
+      TableInfo info = plugin.config().databaseTables().getTableInfo(table);
+
+      if (info == null) {
+        audience.sendMessage(
+            Component.translatable("stats.config.tables.notFound", Component.text(table)));
+        return;
+      }
+
+      plugin.config().databaseTables().setDefaultTable(table);
+      state = table;
+    }
+
+    audience.sendMessage(Component.translatable(
+        table != null ? "stats.config.maps.success" : "stats.config.tables.current",
+        Component.text(state)));
+  }
+
+  public void tableAdd(Audience audience, String table) {
+
+    TableInfo info = plugin.config().databaseTables().getTableInfo(table);
+
+    if (info != null) {
+      audience.sendMessage(Component.translatable("stats.config.tables.exists"));
       return;
     }
 
     plugin.config().databaseTables().addTable(table, false);
     TableManager.createTable(table);
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("stats.config.tables.created").replace("{table}", table));
+
+    audience.sendMessage(
+        Component.translatable("stats.config.tables.created", Component.text(table)));
   }
 
-  public void deleteTable(CommandSender sender, String table) {
-    TableInfo tableInfo = TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
-    if (tableInfo == null) {
-      SendMessage.sendToPlayer(
-          sender,
-          LanguageManager.message("stats.config.tables.notFound").replace("{table}", table));
+  public void tableRemove(Audience audience, String table) {
+
+    TableInfo info = plugin.config().databaseTables().getTableInfo(table);
+
+    if (info == null) {
+      audience.sendMessage(
+          Component.translatable("stats.config.tables.notFound", Component.text(table)));
       return;
     }
+
     plugin.config().databaseTables().removeTable(table);
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("stats.config.tables.deleted").replace("{table}", table));
+
+    audience.sendMessage(
+        Component.translatable("stats.config.tables.deleted", Component.text(table)));
   }
 
-  public void listTables(CommandSender sender) {
+  public void tables(Audience audience) {
+
     Set<String> tables = plugin.config().databaseTables().getTables(TableType.ALL);
+
     if (tables.isEmpty()) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("stats.config.tables.noTables"));
+      audience.sendMessage(Component.translatable("stats.config.tables.noTables"));
       return;
     }
+
     String active = plugin
         .config()
         .databaseTables()
         .getTable(MatchManager.getMatch().getMap().getName());
-    List<String> display = new java.util.ArrayList<>();
+
+    List<String> display = new ArrayList<>();
+
     for (String t : tables) {
+
       if (active != null && active.equals(t)) {
         display.add("§e" + t + "§r");
       } else {
         display.add(t);
       }
     }
-    String tablesList = String.join(", ", display);
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("stats.config.tables.list").replace("{list}", tablesList));
+
+    String list = String.join(", ", display);
+
+    audience.sendMessage(Component.translatable("stats.config.tables.list", Component.text(list)));
   }
 
-  public void addTableForMap(CommandSender sender, String table) {
-    String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
-    TableInfo tableInfo = TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
-    if (tableInfo == null) {
-      SendMessage.sendToPlayer(
-          sender,
-          LanguageManager.message("stats.config.tables.notFound").replace("{table}", table));
-      return;
+  public void map(Audience audience, String table) {
+
+    String mapName = MatchManager.getMatch().getMap().getName();
+
+    String state = plugin.config().databaseTables().getTable(mapName);
+
+    if (table != null) {
+
+      TableInfo info = plugin.config().databaseTables().getTableInfo(table);
+
+      if (info == null) {
+        audience.sendMessage(
+            Component.translatable("stats.config.tables.notFound", Component.text(table)));
+        return;
+      }
+
+      plugin.config().databaseTables().addMapToTable(mapName, table);
+      state = table;
     }
-    plugin.config().databaseTables().addMapToTable(mapName, table);
-    ;
-    SendMessage.sendToPlayer(
-        sender,
-        LanguageManager.message("stats.config.maps.added")
-            .replace("{map}", mapName)
-            .replace("{table}", table));
+
+    audience.sendMessage(Component.translatable(
+        table != null ? "stats.config.maps.added" : "stats.config.maps.current",
+        Component.text(mapName),
+        Component.text(state)));
   }
 
-  public void deleteTableForMap(CommandSender sender) {
-    String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
-    // if (!ConfigManager.getMapTables().containsKey(mapName)) {
-    //   SendMessage.sendToPlayer(
-    //       sender,
-    //       LanguageManager.message("stats.config.maps.notExists").replace("{map}", mapName));
-    //   return;
-    // }
+  public void mapRemove(Audience audience) {
+
+    String mapName = MatchManager.getMatch().getMap().getName();
+
     plugin.config().databaseTables().removeMap(mapName);
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("stats.config.maps.deleted").replace("{map}", mapName));
+
+    audience.sendMessage(
+        Component.translatable("stats.config.maps.deleted", Component.text(mapName)));
   }
 
-  public void addTempTable(CommandSender sender, String table) {
-    plugin.config().databaseTables().setTempTable(table);
-    SendMessage.sendToPlayer(
-        sender, LanguageManager.message("stats.config.temp.added").replace("{table}", table));
+  public void temp(Audience audience, String table) {
+
+    String state = plugin.config().databaseTables().getTempTable();
+
+    if (table != null) {
+      plugin.config().databaseTables().setTempTable(table);
+      state = table;
+    }
+
+    audience.sendMessage(Component.translatable(
+        table != null ? "stats.config.temp.added" : "stats.config.temp.current",
+        Component.text(state)));
   }
 
-  public void removeTempTable(CommandSender sender) {
-    if (plugin.config().databaseTables().getTempTable() == null) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("stats.config.temp.notExists"));
+  public void tempRemove(Audience audience) {
+
+    String state = plugin.config().databaseTables().getTempTable();
+
+    if (state == null) {
+      audience.sendMessage(Component.translatable("stats.config.temp.notExists"));
       return;
     }
+
     plugin.config().databaseTables().removeTempTable();
-    SendMessage.sendToPlayer(sender, LanguageManager.message("stats.config.temp.removed"));
+
+    audience.sendMessage(Component.translatable("stats.config.temp.removed"));
   }
 }

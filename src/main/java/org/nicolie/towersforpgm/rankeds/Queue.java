@@ -1,7 +1,12 @@
 package org.nicolie.towersforpgm.rankeds;
 
+import static net.kyori.adventure.text.Component.text;
+
 import java.util.List;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.draft.core.Matchmaking;
@@ -11,6 +16,7 @@ import org.nicolie.towersforpgm.rankeds.queue.MatchStarter;
 import org.nicolie.towersforpgm.rankeds.queue.QueueManager;
 import org.nicolie.towersforpgm.rankeds.queue.QueueMessaging;
 import org.nicolie.towersforpgm.rankeds.queue.QueueState;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.event.MatchStartEvent;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -24,6 +30,12 @@ public class Queue {
   private final QueueMessaging queueMessaging;
   private final CountdownManager countdownManager;
   private final MatchStarter matchStarter;
+  public static final Component RANKED_PREFIX = text("")
+      .color(NamedTextColor.WHITE)
+      .append(text("[")
+          .color(NamedTextColor.DARK_GRAY)
+          .append(text("Ranked").color(NamedTextColor.GOLD))
+          .append(text("]").color(NamedTextColor.DARK_GRAY)));
 
   public Queue(Draft draft, Matchmaking matchmaking, Teams teams) {
     this.queueState = QueueState.getInstance();
@@ -47,7 +59,7 @@ public class Queue {
 
   public void addPlayer(UUID playerUUID, Match match) {
     if (queueManager.addPlayer(playerUUID, match)) {
-      String playerName = getPlayerNameForDisplay(playerUUID);
+      String playerName = Bukkit.getOfflinePlayer(playerUUID).getName();
       if (playerName != null) {
         queueMessaging.sendQueueMessage(match, playerName, false);
 
@@ -56,6 +68,10 @@ public class Queue {
         }
       }
     }
+  }
+
+  public void sendQueueMessage(Match match, String playerName, boolean isLeave) {
+    queueMessaging.sendQueueMessage(match, playerName, isLeave);
   }
 
   private boolean shouldStartCountdown() {
@@ -71,9 +87,9 @@ public class Queue {
   }
 
   public boolean removePlayer(UUID playerUUID) {
-    Match match = org.nicolie.towersforpgm.utils.MatchManager.getMatch();
+    Match match = MatchManager.getMatch();
     if (queueManager.removePlayer(playerUUID)) {
-      String playerName = getPlayerNameForDisplay(playerUUID);
+      String playerName = Bukkit.getOfflinePlayer(playerUUID).getName();
       if (playerName != null && match != null) {
         queueMessaging.sendQueueMessage(match, playerName, true);
       }
@@ -135,14 +151,7 @@ public class Queue {
     return instance;
   }
 
-  private String getPlayerNameForDisplay(UUID playerUUID) {
-    tc.oc.pgm.api.player.MatchPlayer onlinePlayer =
-        tc.oc.pgm.api.PGM.get().getMatchManager().getPlayer(playerUUID);
-    if (onlinePlayer != null) {
-      return onlinePlayer.getPrefixedName();
-    } else {
-      org.bukkit.OfflinePlayer offlinePlayer = org.bukkit.Bukkit.getOfflinePlayer(playerUUID);
-      return offlinePlayer.getName() != null ? "§3" + offlinePlayer.getName() : null;
-    }
+  public static QueueMessaging getQueueMessaging() {
+    return instance != null ? instance.queueMessaging : null;
   }
 }

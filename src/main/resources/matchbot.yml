@@ -15,6 +15,7 @@ ranked:
   voice-chat:
     enabled: true
     privateChannels: false # Si es true, los canales tendrán límite de usuarios y no se podrá entrar al canal del otro equipo
+    prefix: "" # Prefijo para los canales de voz, por ejemplo "Ranked - Premium"
     inactive: ""
     queue: ""
   roles:

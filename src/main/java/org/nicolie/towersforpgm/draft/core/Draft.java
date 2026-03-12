@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.ConfigManager;
-import org.nicolie.towersforpgm.draft.components.DraftDisplayManager;
+import org.nicolie.towersforpgm.draft.components.BossbarTimer;
 import org.nicolie.towersforpgm.draft.components.DraftPhase;
 import org.nicolie.towersforpgm.draft.components.DraftPickManager;
 import org.nicolie.towersforpgm.draft.components.DraftReroll;
@@ -17,12 +19,14 @@ import org.nicolie.towersforpgm.draft.components.DraftTurnManager;
 import org.nicolie.towersforpgm.draft.components.RerollOptionsGUI;
 import org.nicolie.towersforpgm.draft.components.SubstituteResult;
 import org.nicolie.towersforpgm.draft.events.DraftStartEvent;
-import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.draft.picksMenu.PicksGUIManager;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.start.StartCountdown;
 import tc.oc.pgm.util.bukkit.Sounds;
+import tc.oc.pgm.util.text.TextFormatter;
 
 public class Draft {
   private static Draft instance;
@@ -32,7 +36,7 @@ public class Draft {
   private final DraftState state;
   private final DraftTurnManager turnManager;
   private final DraftPickManager pickManager;
-  private final DraftDisplayManager displayManager;
+  private final BossbarTimer displayManager;
   private final DraftReroll rerollManager;
   private final RerollOptionsGUI rerollOptionsGUI;
 
@@ -47,7 +51,7 @@ public class Draft {
       DraftState state,
       DraftTurnManager turnManager,
       DraftPickManager pickManager,
-      DraftDisplayManager displayManager,
+      BossbarTimer displayManager,
       Captains captains,
       AvailablePlayers availablePlayers,
       Teams teams,
@@ -126,30 +130,38 @@ public class Draft {
     teams.setTeamsSize(0);
 
     match.playSound(Sounds.RAINDROPS);
-    match.sendMessage(Component.text(LanguageManager.message("draft.captains.captainsHeader")));
-    match.sendMessage(
-        Component.text(teams.getTeamColor(1) + Bukkit.getPlayer(captain1).getName() + " §l§bvs. "
-            + teams.getTeamColor(2) + Bukkit.getPlayer(captain2).getName()));
-    match.sendMessage(Component.text("§m---------------------------------"));
+    Component captainsMessage =
+        Component.translatable("draft.captains.captainsHeader").color(NamedTextColor.AQUA);
+    for (MatchPlayer viewer : match.getPlayers()) {
+      viewer.sendMessage(TextFormatter.horizontalLineHeading(
+          viewer.getBukkit(), captainsMessage, NamedTextColor.WHITE, 200));
+      viewer.sendMessage(
+          Component.text(teams.getTeamColor(1) + Bukkit.getPlayer(captain1).getName() + " §l§bvs. "
+              + teams.getTeamColor(2) + Bukkit.getPlayer(captain2).getName()));
+      viewer.sendMessage(TextFormatter.horizontalLine(NamedTextColor.WHITE, 200));
+    }
   }
 
   private void startPickingPhase(Match match) {
     state.setCurrentPhase(DraftPhase.RUNNING);
     announceCurrentTurn(match);
-    plugin.giveItemToMatch(match);
+    PicksGUIManager.giveItem(match);
     displayManager.startDraftTimer();
   }
 
   private void announceCurrentTurn(Match match) {
     int teamNumber = captains.isCaptain1Turn() ? 1 : 2;
-    String teamColor = teams.getTeamColor(teamNumber);
     UUID captainUUID = captains.isCaptain1Turn() ? captains.getCaptain1() : captains.getCaptain2();
-    String captainName = Bukkit.getPlayer(captainUUID).getName();
+    Player currentCaptain = Bukkit.getPlayer(captainUUID);
+    String captainName =
+        currentCaptain != null ? currentCaptain.getName() : teams.getTeamName(teamNumber);
     MatchPlayer captainPlayer = MatchManager.getMatch().getPlayer(captainUUID);
-    match.sendMessage(Component.text(LanguageManager.message("draft.captains.turn")
-        .replace("{teamcolor}", teamColor)
-        .replace("{captain}", captainName)));
-    DraftDisplayManager.sendTitle(captainPlayer);
+    DraftPickManager.sendTitle(captainPlayer);
+    Component turn = Component.translatable(
+            "draft.turn",
+            Component.text(captainName).color(teams.getTeam(teamNumber).getTextColor()))
+        .color(NamedTextColor.GRAY);
+    match.sendMessage(turn);
   }
 
   private void startRerollPhase(Match match) {
@@ -174,7 +186,7 @@ public class Draft {
 
       state.setCurrentPhase(DraftPhase.RUNNING);
       announceCurrentTurn(match);
-      plugin.giveItemToMatch(match);
+      PicksGUIManager.giveItem(match);
       displayManager.startDraftTimer();
     });
   }
@@ -192,10 +204,15 @@ public class Draft {
     resetTeams(match);
     setupNewCaptains(match, newCaptain1, newCaptain2);
 
-    match.sendMessage(Component.text(LanguageManager.message("draft.captains.captainsHeader")));
-    match.sendMessage(Component.text(teams.getTeamColor(1) + newCaptain1.getName() + " §l§bvs. "
-        + teams.getTeamColor(2) + newCaptain2.getName()));
-    match.sendMessage(Component.text("§m---------------------------------"));
+    Component captainsMessage =
+        Component.translatable("draft.captains.captainsHeader").color(NamedTextColor.AQUA);
+    for (MatchPlayer viewer : match.getPlayers()) {
+      viewer.sendMessage(TextFormatter.horizontalLineHeading(
+          viewer.getBukkit(), captainsMessage, NamedTextColor.WHITE, 200));
+      viewer.sendMessage(Component.text(teams.getTeamColor(1) + newCaptain1.getName() + " §l§bvs. "
+          + teams.getTeamColor(2) + newCaptain2.getName()));
+      viewer.sendMessage(TextFormatter.horizontalLine(NamedTextColor.WHITE, 200));
+    }
   }
 
   private void returnPlayersToAvailable(Player oldCaptain1, Player oldCaptain2) {
@@ -239,6 +256,35 @@ public class Draft {
 
   public void pickPlayer(String username) {
     pickManager.pickPlayer(username);
+  }
+
+  public void activatePlayerSuggestions(MatchPlayer captain) {
+    if (getPhase() != DraftPhase.RUNNING) {
+      captain.sendWarning(Component.translatable("draft.suggestions.notActive"));
+      return;
+    }
+    if (captains.isPlayerSuggestions()) {
+      return;
+    }
+    captains.setPlayerSuggestions(true);
+    Party team = captain.getParty();
+    Title suggestion = Title.title(
+        Component.translatable("draft.suggestions.title"),
+        Component.translatable("draft.suggestions.subtitle"));
+    Title.Times times = Title.Times.times(
+        java.time.Duration.ofMillis(500),
+        java.time.Duration.ofSeconds(5),
+        java.time.Duration.ofMillis(500));
+    suggestion = Title.title(suggestion.title(), suggestion.subtitle(), times);
+    team.showTitle(suggestion);
+    team.playSound(Sounds.TIP);
+    captain.clearTitle();
+    captain.sendMessage(
+        Component.translatable("draft.suggestions.activated").color(NamedTextColor.GRAY));
+  }
+
+  public boolean suggestPlayer(MatchPlayer advisor, String username) {
+    return pickManager.suggestPlayer(advisor, username);
   }
 
   public void endDraft() {

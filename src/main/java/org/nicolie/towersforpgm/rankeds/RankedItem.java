@@ -68,8 +68,9 @@ public class RankedItem implements Listener {
               }
             });
 
-        player.sendMessage(Component.text(LanguageManager.message("ranked.prefix")
-            + LanguageManager.message("ranked.queue.joining")));
+        player.sendWarning(Queue.RANKED_PREFIX
+            .append(Component.space())
+            .append(Component.translatable("ranked.joining")));
         RankedListener.movePlayerToQueue(uuid);
       }
       return;

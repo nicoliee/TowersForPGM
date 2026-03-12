@@ -44,14 +44,9 @@ public class QueueJoinListener extends ListenerAdapter {
   private void handleVoiceJoin(GuildVoiceUpdateEvent event) {
     String channelJoinedId = event.getChannelJoined().getId();
     String queueChannelId = MatchBotConfig.getQueueID();
-    String team1ChannelId = MatchBotConfig.getTeam1ID();
-    String team2ChannelId = MatchBotConfig.getTeam2ID();
 
     String inactiveChannelId = MatchBotConfig.getInactiveID();
-    if (!channelJoinedId.equals(queueChannelId)
-        && !channelJoinedId.equals(team1ChannelId)
-        && !channelJoinedId.equals(team2ChannelId)
-        && !channelJoinedId.equals(inactiveChannelId)) {
+    if (!channelJoinedId.equals(queueChannelId) && !channelJoinedId.equals(inactiveChannelId)) {
       return;
     }
     String discordId = event.getMember().getId();

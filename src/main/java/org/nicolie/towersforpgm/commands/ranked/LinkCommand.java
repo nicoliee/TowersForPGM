@@ -9,101 +9,49 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.DiscordManager;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.RegisterCodeManager;
-import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
+import tc.oc.pgm.util.bukkit.Sounds;
 
 public class LinkCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (!(sender instanceof Player)) {
-      SendMessage.sendToPlayer(sender, LanguageManager.message("errors.noPlayer"));
+      audience.sendWarning(Component.translatable("command.onlyPlayers"));
+      return true;
+    }
+    boolean matchbotActive = TowersForPGM.getInstance().isMatchBotEnabled();
+
+    if (!matchbotActive) {
+      audience.sendWarning(Component.translatable("matchbot.register.systemDisabled"));
       return true;
     }
 
     Player player = (Player) sender;
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
 
-    // // Verificar si el sistema de ranked está habilitado
-    // if (!MatchBotConfig.isVoiceChatEnabled()) {
-    //   matchPlayer.sendWarning(
-    //       Component.text(LanguageManager.message("matchbot.register.system-disabled")));
-    //   return true;
-    // }
-
     // Verificar si la cuenta ya está vinculada
     DiscordManager.getDiscordPlayer(player.getUniqueId()).thenAccept(discordPlayer -> {
       if (discordPlayer != null) {
-        Component message =
-            Component.text(LanguageManager.message("matchbot.register.already-linked")
-                .replace("{discord_id}", discordPlayer.getDiscordId()));
-        matchPlayer.sendWarning(message);
+        matchPlayer.sendWarning(Component.translatable("matchbot.register.alreadyLinked"));
         return;
       }
 
       // Verificar si ya tiene un código activo
       if (RegisterCodeManager.hasActiveCode(player.getUniqueId())) {
         String existingCode = RegisterCodeManager.getActiveCode(player.getUniqueId());
-
-        Component hoverText = Component.text(
-                LanguageManager.message("matchbot.register.click-copy-tooltip"))
-            .color(NamedTextColor.AQUA)
-            .decorate(TextDecoration.BOLD)
-            .append(Component.text("\n"
-                    + LanguageManager.message("matchbot.register.use-code-discord")
-                        .replace("{code}", existingCode))
-                .color(NamedTextColor.YELLOW))
-            .append(Component.text("\n" + LanguageManager.message("matchbot.register.code-expires"))
-                .color(NamedTextColor.GRAY)
-                .decorate(TextDecoration.ITALIC));
-
-        Component message = Component.text(
-                LanguageManager.message("matchbot.register.active-code-exists"))
-            .color(NamedTextColor.YELLOW)
-            .append(Component.text("[" + existingCode + "]")
-                .color(NamedTextColor.GOLD)
-                .decorate(TextDecoration.BOLD)
-                .clickEvent(ClickEvent.copyToClipboard(existingCode))
-                .hoverEvent(hoverText));
-
-        matchPlayer.sendMessage(message);
+        sendCode(matchPlayer, existingCode, false);
         return;
       }
-
-      // Generar código de 6 dígitos
       String code = generateCode();
-
-      // Almacenar código temporalmente (10 minutos)
       RegisterCodeManager.storeCode(player.getUniqueId(), code);
-
-      Component hoverText = Component.text(
-              LanguageManager.message("matchbot.register.click-copy-tooltip"))
-          .color(NamedTextColor.AQUA)
-          .decorate(TextDecoration.BOLD)
-          .append(Component.text("\n"
-                  + LanguageManager.message("matchbot.register.use-code-discord")
-                      .replace("{code}", code))
-              .color(NamedTextColor.YELLOW))
-          .append(Component.text("\n" + LanguageManager.message("matchbot.register.code-expires"))
-              .color(NamedTextColor.GRAY)
-              .decorate(TextDecoration.ITALIC));
-
-      Component message = Component.text(
-              LanguageManager.message("matchbot.register.code-generated") + " ")
-          .color(NamedTextColor.GREEN)
-          .append(Component.text(LanguageManager.message("matchbot.register.click-to-copy") + " ")
-              .color(NamedTextColor.YELLOW))
-          .append(Component.text("[" + code + "]")
-              .color(NamedTextColor.GOLD)
-              .decorate(TextDecoration.BOLD)
-              .clickEvent(ClickEvent.copyToClipboard(code))
-              .hoverEvent(hoverText));
-
-      matchPlayer.sendMessage(message);
+      sendCode(matchPlayer, code, true);
     });
 
     return true;
@@ -112,5 +60,40 @@ public class LinkCommand implements CommandExecutor {
   private String generateCode() {
     Random random = new Random();
     return String.format("%06d", random.nextInt(1000000));
+  }
+
+  private void sendCode(MatchPlayer matchPlayer, String code, boolean newCode) {
+    String translationKey =
+        newCode ? "matchbot.register.codeGenerated" : "matchbot.register.activeCode";
+
+    Component message = Component.translatable(translationKey, code(code))
+        .color(NamedTextColor.GREEN)
+        .clickEvent(ClickEvent.copyToClipboard(code))
+        .hoverEvent(hoverText(code));
+
+    matchPlayer.sendMessage(message);
+    matchPlayer.playSound(Sounds.ITEM_PICKUP);
+  }
+
+  private Component hoverText(String code) {
+    Component hoverText = Component.translatable(
+            "matchbot.register.hover.useCode", Component.text(code))
+        .append(Component.newline())
+        .append(Component.translatable("matchbot.register.hover.clickToCopy"))
+        .append(Component.newline())
+        .append(Component.translatable(
+                "matchbot.register.hover.codeExpires",
+                Component.text(RegisterCodeManager.CODE_EXPIRY_MINUTES).color(NamedTextColor.WHITE))
+            .color(NamedTextColor.GRAY)
+            .decorate(TextDecoration.ITALIC));
+    return hoverText;
+  }
+
+  private Component code(String code) {
+    Component value = Component.text("[")
+        .color(NamedTextColor.DARK_GRAY)
+        .append(Component.text(code).color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD))
+        .append(Component.text("]").color(NamedTextColor.DARK_GRAY));
+    return value;
   }
 }

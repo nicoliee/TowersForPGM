@@ -32,6 +32,19 @@ captains:
   title: "§lYour turn"
   subtitle: "§fUse §b§lthe star §rto pick a player"
 
+suggestions:
+  activated: "§aYou have requested suggestions from your team."
+  notActive: "Suggestions are not active."
+  invalidTeam: "You cannot suggest players from the opposing team."
+  suggests: "{advisor}§7 suggests the player: {suggestion}§7."
+  title: "§6§lCaptain Suggestions"
+  subtitle: "§eClick the star to suggest a player"
+  item:
+    name: "§e§lSuggest Player"
+    lore:
+      - ""
+      - "§7Click to request suggestions from your team."
+
 reroll:
   actionBar: "§bUse the §6blaze powder§b if you are not satisfied with the captains."
   waiting: "§e⚠ Right-click the Blaze Powder to request a captain reroll."
@@ -112,3 +125,6 @@ balance:
 join:
   notAllowed: "You cannot join the game."
   team: "You are in the {team} team."
+
+leave:
+  notAllowed: "You cannot leave the team."

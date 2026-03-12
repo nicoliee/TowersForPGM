@@ -5,9 +5,6 @@
 
 > **Important:** Maps must have exactly **2 teams** named "**red**" and "**blue**"
 
-> [!TIP]  
-> **Language Support**: Change plugin language with `/towers language <en|es>`
-
 **Background:** Originally developed for "The Towers Champagne" community, inspired by "Godzilla Rankeds" and "Stratus Network" competitive systems.
 
 > [!NOTE]  
@@ -26,7 +23,7 @@
 
 ## Core Features
 
-### ⭐ Statistics & Ranked System
+### Statistics & Ranked System
 - **Individual/Team Performance** - Kills, deaths, objectives, win rates, trends
 - **ELO Rating** - Skill-based matchmaking for fair games
 - **Queue Management** - Automated match creation when players join
@@ -34,7 +31,7 @@
 - **Map Pool Control** - Admin-defined ranked-eligible maps
 - **Flexible Team Formation** - Auto-balance or captain-based drafts
 
-### ⭐ Discord Integration (MatchBot)
+### Discord Integration (MatchBot)
 - **Live Match Updates** - Auto embeds when ranked matches start/end
 - **Discord Commands** - `/stats <player>` and `/top <category>` in Discord
 - **Role Notifications** - Tag roles for ranked match announcements
@@ -66,9 +63,9 @@
 **Installation:** Install PGM → Add TowersForPGM.jar → Restart → Configure
 
 **Core Setup:**
-- **⭐ Ranked**: [System Guide](documentation/Rankeds.md) - Competitive matches with ELO
-- **⭐ Statistics**: [Setup Guide](documentation/Stats.md) - Database and analytics
-- **⭐ Discord**: [Integration Guide](documentation/Matchbot.md) - MatchBot features
+- **Ranked**: [System Guide](documentation/Rankeds.md) - Competitive matches with ELO
+- **Statistics**: [Setup Guide](documentation/Stats.md) - Database and analytics
+- **Discord**: [Integration Guide](documentation/Matchbot.md) - MatchBot features
 
 **Optional:** [Draft](documentation/Draft.md) • [Preparation Time](documentation/Preparation%20Time.md) • [Chest Refills](documentation/Refill.md)
 

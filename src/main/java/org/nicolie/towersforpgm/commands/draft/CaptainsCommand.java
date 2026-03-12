@@ -14,10 +14,10 @@ import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.core.Draft;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.Audience;
 
 // PGM actualmente solo soporta una partida a la vez, por lo que no se pueden realizar múltiples
 // drafts simultáneamente
@@ -31,54 +31,54 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    Audience audience = Audience.get(sender);
     if (!(sender instanceof Player)) {
-      sender.sendMessage(LanguageManager.message("errors.noPlayer"));
+      audience.sendWarning(Component.translatable("command.onlyPlayers"));
       return true;
     }
     Match match = PGM.get().getMatchManager().getMatch(sender);
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
     // Verificar si la partida está en curso
     if (match.isRunning() || match.isFinished()) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.message("draft.captains.matchStarted")));
+      matchPlayer.sendWarning(Component.translatable("admin.start.matchRunning"));
       return true;
     }
 
     // Verificar si los argumentos son suficientes
     if (args.length < 2) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.usage")));
+      matchPlayer.sendWarning(Component.translatable(
+          "command.incorrectUsage", Component.text("/captains <playerName1> <playerName2>")));
       return true;
     }
 
     // Verificar si hay suficientes jugadores en línea
     if (Bukkit.getOnlinePlayers().size() < 2) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.message("draft.captains.notEnoughPlayers")));
+      matchPlayer.sendWarning(Component.translatable("draft.notEnoughPlayers"));
       return true;
     }
 
     // Evitar que los argumentos sean iguales (duplicados)
     if (args[0].equalsIgnoreCase(args[1])) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.usage")));
+      matchPlayer.sendWarning(Component.translatable(
+          "command.incorrectUsage", Component.text("/captains <playerName1> <playerName2>")));
       return true;
     }
 
     // Verificar si los capitanes están en línea
     if (Bukkit.getPlayer(args[0]) == null || Bukkit.getPlayer(args[1]) == null) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("draft.captains.offline")));
+      matchPlayer.sendWarning(Component.translatable("draft.captains.offline"));
       return true;
     }
 
     // Verificar que no sea una ranked
     if (Queue.isRanked()) {
-      matchPlayer.sendWarning(Component.text(LanguageManager.message("ranked.notAllowed")));
+      matchPlayer.sendWarning(Component.translatable("ranked.notAllowed"));
       return true;
     }
 
     // Verificar que la partida tenga exactamente 2 equipos
     if (!org.nicolie.towersforpgm.draft.core.Teams.validateTeamsForDraft(match)) {
-      matchPlayer.sendWarning(
-          Component.text(LanguageManager.message("draft.captains.invalidTeams")));
+      matchPlayer.sendWarning(Component.translatable("draft.invalidTeams"));
       return true;
     }
 
@@ -86,7 +86,7 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
     UUID captain2 = Bukkit.getPlayer(args[1]).getUniqueId();
 
     boolean randomizeOrder = true;
-    if (args.length >= 3 && args[2].equalsIgnoreCase("force")) {
+    if (args.length >= 3 && args[2].equalsIgnoreCase("-f")) {
       randomizeOrder = false;
     } else {
       randomizeOrder = true;
@@ -126,15 +126,6 @@ public class CaptainsCommand implements CommandExecutor, TabCompleter {
           .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
           .collect(Collectors.toList());
     }
-
-    // Tercer argumento: solo "force"
-    if (args.length == 3) {
-      if ("force".startsWith(args[2].toLowerCase())) {
-        return Collections.singletonList("force");
-      }
-      return Collections.emptyList();
-    }
-
     return Collections.emptyList();
   }
 }

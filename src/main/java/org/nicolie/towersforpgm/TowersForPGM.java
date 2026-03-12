@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.nicolie.towersforpgm.commands.ranked.ForfeitCommand;
 import org.nicolie.towersforpgm.commands.ranked.RankedCommand;
@@ -18,11 +16,10 @@ import org.nicolie.towersforpgm.database.MatchHistoryManager;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.database.sql.SQLDatabaseManager;
 import org.nicolie.towersforpgm.database.sqlite.SQLITEDatabaseManager;
-import org.nicolie.towersforpgm.draft.components.DraftDisplayManager;
+import org.nicolie.towersforpgm.draft.components.BossbarTimer;
 import org.nicolie.towersforpgm.draft.components.DraftPickManager;
 import org.nicolie.towersforpgm.draft.components.DraftState;
 import org.nicolie.towersforpgm.draft.components.DraftTurnManager;
-import org.nicolie.towersforpgm.draft.components.PicksGUI;
 import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.core.Captains;
 import org.nicolie.towersforpgm.draft.core.Draft;
@@ -40,10 +37,11 @@ import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
+import org.nicolie.towersforpgm.translations.PluginTranslator;
+import org.nicolie.towersforpgm.translations.TranslationLoader;
 import org.nicolie.towersforpgm.utils.Commands;
 import org.nicolie.towersforpgm.utils.Events;
 import org.nicolie.towersforpgm.utils.LanguageManager;
-import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public final class TowersForPGM extends JavaPlugin {
@@ -69,7 +67,6 @@ public final class TowersForPGM extends JavaPlugin {
   private Captains captains;
   private Draft draft;
   private Teams teams;
-  private PicksGUI pickInventory;
   private Utilities utilities;
 
   // Refill
@@ -79,6 +76,11 @@ public final class TowersForPGM extends JavaPlugin {
   private boolean isMatchBotEnabled = false; // Variable para verificar si MatchBot está habilitado
   private File matchBotFile;
   private FileConfiguration matchBotConfig;
+
+  @Override
+  public void onLoad() {
+    TranslationLoader.register();
+  }
 
   @Override
   public void onEnable() {
@@ -112,7 +114,8 @@ public final class TowersForPGM extends JavaPlugin {
 
     org.nicolie.towersforpgm.rankeds.DisconnectManager.setTeams(teams);
     DraftState draftState = new DraftState();
-    DraftTurnManager draftTurnManager = new DraftTurnManager(draftState, captains, teams);
+    DraftTurnManager draftTurnManager =
+        new DraftTurnManager(availablePlayers, draftState, captains, teams);
     DraftPickManager draftPickManager = new DraftPickManager(
         this,
         this.ConfigManager,
@@ -122,8 +125,8 @@ public final class TowersForPGM extends JavaPlugin {
         teams,
         utilities,
         draftTurnManager);
-    DraftDisplayManager draftDisplayManager =
-        new DraftDisplayManager(this, this.ConfigManager, captains, teams, utilities);
+    BossbarTimer draftDisplayManager =
+        new BossbarTimer(this, this.ConfigManager, captains, teams, utilities);
     draftPickManager.setDisplayManager(draftDisplayManager);
     draftDisplayManager.setPickManager(draftPickManager);
 
@@ -138,8 +141,6 @@ public final class TowersForPGM extends JavaPlugin {
         availablePlayers,
         teams,
         utilities);
-    pickInventory = new PicksGUI(this, draft, captains, availablePlayers, teams);
-    getServer().getPluginManager().registerEvents(pickInventory, this);
 
     // Registrar listeners para reroll
     getServer()
@@ -160,26 +161,12 @@ public final class TowersForPGM extends JavaPlugin {
     // Registrar comandos
     Commands commandManager = new Commands(this);
     commandManager.registerCommands(
-        availablePlayers,
-        captains,
-        draft,
-        matchmaking,
-        pickInventory,
-        refillManager,
-        teams,
-        preparationListener);
+        availablePlayers, captains, draft, matchmaking, refillManager, teams, preparationListener);
 
     // Registrar eventos
     Events eventManager = new Events(this);
     eventManager.registerEvents(
-        availablePlayers,
-        captains,
-        draft,
-        queue,
-        pickInventory,
-        refillManager,
-        teams,
-        preparationListener);
+        availablePlayers, captains, draft, queue, refillManager, teams, preparationListener);
 
     if (getServer().getPluginManager().getPlugin("MatchBot") != null
         && getServer().getPluginManager().getPlugin("MatchBot").isEnabled()) {
@@ -244,20 +231,8 @@ public final class TowersForPGM extends JavaPlugin {
     return instance;
   }
 
-  public void updateInventories() {
-    pickInventory.updateAllInventories();
-  }
-
-  public void giveitem(World world) {
-    pickInventory.giveItemToPlayers(world);
-  }
-
-  public void giveItemToMatch(Match match) {
-    pickInventory.giveItemToMatch(match);
-  }
-
-  public void removeItem(World world) {
-    pickInventory.removeItemToPlayers(world);
+  public static PluginTranslator getTranslator() {
+    return PluginTranslator.getInstance();
   }
 
   public Draft getDraft() {
@@ -266,12 +241,6 @@ public final class TowersForPGM extends JavaPlugin {
 
   public org.nicolie.towersforpgm.draft.core.AvailablePlayers getAvailablePlayers() {
     return availablePlayers;
-  }
-
-  public void giveItem(Player player) {
-    if (player != null) {
-      pickInventory.giveItemToPlayer(player);
-    }
   }
 
   // Base de datos
