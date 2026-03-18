@@ -12,12 +12,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.draft.components.DraftPhase;
-import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
-import org.nicolie.towersforpgm.draft.core.Captains;
-import org.nicolie.towersforpgm.draft.core.Draft;
-import org.nicolie.towersforpgm.draft.core.Teams;
+import org.nicolie.towersforpgm.draft.state.DraftPhase;
+import org.nicolie.towersforpgm.draft.team.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.team.Captains;
+import org.nicolie.towersforpgm.draft.team.Teams;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.session.MatchSessionRegistry;
+import org.nicolie.towersforpgm.session.draft.DraftContext;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.map.Gamemode;
@@ -28,21 +29,12 @@ import tc.oc.pgm.stats.StatsMatchModule;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class CommandListener implements Listener {
+
   private static final List<String> MATCH_ENDING_COMMANDS =
       Arrays.asList("/end", "/cycle", "/qr", "/finish");
   private static final String FORCE_FLAG = " -f";
   private static final String TEAM_COMMAND = "/team";
   private static final String MATCH_COMMAND = "/match";
-
-  private final Captains captains;
-  private final AvailablePlayers availablePlayers;
-  private final Teams teams;
-
-  public CommandListener(Captains captains, AvailablePlayers availablePlayers, Teams teams) {
-    this.captains = captains;
-    this.availablePlayers = availablePlayers;
-    this.teams = teams;
-  }
 
   @EventHandler
   public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
@@ -55,14 +47,14 @@ public class CommandListener implements Listener {
       return;
     }
 
-    boolean isRanked = Queue.isRanked();
-    boolean isDraft = captains.isMatchWithCaptains();
     Match match = player.getMatch();
+    boolean isRanked = Queue.isRanked();
+    boolean isDraft = isDraftActive(match);
 
     if (isProtectedCommand(lowerCommand) && (isRanked || isDraft) && match.isRunning()) {
       handleProtectedCommand(event, command, lowerCommand, player, isRanked);
     } else if (lowerCommand.startsWith(TEAM_COMMAND) && isRanked) {
-      handleTeamCommand(event, command, lowerCommand, player);
+      handleTeamCommand(event, command, player);
     }
   }
 
@@ -80,14 +72,14 @@ public class CommandListener implements Listener {
       event.setMessage(removeForceFlag(command));
     } else {
       event.setCancelled(true);
-      String messageKey = isRanked ? "commands.protectedInRanked" : "commands.protectedInDraft";
-      player.sendWarning(Component.text(LanguageManager.message("system." + messageKey)));
+      String key = isRanked ? "commands.protectedInRanked" : "commands.protectedInDraft";
+      player.sendWarning(Component.text(LanguageManager.message("system." + key)));
     }
   }
 
   private void handleTeamCommand(
-      PlayerCommandPreprocessEvent event, String command, String lowerCommand, MatchPlayer player) {
-    if (lowerCommand.endsWith(FORCE_FLAG)) {
+      PlayerCommandPreprocessEvent event, String command, MatchPlayer player) {
+    if (command.toLowerCase().endsWith(FORCE_FLAG)) {
       event.setMessage(removeForceFlag(command));
     } else {
       event.setCancelled(true);
@@ -104,9 +96,7 @@ public class CommandListener implements Listener {
     ScoreMatchModule scoreModule = match.getModule(ScoreMatchModule.class);
     StatsMatchModule statsModule = match.getModule(StatsMatchModule.class);
 
-    if (!isValidForScoreDisplay(match, scoreModule, statsModule)) {
-      return;
-    }
+    if (!isValidForScoreDisplay(match, scoreModule, statsModule)) return;
 
     List<MatchPlayer> allPlayers = getAllMatchPlayers(match);
     List<Map.Entry<MatchPlayer, Integer>> playerPoints =
@@ -130,14 +120,10 @@ public class CommandListener implements Listener {
   private List<Map.Entry<MatchPlayer, Integer>> calculatePlayerPoints(
       List<MatchPlayer> players, ScoreMatchModule scoreModule) {
     List<Map.Entry<MatchPlayer, Integer>> playerPoints = new ArrayList<>();
-
     for (MatchPlayer mp : players) {
       int totalPoints = (int) scoreModule.getContribution(mp.getId());
-      if (totalPoints > 0) {
-        playerPoints.add(Map.entry(mp, totalPoints));
-      }
+      if (totalPoints > 0) playerPoints.add(Map.entry(mp, totalPoints));
     }
-
     playerPoints.sort((a, b) -> Integer.compare(b.getValue(), a.getValue()));
     return playerPoints;
   }
@@ -153,11 +139,9 @@ public class CommandListener implements Listener {
               int position = 1;
               int i = 0;
               while (i < scores.size()) {
-                Map.Entry<MatchPlayer, Integer> entry = scores.get(i);
-                int currentPoints = entry.getValue();
+                int currentPoints = scores.get(i).getValue();
                 List<String> playersWithSamePoints = new ArrayList<>();
 
-                // Recoger todos los jugadores con los mismos puntos
                 while (i < scores.size() && scores.get(i).getValue() == currentPoints) {
                   MatchPlayer mp = scores.get(i).getKey();
                   boolean isConnected = match.getPlayers().contains(mp);
@@ -167,54 +151,46 @@ public class CommandListener implements Listener {
                   i++;
                 }
 
-                // Unir los nombres con el separador
                 String allPlayers = String.join("§6, ", playersWithSamePoints);
-                String message =
-                    String.format("§7%d. %s §6- %d", position, allPlayers, currentPoints);
-                player.sendMessage(Component.text(message));
+                player.sendMessage(Component.text(
+                    String.format("§7%d. %s §6- %d", position, allPlayers, currentPoints)));
                 position++;
               }
             },
             1L);
   }
 
-  private String removeForceFlag(String command) {
-    return command.substring(0, command.length() - FORCE_FLAG.length());
-  }
-
   private void displayDraftInfo(MatchPlayer player) {
-    DraftPhase phase = Draft.getPhase();
-    if (phase != DraftPhase.RUNNING && phase != DraftPhase.ENDED) {
-      return;
-    }
+    Match match = player.getMatch();
+    DraftContext ctx = getDraftContext(match);
+    if (ctx == null) return;
+
+    DraftPhase phase = ctx.phase();
+    if (phase != DraftPhase.RUNNING && phase != DraftPhase.ENDED) return;
+
+    Captains captains = ctx.captains();
+    Teams teams = ctx.teams();
+    AvailablePlayers availablePlayers = ctx.availablePlayers();
 
     Player captain1Player = Bukkit.getPlayer(captains.getCaptain1());
     Player captain2Player = Bukkit.getPlayer(captains.getCaptain2());
-
-    if (captain1Player == null || captain2Player == null) {
-      return;
-    }
+    if (captain1Player == null || captain2Player == null) return;
 
     player.playSound(Sounds.INVENTORY_CLICK);
     player.sendMessage(Component.text(LanguageManager.message("draft.captains.captainsHeader")));
 
-    Component captainsLine = Component.text(teams.getTeamColor(1)
-        + captain1Player.getName()
+    Component captainsLine = Component.text(teams.getTeamColor(1) + captain1Player.getName()
         + " §l§bvs. "
-        + teams.getTeamColor(2)
-        + captain2Player.getName());
+        + teams.getTeamColor(2) + captain2Player.getName());
 
     List<Map.Entry<String, Integer>> pickHistory = availablePlayers.getPickHistory();
     if (!pickHistory.isEmpty()) {
       StringBuilder hoverText = new StringBuilder();
-      List<String> groupedPicks = groupPicksByIndex(pickHistory);
+      List<String> groupedPicks = groupPicksByIndex(pickHistory, teams);
       for (int i = 0; i < groupedPicks.size(); i++) {
-        hoverText.append((i + 1)).append(". ").append(groupedPicks.get(i));
-        if (i < groupedPicks.size() - 1) {
-          hoverText.append("\n");
-        }
+        hoverText.append(i + 1).append(". ").append(groupedPicks.get(i));
+        if (i < groupedPicks.size() - 1) hoverText.append("\n");
       }
-
       captainsLine =
           captainsLine.hoverEvent(HoverEvent.showText(Component.text(hoverText.toString())));
     }
@@ -225,7 +201,7 @@ public class CommandListener implements Listener {
       String table = TowersForPGM.getInstance()
           .config()
           .databaseTables()
-          .getTable(player.getMatch().getMap().getName());
+          .getTable(match.getMap().getName());
       if (table != null && !table.isEmpty()) {
         String message = LanguageManager.message("ranked.prefix")
             + LanguageManager.message("system.ranked.activeMatch").replace("{table}", table);
@@ -234,16 +210,15 @@ public class CommandListener implements Listener {
     }
   }
 
-  private List<String> groupPicksByIndex(List<Map.Entry<String, Integer>> pickHistory) {
+  private List<String> groupPicksByIndex(
+      List<Map.Entry<String, Integer>> pickHistory, Teams teams) {
     List<String> groupedPicks = new ArrayList<>();
     int currentIndex = 0;
     StringBuilder currentGroup = new StringBuilder();
 
     for (int i = 0; i < pickHistory.size(); i++) {
       Map.Entry<String, Integer> pick = pickHistory.get(i);
-      String playerName = pick.getKey();
-      int teamNumber = pick.getValue();
-      String teamColor = teams.getTeamColor(teamNumber);
+      String teamColor = teams.getTeamColor(pick.getValue());
 
       if (i > 0 && i != currentIndex) {
         groupedPicks.add(currentGroup.toString());
@@ -251,16 +226,28 @@ public class CommandListener implements Listener {
         currentIndex = i;
       }
 
-      if (currentGroup.length() > 0) {
-        currentGroup.append(", ");
-      }
-      currentGroup.append(teamColor).append(playerName);
+      if (currentGroup.length() > 0) currentGroup.append(", ");
+      currentGroup.append(teamColor).append(pick.getKey());
 
-      if (i == pickHistory.size() - 1) {
-        groupedPicks.add(currentGroup.toString());
-      }
+      if (i == pickHistory.size() - 1) groupedPicks.add(currentGroup.toString());
     }
 
     return groupedPicks;
+  }
+
+  private boolean isDraftActive(Match match) {
+    DraftContext ctx = getDraftContext(match);
+    return ctx != null && ctx.captains().isMatchWithCaptains();
+  }
+
+  private DraftContext getDraftContext(Match match) {
+    if (match == null) return null;
+    var session = MatchSessionRegistry.get(match);
+    if (session == null) return null;
+    return session.getDraft();
+  }
+
+  private String removeForceFlag(String command) {
+    return command.substring(0, command.length() - FORCE_FLAG.length());
   }
 }

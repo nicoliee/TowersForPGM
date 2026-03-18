@@ -1,9 +1,9 @@
 package org.nicolie.towersforpgm.commands.ranked;
 
+import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
@@ -11,61 +11,64 @@ import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.models.top.Top;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.rankeds.Rank;
-import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
-import tc.oc.pgm.api.match.Match;
-import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Argument;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.suggestion.Suggestions;
 import tc.oc.pgm.util.Audience;
 import tc.oc.pgm.util.bukkit.Sounds;
 import tc.oc.pgm.util.text.TextFormatter;
 
-public class EloCommand implements CommandExecutor {
+public class EloCommand {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
+  private static final int PAGE_SIZE = 5;
 
-  @Override
-  public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    Audience audience = Audience.get(sender);
-
-    if (!(sender instanceof Player) && args.length == 0) {
-      audience.sendWarning(Queue.RANKED_PREFIX
-          .append(Component.space())
-          .append(Component.translatable("command.specifyPlayer")));
-      return true;
-    }
-
-    Match match = MatchManager.getMatch();
-    boolean isRankedMap =
-        match != null && plugin.config().ranked().isMapRanked(match.getMap().getName());
-
-    if (!isRankedMap) {
-      audience.sendWarning(Queue.RANKED_PREFIX.append(
-          Component.space().append(Component.translatable("command.emptyResult"))));
-      return true;
-    }
-    String table = plugin.config().databaseTables().getRankedDefaultTable();
-    if (args.length > 0 && "lb".equalsIgnoreCase(args[0])) {
-      int page = 1;
-      if (args.length > 1) {
-        try {
-          page = Math.max(1, Integer.parseInt(args[1]));
-        } catch (NumberFormatException ignored) {
-          page = 1;
-        }
-      }
-      sendEloTop(sender, table, page);
-    } else {
-      sendEloMessage(audience, sender, table, args);
-    }
-    return true;
+  @Command("elo")
+  @CommandDescription("Show your ELO")
+  public void eloSelf(Audience audience, Player sender) {
+    sendEloMessage(audience, sender, sender.getName());
   }
 
-  private void sendEloMessage(
-      Audience audience, CommandSender sender, String table, String[] args) {
-    MatchPlayer matchPlayer =
-        sender instanceof Player ? PGM.get().getMatchManager().getPlayer((Player) sender) : null;
+  @Command("elo <player>")
+  @CommandDescription("Show a player's ELO")
+  public void eloPlayer(
+      Audience audience,
+      CommandSender sender,
+      @Argument(value = "player", suggestions = "onlinePlayers") String targetName) {
+    if ("lb".equalsIgnoreCase(targetName)) {
+      sendEloTop(audience, sender, 1);
+      return;
+    }
 
+    sendEloMessage(audience, sender, targetName);
+  }
+
+  @Suggestions("onlinePlayers")
+  public List<String> onlinePlayersSuggestions(CommandSender sender) {
+    if (!(sender instanceof Player)) {
+      return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+    }
+
+    Player senderPlayer = (Player) sender;
+    return Bukkit.getOnlinePlayers().stream()
+        .filter(player -> player.getWorld().equals(senderPlayer.getWorld()))
+        .map(Player::getName)
+        .toList();
+  }
+
+  @Command("elo lb [page]")
+  @CommandDescription("Show ELO leaderboard")
+  public void eloLeaderboard(
+      Audience audience, CommandSender sender, @Argument("page") Integer pageArg) {
+    int page = pageArg == null ? 1 : Math.max(1, pageArg);
+    sendEloTop(audience, sender, page);
+  }
+
+  private void sendEloMessage(Audience audience, CommandSender sender, String targetName) {
+    String table = plugin.config().databaseTables().getRankedDefaultTable();
     audience.playSound(Sounds.INVENTORY_CLICK);
-    String targetName = args.length > 0 ? args[0] : matchPlayer.getNameLegacy();
+
     StatsManager.getStats(table, targetName).thenAccept(stats -> {
       if (stats == null) {
         audience.sendWarning(Queue.RANKED_PREFIX
@@ -81,17 +84,19 @@ public class EloCommand implements CommandExecutor {
       String headingName = bukkitPlayerHeading != null
           ? PGM.get().getMatchManager().getPlayer(bukkitPlayerHeading).getPrefixedName()
           : "§3" + stats.getUsername();
-      String eloMessage = rank.getPrefixedRank(true) + " " + headingName + "§8: " + rank.getColor()
-          + stats.getElo() + " §8[" + maxRank.getColor() + stats.getMaxElo() + "§8]";
 
+      String eloMessage = rank.getPrefixedRank(true) + " " + headingName + "§8: "
+          + rank.getColor() + stats.getElo() + " §8[" + maxRank.getColor() + stats.getMaxElo()
+          + "§8]";
       audience.sendMessage(Component.text(eloMessage));
     });
   }
 
-  private void sendEloTop(CommandSender sender, String table, int page) {
-    Audience audience = Audience.get(sender);
+  private void sendEloTop(Audience audience, CommandSender sender, int page) {
+
+    String table = plugin.config().databaseTables().getRankedDefaultTable();
     audience.playSound(Sounds.INVENTORY_CLICK);
-    final int PAGE_SIZE = 5;
+
     StatsManager.getTop(table, "elo", PAGE_SIZE, page).thenAccept(topResult -> {
       if (topResult == null
           || topResult.getData() == null
@@ -101,6 +106,7 @@ public class EloCommand implements CommandExecutor {
             .append(Component.translatable("command.emptyResult")));
         return;
       }
+
       int totalPages = topResult.getTotalPages(PAGE_SIZE);
       audience.sendMessage(TextFormatter.horizontalLineHeading(
           sender,
@@ -131,6 +137,7 @@ public class EloCommand implements CommandExecutor {
             "%d. %s§8: " + rank.getColor() + "%d", position, user, entry.getValueAsInt());
         audience.sendMessage(Component.text(line));
       }
+
       audience.sendMessage(TextFormatter.horizontalLine(
           NamedTextColor.WHITE, TextFormatter.GUARANTEED_NO_WRAP_CHAT_PAGE_WIDTH * 3));
     });

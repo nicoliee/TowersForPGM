@@ -2,7 +2,6 @@ package org.nicolie.towersforpgm.rankeds.listeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.nicolie.towersforpgm.commands.ranked.ForfeitCommand;
 import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import tc.oc.pgm.api.match.event.MatchLoadEvent;
@@ -15,7 +14,6 @@ public class RankedMatchLoadListener implements Listener {
     String map = event.getMatch().getMap().getName();
 
     Queue.setRanked(false);
-    ForfeitCommand.forfeitedPlayers.clear();
     DisconnectManager.clearAll();
 
     // Clear queue if map is not ranked

@@ -2,44 +2,38 @@ package org.nicolie.towersforpgm;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.nicolie.towersforpgm.commands.ranked.ForfeitCommand;
-import org.nicolie.towersforpgm.commands.ranked.RankedCommand;
-import org.nicolie.towersforpgm.commands.ranked.TagCommand;
-import org.nicolie.towersforpgm.commands.ranked.UnlinkCommand;
+import org.nicolie.towersforpgm.commands.TowersCommandGraph;
+import org.nicolie.towersforpgm.configs.ConfigManager;
 import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.database.MatchHistoryManager;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.database.sql.SQLDatabaseManager;
 import org.nicolie.towersforpgm.database.sqlite.SQLITEDatabaseManager;
-import org.nicolie.towersforpgm.draft.components.BossbarTimer;
-import org.nicolie.towersforpgm.draft.components.DraftPickManager;
-import org.nicolie.towersforpgm.draft.components.DraftState;
-import org.nicolie.towersforpgm.draft.components.DraftTurnManager;
-import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
-import org.nicolie.towersforpgm.draft.core.Captains;
-import org.nicolie.towersforpgm.draft.core.Draft;
-import org.nicolie.towersforpgm.draft.core.Matchmaking;
-import org.nicolie.towersforpgm.draft.core.Teams;
-import org.nicolie.towersforpgm.draft.core.Utilities;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.commands.AutocompleteHandler;
 import org.nicolie.towersforpgm.matchbot.commands.stats.StatsCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopCommand;
 import org.nicolie.towersforpgm.matchbot.commands.top.TopPaginationListener;
+import org.nicolie.towersforpgm.matchbot.rankeds.VoiceChannelManager;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueJoinListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedFinishListener;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
+import org.nicolie.towersforpgm.session.MatchSessionRegistry;
 import org.nicolie.towersforpgm.translations.PluginTranslator;
 import org.nicolie.towersforpgm.translations.TranslationLoader;
-import org.nicolie.towersforpgm.utils.Commands;
 import org.nicolie.towersforpgm.utils.Events;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -62,15 +56,10 @@ public final class TowersForPGM extends JavaPlugin {
       new HashMap<>(); // Mapa para almacenar los jugadores
   private boolean isStatsCancel = false; // Variable para cancelar el envío de estadísticas
 
-  // Captains
-  private AvailablePlayers availablePlayers;
-  private Captains captains;
-  private Draft draft;
-  private Teams teams;
-  private Utilities utilities;
-
   // Refill
   private RefillManager refillManager; // Administrador de refill
+
+  private Queue queue;
 
   // MatchBot (opcional)
   private boolean isMatchBotEnabled = false; // Variable para verificar si MatchBot está habilitado
@@ -90,13 +79,13 @@ public final class TowersForPGM extends JavaPlugin {
     LanguageManager.initialize(this);
     refillManager = new RefillManager();
     preparationListener = new PreparationListener();
+    queue = new Queue();
     initializeDatabase();
 
     if (database) {
       createTablesOnStartup();
-      // Precargar contadores de matchId en MatchHistoryManager para las tablas configuradas
       try {
-        java.util.Set<String> tables = new java.util.HashSet<>();
+        Set<String> tables = new HashSet<>();
         tables.addAll(this.config().databaseTables().getTables(TableType.ALL));
         MatchHistoryManager.preloadMatchIdCountersAsync(tables).thenRun(() -> getLogger()
             .info("MatchHistoryManager precargado para tablas: " + tables.size()));
@@ -107,66 +96,9 @@ public final class TowersForPGM extends JavaPlugin {
       getLogger().warning("No database connections available!");
     }
 
-    availablePlayers = new AvailablePlayers(this.ConfigManager);
-    teams = new Teams();
-    captains = new Captains();
-    utilities = new Utilities(this.ConfigManager, availablePlayers, captains);
-
-    org.nicolie.towersforpgm.rankeds.DisconnectManager.setTeams(teams);
-    DraftState draftState = new DraftState();
-    DraftTurnManager draftTurnManager =
-        new DraftTurnManager(availablePlayers, draftState, captains, teams);
-    DraftPickManager draftPickManager = new DraftPickManager(
-        this,
-        this.ConfigManager,
-        draftState,
-        captains,
-        availablePlayers,
-        teams,
-        utilities,
-        draftTurnManager);
-    BossbarTimer draftDisplayManager =
-        new BossbarTimer(this, this.ConfigManager, captains, teams, utilities);
-    draftPickManager.setDisplayManager(draftDisplayManager);
-    draftDisplayManager.setPickManager(draftPickManager);
-
-    draft = new Draft(
-        this,
-        this.ConfigManager,
-        draftState,
-        draftTurnManager,
-        draftPickManager,
-        draftDisplayManager,
-        captains,
-        availablePlayers,
-        teams,
-        utilities);
-
-    // Registrar listeners para reroll
-    getServer()
-        .getPluginManager()
-        .registerEvents(new org.nicolie.towersforpgm.draft.listeners.RerollItemListener(), this);
-    getServer().getPluginManager().registerEvents(draft.getRerollOptionsGUI(), this);
-
-    // Inicializar el matchmaking
-    Matchmaking matchmaking =
-        new Matchmaking(this.ConfigManager, availablePlayers, captains, teams, utilities);
-
-    // Registrar Rankeds
-    Queue queue = new Queue(draft, matchmaking, teams);
-    getCommand("ranked").setExecutor(new RankedCommand(queue, utilities));
-    getCommand("forfeit").setExecutor(new ForfeitCommand(teams));
-    getCommand("tag").setExecutor(new TagCommand());
-    getCommand("unlink").setExecutor(new UnlinkCommand());
-    // Registrar comandos
-    Commands commandManager = new Commands(this);
-    commandManager.registerCommands(
-        availablePlayers, captains, draft, matchmaking, refillManager, teams, preparationListener);
-
-    // Registrar eventos
-    Events eventManager = new Events(this);
-    eventManager.registerEvents(
-        availablePlayers, captains, draft, queue, refillManager, teams, preparationListener);
+    MatchSessionRegistry.register(this);
+    setupEvents();
+    setupCommands();
 
     if (getServer().getPluginManager().getPlugin("MatchBot") != null
         && getServer().getPluginManager().getPlugin("MatchBot").isEnabled()) {
@@ -186,36 +118,25 @@ public final class TowersForPGM extends JavaPlugin {
           AutocompleteHandler.register();
         }
 
-        // Registrar listener del queue de voz
         QueueJoinListener.register();
-
-        // Registrar listeners de gestión de canales de voz para ranked
         getServer().getPluginManager().registerEvents(new RankedListener(), this);
         getServer().getPluginManager().registerEvents(new RankedFinishListener(), this);
 
-        // Limpiar canales de voz [Ranked] al iniciar
-        org.bukkit.Bukkit.getScheduler()
+        Bukkit.getScheduler()
             .runTaskLater(
                 this,
                 () -> {
-                  org.nicolie.towersforpgm.matchbot.rankeds.VoiceChannelManager
-                      .cleanupRankedChannelsOnStartup();
+                  VoiceChannelManager.cleanupRankedChannelsOnStartup();
                 },
                 40L);
       }
     }
   }
 
-  public org.nicolie.towersforpgm.configs.ConfigManager config() {
-    return this.ConfigManager;
-  }
-
   @Override
   public void onDisable() {
-    // Limpiar canales de voz [Ranked] al cerrar el plugin
     if (isMatchBotEnabled && MatchBotConfig.isVoiceChatEnabled()) {
-      org.nicolie.towersforpgm.matchbot.rankeds.VoiceChannelManager
-          .cleanupRankedChannelsOnStartup();
+      VoiceChannelManager.cleanupRankedChannelsOnStartup();
     }
 
     // Desconectar de las bases de datos
@@ -235,12 +156,29 @@ public final class TowersForPGM extends JavaPlugin {
     return PluginTranslator.getInstance();
   }
 
-  public Draft getDraft() {
-    return draft;
+  public ConfigManager config() {
+    return this.ConfigManager;
   }
 
-  public org.nicolie.towersforpgm.draft.core.AvailablePlayers getAvailablePlayers() {
-    return availablePlayers;
+  public RefillManager refillManager() {
+    return refillManager;
+  }
+
+  public Queue getQueue() {
+    return queue;
+  }
+
+  private void setupCommands() {
+    try {
+      new TowersCommandGraph(this);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void setupEvents() {
+    Events eventManager = new Events(this);
+    eventManager.registerEvents(queue, refillManager, preparationListener);
   }
 
   // Base de datos
@@ -252,13 +190,13 @@ public final class TowersForPGM extends JavaPlugin {
     return sqliteDatabaseManager;
   }
 
-  public java.sql.Connection getDatabaseConnection() throws java.sql.SQLException {
+  public Connection getDatabaseConnection() throws SQLException {
     if ("MySQL".equals(currentDatabaseType) && mysqlDatabaseManager != null) {
       return mysqlDatabaseManager.getConnection();
     } else if ("SQLite".equals(currentDatabaseType) && sqliteDatabaseManager != null) {
       return sqliteDatabaseManager.getConnection();
     }
-    throw new java.sql.SQLException("No hay conexiones de base de datos disponibles");
+    throw new SQLException("No hay conexiones de base de datos disponibles");
   }
 
   private void createTablesOnStartup() {
@@ -339,13 +277,13 @@ public final class TowersForPGM extends JavaPlugin {
   private boolean testDatabaseConnection(Object databaseManager) {
     try {
       if (databaseManager instanceof SQLDatabaseManager) {
-        java.sql.Connection conn = ((SQLDatabaseManager) databaseManager).getConnection();
+        Connection conn = ((SQLDatabaseManager) databaseManager).getConnection();
         if (conn != null && !conn.isClosed() && conn.isValid(5)) {
           conn.close();
           return true;
         }
       } else if (databaseManager instanceof SQLITEDatabaseManager) {
-        java.sql.Connection conn = ((SQLITEDatabaseManager) databaseManager).getConnection();
+        Connection conn = ((SQLITEDatabaseManager) databaseManager).getConnection();
         // Para SQLite, solo verificar que la conexión no esté cerrada
         // ya que isValid() no está implementado en el driver SQLite
         if (conn != null && !conn.isClosed()) {
@@ -384,26 +322,12 @@ public final class TowersForPGM extends JavaPlugin {
     return disconnectedPlayers;
   }
 
-  // Stats
-  public void addDisconnectedPlayer(String username, MatchPlayer player) {
-    disconnectedPlayers.put(username, player);
-  }
-
-  public void removeDisconnectedPlayer(String username) {
-    disconnectedPlayers.remove(username);
-  }
-
   public boolean isStatsCancel() {
     return isStatsCancel;
   }
 
   public void setStatsCancel(boolean cancel) {
     this.isStatsCancel = cancel;
-  }
-
-  // Refill
-  public RefillManager getRefillManager() {
-    return refillManager;
   }
 
   // MatchBot
@@ -455,7 +379,7 @@ public final class TowersForPGM extends JavaPlugin {
               .forEach(org.nicolie.towersforpgm.database.TableManager::createTable);
           org.nicolie.towersforpgm.database.TableManager.createHistoryTables();
 
-          java.util.Set<String> tables = new java.util.HashSet<>();
+          Set<String> tables = new HashSet<>();
           tables.addAll(this.config().databaseTables().getTables(TableType.ALL));
           MatchHistoryManager.preloadMatchIdCountersAsync(tables);
         } catch (Exception ex) {

@@ -9,106 +9,88 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.bukkit.Bukkit;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.DiscordManager;
-import org.nicolie.towersforpgm.draft.core.Teams;
+import org.nicolie.towersforpgm.draft.team.Teams;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.rankeds.NicknameManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.session.MatchSession;
+import org.nicolie.towersforpgm.session.MatchSessionRegistry;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.match.Match;
 
 public class QueueJoinListener extends ListenerAdapter {
+
   private static final TowersForPGM plugin = TowersForPGM.getInstance();
 
   public static void register() {
     JDA jda = DiscordBot.getJDA();
-    if (jda != null) {
-      jda.addEventListener(new QueueJoinListener());
-    }
+    if (jda != null) jda.addEventListener(new QueueJoinListener());
   }
 
   @Override
   public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
-    if (!MatchBotConfig.isVoiceChatEnabled()) {
-      return;
-    }
-
-    if (event.getChannelJoined() != null) {
-      handleVoiceJoin(event);
-    }
-
-    if (event.getChannelLeft() != null) {
-      handleVoiceLeave(event);
-    }
+    if (!MatchBotConfig.isVoiceChatEnabled()) return;
+    if (event.getChannelJoined() != null) handleVoiceJoin(event);
+    if (event.getChannelLeft() != null) handleVoiceLeave(event);
   }
 
   private void handleVoiceJoin(GuildVoiceUpdateEvent event) {
     String channelJoinedId = event.getChannelJoined().getId();
     String queueChannelId = MatchBotConfig.getQueueID();
-
     String inactiveChannelId = MatchBotConfig.getInactiveID();
-    if (!channelJoinedId.equals(queueChannelId) && !channelJoinedId.equals(inactiveChannelId)) {
+
+    if (!channelJoinedId.equals(queueChannelId) && !channelJoinedId.equals(inactiveChannelId))
       return;
-    }
+
     String discordId = event.getMember().getId();
 
     DiscordManager.getDiscordPlayer(discordId)
         .thenAccept(discordPlayer -> {
-          if (discordPlayer != null) {
-            // Actualizar nickname del jugador
-            NicknameManager.updateNicknameToMinecraftUsername(discordPlayer.getPlayerUuid());
+          if (discordPlayer == null) return;
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
-              Match match = MatchManager.getMatch();
-              Teams teams = plugin.getDraft().getTeams();
-              String playerName =
-                  Bukkit.getOfflinePlayer(discordPlayer.getPlayerUuid()).getName();
+          NicknameManager.updateNicknameToMinecraftUsername(discordPlayer.getPlayerUuid());
 
-              if (playerName != null
-                  && match.isRunning()
-                  && teams.isPlayerInAnyTeam(playerName)
-                  && Queue.isRanked()) {
-                if (teams.isPlayerInTeam(playerName, 1)) {
-                  RankedListener.movePlayerToTeam1(discordPlayer.getPlayerUuid());
-                } else {
-                  RankedListener.movePlayerToTeam2(discordPlayer.getPlayerUuid());
-                }
+          Bukkit.getScheduler().runTask(plugin, () -> {
+            Match match = MatchManager.getMatch();
+            if (match == null) return;
+            MatchSession session = MatchSessionRegistry.get(match);
+            Teams teams = session != null ? session.teams() : null;
+
+            String playerName =
+                Bukkit.getOfflinePlayer(discordPlayer.getPlayerUuid()).getName();
+
+            if (playerName != null
+                && match.isRunning()
+                && teams != null
+                && teams.isPlayerInAnyTeam(playerName)
+                && Queue.isRanked()) {
+              if (teams.isPlayerInTeam(playerName, 1)) {
+                RankedListener.movePlayerToTeam1(discordPlayer.getPlayerUuid());
               } else {
-                if (channelJoinedId.equals(queueChannelId)) {
-                  Queue.getQueue().addPlayer(discordPlayer.getPlayerUuid(), match);
-                }
+                RankedListener.movePlayerToTeam2(discordPlayer.getPlayerUuid());
               }
-            });
-          }
+            } else if (channelJoinedId.equals(queueChannelId)) {
+              Queue.getQueue().addPlayer(discordPlayer.getPlayerUuid(), match);
+            }
+          });
         })
-        .exceptionally(throwable -> {
-          return null;
-        });
+        .exceptionally(throwable -> null);
   }
 
   private void handleVoiceLeave(GuildVoiceUpdateEvent event) {
-    String channelLeftId = event.getChannelLeft().getId();
-    String queueChannelId = MatchBotConfig.getQueueID();
+    if (!event.getChannelLeft().getId().equals(MatchBotConfig.getQueueID())) return;
 
-    if (channelLeftId.equals(queueChannelId)) {
-      String discordId = event.getMember().getId();
-
-      DiscordManager.getDiscordPlayer(discordId)
-          .thenAccept(discordPlayer -> {
-            if (discordPlayer != null) {
-              Queue.getQueue().removePlayer(discordPlayer.getPlayerUuid());
-            }
-          })
-          .exceptionally(throwable -> {
-            return null;
-          });
-    }
+    DiscordManager.getDiscordPlayer(event.getMember().getId())
+        .thenAccept(discordPlayer -> {
+          if (discordPlayer != null) {
+            Queue.getQueue().removePlayer(discordPlayer.getPlayerUuid());
+          }
+        })
+        .exceptionally(throwable -> null);
   }
 
   public static void reloadQueueFromVoice() {
-    Queue queue = Queue.getQueue();
-    if (!MatchBotConfig.isVoiceChatEnabled()) {
-      return;
-    }
+    if (!MatchBotConfig.isVoiceChatEnabled()) return;
 
     JDA jda = DiscordBot.getJDA();
     if (jda == null) return;
@@ -119,11 +101,14 @@ public class QueueJoinListener extends ListenerAdapter {
     VoiceChannel channel = jda.getVoiceChannelById(queueChannelId);
     if (channel == null) return;
 
+    Queue queue = Queue.getQueue();
+    Match match = MatchManager.getMatch();
+
     for (Member member : channel.getMembers()) {
       DiscordManager.getDiscordPlayer(member.getId())
           .thenAccept(discordPlayer -> {
             if (discordPlayer != null) {
-              queue.addPlayer(discordPlayer.getPlayerUuid(), MatchManager.getMatch());
+              queue.addPlayer(discordPlayer.getPlayerUuid(), match);
             }
           })
           .exceptionally(e -> null);

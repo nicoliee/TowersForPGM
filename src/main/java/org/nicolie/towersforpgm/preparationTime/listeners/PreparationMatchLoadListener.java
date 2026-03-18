@@ -6,9 +6,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.preparationTime.PreparationListener;
-import tc.oc.pgm.api.match.Match;
+import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.match.event.MatchLoadEvent;
-import tc.oc.pgm.api.player.MatchPlayer;
 
 public class PreparationMatchLoadListener implements Listener {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
@@ -24,21 +23,16 @@ public class PreparationMatchLoadListener implements Listener {
 
     if (preparationListener.isMapInConfig(map)
         && plugin.config().preparationTime().isPreparationEnabled()) {
-      sendMessageToAdmins(event.getMatch(), "preparation.isAvailable", map);
+      SendMessage.sendToDevelopers(
+          event.getMatch(),
+          Component.translatable("preparation.isAvailable", Component.text(map))
+              .color(NamedTextColor.GREEN));
     } else if (preparationListener.isMapInConfig(map)
         && !plugin.config().preparationTime().isPreparationEnabled()) {
-      sendMessageToAdmins(event.getMatch(), "preparation.isAvailableButDisabled", map);
-    }
-  }
-
-  private void sendMessageToAdmins(Match match, String key, String map) {
-    for (MatchPlayer player : match.getPlayers()) {
-      if (player.getBukkit().hasPermission("towers.admin")) {
-        player.sendMessage(Component.translatable(key)
-            .append(Component.space())
-            .append(Component.text(map).color(NamedTextColor.GREEN))
-            .color(NamedTextColor.YELLOW));
-      }
+      SendMessage.sendToDevelopers(
+          event.getMatch(),
+          Component.translatable("preparation.isAvailableButDisabled", Component.text(map))
+              .color(NamedTextColor.YELLOW));
     }
   }
 }

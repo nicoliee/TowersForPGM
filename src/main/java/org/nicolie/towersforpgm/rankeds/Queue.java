@@ -8,9 +8,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.draft.core.Draft;
-import org.nicolie.towersforpgm.draft.core.Matchmaking;
-import org.nicolie.towersforpgm.draft.core.Teams;
 import org.nicolie.towersforpgm.rankeds.queue.CountdownManager;
 import org.nicolie.towersforpgm.rankeds.queue.MatchStarter;
 import org.nicolie.towersforpgm.rankeds.queue.QueueManager;
@@ -37,10 +34,10 @@ public class Queue {
           .append(text("Ranked").color(NamedTextColor.GOLD))
           .append(text("]").color(NamedTextColor.DARK_GRAY)));
 
-  public Queue(Draft draft, Matchmaking matchmaking, Teams teams) {
+  public Queue() {
     this.queueState = QueueState.getInstance();
-    this.queueManager = new QueueManager(teams);
-    this.matchStarter = new MatchStarter(queueManager, draft, matchmaking);
+    this.queueManager = new QueueManager();
+    this.matchStarter = new MatchStarter(queueManager);
     this.countdownManager = new CountdownManager(queueManager);
     this.countdownManager.setMatchStarter(matchStarter);
     this.queueMessaging = new QueueMessaging(queueManager);
@@ -119,7 +116,7 @@ public class Queue {
     MatchStarter.sendRankedStartEmbed(event);
   }
 
-  public List<String> getQueueList() {
+  public List<Component> getQueueList() {
     return queueManager.getQueueDisplayNames();
   }
 
@@ -153,5 +150,9 @@ public class Queue {
 
   public static QueueMessaging getQueueMessaging() {
     return instance != null ? instance.queueMessaging : null;
+  }
+
+  public static Queue getInstance() {
+    return instance;
   }
 }

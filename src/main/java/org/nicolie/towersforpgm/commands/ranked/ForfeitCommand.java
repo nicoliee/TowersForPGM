@@ -1,148 +1,147 @@
 package org.nicolie.towersforpgm.commands.ranked;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.List;
 import me.tbg.match.bot.configs.DiscordBot;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.StatsManager;
-import org.nicolie.towersforpgm.draft.core.Teams;
+import org.nicolie.towersforpgm.draft.team.Teams;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.Forfeit;
 import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Elo;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import tc.oc.pgm.api.PGM;
+import org.nicolie.towersforpgm.session.MatchSession;
+import org.nicolie.towersforpgm.session.MatchSessionRegistry;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
-import tc.oc.pgm.util.Audience;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
 import tc.oc.pgm.util.bukkit.Sounds;
 
-public class ForfeitCommand implements CommandExecutor {
-  private final TowersForPGM plugin = TowersForPGM.getInstance();
-  private final Teams teams;
-  public static Set<UUID> forfeitedPlayers = new HashSet<>();
-
-  public ForfeitCommand(Teams teams) {
-    this.teams = teams;
-  }
-
-  public static void resetTeamForfeits(Party team) {
-    if (team == null) return;
-    team.getPlayers().forEach(mp -> forfeitedPlayers.remove(mp.getId()));
-  }
-
-  @Override
-  public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    Audience audience = Audience.get(sender);
-    if (!(sender instanceof Player)) {
-      audience.sendWarning(Component.translatable("command.onlyPlayers"));
-      return true;
+public class ForfeitCommand {
+  // TODO: refactor
+  @Command("forfeit|ff")
+  @CommandDescription("Forfeit the current ranked match")
+  public void forfeitCommand(MatchPlayer sender) {
+    if (!Queue.isRanked() || sender.isObserving()) {
+      sender.sendWarning(Component.translatable("ranked.noForfeit"));
+      return;
     }
-    MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer((Player) sender);
-    if (!Queue.isRanked() || matchPlayer.isObserving()) {
-      matchPlayer.sendWarning(Component.translatable("ranked.noForfeit"));
-      return true;
-    }
-    Match match = PGM.get().getMatchManager().getMatch(sender);
-    Party team = matchPlayer.getParty();
 
-    if (!forfeitedPlayers.add(matchPlayer.getId())) {
-      matchPlayer.sendWarning(Component.translatable("ranked.alreadyForfeited"));
-      return true;
+    Match match = sender.getMatch();
+    Party team = sender.getParty();
+
+    // Already voted
+    if (!DisconnectManager.addForfeit(match, sender)) {
+      sender.sendWarning(Component.translatable("ranked.alreadyForfeited"));
+      return;
     }
+
     match.sendMessage(Queue.RANKED_PREFIX
         .append(Component.space())
-        .append(Component.translatable("ranked.forfeit", matchPlayer.getName())));
+        .append(Component.translatable("ranked.forfeit", sender.getName())));
     match.playSound(Sounds.ALERT);
 
-    boolean allForfeited = team.getPlayers().stream()
-        .filter(mp -> !DisconnectManager.isSanctionedPlayer(match, mp))
-        .allMatch(mp -> forfeitedPlayers.contains(mp.getId()));
+    if (!DisconnectManager.allForfeited(match, team)) return;
 
-    // Get the opposing team name
-    int currentTeamNumber = teams.getTeamNumber(team);
+    // All players on the team have voted — resolve outcome
+    Teams teams = teamsForMatch(match);
+    int currentTeamNumber = teams != null ? teams.getTeamNumber(team) : -1;
     int opponentTeamNumber = currentTeamNumber == 1 ? 2 : 1;
-    String winningTeam = teams.getTeamName(opponentTeamNumber);
-    if (allForfeited) {
-      boolean sanctionedForThisTeam = DisconnectManager.isSanctionActive(match)
-          && DisconnectManager.isSanctionForTeam(match, team);
+    String winningTeam = teams != null ? teams.getTeamName(opponentTeamNumber) : "";
 
-      if (sanctionedForThisTeam) {
-        String sanctionedUser = DisconnectManager.getSanctionedUsername(match);
+    boolean sanctionedForThisTeam = DisconnectManager.isSanctionActive(match)
+        && DisconnectManager.isSanctionForTeam(match, team);
 
-        if (sanctionedUser != null) {
-          java.util.List<MatchPlayer> sanctionedTeam = new java.util.ArrayList<>(team.getPlayers());
-          java.util.List<MatchPlayer> opponentTeam = new java.util.ArrayList<>();
-          for (tc.oc.pgm.api.party.Party p : match.getParties()) {
-            if (!p.equals(team)) opponentTeam.addAll(p.getPlayers());
-          }
-
-          Elo.doubleLossPenalty(sanctionedUser, sanctionedTeam, opponentTeam)
-              .thenAccept((PlayerEloChange penalty) -> {
-                Bukkit.getScheduler().runTask(TowersForPGM.getInstance(), () -> {
-                  TowersForPGM.getInstance().setStatsCancel(true);
-                  String table =
-                      plugin.config().databaseTables().getTable(match.getMap().getName());
-                  StatsManager.applySanction(table, sanctionedUser, 2, penalty);
-                  match.sendMessage(Queue.RANKED_PREFIX
-                      .append(Component.space())
-                      .append(Component.translatable("ranked.forfeitSanctionApplied")
-                          .color(NamedTextColor.RED)
-                          .arguments(
-                              Component.text(sanctionedUser).color(NamedTextColor.GRAY),
-                              Component.text("-" + String.valueOf(Math.abs(penalty.getEloChange())))
-                                  .color(NamedTextColor.GRAY))));
-                  TableInfo tableInfo =
-                      TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
-                  boolean isRankedTable = tableInfo != null && tableInfo.isRanked();
-                  if (TowersForPGM.getInstance().isMatchBotEnabled() && isRankedTable) {
-                    java.util.Set<String> usernames = new java.util.HashSet<>();
-                    for (MatchPlayer mp : match.getPlayers()) usernames.add(mp.getNameLegacy());
-                    if (sanctionedUser != null && !sanctionedUser.isEmpty())
-                      usernames.add(sanctionedUser);
-
-                    org.nicolie.towersforpgm.database.StatsManager.getEloForUsernames(
-                            table, new java.util.ArrayList<>(usernames))
-                        .thenAccept(eloList -> {
-                          net.dv8tion.jda.api.EmbedBuilder embed = Forfeit.create(
-                              match,
-                              table,
-                              eloList,
-                              sanctionedUser,
-                              team.getNameLegacy(),
-                              penalty.getEloChange());
-                          DiscordBot.sendMatchEmbed(
-                              embed,
-                              MatchBotConfig.getDiscordChannel(),
-                              null,
-                              DiscordBot.setEmbedThumbnail(match.getMap(), embed));
-                        });
-                  }
-
-                  Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "end");
-                });
-              });
-        } else {
-          TowersForPGM.getInstance().setStatsCancel(true);
-          Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "end");
-        }
-      } else {
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "end " + winningTeam);
-      }
-      forfeitedPlayers.clear();
-      DisconnectManager.clearMatch(match);
+    if (sanctionedForThisTeam) {
+      handleSanctionedForfeit(match, team, teams);
+    } else {
+      Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "end " + winningTeam);
     }
-    return true;
+
+    DisconnectManager.clearMatch(match);
+  }
+
+  private void handleSanctionedForfeit(Match match, Party losingTeam, Teams teams) {
+    String sanctionedUser = DisconnectManager.getSanctionedUsername(match);
+
+    if (sanctionedUser == null) {
+      TowersForPGM.getInstance().setStatsCancel(true);
+      Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "end");
+      return;
+    }
+
+    List<MatchPlayer> sanctionedTeam = new ArrayList<>(losingTeam.getPlayers());
+    List<MatchPlayer> opponentTeam = new ArrayList<>();
+    for (Party p : match.getParties()) {
+      if (!p.equals(losingTeam)) opponentTeam.addAll(p.getPlayers());
+    }
+
+    Elo.doubleLossPenalty(sanctionedUser, sanctionedTeam, opponentTeam)
+        .thenAccept((PlayerEloChange penalty) -> Bukkit.getScheduler()
+            .runTask(TowersForPGM.getInstance(), () -> {
+              TowersForPGM.getInstance().setStatsCancel(true);
+
+              String table = TowersForPGM.getInstance()
+                  .config()
+                  .databaseTables()
+                  .getTable(match.getMap().getName());
+              StatsManager.applySanction(table, sanctionedUser, 2, penalty);
+
+              match.sendMessage(Queue.RANKED_PREFIX
+                  .append(Component.space())
+                  .append(Component.translatable("ranked.forfeitSanctionApplied")
+                      .color(NamedTextColor.RED)
+                      .arguments(
+                          Component.text(sanctionedUser).color(NamedTextColor.GRAY),
+                          Component.text("-" + Math.abs(penalty.getEloChange()))
+                              .color(NamedTextColor.GRAY))));
+
+              sendMatchBotEmbed(match, table, sanctionedUser, losingTeam, penalty);
+
+              Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "end");
+            }));
+  }
+
+  private void sendMatchBotEmbed(
+      Match match, String table, String sanctionedUser, Party losingTeam, PlayerEloChange penalty) {
+    if (!TowersForPGM.getInstance().isMatchBotEnabled()) return;
+
+    TableInfo tableInfo = TowersForPGM.getInstance().config().databaseTables().getTableInfo(table);
+    if (tableInfo == null || !tableInfo.isRanked()) return;
+
+    java.util.Set<String> usernames = new HashSet<>();
+    for (MatchPlayer mp : match.getPlayers()) usernames.add(mp.getNameLegacy());
+    if (!sanctionedUser.isEmpty()) usernames.add(sanctionedUser);
+
+    StatsManager.getEloForUsernames(table, new ArrayList<>(usernames)).thenAccept(eloList -> {
+      net.dv8tion.jda.api.EmbedBuilder embed = Forfeit.create(
+          match,
+          table,
+          eloList,
+          sanctionedUser,
+          losingTeam.getNameLegacy(),
+          penalty.getEloChange());
+      DiscordBot.sendMatchEmbed(
+          embed,
+          MatchBotConfig.getDiscordChannel(),
+          null,
+          DiscordBot.setEmbedThumbnail(match.getMap(), embed));
+    });
+  }
+
+  private static Teams teamsForMatch(Match match) {
+    if (match == null) return null;
+    MatchSession session = MatchSessionRegistry.get(match);
+    if (session == null) return null;
+    return session.teams();
   }
 }

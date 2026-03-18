@@ -12,37 +12,39 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
-import org.nicolie.towersforpgm.draft.core.Draft;
-import org.nicolie.towersforpgm.draft.core.Matchmaking;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedStart;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.rankeds.RankedItem;
 import org.nicolie.towersforpgm.rankeds.RankedPlayers;
+import org.nicolie.towersforpgm.session.MatchSessionRegistry;
+import org.nicolie.towersforpgm.session.draft.DraftOptions;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.event.MatchStartEvent;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class MatchStarter {
+
   private final TowersForPGM plugin;
   private final QueueState queueState;
   private final QueueManager queueManager;
-  private final Draft draft;
-  private final Matchmaking matchmaking;
 
-  public MatchStarter(QueueManager queueManager, Draft draft, Matchmaking matchmaking) {
+  // ── Constructor — Draft and Matchmaking removed ───────────────────────────
+
+  public MatchStarter(QueueManager queueManager) {
     this.plugin = TowersForPGM.getInstance();
     this.queueState = QueueState.getInstance();
     this.queueManager = queueManager;
-    this.draft = draft;
-    this.matchmaking = matchmaking;
   }
+
+  // ── startMatch — unchanged logic ──────────────────────────────────────────
 
   public void startMatch(Match match, String table) {
     int validSize = queueManager.getValidRankedSize(match);
     removeDisconnectedPlayersFromQueue(match, validSize);
+
     int currentSize = queueState.getQueueSize();
     if (currentSize % 2 != 0) currentSize--;
     int finalSize = Math.min(validSize, currentSize);
@@ -64,6 +66,8 @@ public class MatchStarter {
     processEloAndStartMatch(match, table, rankedPlayers, rankedMatchPlayers);
   }
 
+  // ── sendRankedStartEmbed — unchanged ──────────────────────────────────────
+
   public static void sendRankedStartEmbed(MatchStartEvent event) {
     TowersForPGM plugin = TowersForPGM.getInstance();
     QueueState queueState = QueueState.getInstance();
@@ -78,7 +82,7 @@ public class MatchStarter {
         .collect(Collectors.toList());
 
     String table = plugin.config().databaseTables().getRankedDefaultTable();
-    java.util.concurrent.CompletableFuture<List<PlayerEloChange>> eloFuture =
+    var eloFuture =
         queueState.getEloCacheOrDefault(table, StatsManager.getEloForUsernames(table, usernames));
 
     eloFuture
@@ -100,27 +104,25 @@ public class MatchStarter {
         });
   }
 
+  // ── Private helpers — unchanged ───────────────────────────────────────────
+
   private void removeDisconnectedPlayersFromQueue(Match match, int validSize) {
     List<UUID> queuePlayers = queueState.getQueuePlayers();
     int sizeToCheck = Math.min(validSize, queuePlayers.size());
 
-    List<UUID> disconnectedUUIDs = queuePlayers.subList(0, sizeToCheck).stream()
+    queuePlayers.subList(0, sizeToCheck).stream()
         .filter(uuid -> PGM.get().getMatchManager().getPlayer(uuid) == null)
-        .collect(Collectors.toList());
-
-    for (UUID disconnectedUUID : disconnectedUUIDs) {
-      OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(disconnectedUUID);
-      if (offlinePlayer.getName() != null) {
-        queueState.removePlayer(disconnectedUUID);
-      }
-    }
+        .forEach(uuid -> {
+          OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
+          if (op.getName() != null) queueState.removePlayer(uuid);
+        });
   }
 
   private List<String> getRankedPlayerNames(int finalSize) {
     return queueState.getQueuePlayers().subList(0, finalSize).stream()
         .map(uuid -> {
-          MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
-          return player != null ? player.getNameLegacy() : null;
+          MatchPlayer p = PGM.get().getMatchManager().getPlayer(uuid);
+          return p != null ? p.getNameLegacy() : null;
         })
         .filter(name -> name != null)
         .collect(Collectors.toList());
@@ -143,8 +145,7 @@ public class MatchStarter {
 
   private void processEloAndStartMatch(
       Match match, String table, List<String> rankedPlayers, List<MatchPlayer> rankedMatchPlayers) {
-    java.util.concurrent.CompletableFuture<List<PlayerEloChange>> eloFuture =
-        StatsManager.getEloForUsernames(table, rankedPlayers);
+    var eloFuture = StatsManager.getEloForUsernames(table, rankedPlayers);
     queueState.putEloCache(table, eloFuture);
 
     eloFuture
@@ -158,6 +159,8 @@ public class MatchStarter {
           return null;
         });
   }
+
+  // ── startDraftOrMatchmaking — the only method that really changed ─────────
 
   private void startDraftOrMatchmaking(
       Match match, List<PlayerEloChange> eloList, List<MatchPlayer> rankedMatchPlayers) {
@@ -173,19 +176,20 @@ public class MatchStarter {
     RankedPlayers pair = RankedPlayers.selectCaptains(playersWithElo);
 
     if (plugin.config().ranked().isRankedMatchmaking()) {
-      matchmaking.startMatchmaking(
-          pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers(), match);
+      // ── Matchmaking — automatic MMR balance ──────────────────────────
+      MatchSessionRegistry.of(match)
+          .startMatchmaking(pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers());
     } else {
-      boolean randomizeOrder = !pair.is2v2();
-      boolean allowReroll = plugin.config().ranked().isReroll();
-      draft.setCustomOrderPattern(plugin.config().ranked().getRankedOrder(), 0);
-      draft.startDraft(
-          pair.getCaptain1(),
-          pair.getCaptain2(),
-          pair.getRemainingPlayers(),
-          match,
-          randomizeOrder,
-          allowReroll);
+      // ── Draft — manual picks ──────────────────────────────────────────
+      DraftOptions options = DraftOptions.builder()
+          .orderPattern(plugin.config().ranked().getRankedOrder())
+          .minOrder(0)
+          .randomizeOrder(!pair.is2v2())
+          .allowReroll(plugin.config().ranked().isReroll())
+          .build();
+
+      MatchSessionRegistry.of(match)
+          .startDraft(pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers(), options);
     }
   }
 }

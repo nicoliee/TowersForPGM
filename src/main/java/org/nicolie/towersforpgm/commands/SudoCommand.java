@@ -1,52 +1,26 @@
 package org.nicolie.towersforpgm.commands;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.nicolie.towersforpgm.utils.Permissions;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Argument;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Permission;
 import tc.oc.pgm.util.Audience;
 
-public class SudoCommand implements CommandExecutor {
+public class SudoCommand {
 
-  @Override
-  public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    Audience audience = Audience.get(sender);
-    if (args.length < 2) {
-      audience.sendWarning(Component.translatable(
-          "command.incorrectUsage", Component.text("/sudo <playerName> <command/message>")));
-      return true;
-    }
-
-    String targetPlayerName = args[0];
-
-    StringBuilder messageBuilder = new StringBuilder();
-    for (int i = 1; i < args.length; i++) {
-      messageBuilder.append(args[i]);
-      if (i < args.length - 1) {
-        messageBuilder.append(" ");
-      }
-    }
-    String message = messageBuilder.toString();
-
-    Player targetPlayer = Bukkit.getPlayerExact(targetPlayerName);
-
-    if (targetPlayer == null) {
-      audience.sendWarning(Component.translatable(
-          "command.playerNotFound",
-          Component.text(targetPlayerName).color(NamedTextColor.DARK_AQUA)));
-      return true;
-    }
-
+  @Command("sudo <target> <message>")
+  @CommandDescription("Execute a command or send a message as another player")
+  @Permission(Permissions.DEVELOPER)
+  public void executeSudo(
+      Audience audience, @Argument("target") Player target, @Argument("message") String message) {
     if (message.startsWith("/")) {
       String commandToExecute = message.substring(1);
-      Bukkit.dispatchCommand(targetPlayer, commandToExecute);
+      Bukkit.dispatchCommand(target, commandToExecute);
     } else {
-      targetPlayer.chat(message);
+      target.chat(message);
     }
-
-    return true;
   }
 }

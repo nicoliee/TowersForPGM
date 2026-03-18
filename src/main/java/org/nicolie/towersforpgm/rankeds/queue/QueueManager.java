@@ -7,33 +7,58 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.draft.core.AvailablePlayers;
-import org.nicolie.towersforpgm.draft.core.Teams;
+import org.nicolie.towersforpgm.draft.team.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.team.Teams;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.session.MatchSession;
+import org.nicolie.towersforpgm.session.MatchSessionRegistry;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class QueueManager {
+
   private final TowersForPGM plugin;
   private final QueueState queueState;
-  private final Teams teams;
 
-  public QueueManager(Teams teams) {
+  // ── Constructor — no longer receives Teams ────────────────────────────────
+
+  public QueueManager() {
     this.plugin = TowersForPGM.getInstance();
     this.queueState = QueueState.getInstance();
-    this.teams = teams;
   }
+
+  // ── Helpers — resolve session state per match ─────────────────────────────
+
+  /**
+   * Returns the active Teams for {@code match}, or {@code null} if no draft/matchmaking has been
+   * started yet.
+   */
+  private Teams teamsFor(Match match) {
+    MatchSession session = MatchSessionRegistry.get(match);
+    return session != null ? session.teams() : null;
+  }
+
+  /** Returns the active AvailablePlayers for {@code match}, or {@code null}. */
+  private AvailablePlayers availablePlayersFor(Match match) {
+    MatchSession session = MatchSessionRegistry.get(match);
+    return session != null ? session.availablePlayers() : null;
+  }
+
+  // ── addPlayer (MatchPlayer overload) ──────────────────────────────────────
 
   public boolean addPlayer(MatchPlayer player) {
     UUID playerUUID = player.getId();
     Match match = player.getMatch();
     String map = match.getMap().getName();
 
+    // Check if player is already in a team for this match
+    Teams teams = teamsFor(match);
     if (player.isParticipating()
         || match.isRunning()
-        || teams.isPlayerInAnyTeam(player.getNameLegacy())) {
+        || (teams != null && teams.isPlayerInAnyTeam(player.getNameLegacy()))) {
       player.sendWarning(Queue.RANKED_PREFIX
           .append(Component.space())
           .append(Component.translatable("join.err.afterStart")));
@@ -58,14 +83,12 @@ public class QueueManager {
     return true;
   }
 
-  public boolean addPlayer(UUID playerUUID, Match match) {
-    if (playerUUID == null || queueState.containsPlayer(playerUUID)) {
-      return false;
-    }
+  // ── addPlayer (UUID overload — used by voice queue) ───────────────────────
 
-    if (match == null) {
-      match = getDefaultMatch();
-    }
+  public boolean addPlayer(UUID playerUUID, Match match) {
+    if (playerUUID == null || queueState.containsPlayer(playerUUID)) return false;
+
+    if (match == null) match = getDefaultMatch();
 
     MatchPlayer onlinePlayer = PGM.get().getMatchManager().getPlayer(playerUUID);
     OfflinePlayer offlinePlayer = onlinePlayer != null ? null : Bukkit.getOfflinePlayer(playerUUID);
@@ -76,28 +99,27 @@ public class QueueManager {
 
     String name = onlinePlayer != null ? onlinePlayer.getNameLegacy() : offlinePlayer.getName();
 
+    // When a ranked match is already running, block players that are
+    // already assigned to a team or in the draft pool.
     if (queueState.isRanked()) {
-      AvailablePlayers available = plugin.getAvailablePlayers();
-      if (available != null) {
-        List<String> all = available.getAllAvailablePlayers();
-        if (all.contains(name)) {
-          return false;
-        }
+      AvailablePlayers available = availablePlayersFor(match);
+      if (available != null && available.getAllAvailablePlayers().contains(name)) {
+        return false;
       }
 
+      Teams teams = teamsFor(match);
       if (teams != null && teams.isPlayerInAnyTeam(name)) {
         return false;
       }
     }
 
-    String map = match.getMap().getName();
-    if (!plugin.config().ranked().isMapRanked(map)) {
-      return false;
-    }
+    if (!plugin.config().ranked().isMapRanked(match.getMap().getName())) return false;
 
     queueState.addPlayer(playerUUID);
     return true;
   }
+
+  // ── removePlayer ──────────────────────────────────────────────────────────
 
   public boolean removePlayer(MatchPlayer player) {
     UUID playerUUID = player.getId();
@@ -121,23 +143,17 @@ public class QueueManager {
   }
 
   public boolean removePlayer(UUID playerUUID) {
-    if (playerUUID == null || !queueState.containsPlayer(playerUUID)) {
-      return false;
-    }
-
+    if (playerUUID == null || !queueState.containsPlayer(playerUUID)) return false;
     return queueState.removePlayer(playerUUID);
   }
 
-  public List<String> getQueueDisplayNames() {
+  // ── Unchanged methods ─────────────────────────────────────────────────────
+
+  public List<Component> getQueueDisplayNames() {
     return queueState.getQueuePlayers().stream()
         .map(uuid -> {
-          MatchPlayer player = PGM.get().getMatchManager().getPlayer(uuid);
-          if (player != null) {
-            return player.getPrefixedName();
-          } else {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-            return offlinePlayer.getName() != null ? "§3" + offlinePlayer.getName() : null;
-          }
+          OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
+          return MatchManager.getPrefixedName(op.getName());
         })
         .filter(name -> name != null)
         .collect(Collectors.toList());
@@ -149,13 +165,13 @@ public class QueueManager {
         .collect(Collectors.toList());
   }
 
-  public void removeDisconnectedPlayers(Match match, List<UUID> disconnectedPlayerUUIDs) {
-    for (UUID playerUUID : disconnectedPlayerUUIDs) {
-      if (playerUUID != null && queueState.containsPlayer(playerUUID)) {
-        String playerName = Bukkit.getOfflinePlayer(playerUUID).getName();
-        queueState.removePlayer(playerUUID);
-        RankedListener.movePlayerToInactive(playerUUID);
-        Queue.getQueueMessaging().sendQueueMessage(match, playerName, true);
+  public void removeDisconnectedPlayers(Match match, List<UUID> disconnected) {
+    for (UUID uuid : disconnected) {
+      if (uuid != null && queueState.containsPlayer(uuid)) {
+        String name = Bukkit.getOfflinePlayer(uuid).getName();
+        queueState.removePlayer(uuid);
+        RankedListener.movePlayerToInactive(uuid);
+        Queue.getQueueMessaging().sendQueueMessage(match, name, true);
       }
     }
   }

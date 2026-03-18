@@ -1,9 +1,17 @@
 package org.nicolie.towersforpgm.utils;
 
+import static net.kyori.adventure.text.Component.empty;
+import static net.kyori.adventure.text.Component.translatable;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.StreamSupport;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import tc.oc.pgm.api.PGM;
@@ -64,5 +72,31 @@ public class MatchManager {
       return matchPlayer.getPrefixedName();
     }
     return "§3" + username;
+  }
+
+  public static Component orList(Collection<? extends ComponentLike> texts, TextColor color) {
+    var list =
+        texts instanceof List ? (List<? extends ComponentLike>) texts : new ArrayList<>(texts);
+    return switch (list.size()) {
+      case 0 -> empty();
+      case 1 -> empty().color(color).append(list.getFirst());
+      case 2 -> translatable("misc.or", color, list.get(0), list.get(1));
+      default -> {
+        var it = list.iterator();
+        var a = translatable("misc.list.start", color, it.next(), it.next());
+        var b = it.next();
+        while (it.hasNext()) {
+          a = translatable("misc.list.middle", color, a, b);
+          b = it.next();
+        }
+        yield translatable("misc.or", color, a, b);
+      }
+    };
+  }
+
+  public static Collection<Component> convert(List<String> texts, TextColor color) {
+    return texts.stream()
+        .map(text -> (Component) Component.text(text).color(color))
+        .toList();
   }
 }

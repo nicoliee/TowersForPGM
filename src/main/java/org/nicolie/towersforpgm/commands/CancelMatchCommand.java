@@ -1,24 +1,20 @@
 package org.nicolie.towersforpgm.commands;
 
 import net.kyori.adventure.text.Component;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.nicolie.towersforpgm.commands.commandUtils.StatsConfig;
+import org.nicolie.towersforpgm.commands.towers.commandUtils.StatsConfig;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
 import tc.oc.pgm.util.Audience;
 
-public class CancelMatchCommand implements CommandExecutor {
-  private final StatsConfig statsConfig;
+public class CancelMatchCommand {
+  private final StatsConfig statsConfig = new StatsConfig();
 
-  public CancelMatchCommand() {
-    this.statsConfig = new StatsConfig();
-  }
-
-  @Override
-  public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    Audience audience = Audience.get(sender);
+  @Command("cancelmatch")
+  @CommandDescription("Cancel the current match")
+  public void cancelMatch(Audience audience, CommandSender sender) {
     statsConfig.enabled(audience, true);
     Match match = PGM.get().getMatchManager().getMatch(sender);
     if (match.isRunning()) {
@@ -27,6 +23,5 @@ public class CancelMatchCommand implements CommandExecutor {
     } else {
       audience.sendWarning(Component.translatable("command.matchNotStarted"));
     }
-    return true;
   }
 }

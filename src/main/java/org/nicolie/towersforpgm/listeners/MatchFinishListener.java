@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.kyori.adventure.text.Component;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.nicolie.towersforpgm.TowersForPGM;
@@ -17,7 +18,6 @@ import org.nicolie.towersforpgm.matchbot.embeds.RankedFinish;
 import org.nicolie.towersforpgm.rankeds.Elo;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Queue;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.map.Gamemode;
 import tc.oc.pgm.api.match.Match;
@@ -48,14 +48,18 @@ public class MatchFinishListener implements Listener {
 
   private void cancelStats(MatchFinishEvent event) {
     String mapName = event.getMatch().getMap().getName();
+    Match match = event.getMatch();
     TowersForPGM.getInstance()
         .getLogger()
         .info("[-] Stats cancelled for match-" + event.getMatch().getId() + ": " + mapName
             + ", stats not sent to database.");
-    SendMessage.sendToDevelopers(LanguageManager.message("stats.consoleCancel")
-        .replace("{id}", String.valueOf(event.getMatch().getId()))
-        .replace("{map}", mapName)
-        .replace("{size}", String.valueOf(event.getMatch().getParticipants().size())));
+    SendMessage.sendToDevelopers(
+        match,
+        Component.translatable(
+            "stats.cancelled",
+            Component.text(match.getId()),
+            Component.text(mapName),
+            Component.text(match.getParticipants().size())));
     plugin.setStatsCancel(false);
   }
 

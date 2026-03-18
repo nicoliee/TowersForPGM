@@ -2,31 +2,22 @@ package org.nicolie.towersforpgm.commands.ranked;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.DiscordManager;
+import org.nicolie.towersforpgm.utils.Permissions;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Argument;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Permission;
 import tc.oc.pgm.util.Audience;
 
-public class UnlinkCommand implements CommandExecutor {
+public class UnlinkCommand {
   private final TowersForPGM plugin = TowersForPGM.getInstance();
 
-  @Override
-  public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    Audience audience = Audience.get(sender);
-    if (!sender.hasPermission("towers.admin")) {
-      audience.sendMessage(Component.translatable("misc.noPermission"));
-      return true;
-    }
-
-    if (args.length < 1) {
-      audience.sendMessage(Component.translatable(
-          "command.incorrectUsage", Component.text("/unlink <playerName|discordId>")));
-      return true;
-    }
-
-    String identifier = args[0];
+  @Command("unlink <identifier>")
+  @CommandDescription("Unlink a Discord account by player name or Discord ID")
+  @Permission(Permissions.ADMIN)
+  public void unlinkCommand(Audience audience, @Argument("identifier") String identifier) {
     DiscordManager.unlinkPlayer(identifier)
         .thenAccept(success -> {
           if (success) {
@@ -44,16 +35,13 @@ public class UnlinkCommand implements CommandExecutor {
           plugin.getLogger().severe("Error unlinking player: " + e.getMessage());
           return null;
         });
-
-    return true;
   }
 
   private Component formatIdentifier(String identifier) {
-    Component idComponent = Component.text("[")
+    return Component.text("[")
         .color(NamedTextColor.DARK_GRAY)
         .append(Component.text(identifier)
             .color(NamedTextColor.GOLD)
             .append(Component.text("]").color(NamedTextColor.DARK_GRAY)));
-    return idComponent;
   }
 }
