@@ -65,7 +65,6 @@ public class PicksMenu extends PagedInventoryMenu {
     init(player, contents);
   }
 
-  @SuppressWarnings("deprecation")
   private void fillBackground(InventoryContents contents) {
     ItemStack bg = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 7);
     ItemMeta meta = bg.getItemMeta();

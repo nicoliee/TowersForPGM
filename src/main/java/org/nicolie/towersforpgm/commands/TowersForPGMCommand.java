@@ -1,7 +1,6 @@
 package org.nicolie.towersforpgm.commands;
 
 import net.kyori.adventure.text.Component;
-import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.Argument;
@@ -15,14 +14,15 @@ public class TowersForPGMCommand {
 
   @Command("towerforpgm")
   @CommandDescription("Show plugin version")
-  public void version(Audience audience, CommandSender sender) {
-    audience.sendMessage(
-        Component.text("§8[§bTowersForPGM§8] §7Version: " + plugin.getDescription().getVersion()));
+  public void version(Audience audience) {
+    audience.sendMessage(Component.text(
+        "§8[§bTowersForPGM§8] §7Version: " + plugin.getDescription().getVersion()));
   }
 
   @Command("towersforpgm setlanguage <language>")
   @CommandDescription("Set the plugin language")
-  public void setLanguage(Audience audience, CommandSender sender,
+  public void setLanguage(
+      Audience audience,
       @Argument(value = "language", suggestions = "supportedLanguages") String language) {
     if (!LanguageManager.getSupportedLanguages().contains(language.toLowerCase())) {
       audience.sendMessage(Component.text(LanguageManager.message("system.invalidLanguage")));
@@ -34,9 +34,8 @@ public class TowersForPGMCommand {
 
   @Command("towersforpgm dbreload")
   @CommandDescription("Reload the database connection")
-  public void dbReload(Audience audience, CommandSender sender) {
-    audience.sendMessage(
-        Component.text("§8[§bTowersForPGM§8] §7Reloading database connection..."));
+  public void dbReload(Audience audience) {
+    audience.sendMessage(Component.text("§8[§bTowersForPGM§8] §7Reloading database connection..."));
     if (plugin.reloadDatabase()) {
       audience.sendMessage(Component.text(
           "§aDatabase reloaded and active (" + plugin.getCurrentDatabaseType() + ")"));
@@ -47,7 +46,7 @@ public class TowersForPGMCommand {
   }
 
   @Suggestions("supportedLanguages")
-  public java.util.List<String> supportedLanguagesSuggestions(CommandSender sender) {
+  public java.util.List<String> supportedLanguagesSuggestions() {
     return LanguageManager.getSupportedLanguages();
   }
 }

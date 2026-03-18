@@ -3,7 +3,6 @@ package org.nicolie.towersforpgm.commands.towers;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.commands.towers.commandUtils.RefillConfig;
-
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.*;
 import tc.oc.pgm.util.Audience;

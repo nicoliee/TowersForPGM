@@ -46,6 +46,7 @@ public class PlayerSkullItem implements MenuItem {
     return MatchManager.getPrefixedName(targetName);
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public List<String> getLore(Player player) {
     List<Component> lore = (stats != null && expanded)

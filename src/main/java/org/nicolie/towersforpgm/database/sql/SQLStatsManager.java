@@ -274,7 +274,6 @@ public class SQLStatsManager {
     String dataSql = "SELECT username, `" + dbColumn + "` AS valuePerGame FROM `" + table
         + "` ORDER BY `" + dbColumn + "` DESC LIMIT ? OFFSET ?";
 
-    // Solo obtener count si es la primera página
     String countSql = "SELECT COUNT(*) as total FROM `" + table + "`";
 
     List<Top> topList = new ArrayList<>();
@@ -302,14 +301,12 @@ public class SQLStatsManager {
         }
       }
 
-      // Solo obtener count total si es la primera página
-      if (page == 1) {
-        try (PreparedStatement countStmt = conn.prepareStatement(countSql)) {
-          countStmt.setQueryTimeout(2);
-          try (ResultSet rs = countStmt.executeQuery()) {
-            if (rs.next()) {
-              totalRecords = rs.getInt("total");
-            }
+      // Obtener siempre el total para que getTotalPages sea correcto en cualquier página
+      try (PreparedStatement countStmt = conn.prepareStatement(countSql)) {
+        countStmt.setQueryTimeout(2);
+        try (ResultSet rs = countStmt.executeQuery()) {
+          if (rs.next()) {
+            totalRecords = rs.getInt("total");
           }
         }
       }

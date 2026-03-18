@@ -353,6 +353,24 @@ public class SQLITEStatsManager {
         return new TopResult(new ArrayList<>(), 0);
       }
     }
+
+    // Si la página no devolvió filas (p.ej. página fuera de rango), recuperar igualmente el total
+    // para que getTotalPages no quede incorrecto en páginas > 1.
+    if (totalRecords == 0) {
+      String countSql = "SELECT COUNT(*) AS totalCount FROM `" + table + "`";
+      try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection();
+          PreparedStatement countStmt = conn.prepareStatement(countSql)) {
+        countStmt.setQueryTimeout(2);
+        try (ResultSet countRs = countStmt.executeQuery()) {
+          if (countRs.next()) {
+            totalRecords = countRs.getInt("totalCount");
+          }
+        }
+      } catch (SQLException ignored) {
+        // Mantener comportamiento seguro: si falla el count, conservar totalRecords actual.
+      }
+    }
+
     return new TopResult(topList, totalRecords);
   }
 
