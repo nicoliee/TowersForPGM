@@ -9,10 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.draft.pick.gui.items.*;
@@ -57,7 +54,7 @@ public class PicksMenu extends PagedInventoryMenu {
     placeTeamInfoButton(contents, player);
     placeSuggestionButton(contents, player);
     setupPageContents(player, contents);
-    fillBackground(contents);
+    fillBackground(contents, player);
   }
 
   @Override
@@ -65,15 +62,13 @@ public class PicksMenu extends PagedInventoryMenu {
     init(player, contents);
   }
 
-  private void fillBackground(InventoryContents contents) {
-    ItemStack bg = new ItemStack(Material.STAINED_GLASS_PANE, 1, (byte) 7);
-    ItemMeta meta = bg.getItemMeta();
-    meta.setDisplayName(" ");
-    bg.setItemMeta(meta);
+  private void fillBackground(InventoryContents contents, Player player) {
+    BackgroundItem bgItem = new BackgroundItem();
+    ClickableItem pane = ClickableItem.empty(bgItem.createItem(player));
     for (int row = 0; row < ROWS; row++) {
       for (int col = 0; col < 9; col++) {
         if (contents.get(row, col).isEmpty()) {
-          contents.set(row, col, ClickableItem.empty(bg));
+          contents.set(row, col, pane);
         }
       }
     }
@@ -95,15 +90,13 @@ public class PicksMenu extends PagedInventoryMenu {
   }
 
   private void placeTeamInfoButton(InventoryContents contents, Player player) {
-    contents.set(0, 4, ClickableItem.of(buildTeamInfoItem(player), e -> {
-      currentSort = currentSort.next();
-      e.getInventory().setItem(e.getSlot(), buildTeamInfoItem(player));
-      new TeamInfoItem(currentSort, ctx).onClick(player, e.getClick());
-    }));
-  }
-
-  private ItemStack buildTeamInfoItem(Player player) {
-    return new TeamInfoItem(currentSort, ctx).createColoredItem(player);
+    contents.set(
+        0, 4, ClickableItem.of(new TeamInfoItem(currentSort, ctx).createColoredItem(player), e -> {
+          currentSort = currentSort.next();
+          e.getInventory()
+              .setItem(e.getSlot(), new TeamInfoItem(currentSort, ctx).createColoredItem(player));
+          new TeamInfoItem(currentSort, ctx).onClick(player, e.getClick());
+        }));
   }
 
   private void placeSuggestionButton(InventoryContents contents, Player player) {

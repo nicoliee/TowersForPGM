@@ -77,7 +77,7 @@ public class BorderItem implements MenuItem {
 
   public ItemStack createColoredItem(Player player) {
     byte color = resolveBorderColor(player);
-    ItemStack pane = new ItemStack(Material.STAINED_GLASS_PANE, 1, color);
+    ItemStack pane = new ItemStack(getMaterial(player), 1, color);
     ItemMeta meta = pane.getItemMeta();
     meta.setDisplayName(" ");
     pane.setItemMeta(meta);
