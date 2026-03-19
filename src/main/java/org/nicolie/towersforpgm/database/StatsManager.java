@@ -193,58 +193,6 @@ public class StatsManager {
         SQL_EXECUTOR);
   }
 
-  public static CompletableFuture<TopResult> getTop(
-      String table,
-      String dbColumn,
-      int limit,
-      Double lastValue,
-      String lastUser,
-      Integer totalRecords) {
-    TowersForPGM plugin = TowersForPGM.getInstance();
-    if (!plugin.getIsDatabaseActivated()) {
-      plugin
-          .getLogger()
-          .warning("Base de datos no activada, no se puede obtener top de tabla: " + table);
-      return CompletableFuture.completedFuture(new TopResult(java.util.Collections.emptyList(), 0));
-    }
-
-    String dbType = plugin.getCurrentDatabaseType();
-    return CompletableFuture.supplyAsync(
-        () -> {
-          long startTime = System.currentTimeMillis();
-          try {
-            TopResult result = null;
-            if ("MySQL".equals(dbType)) {
-              result =
-                  SQLStatsManager.getTop(table, dbColumn, limit, lastValue, lastUser, totalRecords);
-            } else if ("SQLite".equals(dbType)) {
-              result = SQLITEStatsManager.getTop(
-                  table, dbColumn, limit, lastValue, lastUser, totalRecords);
-            } else {
-              plugin
-                  .getLogger()
-                  .warning(
-                      "Tipo de base de datos desconocido: " + dbType + " para tabla: " + table);
-              return new TopResult(java.util.Collections.emptyList(), 0);
-            }
-            long endTime = System.currentTimeMillis();
-            long duration = endTime - startTime;
-            plugin
-                .getLogger()
-                .info("[+] getTop(keyset): " + table + ", " + dbColumn + ", " + duration + "ms");
-            return result;
-          } catch (Exception e) {
-            long endTime = System.currentTimeMillis();
-            long duration = endTime - startTime;
-            plugin
-                .getLogger()
-                .severe("[-] getTop(keyset): " + table + ", " + dbColumn + ", " + duration + "ms");
-            return new TopResult(java.util.Collections.emptyList(), 0);
-          }
-        },
-        SQL_EXECUTOR);
-  }
-
   public static CompletableFuture<List<PlayerEloChange>> getEloForUsernames(
       String table, List<String> usernames) {
     TowersForPGM plugin = TowersForPGM.getInstance();

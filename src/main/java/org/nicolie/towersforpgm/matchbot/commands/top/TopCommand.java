@@ -147,12 +147,7 @@ public class TopCommand extends ListenerAdapter {
                 String dbColumnFinal = dbColumn;
                 String token = org.nicolie.towersforpgm.matchbot.commands.top.TopPaginationListener
                     .createStateToken(
-                        table,
-                        stat,
-                        perGame,
-                        dbColumnFinal,
-                        result.getTotalRecords(),
-                        result.getData());
+                        table, stat, perGame, dbColumnFinal, result.getTotalRecords());
 
                 hook.sendMessageEmbeds(embed.build())
                     .addActionRow(

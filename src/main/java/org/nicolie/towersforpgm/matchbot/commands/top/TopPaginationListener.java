@@ -1,6 +1,5 @@
 package org.nicolie.towersforpgm.matchbot.commands.top;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -9,37 +8,28 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 import org.nicolie.towersforpgm.database.StatsManager;
-import org.nicolie.towersforpgm.database.models.top.Top;
 import org.nicolie.towersforpgm.matchbot.embeds.TopEmbed;
 import org.nicolie.towersforpgm.matchbot.enums.Stat;
 
 public class TopPaginationListener extends ListenerAdapter {
+  private static final TopPaginationListener INSTANCE = new TopPaginationListener();
+
   public static void register() {
     net.dv8tion.jda.api.JDA jda = me.tbg.match.bot.configs.DiscordBot.getJDA();
     if (jda != null) {
-      jda.addEventListener(new TopPaginationListener());
+      jda.addEventListener(INSTANCE);
     }
   }
 
   public static void unregister() {
     net.dv8tion.jda.api.JDA jda = me.tbg.match.bot.configs.DiscordBot.getJDA();
     if (jda != null) {
-      jda.removeEventListener(new TopPaginationListener());
+      jda.removeEventListener(INSTANCE);
     }
   }
 
   private static final int PAGE_SIZE = 10;
   private static final ConcurrentHashMap<String, State> STATE = new ConcurrentHashMap<>();
-
-  private static class Anchor {
-    final double value;
-    final String user;
-
-    Anchor(double value, String user) {
-      this.value = value;
-      this.user = user;
-    }
-  }
 
   private static class State {
     final String table;
@@ -48,7 +38,6 @@ public class TopPaginationListener extends ListenerAdapter {
     final String dbColumn; // ya con PerGame si aplica
     final int totalRecords;
     int page; // página actual
-    Anchor lastAnchor; // anchor de la página actual
 
     State(String table, Stat stat, boolean perGame, String dbColumn, int totalRecords) {
       this.table = table;
@@ -61,29 +50,11 @@ public class TopPaginationListener extends ListenerAdapter {
   }
 
   public static String createStateToken(
-      String table,
-      Stat stat,
-      boolean perGame,
-      String dbColumn,
-      int totalRecords,
-      List<Top> firstPage) {
+      String table, Stat stat, boolean perGame, String dbColumn, int totalRecords) {
     String token = UUID.randomUUID().toString().substring(0, 8);
     State s = new State(table, stat, perGame, dbColumn, totalRecords);
-    if (!firstPage.isEmpty()) {
-      Top last = firstPage.get(firstPage.size() - 1);
-      s.lastAnchor = new Anchor(last.getValue(), last.getUsername());
-    }
     STATE.put(token, s);
     return token;
-  }
-
-  public static void updateAnchor(String token, List<Top> pageData) {
-    State s = STATE.get(token);
-    if (s == null) return;
-    if (!pageData.isEmpty()) {
-      Top last = pageData.get(pageData.size() - 1);
-      s.lastAnchor = new Anchor(last.getValue(), last.getUsername());
-    }
   }
 
   private static void setPage(String token, int page) {
@@ -124,20 +95,32 @@ public class TopPaginationListener extends ListenerAdapter {
         event.reply("No previous page available.").setEphemeral(true).queue();
         return;
       }
+
       int targetPage = currentPage - 1;
-      // Usamos fallback OFFSET para página previa
-      StatsManager.getTop(state.table, state.dbColumn, PAGE_SIZE, targetPage).thenAccept(result -> {
-        setPage(token, targetPage);
-        updateAnchor(token, result.getData());
-        EmbedBuilder embed =
-            TopEmbed.createTopEmbed(state.stat, state.table, targetPage, result, state.perGame);
-        event
-            .editMessageEmbeds(embed.build())
-            .setActionRow(
-                Button.secondary("top_prev_" + token, "⬅️").withDisabled(targetPage <= 1),
-                Button.secondary("top_next_" + token, "➡️").withDisabled(targetPage >= totalPages))
-            .queue();
-      });
+
+      event
+          .deferEdit()
+          .queue(
+              ignored -> StatsManager.getTop(state.table, state.dbColumn, PAGE_SIZE, targetPage)
+                  .thenAccept(result -> {
+                    setPage(token, targetPage);
+                    EmbedBuilder embed = TopEmbed.createTopEmbed(
+                        state.stat, state.table, targetPage, result, state.perGame);
+                    event
+                        .getHook()
+                        .editOriginalEmbeds(embed.build())
+                        .setActionRow(
+                            Button.secondary("top_prev_" + token, "⬅️")
+                                .withDisabled(targetPage <= 1),
+                            Button.secondary("top_next_" + token, "➡️")
+                                .withDisabled(targetPage >= totalPages))
+                        .queue();
+                  }),
+              error -> event
+                  .reply("Could not process pagination.")
+                  .setEphemeral(true)
+                  .queue());
+
       return;
     }
 
@@ -146,22 +129,26 @@ public class TopPaginationListener extends ListenerAdapter {
       return;
     }
 
-    Double lastValue = state.lastAnchor == null ? null : state.lastAnchor.value;
-    String lastUser = state.lastAnchor == null ? null : state.lastAnchor.user;
-    StatsManager.getTop(
-            state.table, state.dbColumn, PAGE_SIZE, lastValue, lastUser, state.totalRecords)
-        .thenAccept(result -> {
-          int newPage = currentPage + 1;
-          setPage(token, newPage);
-          updateAnchor(token, result.getData());
-          EmbedBuilder embed =
-              TopEmbed.createTopEmbed(state.stat, state.table, newPage, result, state.perGame);
-          event
-              .editMessageEmbeds(embed.build())
-              .setActionRow(
-                  Button.secondary("top_prev_" + token, "⬅️").withDisabled(newPage <= 1),
-                  Button.secondary("top_next_" + token, "➡️").withDisabled(newPage >= totalPages))
-              .queue();
-        });
+    int targetPage = currentPage + 1;
+
+    event
+        .deferEdit()
+        .queue(
+            ignored -> StatsManager.getTop(state.table, state.dbColumn, PAGE_SIZE, targetPage)
+                .thenAccept(result -> {
+                  setPage(token, targetPage);
+                  EmbedBuilder embed = TopEmbed.createTopEmbed(
+                      state.stat, state.table, targetPage, result, state.perGame);
+                  event
+                      .getHook()
+                      .editOriginalEmbeds(embed.build())
+                      .setActionRow(
+                          Button.secondary("top_prev_" + token, "⬅️").withDisabled(targetPage <= 1),
+                          Button.secondary("top_next_" + token, "➡️")
+                              .withDisabled(targetPage >= totalPages))
+                      .queue();
+                }),
+            error ->
+                event.reply("Could not process pagination.").setEphemeral(true).queue());
   }
 }
