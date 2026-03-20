@@ -17,7 +17,7 @@ public enum SortOrder {
   public Component label() {
     switch (this) {
       case NAME:
-        return Component.translatable("draft.gui.sort.name");
+        return Component.translatable("stats.name");
       case KILLS:
         return Component.translatable("stats.kills");
       case POINTS:
@@ -25,7 +25,7 @@ public enum SortOrder {
       case WINS:
         return Component.translatable("stats.wins");
       default:
-        return Component.translatable("draft.gui.sort.name");
+        return Component.translatable("stats.name");
     }
   }
 

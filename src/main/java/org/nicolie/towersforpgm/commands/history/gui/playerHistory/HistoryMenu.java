@@ -1,6 +1,7 @@
-package org.nicolie.towersforpgm.commands.history.gui;
+package org.nicolie.towersforpgm.commands.history.gui.playerHistory;
 
 import fr.minuskube.inv.ClickableItem;
+import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.Pagination;
 import fr.minuskube.inv.content.SlotIterator;
@@ -9,14 +10,17 @@ import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
-import org.nicolie.towersforpgm.commands.history.gui.items.BackgroundItem;
-import org.nicolie.towersforpgm.commands.history.gui.items.BorderItem;
-import org.nicolie.towersforpgm.commands.history.gui.items.MatchItem;
-import org.nicolie.towersforpgm.commands.history.gui.items.PlayerSkullItem;
+import org.nicolie.towersforpgm.commands.history.gui.match.MatchMenu;
+import org.nicolie.towersforpgm.commands.history.gui.playerHistory.items.BackgroundItem;
+import org.nicolie.towersforpgm.commands.history.gui.playerHistory.items.BorderItem;
+import org.nicolie.towersforpgm.commands.history.gui.playerHistory.items.MatchItem;
+import org.nicolie.towersforpgm.commands.history.gui.playerHistory.items.PlayerSkullItem;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.database.models.history.MatchHistory;
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.menu.PagedInventoryMenu;
+import tc.oc.pgm.util.bukkit.Sounds;
 
 public class HistoryMenu extends PagedInventoryMenu {
 
@@ -32,6 +36,7 @@ public class HistoryMenu extends PagedInventoryMenu {
 
   public HistoryMenu(
       MatchPlayer viewer,
+      SmartInventory parent,
       String table,
       Stats stats,
       List<MatchHistory> matches,
@@ -40,10 +45,11 @@ public class HistoryMenu extends PagedInventoryMenu {
         Component.translatable("history.gui.title").color(NamedTextColor.DARK_GRAY),
         ROWS,
         viewer,
-        null,
+        parent,
         ITEMS_PER_PAGE,
         1,
         1);
+    viewer.playSound(Sounds.INVENTORY_CLICK);
     this.stats = stats;
     this.matches = matches;
     this.targetUsername = targetUsername;
@@ -55,6 +61,7 @@ public class HistoryMenu extends PagedInventoryMenu {
     fillBorder(contents);
     placePlayerInfoButton(contents, player);
     setupPageContents(player, contents);
+    placeBackButton(contents);
     fillBackground(contents);
   }
 
@@ -120,7 +127,19 @@ public class HistoryMenu extends PagedInventoryMenu {
     return ClickableItem.of(matchItem.createItem(player), e -> onMatchClick(player, match));
   }
 
-  protected void onMatchClick(Player player, MatchHistory match) {}
+  protected void onMatchClick(Player player, MatchHistory match) {
+    MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
+    if (matchPlayer == null) return;
+    new MatchMenu(matchPlayer, getInventory(), match, table).open();
+  }
+
+  private void placeBackButton(InventoryContents contents) {
+    if (getInventory().getParent().isEmpty()) return;
+
+    Component parentTitle =
+        Component.text(getInventory().getParent().map(SmartInventory::getTitle).orElse(""));
+    addBackButton(contents, Component.translatable("menu.page.return", parentTitle), lastRow(), 4);
+  }
 
   private void fillBorder(InventoryContents contents) {
     BorderItem borderItem = new BorderItem();
@@ -128,9 +147,9 @@ public class HistoryMenu extends PagedInventoryMenu {
 
     for (int col = 0; col < 9; col++) {
       contents.set(0, col, pane);
-      contents.set(ROWS - 1, col, pane);
+      contents.set(lastRow(), col, pane);
     }
-    for (int row = 1; row < ROWS - 1; row++) {
+    for (int row = 1; row < lastRow(); row++) {
       contents.set(row, 0, pane);
       contents.set(row, 8, pane);
     }

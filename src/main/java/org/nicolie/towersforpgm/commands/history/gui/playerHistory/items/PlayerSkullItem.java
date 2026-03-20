@@ -1,4 +1,4 @@
-package org.nicolie.towersforpgm.commands.history.gui.items;
+package org.nicolie.towersforpgm.commands.history.gui.playerHistory.items;
 
 import com.google.common.collect.Lists;
 import java.util.List;
@@ -30,11 +30,12 @@ public class PlayerSkullItem implements MenuItem {
 
   @Override
   public Component getDisplayName() {
-    return MatchManager.getPrefixedName(targetName)
-        .append(Component.space()
-            .append(Component.text("-").color(NamedTextColor.DARK_GRAY))
-            .append(Component.space())
-            .append(Component.text(table).color(NamedTextColor.GRAY)));
+    Component base = Component.text()
+        .append(MatchManager.getPrefixedName(targetName))
+        .append(Component.text(" - ").color(NamedTextColor.DARK_GRAY))
+        .append(Component.text(table).color(NamedTextColor.GRAY))
+        .build();
+    return base;
   }
 
   @SuppressWarnings("deprecation")

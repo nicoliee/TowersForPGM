@@ -11,6 +11,7 @@ import java.util.Spliterators;
 import java.util.stream.StreamSupport;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -55,7 +56,7 @@ public class MatchManager {
 
   public static Component getPrefixedName(String username) {
     if (username == null) return null;
-    Component prefixed = Component.text("§3" + username);
+    Component prefixed = Component.text(username).color(NamedTextColor.DARK_AQUA);
     Player player = Bukkit.getPlayerExact(username);
     if (player != null && player.isOnline()) {
       MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);

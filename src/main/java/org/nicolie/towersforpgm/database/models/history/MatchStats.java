@@ -1,7 +1,11 @@
 package org.nicolie.towersforpgm.database.models.history;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import me.tbg.match.bot.stats.Stats;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 public class MatchStats {
   private final String displayName;
@@ -226,5 +230,108 @@ public class MatchStats {
         totalPoints,
         null // party
         );
+  }
+
+  public List<Component> getComponent() {
+    List<Component> lore = new ArrayList<>();
+    Component combatLine = Component.translatable(
+            "match.stats.type.kills", Component.text(kills).color(NamedTextColor.GREEN))
+        .color(NamedTextColor.GRAY)
+        .append(Component.space())
+        .append(Component.translatable(
+                "match.stats.type.deaths", Component.text(deaths).color(NamedTextColor.RED))
+            .color(NamedTextColor.GRAY))
+        .append(Component.space())
+        .append(Component.translatable(
+                "match.stats.type.kill_death_ratio",
+                Component.text(String.format("%.2f", getKDRatio())).color(NamedTextColor.GREEN))
+            .color(NamedTextColor.GRAY));
+    lore.add(combatLine);
+
+    Component combatLine2 = Component.translatable(
+            "match.stats.type.assists", Component.text(assists).color(NamedTextColor.GREEN))
+        .color(NamedTextColor.GRAY)
+        .append(Component.space())
+        .append(Component.translatable(
+                "match.stats.type.best_kill_streak",
+                Component.text(maxKillstreak).color(NamedTextColor.GREEN))
+            .color(NamedTextColor.GRAY));
+    lore.add(combatLine2);
+
+    Component damageDoneComponent = Component.translatable(
+            "match.stats.damage.dealt",
+            Component.text(String.format("%.1f", damageDone) + "❤").color(NamedTextColor.GREEN),
+            Component.text(String.format("%.1f", bowDamage) + "❤").color(NamedTextColor.YELLOW))
+        .color(NamedTextColor.GRAY);
+    lore.add(damageDoneComponent);
+
+    Component damageTakenComponent = Component.translatable(
+            "match.stats.damage.received",
+            Component.text(String.format("%.1f", damageTaken) + "❤").color(NamedTextColor.RED),
+            Component.text(String.format("%.1f", bowDamageTaken) + "❤").color(NamedTextColor.GOLD))
+        .color(NamedTextColor.GRAY);
+    lore.add(damageTakenComponent);
+
+    if (shotsTaken > 0) {
+      double accuracy = (double) shotsHit / shotsTaken * 100;
+      Component bowComponent = Component.translatable(
+              "match.stats.bow",
+              Component.text(shotsHit).color(NamedTextColor.YELLOW),
+              Component.text(shotsTaken).color(NamedTextColor.YELLOW),
+              Component.text(String.format("%.1f%%", accuracy)).color(NamedTextColor.YELLOW))
+          .color(NamedTextColor.GRAY);
+      lore.add(bowComponent);
+
+      if (longestBowKill > 0) {
+        Component longestBowKillComponent = Component.translatable(
+                "match.stats.type.longest_bow_shot",
+                Component.text(longestBowKill + "m").color(NamedTextColor.YELLOW))
+            .color(NamedTextColor.GRAY);
+        lore.add(longestBowKillComponent);
+      }
+    }
+
+    boolean hasObjective = destroyablePiecesBroken > 0
+        || monumentsDestroyed > 0
+        || flagsCaptured > 0
+        || flagPickups > 0
+        || coresLeaked > 0
+        || woolsCaptured > 0
+        || woolsTouched > 0
+        || longestFlagHoldMillis > 0;
+
+    if (hasObjective) {
+      lore.add(Component.empty());
+      if (destroyablePiecesBroken > 0)
+        lore.add(statLine("match.stats.broken.concise", destroyablePiecesBroken));
+      if (monumentsDestroyed > 0)
+        lore.add(statLine("match.stats.monuments.concise", monumentsDestroyed));
+      if (coresLeaked > 0) lore.add(statLine("match.stats.coresLeaked.concise", coresLeaked));
+      if (woolsCaptured > 0) lore.add(statLine("match.stats.woolsCaptured.concise", woolsCaptured));
+      if (woolsTouched > 0) lore.add(statLine("match.stats.woolsTouched.concise", woolsTouched));
+      if (flagsCaptured > 0) lore.add(statLine("match.stats.flagsCaptured.concise", flagsCaptured));
+      if (flagPickups > 0) lore.add(statLine("match.stats.flagPickups.concise", flagPickups));
+      if (longestFlagHoldMillis > 0) {
+        long secs = longestFlagHoldMillis / 1000;
+        lore.add(Component.translatable(
+                "match.stats.flaghold.concise",
+                Component.text(secs + "s").color(NamedTextColor.GRAY))
+            .color(NamedTextColor.DARK_GRAY));
+      }
+    }
+
+    lore.add(Component.empty());
+    lore.add(Component.translatable(
+            "match.stats.type.generic",
+            Component.translatable("stats.points").color(NamedTextColor.DARK_GRAY),
+            Component.text(totalPoints).color(NamedTextColor.GOLD))
+        .color(NamedTextColor.DARK_GRAY));
+
+    return lore;
+  }
+
+  private static Component statLine(String key, int value) {
+    return Component.translatable(key, Component.text(value).color(NamedTextColor.GRAY))
+        .color(NamedTextColor.DARK_GRAY);
   }
 }

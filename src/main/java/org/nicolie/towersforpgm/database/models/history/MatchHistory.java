@@ -1,6 +1,13 @@
 package org.nicolie.towersforpgm.database.models.history;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class MatchHistory {
   private final String matchId;
@@ -12,7 +19,6 @@ public class MatchHistory {
   private final String winnersText;
   private final List<PlayerHistory> players;
   private final long finishedAt;
-  // Nuevo campo - nullable para retrocompatibilidad
   private final List<TeamInfo> teams;
 
   /** Constructor retrocompatible - mantiene la firma original. */
@@ -125,5 +131,97 @@ public class MatchHistory {
       return List.of();
     }
     return players.stream().filter(p -> p.getWin() == 0).toList();
+  }
+
+  public List<Component> getFormattedInfo() {
+    List<Component> lore = new ArrayList<>();
+    Component dateComponent = formatTimeAgo(getFinishedAt())
+        .color(NamedTextColor.DARK_GRAY)
+        .color(NamedTextColor.GRAY)
+        .decoration(TextDecoration.ITALIC, false);
+    lore.add(dateComponent);
+
+    Component durationComponent = Component.translatable(
+            "history.duration",
+            Component.text(SendMessage.formatTime(getDurationSeconds()))
+                .color(NamedTextColor.DARK_GRAY))
+        .color(NamedTextColor.GRAY)
+        .decoration(TextDecoration.ITALIC, false);
+    lore.add(durationComponent);
+
+    Component scoresComponent = Component.translatable(
+            "match.stats.type.generic", Component.translatable("stats.score"), getFormattedScores())
+        .color(NamedTextColor.GRAY);
+    lore.add(scoresComponent);
+    return lore;
+  }
+
+  public Component getFormattedScores() {
+    if (teams != null && !teams.isEmpty()) {
+      Component scoreComponent = Component.empty();
+      for (int i = 0; i < teams.size(); i++) {
+        TeamInfo team = teams.get(i);
+        if (i > 0) {
+          scoreComponent = scoreComponent.append(
+              Component.text(" - ").color(NamedTextColor.WHITE).decorate(TextDecoration.BOLD));
+        }
+        scoreComponent = scoreComponent.append(
+            Component.text(team.getScore()).color(TextColor.fromHexString(team.getColorHex())));
+      }
+      return scoreComponent;
+    }
+    return Component.text(scoresText);
+  }
+
+  private Component formatTimeAgo(long finishedAtMillis) {
+    long seconds = Math.max(0, Instant.now().getEpochSecond() - (finishedAtMillis));
+
+    Component unit;
+    if (seconds <= 0) {
+      unit = Component.translatable("misc.now");
+    } else if (seconds < 60) {
+      unit = Component.translatable(
+          seconds == 1 ? "misc.second" : "misc.seconds", Component.text(seconds));
+    } else {
+      long minutes = seconds / 60;
+      if (minutes < 60) {
+        unit = Component.translatable(
+            minutes == 1 ? "misc.minute" : "misc.minutes", Component.text(minutes));
+      } else {
+        long hours = minutes / 60;
+        if (hours < 24) {
+          unit = Component.translatable(
+              hours == 1 ? "misc.hour" : "misc.hours", Component.text(hours));
+        } else {
+          long days = hours / 24;
+          if (days < 30) {
+            long weeks = days / 7;
+            if (weeks >= 2 && weeks <= 3) {
+              unit = Component.translatable(
+                  weeks == 1 ? "misc.week" : "misc.weeks", Component.text(weeks));
+            } else {
+              unit = Component.translatable(
+                  days == 1 ? "misc.day" : "misc.days", Component.text(days));
+            }
+          } else {
+            long months = days / 30;
+            if (months < 12) {
+              unit = Component.translatable(
+                  months == 1 ? "misc.month" : "misc.months", Component.text(months));
+            } else {
+              long years = months / 12;
+              if (years > 3) {
+                unit = Component.translatable("misc.eon");
+              } else {
+                unit = Component.translatable(
+                    years == 1 ? "misc.year" : "misc.years", Component.text(years));
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return Component.translatable("misc.timeAgo", unit);
   }
 }
