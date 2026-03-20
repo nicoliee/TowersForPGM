@@ -47,10 +47,9 @@ public class Events {
     pluginManager.registerEvents(new CommandListener(), plugin);
     pluginManager.registerEvents(new PreparationListener(), plugin);
     pluginManager.registerEvents(new MatchLoadListener(), plugin);
-    org.nicolie.towersforpgm.listeners.MatchStatsListener matchStatsListener =
-        new org.nicolie.towersforpgm.listeners.MatchStatsListener();
-    pluginManager.registerEvents(matchStatsListener, plugin);
-    pluginManager.registerEvents(new MatchFinishListener(matchStatsListener), plugin);
+    pluginManager.registerEvents(
+        new org.nicolie.towersforpgm.listeners.MatchStatsListener(), plugin);
+    pluginManager.registerEvents(new MatchFinishListener(), plugin);
     pluginManager.registerEvents(new PrivateMatchListener(queue), plugin);
     pluginManager.registerEvents(new RankedItem(queue), plugin);
 

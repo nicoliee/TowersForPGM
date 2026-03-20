@@ -1,30 +1,28 @@
 package org.nicolie.towersforpgm.rankeds.queue;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import org.bukkit.scheduler.BukkitTask;
+import java.util.concurrent.ScheduledFuture;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 
-public class QueueState {
-  private static QueueState instance;
+/** Estado de countdown y caché de ELO. La lista de jugadores vive en RankedQueue. */
+public final class QueueState {
+
+  private static final QueueState INSTANCE = new QueueState();
 
   private boolean ranked = false;
   private boolean countdownActive = false;
-  private BukkitTask countdownTask = null;
-  private final List<UUID> queuePlayers = new ArrayList<>();
+  private ScheduledFuture<?> countdownFuture = null;
+
   private final Map<String, java.util.concurrent.CompletableFuture<List<PlayerEloChange>>>
       eloCache = new ConcurrentHashMap<>();
 
   private QueueState() {}
 
   public static QueueState getInstance() {
-    if (instance == null) {
-      instance = new QueueState();
-    }
-    return instance;
+    return INSTANCE;
   }
 
   public boolean isRanked() {
@@ -43,44 +41,37 @@ public class QueueState {
     this.countdownActive = countdownActive;
   }
 
-  public BukkitTask getCountdownTask() {
-    return countdownTask;
+  public ScheduledFuture<?> getCountdownFuture() {
+    return countdownFuture;
   }
 
-  public void setCountdownTask(BukkitTask countdownTask) {
-    this.countdownTask = countdownTask;
+  public void setCountdownFuture(ScheduledFuture<?> future) {
+    this.countdownFuture = future;
   }
 
-  // Queue players management
-  public List<UUID> getQueuePlayers() {
-    return new ArrayList<>(queuePlayers);
-  }
-
-  public boolean containsPlayer(UUID playerUUID) {
-    return queuePlayers.contains(playerUUID);
-  }
-
-  public void addPlayer(UUID playerUUID) {
-    if (!queuePlayers.contains(playerUUID)) {
-      queuePlayers.add(playerUUID);
-    }
-  }
-
-  public boolean removePlayer(UUID playerUUID) {
-    return queuePlayers.remove(playerUUID);
-  }
+  // ── Queue size — delegado a RankedQueue ───────────────────────────────────
 
   public int getQueueSize() {
-    return queuePlayers.size();
+    return RankedQueue.getInstance().size();
   }
 
-  public void clearQueue() {
-    queuePlayers.clear();
+  public List<UUID> getQueuePlayers() {
+    return RankedQueue.getInstance().snapshot();
   }
 
-  public Map<String, java.util.concurrent.CompletableFuture<List<PlayerEloChange>>> getEloCache() {
-    return eloCache;
+  public boolean containsPlayer(UUID uuid) {
+    return RankedQueue.getInstance().contains(uuid);
   }
+
+  public void addPlayer(UUID uuid) {
+    RankedQueue.getInstance().add(uuid);
+  }
+
+  public boolean removePlayer(UUID uuid) {
+    return RankedQueue.getInstance().remove(uuid);
+  }
+
+  // ── ELO cache ─────────────────────────────────────────────────────────────
 
   public void putEloCache(
       String table, java.util.concurrent.CompletableFuture<List<PlayerEloChange>> future) {
@@ -96,22 +87,20 @@ public class QueueState {
     eloCache.remove(table);
   }
 
-  public void reset() {
-    ranked = false;
-    countdownActive = false;
-    if (countdownTask != null) {
-      countdownTask.cancel();
-      countdownTask = null;
-    }
-    queuePlayers.clear();
-    eloCache.clear();
-  }
+  // ── Cleanup ───────────────────────────────────────────────────────────────
 
   public void cancelCountdown() {
-    if (countdownTask != null) {
-      countdownTask.cancel();
-      countdownTask = null;
+    if (countdownFuture != null) {
+      countdownFuture.cancel(false);
+      countdownFuture = null;
     }
     countdownActive = false;
+  }
+
+  public void reset() {
+    ranked = false;
+    cancelCountdown();
+    RankedQueue.getInstance().clear();
+    eloCache.clear();
   }
 }

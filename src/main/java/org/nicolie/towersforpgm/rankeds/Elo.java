@@ -34,18 +34,6 @@ public class Elo {
       Map<String, PlayerEloChange> eloMap =
           eloList.stream().collect(Collectors.toMap(PlayerEloChange::getUsername, e -> e));
 
-      if (losers.isEmpty()) {
-        winners.forEach(player -> {
-          String username = player.getNameLegacy();
-          PlayerEloChange playerElo =
-              eloMap.getOrDefault(username, new PlayerEloChange(username, 0, 0, 0, 0));
-          int currentElo = playerElo.getCurrentElo();
-          int maxElo = playerElo.getMaxElo();
-          changes.add(new PlayerEloChange(username, currentElo, currentElo, 0, maxElo));
-        });
-        return changes;
-      }
-
       for (MatchPlayer winner : winners) {
         String username = winner.getNameLegacy();
         PlayerEloChange playerElo =

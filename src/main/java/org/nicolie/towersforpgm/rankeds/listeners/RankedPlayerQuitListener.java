@@ -6,13 +6,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
-import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.rankeds.disconnect.DisconnectManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class RankedPlayerQuitListener implements Listener {
+
   private final Queue queue;
 
   public RankedPlayerQuitListener(Queue queue) {
@@ -25,9 +26,8 @@ public class RankedPlayerQuitListener implements Listener {
     UUID uuid = player.getUniqueId();
     Match match = PGM.get().getMatchManager().getMatch(player);
     MatchPlayer matchPlayer = match.getPlayer(player);
-    Boolean isOnTeam = matchPlayer.isParticipating();
 
-    if (isOnTeam && Queue.isRanked()) {
+    if (matchPlayer.isParticipating() && Queue.isRanked()) {
       DisconnectManager.startDisconnectTimer(match, matchPlayer);
     }
 

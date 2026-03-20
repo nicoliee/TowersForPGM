@@ -708,8 +708,8 @@ public class SQLITEStatsManager {
   public static List<Integer> getEloHistory(String username, String table) {
     List<Integer> eloHistory = new ArrayList<>();
 
-    // Query para obtener el elo_delta de todas las partidas del jugador, ordenadas por finished_at
-    String sql = "SELECT mph.elo_delta "
+    // Query para obtener el elo_before de todas las partidas del jugador, ordenadas por finished_at
+    String sql = "SELECT mph.maxElo_after "
         + "FROM match_players_history mph "
         + "INNER JOIN matches_history mh ON mph.match_id = mh.match_id "
         + "WHERE mph.username = ? AND mh.table_name = ? "
@@ -722,23 +722,21 @@ public class SQLITEStatsManager {
       ps.setString(2, table);
 
       try (ResultSet rs = ps.executeQuery()) {
-        int currentElo = 0; // El jugador empieza con 0 de ELO
-        boolean hasNonZeroDelta = false; // Flag para verificar si hay algún delta diferente de 0
+        boolean hasNonZeroElo = false;
         while (rs.next()) {
-          int eloDelta = rs.getInt("elo_delta");
-          if (eloDelta != 0) {
-            hasNonZeroDelta = true;
+          int elo = rs.getInt("maxElo_after");
+          if (elo != 0) {
+            hasNonZeroElo = true;
           }
-          currentElo += eloDelta; // Acumular el delta
-          eloHistory.add(currentElo);
+          eloHistory.add(elo);
         }
 
-        // Si todos los deltas son 0, retornar lista vacía
-        if (!hasNonZeroDelta && !eloHistory.isEmpty()) {
+        // Si todos los elos son 0, retornar lista vacía
+        if (!hasNonZeroElo && !eloHistory.isEmpty()) {
           plugin
               .getLogger()
               .info("[+] getEloHistory (SQLite): " + username + " en " + table
-                  + " - Todos los deltas son 0, retornando vacío");
+                  + " - Todos los elos son 0, retornando vacío");
           return new ArrayList<>();
         }
       }

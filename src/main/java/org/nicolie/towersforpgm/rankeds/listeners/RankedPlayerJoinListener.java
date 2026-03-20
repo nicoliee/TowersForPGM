@@ -6,13 +6,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.rankeds.disconnect.DisconnectManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
 public class RankedPlayerJoinListener implements Listener {
+
   private final TowersForPGM plugin;
 
   public RankedPlayerJoinListener(TowersForPGM plugin) {
@@ -33,10 +34,9 @@ public class RankedPlayerJoinListener implements Listener {
           && !match.isFinished()
           && Queue.isRanked()
           && !DisconnectManager.isSanctionActive(match)) {
-        DisconnectManager.cancelDisconnectTimer(player.getName());
-        Component message =
-            Component.translatable("ranked.disconnect.reconnected", matchPlayer.getName());
-        match.sendMessage(message);
+        DisconnectManager.cancelDisconnectTimer(match, player.getName());
+        match.sendMessage(
+            Component.translatable("ranked.disconnect.reconnected", matchPlayer.getName()));
       }
     }
   }

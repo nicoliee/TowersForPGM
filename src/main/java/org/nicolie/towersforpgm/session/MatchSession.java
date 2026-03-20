@@ -11,6 +11,7 @@ import org.nicolie.towersforpgm.draft.team.Captains;
 import org.nicolie.towersforpgm.draft.team.Teams;
 import org.nicolie.towersforpgm.session.draft.DraftContext;
 import org.nicolie.towersforpgm.session.draft.DraftOptions;
+import org.nicolie.towersforpgm.session.ranked.RankedSession;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
 
@@ -22,6 +23,9 @@ public final class MatchSession {
   @Nullable
   private DraftContext draftContext;
 
+  @Nullable
+  private RankedSession rankedSession;
+
   MatchSession(Match match, TowersForPGM plugin) {
     this.match = match;
     this.plugin = plugin;
@@ -29,11 +33,9 @@ public final class MatchSession {
 
   public DraftContext startDraft(
       UUID captain1, UUID captain2, List<MatchPlayer> players, DraftOptions options) {
-
     if (draftContext != null) cleanupDraftContext(draftContext);
 
     draftContext = createDraftContext();
-
     invokeDraftMethod(
         draftContext,
         "startDraft",
@@ -47,11 +49,9 @@ public final class MatchSession {
   }
 
   public DraftContext startMatchmaking(UUID captain1, UUID captain2, List<MatchPlayer> players) {
-
     if (draftContext != null) cleanupDraftContext(draftContext);
 
     draftContext = createDraftContext();
-
     invokeDraftMethod(
         draftContext,
         "startMatchmaking",
@@ -79,6 +79,28 @@ public final class MatchSession {
     return draftContext;
   }
 
+  public RankedSession startRanked() {
+    if (rankedSession != null) rankedSession.destroy();
+
+    Teams sessionTeams = teams();
+    if (sessionTeams == null) {
+      throw new IllegalStateException("No hay Teams disponibles para crear RankedSession");
+    }
+
+    rankedSession = new RankedSession(match, plugin, sessionTeams);
+    rankedSession.activate();
+    return rankedSession;
+  }
+
+  @Nullable
+  public RankedSession getRanked() {
+    return rankedSession;
+  }
+
+  public boolean hasRanked() {
+    return rankedSession != null && rankedSession.isActive();
+  }
+
   @Nullable
   public Teams teams() {
     return draftContext != null ? draftContext.teams() : null;
@@ -98,14 +120,20 @@ public final class MatchSession {
     return match;
   }
 
+  void destroy() {
+    endDraft();
+    if (rankedSession != null) {
+      rankedSession.destroy();
+      rankedSession = null;
+    }
+  }
+
   private DraftContext createDraftContext() {
     try {
       Constructor<DraftContext> ctor =
           DraftContext.class.getDeclaredConstructor(Match.class, TowersForPGM.class);
-
       ctor.setAccessible(true);
       return ctor.newInstance(match, plugin);
-
     } catch (ReflectiveOperationException e) {
       throw new IllegalStateException("No se pudo crear DraftContext", e);
     }
@@ -115,24 +143,14 @@ public final class MatchSession {
     invokeDraftMethod(context, "cleanup", new Class<?>[0]);
   }
 
-  /**
-   * Invoca métodos privados de DraftContext usando reflexión. Se usa para evitar exponer métodos
-   * internamente.
-   */
   private void invokeDraftMethod(
       DraftContext context, String methodName, Class<?>[] parameterTypes, Object... args) {
-
     try {
       Method method = DraftContext.class.getDeclaredMethod(methodName, parameterTypes);
       method.setAccessible(true);
       method.invoke(context, args);
-
     } catch (ReflectiveOperationException e) {
       throw new IllegalStateException("No se pudo invocar DraftContext." + methodName + "()", e);
     }
-  }
-
-  void destroy() {
-    endDraft();
   }
 }

@@ -2,11 +2,10 @@ package org.nicolie.towersforpgm.rankeds.listeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.nicolie.towersforpgm.rankeds.DisconnectManager;
 import org.nicolie.towersforpgm.rankeds.Queue;
+import org.nicolie.towersforpgm.rankeds.queue.RankedQueue;
 import tc.oc.pgm.api.match.event.MatchLoadEvent;
 
-/** Handles ranked-related logic when a match loads. */
 public class RankedMatchLoadListener implements Listener {
 
   @EventHandler
@@ -14,15 +13,13 @@ public class RankedMatchLoadListener implements Listener {
     String map = event.getMatch().getMap().getName();
 
     Queue.setRanked(false);
-    DisconnectManager.clearAll();
 
-    // Clear queue if map is not ranked
     if (!org.nicolie.towersforpgm.TowersForPGM.getInstance()
             .config()
             .ranked()
             .getRankedMaps()
             .contains(map)
-        && Queue.getQueueSize() > 0) {
+        && RankedQueue.getInstance().size() > 0) {
       Queue.clearQueue();
     }
   }

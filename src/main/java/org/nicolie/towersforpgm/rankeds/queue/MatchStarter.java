@@ -30,22 +30,20 @@ public class MatchStarter {
   private final TowersForPGM plugin;
   private final QueueState queueState;
   private final QueueManager queueManager;
-
-  // ── Constructor — Draft and Matchmaking removed ───────────────────────────
+  private final RankedQueue rankedQueue;
 
   public MatchStarter(QueueManager queueManager) {
     this.plugin = TowersForPGM.getInstance();
     this.queueState = QueueState.getInstance();
     this.queueManager = queueManager;
+    this.rankedQueue = RankedQueue.getInstance();
   }
-
-  // ── startMatch — unchanged logic ──────────────────────────────────────────
 
   public void startMatch(Match match, String table) {
     int validSize = queueManager.getValidRankedSize(match);
     removeDisconnectedPlayersFromQueue(match, validSize);
 
-    int currentSize = queueState.getQueueSize();
+    int currentSize = rankedQueue.size();
     if (currentSize % 2 != 0) currentSize--;
     int finalSize = Math.min(validSize, currentSize);
 
@@ -65,8 +63,6 @@ public class MatchStarter {
 
     processEloAndStartMatch(match, table, rankedPlayers, rankedMatchPlayers);
   }
-
-  // ── sendRankedStartEmbed — unchanged ──────────────────────────────────────
 
   public static void sendRankedStartEmbed(MatchStartEvent event) {
     TowersForPGM plugin = TowersForPGM.getInstance();
@@ -104,22 +100,18 @@ public class MatchStarter {
         });
   }
 
-  // ── Private helpers — unchanged ───────────────────────────────────────────
-
   private void removeDisconnectedPlayersFromQueue(Match match, int validSize) {
-    List<UUID> queuePlayers = queueState.getQueuePlayers();
-    int sizeToCheck = Math.min(validSize, queuePlayers.size());
-
-    queuePlayers.subList(0, sizeToCheck).stream()
+    List<UUID> snapshot = rankedQueue.take(validSize);
+    snapshot.stream()
         .filter(uuid -> PGM.get().getMatchManager().getPlayer(uuid) == null)
         .forEach(uuid -> {
           OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
-          if (op.getName() != null) queueState.removePlayer(uuid);
+          if (op.getName() != null) rankedQueue.remove(uuid);
         });
   }
 
   private List<String> getRankedPlayerNames(int finalSize) {
-    return queueState.getQueuePlayers().subList(0, finalSize).stream()
+    return rankedQueue.take(finalSize).stream()
         .map(uuid -> {
           MatchPlayer p = PGM.get().getMatchManager().getPlayer(uuid);
           return p != null ? p.getNameLegacy() : null;
@@ -137,10 +129,7 @@ public class MatchStarter {
   }
 
   private void removePlayersFromQueue(int finalSize) {
-    List<UUID> queuePlayers = queueState.getQueuePlayers();
-    for (int i = 0; i < finalSize && i < queuePlayers.size(); i++) {
-      queueState.removePlayer(queuePlayers.get(i));
-    }
+    rankedQueue.take(finalSize).forEach(rankedQueue::remove);
   }
 
   private void processEloAndStartMatch(
@@ -160,8 +149,6 @@ public class MatchStarter {
         });
   }
 
-  // ── startDraftOrMatchmaking — the only method that really changed ─────────
-
   private void startDraftOrMatchmaking(
       Match match, List<PlayerEloChange> eloList, List<MatchPlayer> rankedMatchPlayers) {
     List<Map.Entry<MatchPlayer, Integer>> playersWithElo = eloList.stream()
@@ -176,11 +163,9 @@ public class MatchStarter {
     RankedPlayers pair = RankedPlayers.selectCaptains(playersWithElo);
 
     if (plugin.config().ranked().isRankedMatchmaking()) {
-      // ── Matchmaking — automatic MMR balance ──────────────────────────
       MatchSessionRegistry.of(match)
           .startMatchmaking(pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers());
     } else {
-      // ── Draft — manual picks ──────────────────────────────────────────
       DraftOptions options = DraftOptions.builder()
           .orderPattern(plugin.config().ranked().getRankedOrder())
           .minOrder(0)

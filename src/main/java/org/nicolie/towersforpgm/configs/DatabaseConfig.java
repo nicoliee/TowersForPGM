@@ -14,6 +14,7 @@ public class DatabaseConfig {
   private String password;
   private String id;
   private String matchLink;
+  private String statsLink;
 
   public DatabaseConfig(FileConfiguration config) {
     this.config = config;
@@ -37,6 +38,14 @@ public class DatabaseConfig {
 
   public String getMatchLink() {
     return matchLink;
+  }
+
+  public String getStatsLink() {
+    return statsLink;
+  }
+
+  public void setStatsLink(String statsLink) {
+    this.statsLink = statsLink;
   }
 
   public String getHost() {

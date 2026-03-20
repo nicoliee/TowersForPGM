@@ -142,23 +142,6 @@ public class MatchHistoryManager {
   }
 
   /**
-   * Método retrocompatible para guardar un match sin información extendida.
-   *
-   * @deprecated Use {@link #saveMatch(String, String,
-   *     org.nicolie.towersforpgm.matchbot.embeds.MatchInfo, boolean, List, List, List, Map, Map)}
-   */
-  @Deprecated
-  public static CompletableFuture<Void> saveMatch(
-      String matchId,
-      String table,
-      org.nicolie.towersforpgm.matchbot.embeds.MatchInfo matchInfo,
-      boolean ranked,
-      List<Stats> rawStats,
-      List<PlayerEloChange> eloChanges) {
-    return saveMatch(matchId, table, matchInfo, ranked, rawStats, eloChanges, null, null, null);
-  }
-
-  /**
    * Obtiene un match del historial.
    *
    * @param matchId ID del match

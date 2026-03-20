@@ -27,11 +27,11 @@ public class ReadyReminder {
 
   public void startTimer() {
     cancelTimer();
-    sendReadyReminder(true);
+    sendReadyReminder();
     reminderTask = new BukkitRunnable() {
       @Override
       public void run() {
-        sendReadyReminder(false);
+        sendReadyReminder();
       }
     }.runTaskTimer(plugin, 20L * REMINDER_INTERVAL, 20L * REMINDER_INTERVAL);
   }
@@ -43,29 +43,22 @@ public class ReadyReminder {
     }
   }
 
-  private void sendReadyReminder(boolean isActionBar) {
+  private void sendReadyReminder() {
     MatchPlayer captain1 = PGM.get().getMatchManager().getPlayer(captains.getCaptain1());
     MatchPlayer captain2 = PGM.get().getMatchManager().getPlayer(captains.getCaptain2());
+    captain2.playSound(Sounds.DIRECT_MESSAGE);
     Component readyActionBarMessage = Component.translatable(
-            "draft.ready.tip", Component.text("/ready"))
-        .color(NamedTextColor.GOLD)
+            "draft.ready.tip", Component.text("/ready").color(NamedTextColor.GOLD))
         .color(NamedTextColor.AQUA);
-    if (isActionBar) {
-      if (captain1 != null) {
-        captain1.sendActionBar(readyActionBarMessage);
-      }
-      if (captain2 != null) {
-        captain2.sendActionBar(readyActionBarMessage);
-      }
-    } else {
-      if (captain1 != null) {
-        captain1.sendMessage(readyActionBarMessage);
-        captain1.playSound(Sounds.DIRECT_MESSAGE);
-      }
-      if (captain2 != null) {
-        captain2.sendMessage(readyActionBarMessage);
-        captain2.playSound(Sounds.DIRECT_MESSAGE);
-      }
+    if (captain1 != null && !captains.isReady1()) {
+      captain1.sendActionBar(readyActionBarMessage);
+      captain1.sendMessage(readyActionBarMessage);
+      captain1.playSound(Sounds.DIRECT_MESSAGE);
+    }
+    if (captain2 != null && !captains.isReady2()) {
+      captain2.sendActionBar(readyActionBarMessage);
+      captain2.sendMessage(readyActionBarMessage);
+      captain2.playSound(Sounds.DIRECT_MESSAGE);
     }
   }
 

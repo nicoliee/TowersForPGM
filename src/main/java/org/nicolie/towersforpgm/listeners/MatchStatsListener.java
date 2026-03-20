@@ -10,11 +10,11 @@ import tc.oc.pgm.api.setting.SettingKey;
 import tc.oc.pgm.api.setting.SettingValue;
 
 public class MatchStatsListener implements Listener {
-  private String matchURL;
 
   @EventHandler
   public void onMatchStats(MatchStatsEvent event) {
     String baseURL = TowersForPGM.getInstance().config().database().getMatchLink();
+    String matchURL = TowersForPGM.getInstance().config().database().getStatsLink();
     if (matchURL != null && !matchURL.isEmpty() && baseURL != null && !baseURL.isEmpty()) {
       String urlCopy = matchURL;
       String fullURL = baseURL + urlCopy.replace("/", "");
@@ -34,11 +34,7 @@ public class MatchStatsListener implements Listener {
                 }
               },
               1L);
-      matchURL = null;
+      TowersForPGM.getInstance().config().database().setStatsLink(null);
     }
-  }
-
-  public void setMatchURL(String url) {
-    matchURL = url;
   }
 }

@@ -234,23 +234,6 @@ public class MatchHistoryRepository {
             pp.setInt(paramIndex++, 0);
             pp.setInt(paramIndex++, 0);
           }
-
-        } else {
-          // Modo legacy
-          int paramIndex = 1;
-          pp.setString(paramIndex++, matchId);
-          pp.setString(paramIndex++, s.getUsername());
-          pp.setInt(paramIndex++, s.getKills());
-          pp.setInt(paramIndex++, s.getDeaths());
-          pp.setInt(paramIndex++, s.getAssists());
-          pp.setDouble(paramIndex++, s.getDamageDone());
-          pp.setDouble(paramIndex++, s.getDamageTaken());
-          pp.setInt(paramIndex++, s.getPoints());
-          pp.setInt(paramIndex++, s.getWins());
-          pp.setInt(paramIndex++, s.getGames());
-          pp.setInt(paramIndex++, wsDelta);
-          pp.setInt(paramIndex++, eloDelta);
-          pp.setInt(paramIndex++, maxEloAfter);
         }
 
         pp.addBatch();
