@@ -66,7 +66,7 @@ public class TeamHeaderItem implements MenuItem {
     }
 
     lore.add(Component.empty());
-    lore.add(Component.text("Click para cambiar orden").color(NamedTextColor.DARK_GRAY));
+    lore.add(Component.translatable("history.gui.click.sort").color(NamedTextColor.DARK_GRAY));
 
     return Lists.transform(lore, c -> TextTranslations.translateLegacy(c, player));
   }
