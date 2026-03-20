@@ -140,10 +140,6 @@ public class PlayerHistory {
     return teamName;
   }
 
-  /**
-   * Devuelve el color del team en formato hexadecimal (#RRGGBB). Retorna null si no hay información
-   * de color.
-   */
   public String getTeamColorHex() {
     return teamColorHex;
   }
@@ -152,10 +148,6 @@ public class PlayerHistory {
     return eloBefore;
   }
 
-  /**
-   * Calcula el elo después sumando el delta al elo anterior. Compatible con maxEloAfter cuando está
-   * disponible.
-   */
   public Integer getEloAfter() {
     if (maxEloAfter != null) {
       return maxEloAfter;

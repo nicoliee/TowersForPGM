@@ -6,6 +6,7 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.draft.DraftCaptainCommands;
 import org.nicolie.towersforpgm.commands.draft.DraftManagerCommands;
 import org.nicolie.towersforpgm.commands.draft.DraftStartCommands;
+import org.nicolie.towersforpgm.commands.history.HistoryCommand;
 import org.nicolie.towersforpgm.commands.ranked.EloCommand;
 import org.nicolie.towersforpgm.commands.ranked.ForfeitCommand;
 import org.nicolie.towersforpgm.commands.ranked.LinkCommand;
@@ -68,6 +69,7 @@ public class TowersCommandGraph extends CommandGraph<TowersForPGM> {
     register(new LinkCommand());
     register(new TagCommand());
     register(new UnlinkCommand());
+    register(new HistoryCommand(plugin));
 
     register(new DraftCommand());
     register(new PreparationCommand());

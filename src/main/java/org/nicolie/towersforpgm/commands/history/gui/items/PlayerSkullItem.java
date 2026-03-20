@@ -7,31 +7,34 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.database.models.Stats;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.menu.MenuItem;
 import tc.oc.pgm.util.text.TextTranslations;
 
 public class PlayerSkullItem implements MenuItem {
-  public enum ClickResult {
-    TOGGLE_EXPAND,
-    ACTION_TAKEN,
-    NONE
-  }
 
   private final String targetName;
+  private final String table;
   private final Stats stats;
   private final boolean expanded;
 
-  public PlayerSkullItem(String targetName, Stats stats, boolean expanded) {
+  public PlayerSkullItem(String targetName, String table, Stats stats, boolean expanded) {
     this.targetName = targetName;
+    this.table = table;
     this.stats = stats;
     this.expanded = expanded;
   }
 
   @Override
   public Component getDisplayName() {
-    return MatchManager.getPrefixedName(targetName);
+    return MatchManager.getPrefixedName(targetName)
+        .append(Component.space()
+            .append(Component.text("-").color(NamedTextColor.DARK_GRAY))
+            .append(Component.space())
+            .append(Component.text(table).color(NamedTextColor.GRAY)));
   }
 
   @SuppressWarnings("deprecation")
@@ -43,9 +46,9 @@ public class PlayerSkullItem implements MenuItem {
 
     if (stats != null) {
       lore.add(Component.space());
-      lore.add(Component.translatable(
-              expanded ? "draft.gui.rightClick.back" : "draft.gui.rightClick.details")
-          .color(NamedTextColor.GRAY));
+      lore.add(
+          Component.translatable(expanded ? "history.gui.click.back" : "history.gui.click.next")
+              .color(NamedTextColor.GRAY));
     }
 
     return Lists.transform(lore, c -> TextTranslations.translateLegacy(c, player));
@@ -54,6 +57,17 @@ public class PlayerSkullItem implements MenuItem {
   @Override
   public Material getMaterial(Player player) {
     return Material.SKULL_ITEM;
+  }
+
+  @Override
+  public short getData() {
+    return 3;
+  }
+
+  @Override
+  public ItemMeta modifyMeta(ItemMeta meta) {
+    ((SkullMeta) meta).setOwner(targetName);
+    return meta;
   }
 
   @Override

@@ -627,4 +627,71 @@ public class MatchHistoryRepository {
       return false;
     }
   }
+
+  public CompletableFuture<List<String>> getPlayerMatchIds(
+      String username, String table, int limit) {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          List<String> matchIds = new ArrayList<>();
+          try (Connection conn = TowersForPGM.getInstance().getDatabaseConnection()) {
+            String sql;
+            if (table != null && !table.trim().isEmpty()) {
+              sql = "SELECT mh.match_id "
+                  + "FROM matches_history mh "
+                  + "INNER JOIN match_players_history mph ON mh.match_id = mph.match_id "
+                  + "WHERE mph.username = ? AND mh.table_name = ? "
+                  + "ORDER BY mh.finished_at DESC "
+                  + "LIMIT ?";
+            } else {
+              sql = "SELECT mh.match_id "
+                  + "FROM matches_history mh "
+                  + "INNER JOIN match_players_history mph ON mh.match_id = mph.match_id "
+                  + "WHERE mph.username = ? "
+                  + "ORDER BY mh.finished_at DESC "
+                  + "LIMIT ?";
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+              ps.setString(1, username);
+              if (table != null && !table.trim().isEmpty()) {
+                ps.setString(2, table);
+                ps.setInt(3, limit);
+              } else {
+                ps.setInt(2, limit);
+              }
+              try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                  matchIds.add(rs.getString("match_id"));
+                }
+              }
+            }
+          } catch (Exception e) {
+            TowersForPGM.getInstance()
+                .getLogger()
+                .warning(
+                    "Error obteniendo matchIds del jugador " + username + ": " + e.getMessage());
+          }
+          return matchIds;
+        },
+        DB_EXECUTOR);
+  }
+
+  public CompletableFuture<List<MatchHistory>> getPlayerMatchHistory(
+      String username, String table, int limit) {
+    return getPlayerMatchIds(username, table, limit).thenCompose(ids -> {
+      if (ids.isEmpty()) {
+        return CompletableFuture.completedFuture(new ArrayList<>());
+      }
+
+      // Resolver cada ID en paralelo y mantener orden
+      List<CompletableFuture<MatchHistory>> futures =
+          ids.stream().map(this::getMatch).collect(java.util.stream.Collectors.toList());
+
+      return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+          .thenApply(v -> futures.stream()
+              .map(CompletableFuture::join)
+              .filter(java.util.Objects::nonNull)
+              .collect(java.util.stream.Collectors.toList()));
+    });
+  }
 }

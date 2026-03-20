@@ -215,4 +215,22 @@ public class MatchHistoryManager {
   public static Map<String, TeamInfo> createPlayerTeamMap(Match match) {
     return TeamInfoExtractor.createPlayerTeamMap(match);
   }
+
+  public static CompletableFuture<List<String>> getPlayerMatchIds(
+      String username, String table, int limit) {
+    return historyService.getPlayerMatchIds(username, table, limit);
+  }
+
+  /**
+   * Obtiene los últimos N MatchHistory completos de un jugador en una tabla.
+   *
+   * @param username Nombre del jugador
+   * @param table Nombre de la tabla (null = todas)
+   * @param limit Límite de resultados (recomendado: 14)
+   * @return CompletableFuture con lista de MatchHistory resueltos
+   */
+  public static CompletableFuture<List<MatchHistory>> getPlayerMatchHistory(
+      String username, String table, int limit) {
+    return historyService.getPlayerMatchHistory(username, table, limit);
+  }
 }

@@ -301,4 +301,14 @@ public class MatchHistoryService {
   public int getCountForDay(String table, String datePart) {
     return repository.getCountForDay(table, datePart);
   }
+
+  public CompletableFuture<List<String>> getPlayerMatchIds(
+      String username, String table, int limit) {
+    return repository.getPlayerMatchIds(username, table, limit);
+  }
+
+  public CompletableFuture<List<org.nicolie.towersforpgm.database.models.history.MatchHistory>>
+      getPlayerMatchHistory(String username, String table, int limit) {
+    return repository.getPlayerMatchHistory(username, table, limit);
+  }
 }
