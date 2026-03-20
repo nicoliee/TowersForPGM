@@ -7,6 +7,7 @@ import me.tbg.match.bot.configs.DiscordBot;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.StatsManager;
@@ -19,6 +20,7 @@ import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.session.MatchSession;
 import org.nicolie.towersforpgm.session.MatchSessionRegistry;
+import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -27,27 +29,31 @@ import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
 import tc.oc.pgm.util.bukkit.Sounds;
 
 public class ForfeitCommand {
-  // TODO: refactor
   @Command("forfeit|ff")
   @CommandDescription("Forfeit the current ranked match")
-  public void forfeitCommand(MatchPlayer sender) {
-    if (!Queue.isRanked() || sender.isObserving()) {
-      sender.sendWarning(Component.translatable("ranked.noForfeit"));
+  public void forfeitCommand(Player sender) {
+    Match match = PGM.get().getMatchManager().getMatch(sender);
+    if (match == null) return;
+
+    MatchPlayer matchPlayer = match.getPlayer(sender);
+    if (matchPlayer == null) return;
+
+    if (!Queue.isRanked() || matchPlayer.isObserving()) {
+      matchPlayer.sendWarning(Component.translatable("ranked.noForfeit"));
       return;
     }
 
-    Match match = sender.getMatch();
-    Party team = sender.getParty();
+    Party team = matchPlayer.getParty();
 
     // Already voted
-    if (!DisconnectManager.addForfeit(match, sender)) {
-      sender.sendWarning(Component.translatable("ranked.alreadyForfeited"));
+    if (!DisconnectManager.addForfeit(match, matchPlayer)) {
+      matchPlayer.sendWarning(Component.translatable("ranked.alreadyForfeited"));
       return;
     }
 
     match.sendMessage(Queue.RANKED_PREFIX
         .append(Component.space())
-        .append(Component.translatable("ranked.forfeit", sender.getName())));
+        .append(Component.translatable("ranked.forfeit", matchPlayer.getName())));
     match.playSound(Sounds.ALERT);
 
     if (!DisconnectManager.allForfeited(match, team)) return;

@@ -2,8 +2,6 @@ package org.nicolie.towersforpgm.commands.history.gui.items;
 
 import com.google.common.collect.Lists;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,9 +21,6 @@ import tc.oc.pgm.menu.MenuItem;
 import tc.oc.pgm.util.text.TextTranslations;
 
 public class MatchItem implements MenuItem {
-
-  private static final DateTimeFormatter DATE_FMT =
-      DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm").withZone(ZoneId.systemDefault());
 
   private final MatchHistory matchHistory;
   private final String viewerUsername;
@@ -56,9 +51,8 @@ public class MatchItem implements MenuItem {
   private List<Component> buildLore(Player player) {
     List<Component> lore = new ArrayList<>();
 
-    String dateStr = DATE_FMT.format(Instant.ofEpochMilli(matchHistory.getFinishedAt()));
-    Component dateComponent = Component.translatable(
-            "history.date", Component.text(dateStr).color(NamedTextColor.DARK_GRAY))
+    Component dateComponent = formatTimeAgo(matchHistory.getFinishedAt())
+        .color(NamedTextColor.DARK_GRAY)
         .color(NamedTextColor.GRAY)
         .decoration(TextDecoration.ITALIC, false);
     lore.add(dateComponent);
@@ -104,7 +98,7 @@ public class MatchItem implements MenuItem {
           Component playerComponent;
           if (matchHistory.isRanked()) {
             playerComponent = formatRanked(
-                Component.text("  " + member.getUsername())
+                Component.text(member.getUsername())
                     .color(isViewer ? NamedTextColor.WHITE : NamedTextColor.GRAY),
                 member.getEloAfter(),
                 member.getEloDelta());
@@ -173,7 +167,10 @@ public class MatchItem implements MenuItem {
   private Component formatRanked(Component name, Integer elo, Integer eloDelta) {
     Rank rank = Rank.getRankByElo(elo);
     boolean positive = eloDelta != null && eloDelta > 0;
-    Component eloComponent = Component.text(rank.getPrefixedRank(true))
+    Component eloComponent = Component.space()
+        .append(Component.space())
+        .append(Component.space())
+        .append(Component.text(rank.getPrefixedRank(true)))
         .append(Component.space())
         .append(name)
         .append(Component.space())
@@ -184,5 +181,57 @@ public class MatchItem implements MenuItem {
             .color(positive ? NamedTextColor.GREEN : NamedTextColor.RED))
         .append(Component.text(")").color(NamedTextColor.DARK_GRAY));
     return eloComponent;
+  }
+
+  private Component formatTimeAgo(long finishedAtMillis) {
+    long seconds = Math.max(0, Instant.now().getEpochSecond() - (finishedAtMillis));
+
+    Component unit;
+    if (seconds <= 0) {
+      unit = Component.translatable("misc.now");
+    } else if (seconds < 60) {
+      unit = Component.translatable(
+          seconds == 1 ? "misc.second" : "misc.seconds", Component.text(seconds));
+    } else {
+      long minutes = seconds / 60;
+      if (minutes < 60) {
+        unit = Component.translatable(
+            minutes == 1 ? "misc.minute" : "misc.minutes", Component.text(minutes));
+      } else {
+        long hours = minutes / 60;
+        if (hours < 24) {
+          unit = Component.translatable(
+              hours == 1 ? "misc.hour" : "misc.hours", Component.text(hours));
+        } else {
+          long days = hours / 24;
+          if (days < 30) {
+            long weeks = days / 7;
+            if (weeks >= 2 && weeks <= 3) {
+              unit = Component.translatable(
+                  weeks == 1 ? "misc.week" : "misc.weeks", Component.text(weeks));
+            } else {
+              unit = Component.translatable(
+                  days == 1 ? "misc.day" : "misc.days", Component.text(days));
+            }
+          } else {
+            long months = days / 30;
+            if (months < 12) {
+              unit = Component.translatable(
+                  months == 1 ? "misc.month" : "misc.months", Component.text(months));
+            } else {
+              long years = months / 12;
+              if (years > 3) {
+                unit = Component.translatable("misc.eon");
+              } else {
+                unit = Component.translatable(
+                    years == 1 ? "misc.year" : "misc.years", Component.text(years));
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return Component.translatable("misc.timeAgo", unit);
   }
 }

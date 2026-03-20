@@ -150,7 +150,8 @@ public class HistoryMenu extends PagedInventoryMenu {
   private void placePlayerInfoButton(InventoryContents contents, Player player) {
     PlayerSkullItem skull = new PlayerSkullItem(targetUsername, table, stats, skullExpanded);
     contents.set(0, 4, ClickableItem.of(skull.createItem(player), e -> {
-      PlayerSkullItem updated = new PlayerSkullItem(targetUsername, table, stats, !skullExpanded);
+      skullExpanded = !skullExpanded;
+      PlayerSkullItem updated = new PlayerSkullItem(targetUsername, table, stats, skullExpanded);
       e.getInventory().setItem(e.getSlot(), updated.createItem(player));
     }));
   }

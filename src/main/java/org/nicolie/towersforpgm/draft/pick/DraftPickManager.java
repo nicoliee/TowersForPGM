@@ -162,10 +162,10 @@ public class DraftPickManager {
     List<String> team1Names = new ArrayList<>(teams.getAllTeam(1));
     List<String> team2Names = new ArrayList<>(teams.getAllTeam(2));
 
-    Component team1 = MatchManager.orList(
+    Component team1 = TextFormatter.list(
         MatchManager.convert(team1Names, teams.getTeam(1).getTextColor()),
         NamedTextColor.DARK_GRAY);
-    Component team2 = MatchManager.orList(
+    Component team2 = TextFormatter.list(
         MatchManager.convert(team2Names, teams.getTeam(2).getTextColor()),
         NamedTextColor.DARK_GRAY);
 
