@@ -23,6 +23,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.map.gui.MapVoteMenu;
+import org.nicolie.towersforpgm.draft.map.modes.AutomaticMode;
+import org.nicolie.towersforpgm.draft.map.modes.PluralityMode;
+import org.nicolie.towersforpgm.draft.map.modes.VetoMode;
 import org.nicolie.towersforpgm.draft.team.AvailablePlayers;
 import org.nicolie.towersforpgm.draft.team.Captains;
 import org.nicolie.towersforpgm.draft.timer.BossbarTimer;
@@ -37,7 +40,7 @@ public final class MapVoteManager {
     void onVoteComplete(String winningMap);
   }
 
-  private static final int VOTE_ITEM_SLOT = 2; // same slot as draft pick star
+  private static final int VOTE_ITEM_SLOT = 2;
 
   public static final String SECRET_KEY = "__SECRET__";
 
@@ -50,6 +53,9 @@ public final class MapVoteManager {
   private String secretMapName = null;
   private VoteCallback callback;
   private boolean finished = false;
+  private PluralityMode pluralityMode;
+  private VetoMode vetoMode;
+  private AutomaticMode automaticMode;
 
   private final Match match;
   private final MapVoteConfig config;
@@ -76,6 +82,8 @@ public final class MapVoteManager {
     this.finished = false;
 
     buildDisplayedMaps();
+    initModes();
+
     remainingMaps.clear();
     remainingMaps.addAll(
         displayedMaps.stream().filter(m -> !SECRET_KEY.equals(m)).collect(Collectors.toList()));
@@ -92,11 +100,27 @@ public final class MapVoteManager {
 
     switch (config.getVoteMode()) {
       case VETO:
-        castVetoVote(voterUUID, displayedMapName);
+        vetoMode.castVetoVote(voterUUID, displayedMapName);
+        // Sincronizar remainingMaps desde el mode (VetoMode los modifica internamente)
+        syncRemainingMapsFromVeto();
+
+        Player p = Bukkit.getPlayer(voterUUID);
+        if (p != null) {
+          match.sendMessage(Component.translatable(
+                  "draft.map.veto",
+                  Component.text(p.getName()).color(NamedTextColor.AQUA),
+                  Component.text(displayedMapName).color(NamedTextColor.RED))
+              .color(NamedTextColor.GRAY));
+        }
+        if (remainingMaps.size() == 1) finish();
         break;
+
       case PLURALITY:
       default:
-        castPluralityVote(voterUUID, displayedMapName);
+        pluralityMode.castPluralityVote(voterUUID, displayedMapName);
+        votes.put(
+            voterUUID, displayedMapName); // mantener espejo para getVoteCounts/getVotersForMap
+        if (votes.size() >= eligibleVoters.size()) finish();
         break;
     }
   }
@@ -187,6 +211,36 @@ public final class MapVoteManager {
     player.getInventory().setItem(VOTE_ITEM_SLOT, createVoteItem(player));
   }
 
+  public void openMenuFor(MatchPlayer mp) {
+    MapVoteMenu menu = new MapVoteMenu(mp, this);
+    openMenus.put(mp.getId(), menu);
+    menu.open();
+  }
+
+  private void initModes() {
+    switch (config.getVoteMode()) {
+      case PLURALITY:
+        pluralityMode = new PluralityMode(config, displayedMaps, votes, SECRET_KEY, secretMapName);
+        break;
+      case VETO:
+        vetoMode = new VetoMode(config, displayedMaps, remainingMaps, votes, SECRET_KEY);
+        break;
+      case AUTOMATIC:
+        automaticMode = new AutomaticMode(config.getMaps());
+        break;
+      default:
+        break;
+    }
+  }
+
+  private void syncRemainingMapsFromVeto() {
+    remainingMaps.clear();
+    for (String mapName : displayedMaps) {
+      if (SECRET_KEY.equals(mapName)) continue;
+      if (!votes.containsValue(mapName)) remainingMaps.add(mapName);
+    }
+  }
+
   private void giveVoteItemToAll() {
     match.getPlayers().forEach(mp -> giveVoteItem(mp.getBukkit()));
   }
@@ -207,8 +261,8 @@ public final class MapVoteManager {
     Component titleText = Component.translatable(titleKeyForVoteMode())
         .color(NamedTextColor.AQUA)
         .decorate(TextDecoration.BOLD);
-    String subtitleKey = subtitleKeyForCurrentModes(player);
-    Component subtitleText = Component.translatable(subtitleKey).color(NamedTextColor.GRAY);
+    Component subtitleText =
+        Component.translatable(subtitleKeyForCurrentModes(player)).color(NamedTextColor.GRAY);
     return Title.title(
         titleText,
         subtitleText,
@@ -262,12 +316,6 @@ public final class MapVoteManager {
     eligibleVoters.remove(null);
   }
 
-  public void openMenuFor(MatchPlayer mp) {
-    MapVoteMenu menu = new MapVoteMenu(mp, this);
-    openMenus.put(mp.getId(), menu);
-    menu.open();
-  }
-
   private void closeAllMenus() {
     new HashSet<>(openMenus.keySet()).forEach(uuid -> {
       Player p = Bukkit.getPlayer(uuid);
@@ -276,41 +324,26 @@ public final class MapVoteManager {
     openMenus.clear();
   }
 
-  private void castPluralityVote(UUID voterUUID, String displayedName) {
-    if (!displayedMaps.contains(displayedName)) return;
-    votes.put(voterUUID, displayedName);
-    if (votes.size() >= eligibleVoters.size()) finish();
+  private void finish() {
+    if (finished) return;
+    finished = true;
+    mapVoteTimer.cancel();
+    closeAllMenus();
+    removeVoteItemFromAll();
+
+    String winner = resolveWinner();
+    if (callback != null) callback.onVoteComplete(winner);
   }
 
-  private void castVetoVote(UUID voterUUID, String displayedName) {
-    if (!displayedMaps.contains(displayedName)) return;
-    if (SECRET_KEY.equals(displayedName)) return; // no hay secret map en veto
-
-    String previousVote = votes.get(voterUUID);
-    if (displayedName.equals(previousVote)) return;
-    if (!remainingMaps.contains(displayedName)) return;
-
-    votes.put(voterUUID, displayedName);
-    rebuildRemainingMapsForVeto();
-
-    Player p = Bukkit.getPlayer(voterUUID);
-    if (p != null) {
-      match.sendMessage(Component.translatable(
-              "draft.map.veto",
-              Component.text(p.getName()).color(NamedTextColor.AQUA),
-              Component.text(displayedName).color(NamedTextColor.RED))
-          .color(NamedTextColor.GRAY));
-    }
-    if (remainingMaps.size() == 1) finish();
-  }
-
-  private void rebuildRemainingMapsForVeto() {
-    remainingMaps.clear();
-    for (String mapName : displayedMaps) {
-      if (SECRET_KEY.equals(mapName)) continue;
-      if (!votes.containsValue(mapName)) {
-        remainingMaps.add(mapName);
-      }
+  private String resolveWinner() {
+    switch (config.getVoteMode()) {
+      case VETO:
+        return vetoMode.resolveVetoWinner();
+      case AUTOMATIC:
+        return automaticMode.resolveWinner();
+      case PLURALITY:
+      default:
+        return pluralityMode.resolvePluralityWinner();
     }
   }
 
@@ -321,6 +354,9 @@ public final class MapVoteManager {
 
     switch (config.getVoteMode()) {
       case VETO:
+      case AUTOMATIC:
+        // En VETO se muestran todos; en AUTOMATIC no importa (no hay GUI),
+        // pero rellenamos igual para que resolvePluralityWinner tenga contexto si se reutiliza
         displayedMaps.addAll(all);
         return;
       case PLURALITY:
@@ -347,53 +383,5 @@ public final class MapVoteManager {
 
     secretMapName = pool.get(rng.nextInt(pool.size()));
     displayedMaps.add(SECRET_KEY);
-  }
-
-  private void finish() {
-    if (finished) return;
-    finished = true;
-    mapVoteTimer.cancel();
-    closeAllMenus();
-    removeVoteItemFromAll();
-
-    String winner;
-    switch (config.getVoteMode()) {
-      case VETO:
-        winner = resolveVetoWinner();
-        break;
-      case PLURALITY:
-      default:
-        winner = resolvePluralityWinner();
-        break;
-    }
-
-    if (callback != null) callback.onVoteComplete(winner);
-  }
-
-  private String resolvePluralityWinner() {
-    Map<String, Integer> counts = getVoteCounts();
-    if (counts.isEmpty())
-      return resolveSecret(
-          displayedMaps.isEmpty() ? config.getMaps().get(0) : displayedMaps.get(0));
-
-    int max = Collections.max(counts.values());
-    List<String> tied = counts.entrySet().stream()
-        .filter(e -> e.getValue() == max)
-        .map(Map.Entry::getKey)
-        .collect(Collectors.toList());
-
-    Collections.shuffle(tied, new Random());
-    return resolveSecret(tied.get(0));
-  }
-
-  private String resolveVetoWinner() {
-    if (remainingMaps.size() == 1) return remainingMaps.get(0);
-    List<String> copy = new ArrayList<>(remainingMaps);
-    Collections.shuffle(copy, new Random());
-    return copy.get(0);
-  }
-
-  private String resolveSecret(String name) {
-    return SECRET_KEY.equals(name) ? secretMapName : name;
   }
 }

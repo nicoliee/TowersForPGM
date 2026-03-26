@@ -6,8 +6,11 @@ import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.towers.commandUtils.MatchBotConfigs;
 import org.nicolie.towersforpgm.configs.tables.TableType;
+import org.nicolie.towersforpgm.utils.Permissions;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.*;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.suggestion.Suggestions;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandContext;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandInput;
 import tc.oc.pgm.util.Audience;
 
 public class MatchBotCommand {
@@ -22,7 +25,8 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot accounts [table]")
-  @CommandDescription("Set matchbot accounts table")
+  // @CommandDescription("Set matchbot accounts table")
+  @Permission(Permissions.ADMIN)
   public void matchBotAccounts(
       Audience audience,
       CommandSender sender,
@@ -32,7 +36,8 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot channel [value]")
-  @CommandDescription("Set matchbot Discord channel")
+  // @CommandDescription("Set matchbot Discord channel")
+  @Permission(Permissions.ADMIN)
   public void matchBotChannel(
       Audience audience, CommandSender sender, @Argument("value") String value) {
     if (!isEnabled(audience)) return;
@@ -40,14 +45,16 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot config")
-  @CommandDescription("Show matchbot config")
+  // @CommandDescription("Show matchbot config")
+  @Permission(Permissions.ADMIN)
   public void matchBotConfig(Audience audience, CommandSender sender) {
     if (!isEnabled(audience)) return;
     matchBotConfig.showConfig(audience);
   }
 
   @Command("towers matchbot rankedrole [roleId]")
-  @CommandDescription("Set matchbot ranked role")
+  // @CommandDescription("Set matchbot ranked role")
+  @Permission(Permissions.ADMIN)
   public void matchBotRankedRole(
       Audience audience, CommandSender sender, @Argument("roleId") String roleId) {
     if (!isEnabled(audience)) return;
@@ -55,6 +62,7 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot roles bronze [roleId]")
+  @Permission(Permissions.ADMIN)
   public void matchBotRolesBronze(
       Audience audience, CommandSender sender, @Argument("roleId") String roleId) {
     if (!isEnabled(audience)) return;
@@ -62,6 +70,7 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot roles diamond [roleId]")
+  @Permission(Permissions.ADMIN)
   public void matchBotRolesDiamond(
       Audience audience, CommandSender sender, @Argument("roleId") String roleId) {
     if (!isEnabled(audience)) return;
@@ -69,6 +78,7 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot roles emerald [roleId]")
+  @Permission(Permissions.ADMIN)
   public void matchBotRolesEmerald(
       Audience audience, CommandSender sender, @Argument("roleId") String roleId) {
     if (!isEnabled(audience)) return;
@@ -76,6 +86,7 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot roles gold [roleId]")
+  @Permission(Permissions.ADMIN)
   public void matchBotRolesGold(
       Audience audience, CommandSender sender, @Argument("roleId") String roleId) {
     if (!isEnabled(audience)) return;
@@ -83,6 +94,7 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot roles registered [roleId]")
+  @Permission(Permissions.ADMIN)
   public void matchBotRolesRegistered(
       Audience audience, CommandSender sender, @Argument("roleId") String roleId) {
     if (!isEnabled(audience)) return;
@@ -90,6 +102,7 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot roles silver [roleId]")
+  @Permission(Permissions.ADMIN)
   public void matchBotRolesSilver(
       Audience audience, CommandSender sender, @Argument("roleId") String roleId) {
     if (!isEnabled(audience)) return;
@@ -97,7 +110,8 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot stats [value]")
-  @CommandDescription("Toggle matchbot stat points")
+  // @CommandDescription("Toggle matchbot stat points")
+  @Permission(Permissions.ADMIN)
   public void matchBotStats(
       Audience audience, CommandSender sender, @Argument("value") Boolean value) {
     if (!isEnabled(audience)) return;
@@ -105,7 +119,8 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot tables add <table>")
-  @CommandDescription("Add a matchbot table")
+  // @CommandDescription("Add a matchbot table")
+  @Permission(Permissions.ADMIN)
   public void matchBotTablesAdd(
       Audience audience,
       CommandSender sender,
@@ -115,14 +130,16 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot tables list")
-  @CommandDescription("List matchbot tables")
+  // @CommandDescription("List matchbot tables")
+  @Permission(Permissions.ADMIN)
   public void matchBotTablesList(Audience audience, CommandSender sender) {
     if (!isEnabled(audience)) return;
     matchBotConfig.listTables(audience);
   }
 
   @Command("towers matchbot tables remove <table>")
-  @CommandDescription("Remove a matchbot table")
+  // @CommandDescription("Remove a matchbot table")
+  @Permission(Permissions.ADMIN)
   public void matchBotTablesRemove(
       Audience audience,
       CommandSender sender,
@@ -132,7 +149,7 @@ public class MatchBotCommand {
   }
 
   @Command("towers matchbot toggle [value]")
-  @CommandDescription("Toggle matchbot")
+  // @CommandDescription("Toggle matchbot")
   public void matchBotToggle(
       Audience audience, CommandSender sender, @Argument("value") Boolean value) {
     if (!isEnabled(audience)) return;
@@ -174,7 +191,8 @@ public class MatchBotCommand {
   }
 
   @Suggestions("allTables")
-  public List<String> allTablesSuggestions(CommandSender sender) {
+  public List<String> allTablesSuggestions(
+      CommandContext<CommandSender> context, CommandInput input) {
     Set<String> tables =
         TowersForPGM.getInstance().config().databaseTables().getTables(TableType.ALL);
     return List.copyOf(tables);

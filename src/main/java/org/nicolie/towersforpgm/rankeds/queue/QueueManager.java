@@ -13,7 +13,6 @@ import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.session.MatchSession;
 import org.nicolie.towersforpgm.session.MatchSessionRegistry;
-import org.nicolie.towersforpgm.session.ranked.RankedSession;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
@@ -70,7 +69,6 @@ public class QueueManager {
 
     if (available != null && available.isPlayerAvailable(playerName)) return false;
     if (captains != null && captains.isCaptain(playerUUID)) return false;
-    if (!plugin.config().ranked().isMapRanked(match.getMap().getName())) return false;
 
     return true;
   }
@@ -136,11 +134,6 @@ public class QueueManager {
     int target = Math.min(maxSize, match.getPlayers().size());
     if (target % 2 != 0) target--;
     return target >= minSize ? target : minSize;
-  }
-
-  private RankedSession getRankedSession(Match match) {
-    MatchSession session = MatchSessionRegistry.get(match);
-    return session != null ? session.getRanked() : null;
   }
 
   private AvailablePlayers getAvailablePlayers(Match match) {

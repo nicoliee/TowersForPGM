@@ -13,6 +13,7 @@ public final class MapVoteConfig {
   public enum VoteMode {
     PLURALITY,
     VETO,
+    AUTOMATIC,
     NONE
   }
 
@@ -61,7 +62,7 @@ public final class MapVoteConfig {
   public static final class Builder {
     private List<String> maps = List.of();
     private VoterMode voterMode = VoterMode.ALL;
-    private VoteMode voteMode = VoteMode.PLURALITY;
+    private VoteMode voteMode = VoteMode.NONE;
     private int durationSeconds = 30;
     private boolean showVotes = true;
 

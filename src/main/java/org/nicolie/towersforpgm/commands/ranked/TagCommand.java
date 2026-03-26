@@ -30,16 +30,10 @@ public class TagCommand {
     }
 
     Match match = PGM.get().getMatchManager().getMatch(sender);
-    String map = match.getMap().getName();
     MatchPlayer player = match.getPlayer(sender);
 
-    boolean isRankedMap = TowersForPGM.getInstance().config().ranked().isMapRanked(map);
-    if (!isRankedMap) {
-      player.sendWarning(Queue.RANKED_PREFIX
-          .append(Component.space())
-          .append(Component.translatable("ranked.notRankedMap"), Component.text(map)));
-      return;
-    }
+    // TODO: Si voice chat está activado: Verificar que tenga el rango en discord y esté en voice
+    // chat queue para tagear
 
     if (player.isParticipating()) {
       player.sendWarning(Component.translatable("ranked.matchbot.tagNotAvailable"));
@@ -72,6 +66,8 @@ public class TagCommand {
   private void sendEmbed(Player sender, Match match, MatchPlayer player) {
     List<String> usernames = new ArrayList<>();
     for (MatchPlayer matchPlayer : match.getPlayers()) {
+      // TODO: Si voice chat está activado: Usar lista de usuarios en vc en vez de todos los
+      // jugadores del match
       usernames.add(matchPlayer.getNameLegacy());
     }
 

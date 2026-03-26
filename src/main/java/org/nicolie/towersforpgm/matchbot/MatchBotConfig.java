@@ -57,8 +57,6 @@ public class MatchBotConfig {
     goldRoleId = config.getString("ranked.roles.gold", "");
     emeraldRoleId = config.getString("ranked.roles.emerald", "");
     diamondRoleId = config.getString("ranked.roles.diamond", "");
-
-    // BotConfig.addBlacklist(plugin.config().ranked().getRankedMaps());
   }
 
   private static void saveToFile(String path, Object value) {

@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm.commands.towers;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.commands.towers.commandUtils.RefillConfig;
+import org.nicolie.towersforpgm.utils.Permissions;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.*;
 import tc.oc.pgm.util.Audience;
@@ -11,7 +12,8 @@ public class RefillCommand {
   private final RefillConfig refillConfig = new RefillConfig();
 
   @Command("towers refill add")
-  @CommandDescription("Add a refill chest at current location")
+  // @CommandDescription("Add a refill chest at current location")
+  @Permission(Permissions.ADMIN)
   public void refillAdd(Audience audience, Player sender) {
     Location loc = sender.getLocation();
     String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
@@ -19,7 +21,8 @@ public class RefillCommand {
   }
 
   @Command("towers refill delete")
-  @CommandDescription("Delete refill chest at current location")
+  // @CommandDescription("Delete refill chest at current location")
+  @Permission(Permissions.ADMIN)
   public void refillDelete(Audience audience, Player sender) {
     Location loc = sender.getLocation();
     String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
@@ -27,7 +30,8 @@ public class RefillCommand {
   }
 
   @Command("towers refill reload")
-  @CommandDescription("Reload refill chests for current map")
+  // @CommandDescription("Reload refill chests for current map")
+  @Permission(Permissions.ADMIN)
   public void refillReload(Audience audience, Player sender) {
     String mapName = PGM.get().getMatchManager().getMatch(sender).getMap().getName();
     String worldName = sender.getWorld().getName();

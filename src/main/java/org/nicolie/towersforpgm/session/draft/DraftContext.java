@@ -23,6 +23,7 @@ import org.nicolie.towersforpgm.draft.team.*;
 import org.nicolie.towersforpgm.draft.timer.BossbarTimer;
 import org.nicolie.towersforpgm.draft.timer.ReadyReminder;
 import org.nicolie.towersforpgm.draft.timer.SuggestionTimer;
+import org.nicolie.towersforpgm.session.bridge.CrossMatchBridge;
 import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.api.map.MapInfo;
 import tc.oc.pgm.api.match.Match;
@@ -413,13 +414,11 @@ public final class DraftContext {
     state.setCurrentPhase(DraftPhase.MAP);
 
     mapVoteManager.startVote(winningMap -> {
+      state.setCurrentPhase(DraftPhase.RUNNING);
+      CrossMatchBridge.getInstance().capture(match);
       match.sendMessage(Component.translatable(
               "draft.map.selected", Component.text(winningMap).color(NamedTextColor.GOLD))
           .color(NamedTextColor.AQUA));
-
-      // Importante: cambiar fase antes de capturar snapshot
-      state.setCurrentPhase(DraftPhase.RUNNING);
-      org.nicolie.towersforpgm.session.bridge.CrossMatchBridge.getInstance().capture(match);
       MapInfo info = MatchManager.getMatchInfo(winningMap);
       MatchManager.setNextMap(match, info);
     });

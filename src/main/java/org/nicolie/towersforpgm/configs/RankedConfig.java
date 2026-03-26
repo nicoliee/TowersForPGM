@@ -44,7 +44,7 @@ public class RankedConfig {
         boolean matchmaking = plugin.getConfig().getBoolean(basePath + ".matchmaking", false);
         String order = plugin.getConfig().getString(basePath + ".order", "ABBAAB");
         boolean reroll = plugin.getConfig().getBoolean(basePath + ".reroll", false);
-        String mapVote = plugin.getConfig().getString(basePath + ".mapVote", "NONE");
+        String mapVote = plugin.getConfig().getString(basePath + ".mapVote", "AUTOMATIC");
         String table = plugin.getConfig().getString(basePath + ".table", "");
         String mapPool = plugin.getConfig().getString(basePath + ".mapPool", "default");
 
@@ -186,10 +186,6 @@ public class RankedConfig {
     }
 
     return new ArrayList<>();
-  }
-
-  public boolean isMapRanked(String mapName) {
-    return getRankedMaps().stream().anyMatch(map -> map.equalsIgnoreCase(mapName));
   }
 
   public List<String> getMapsFromPool(String poolName) {

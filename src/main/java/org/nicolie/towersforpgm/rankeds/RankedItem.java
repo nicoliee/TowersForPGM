@@ -78,6 +78,7 @@ public class RankedItem implements Listener {
     queue.addPlayer(player);
   }
 
+  @SuppressWarnings("deprecation")
   private boolean isQueueItem(ItemStack item, Player player) {
     if (item == null || item.getType() != Material.EYE_OF_ENDER) {
       return false;
@@ -91,6 +92,7 @@ public class RankedItem implements Listener {
         TextTranslations.translateLegacy(Component.translatable("ranked.item"), player));
   }
 
+  @SuppressWarnings("deprecation")
   public static ItemStack getQueueItem(Player player) {
     ItemStack queueItem = new ItemStack(Material.EYE_OF_ENDER);
     ItemMeta meta = queueItem.getItemMeta();

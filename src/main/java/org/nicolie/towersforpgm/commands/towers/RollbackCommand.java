@@ -5,13 +5,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.MatchHistoryManager;
+import org.nicolie.towersforpgm.utils.Permissions;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.*;
 import tc.oc.pgm.util.Audience;
 
 public class RollbackCommand {
 
   @Command("towers rollback <matchId>")
-  @CommandDescription("Rollback a match by ID")
+  // @CommandDescription("Rollback a match by ID")
+  @Permission(Permissions.ADMIN)
   public void rollback(
       Audience audience, CommandSender sender, @Argument("matchId") String matchId) {
     MatchHistoryManager.getMatch(matchId).thenAccept(history -> {

@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueJoinListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
@@ -62,6 +63,13 @@ public class RankedCommand {
   @Permission(Permissions.ADMIN)
   public void rankedReloadCommand(Audience audience, CommandSender sender) {
     QueueJoinListener.reloadQueueFromVoice(null);
+  }
+
+  @Command("ranked profile")
+  @CommandDescription("Current ranked profile")
+  public void rankedProfileCommand(Audience audience) {
+    audience.sendMessage(
+        TowersForPGM.getInstance().config().ranked().getActiveProfile().getFormattedInfoShort());
   }
 
   private void handleJoinLeaveCommand(Audience audience, Player sender, boolean isJoin) {

@@ -8,6 +8,7 @@ import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.TableManager;
 import org.nicolie.towersforpgm.draft.map.MapVoteConfig.VoteMode;
 import org.nicolie.towersforpgm.rankeds.RankedProfile;
+import tc.oc.pgm.rotation.pools.MapPool;
 
 public class RankedConfig {
 
@@ -123,11 +124,12 @@ public class RankedConfig {
         Component.text(state)));
   }
 
-  public void pool(Audience audience, String poolName) {
+  public void pool(Audience audience, MapPool pool) {
 
     String state = plugin.config().ranked().getMapPool();
 
-    if (poolName != null) {
+    if (pool != null) {
+      String poolName = pool.getName();
 
       boolean success = plugin.config().ranked().setPool(poolName);
 
@@ -143,7 +145,7 @@ public class RankedConfig {
     List<String> maps = plugin.config().ranked().getMapsFromPool(state);
 
     audience.sendMessage(Component.translatable(
-        poolName != null ? "ranked.config.pool.set" : "ranked.config.pool.current",
+        pool != null ? "ranked.config.pool.set" : "ranked.config.pool.current",
         Component.text(state),
         Component.text(maps.size())));
 

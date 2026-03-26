@@ -1,6 +1,10 @@
 package org.nicolie.towersforpgm.rankeds;
 
+import static net.kyori.adventure.text.Component.newline;
+
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import tc.oc.pgm.util.text.TextFormatter;
 
 public class RankedProfile {
   private final String name;
@@ -103,8 +107,6 @@ public class RankedProfile {
   }
 
   public Component getFormattedInfo() {
-    Component separator = Component.translatable("ranked.config.profile.separator");
-
     Component header = Component.translatable("ranked.config.profile.header", Component.text(name));
 
     Component players = Component.translatable(
@@ -120,11 +122,9 @@ public class RankedProfile {
 
     Component infoComponent = Component.empty()
         .appendNewline()
-        .append(separator)
         .appendNewline()
         .append(header)
         .appendNewline()
-        .append(separator)
         .appendNewline()
         .append(players)
         .appendNewline()
@@ -164,9 +164,43 @@ public class RankedProfile {
         .append(Component.translatable(
             "ranked.config.profile.timerDisconnect",
             Component.text(String.valueOf(timerDisconnect))))
-        .appendNewline()
-        .append(separator);
+        .appendNewline();
 
     return infoComponent;
+  }
+
+  public Component getFormattedInfoShort() {
+    Component line = TextFormatter.horizontalLine(
+        NamedTextColor.WHITE, TextFormatter.GUARANTEED_NO_WRAP_CHAT_PAGE_WIDTH * 3);
+    Component header = Component.translatable(
+            "ranked.config.profile.header", Component.text(name).color(NamedTextColor.WHITE))
+        .color(NamedTextColor.GRAY);
+    Component table = Component.translatable(
+            "ranked.config.profile.table", Component.text(getTable()).color(NamedTextColor.WHITE))
+        .color(NamedTextColor.GRAY);
+    Component players = Component.translatable(
+            "ranked.config.profile.players",
+            Component.text(String.valueOf(min)).color(NamedTextColor.WHITE),
+            Component.text(String.valueOf(max)).color(NamedTextColor.WHITE))
+        .color(NamedTextColor.GRAY);
+    Component pool = Component.translatable(
+            "ranked.config.profile.mapPool", Component.text(mapPool).color(NamedTextColor.WHITE))
+        .color(NamedTextColor.GRAY);
+    Component info = Component.empty()
+        .append(line)
+        .append(newline())
+        .append(header)
+        .append(newline())
+        .append(Component.space())
+        .append(newline())
+        .append(table)
+        .append(newline())
+        .append(players)
+        .append(newline())
+        .append(pool)
+        .append(newline())
+        .append(line);
+
+    return info;
   }
 }

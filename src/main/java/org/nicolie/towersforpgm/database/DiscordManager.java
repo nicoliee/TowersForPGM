@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.database;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -138,49 +139,68 @@ public class DiscordManager {
         DISCORD_EXECUTOR);
   }
 
-  public static CompletableFuture<Boolean> unlinkPlayer(String identifier) {
+  public static CompletableFuture<Boolean> unlinkPlayer(String discordId) {
     TowersForPGM plugin = TowersForPGM.getInstance();
     if (!plugin.getIsDatabaseActivated()) {
       return CompletableFuture.completedFuture(false);
     }
 
     String dbType = plugin.getCurrentDatabaseType();
+
     return CompletableFuture.supplyAsync(
         () -> {
           try {
-            java.util.UUID uuid = null;
-            try {
-              uuid = java.util.UUID.fromString(identifier);
-            } catch (IllegalArgumentException ignored) {
-              // No es un UUID, es un Discord ID
+            boolean success = false;
+
+            if ("MySQL".equals(dbType)) {
+              success = SQLDiscordManager.deleteByDiscordId(discordId).join();
+            } else if ("SQLite".equals(dbType)) {
+              success = SQLITEDiscordManager.deleteByDiscordId(discordId).join();
             }
 
-            boolean success = false;
-            if (uuid != null) {
-              // Es un UUID
-              if ("MySQL".equals(dbType)) {
-                success = SQLDiscordManager.deleteByUuid(uuid).join();
-              } else if ("SQLite".equals(dbType)) {
-                success = SQLITEDiscordManager.deleteByUuid(uuid).join();
-              }
-              if (success) {
-                DiscordPlayerCache.remove(uuid, null);
-              }
-            } else {
-              // Es un Discord ID
-              if ("MySQL".equals(dbType)) {
-                success = SQLDiscordManager.deleteByDiscordId(identifier).join();
-              } else if ("SQLite".equals(dbType)) {
-                success = SQLITEDiscordManager.deleteByDiscordId(identifier).join();
-              }
-              if (success) {
-                DiscordPlayerCache.remove(null, identifier);
-              }
+            if (success) {
+              DiscordPlayerCache.remove(null, discordId);
             }
 
             return success;
           } catch (Exception e) {
-            plugin.getLogger().severe("[DiscordManager] Error en unlinkPlayer: " + e.getMessage());
+            plugin
+                .getLogger()
+                .severe("[DiscordManager] Error en unlinkPlayer(String): " + e.getMessage());
+            return false;
+          }
+        },
+        DISCORD_EXECUTOR);
+  }
+
+  public static CompletableFuture<Boolean> unlinkPlayer(UUID player) {
+    TowersForPGM plugin = TowersForPGM.getInstance();
+    if (!plugin.getIsDatabaseActivated()) {
+      return CompletableFuture.completedFuture(false);
+    }
+
+    String dbType = plugin.getCurrentDatabaseType();
+
+    return CompletableFuture.supplyAsync(
+        () -> {
+          try {
+            boolean success = false;
+
+            if ("MySQL".equals(dbType)) {
+              success = SQLDiscordManager.deleteByUuid(player).join();
+            } else if ("SQLite".equals(dbType)) {
+              success = SQLITEDiscordManager.deleteByUuid(player).join();
+            }
+
+            if (success) {
+              DiscordPlayerCache.remove(player, null);
+            }
+
+            return success;
+          } catch (Exception e) {
+            plugin
+                .getLogger()
+                .severe("[DiscordManager] Error en unlinkPlayer(UUID): " + e.getMessage());
             return false;
           }
         },

@@ -1,12 +1,15 @@
 package org.nicolie.towersforpgm.commands;
 
 import net.kyori.adventure.text.Component;
+import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.Argument;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.suggestion.Suggestions;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandContext;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandInput;
 import tc.oc.pgm.util.Audience;
 
 public class TowersForPGMCommand {
@@ -46,7 +49,8 @@ public class TowersForPGMCommand {
   }
 
   @Suggestions("supportedLanguages")
-  public java.util.List<String> supportedLanguagesSuggestions() {
+  public java.util.List<String> supportedLanguagesSuggestions(
+      CommandContext<CommandSender> context, CommandInput input) {
     return LanguageManager.getSupportedLanguages();
   }
 }

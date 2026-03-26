@@ -1,5 +1,6 @@
 package org.nicolie.towersforpgm.commands;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
@@ -25,11 +26,14 @@ import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
 import tc.oc.pgm.command.injectors.AudienceProvider;
 import tc.oc.pgm.command.parsers.MapInfoParser;
+import tc.oc.pgm.command.parsers.MapPoolParser;
 import tc.oc.pgm.command.parsers.MatchPlayerParser;
+import tc.oc.pgm.command.parsers.OfflinePlayerParser;
 import tc.oc.pgm.command.parsers.PartyParser;
 import tc.oc.pgm.command.parsers.PlayerParser;
 import tc.oc.pgm.command.util.CommandGraph;
 import tc.oc.pgm.lib.org.incendo.cloud.minecraft.extras.MinecraftHelp;
+import tc.oc.pgm.rotation.pools.MapPool;
 import tc.oc.pgm.util.Audience;
 
 public class TowersCommandGraph extends CommandGraph<TowersForPGM> {
@@ -55,6 +59,8 @@ public class TowersCommandGraph extends CommandGraph<TowersForPGM> {
     registerParser(Player.class, new PlayerParser());
     registerParser(Party.class, PartyParser::new);
     registerParser(MatchPlayer.class, new MatchPlayerParser());
+    registerParser(MapPool.class, new MapPoolParser());
+    registerParser(OfflinePlayer.class, new OfflinePlayerParser());
   }
 
   @Override

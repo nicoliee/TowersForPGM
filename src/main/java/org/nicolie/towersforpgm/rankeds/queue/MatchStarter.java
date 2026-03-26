@@ -194,7 +194,15 @@ public class MatchStarter {
                   VoteMode.PLURALITY,
                   15);
           break;
-          // Si es none u otro, no se agrega votación de mapas
+        case "automatic":
+        default:
+          builder
+              .mapVote(true)
+              .maps(
+                  TowersForPGM.getInstance().config().ranked().getRankedMaps(),
+                  VoterMode.ALL,
+                  VoteMode.AUTOMATIC,
+                  0);
       }
 
       DraftOptions options = builder.build();

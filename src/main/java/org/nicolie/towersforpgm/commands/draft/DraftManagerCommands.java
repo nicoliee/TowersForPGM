@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.state.DraftPhase;
 import org.nicolie.towersforpgm.draft.state.SubstituteResult;
@@ -24,6 +25,8 @@ import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.Permission;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.suggestion.Suggestions;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandContext;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandInput;
 import tc.oc.pgm.util.Audience;
 import tc.oc.pgm.util.bukkit.Sounds;
 
@@ -141,7 +144,8 @@ public class DraftManagerCommands {
   }
 
   @Suggestions("playersNotInDraft")
-  public List<String> suggestPlayersForAdd(Player sender) {
+  public List<String> suggestPlayersForAdd(
+      Player sender, CommandContext<CommandSender> context, CommandInput input) {
     Match match = PGM.get().getMatchManager().getMatch(sender);
     DraftContext ctx = getContextSilently(match);
     if (ctx == null) return List.of();
@@ -153,7 +157,8 @@ public class DraftManagerCommands {
   }
 
   @Suggestions("playersInDraft")
-  public List<String> suggestPlayersForRemove(Player sender) {
+  public List<String> suggestPlayersForRemove(
+      Player sender, CommandContext<CommandSender> context, CommandInput input) {
     Match match = PGM.get().getMatchManager().getMatch(sender);
     DraftContext ctx = getContextSilently(match);
     if (ctx == null) return List.of();

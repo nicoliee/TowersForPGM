@@ -16,6 +16,8 @@ import tc.oc.pgm.lib.org.incendo.cloud.annotations.Argument;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.suggestion.Suggestions;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandContext;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandInput;
 import tc.oc.pgm.util.Audience;
 import tc.oc.pgm.util.bukkit.Sounds;
 import tc.oc.pgm.util.text.TextFormatter;
@@ -45,7 +47,8 @@ public class EloCommand {
   }
 
   @Suggestions("onlinePlayers")
-  public List<String> onlinePlayersSuggestions(CommandSender sender) {
+  public List<String> onlinePlayersSuggestions(
+      CommandSender sender, CommandContext<CommandSender> context, CommandInput input) {
     if (!(sender instanceof Player)) {
       return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
     }
@@ -79,8 +82,6 @@ public class EloCommand {
 
       Rank rank = Rank.getRankByElo(stats.getElo());
       Rank maxRank = Rank.getRankByElo(stats.getMaxElo());
-      org.bukkit.entity.Player bukkitPlayerHeading =
-          org.bukkit.Bukkit.getPlayerExact(stats.getUsername());
       Component headingName = MatchManager.getPrefixedName(targetName);
 
       Component eloMessage = rank.getNameComponent(true)

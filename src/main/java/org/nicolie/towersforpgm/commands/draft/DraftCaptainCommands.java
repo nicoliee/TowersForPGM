@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm.commands.draft;
 import java.util.List;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.pick.gui.PicksGUIManager;
 import org.nicolie.towersforpgm.draft.state.DraftPhase;
@@ -19,6 +20,8 @@ import tc.oc.pgm.lib.org.incendo.cloud.annotations.Argument;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.suggestion.Suggestions;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandContext;
+import tc.oc.pgm.lib.org.incendo.cloud.context.CommandInput;
 import tc.oc.pgm.util.Audience;
 
 public class DraftCaptainCommands {
@@ -109,7 +112,8 @@ public class DraftCaptainCommands {
   }
 
   @Suggestions("availableDraftPlayers")
-  public List<String> getAvailablePlayers(Player sender) {
+  public List<String> getAvailablePlayers(
+      Player sender, CommandContext<CommandSender> context, CommandInput input) {
     Match match = PGM.get().getMatchManager().getMatch(sender);
     DraftContext ctx = getContextSilently(match);
     if (ctx == null) return List.of();
