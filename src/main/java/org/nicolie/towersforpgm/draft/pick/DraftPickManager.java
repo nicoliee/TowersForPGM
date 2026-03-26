@@ -159,38 +159,7 @@ public class DraftPickManager {
       state.getDraftTimer().cancel();
     }
 
-    List<String> team1Names = new ArrayList<>(teams.getAllTeam(1));
-    List<String> team2Names = new ArrayList<>(teams.getAllTeam(2));
-
-    Component team1 = TextFormatter.list(
-        MatchManager.convert(team1Names, teams.getTeam(1).getTextColor()),
-        NamedTextColor.DARK_GRAY);
-    Component team2 = TextFormatter.list(
-        MatchManager.convert(team2Names, teams.getTeam(2).getTextColor()),
-        NamedTextColor.DARK_GRAY);
-
-    int team1Size = team1Names.size();
-    int team2Size = team2Names.size();
-    int teamsize = Math.max(team1Size, team2Size);
-    Component teamsMessage =
-        Component.translatable("draft.captains.teamsHeader").color(NamedTextColor.AQUA);
-    for (MatchPlayer viewer : match.getPlayers()) {
-      viewer.sendMessage(TextFormatter.horizontalLineHeading(
-          viewer.getBukkit(), teamsMessage, NamedTextColor.WHITE, 200));
-      viewer.sendMessage(team1);
-      viewer.sendMessage(Component.text("§8[" + teams.getTeamColor(1).replace("&", "§") + team1Size
-          + "§8] §l§bvs. " + "§8[" + teams.getTeamColor(2).replace("&", "§") + team2Size + "§8]"));
-      viewer.sendMessage(team2);
-      viewer.sendMessage(TextFormatter.horizontalLine(NamedTextColor.WHITE, 200));
-    }
-
-    teams.setTeamsSize(teamsize);
-
-    captains.setReadyActive(true);
-    captains.setMatchWithCaptains(true);
-
-    PicksGUIManager.removeItem(match);
-    readyReminder.startTimer();
+    finalizeTeams();
 
     if (bossbarTimer != null) {
       bossbarTimer.cancelTimer();
@@ -200,10 +169,6 @@ public class DraftPickManager {
     Set<String> team2Set = teams.getAllTeam(2);
     DraftEndEvent draftEndEvent = new DraftEndEvent(team1Set, team2Set, match);
     Bukkit.getPluginManager().callEvent(draftEndEvent);
-
-    match
-        .needModule(StartMatchModule.class)
-        .forceStartCountdown(Duration.ofSeconds(90), Duration.ZERO);
   }
 
   public void cleanLists() {
@@ -445,5 +410,47 @@ public class DraftPickManager {
             java.time.Duration.ofMillis(3000),
             java.time.Duration.ofMillis(500)));
     player.showTitle(title);
+  }
+
+  public void finalizeTeams() {
+    List<String> team1Names = new ArrayList<>(teams.getAllTeam(1));
+    List<String> team2Names = new ArrayList<>(teams.getAllTeam(2));
+
+    Component team1 = TextFormatter.list(
+        MatchManager.convert(team1Names, teams.getTeam(1).getTextColor()),
+        NamedTextColor.DARK_GRAY);
+    Component team2 = TextFormatter.list(
+        MatchManager.convert(team2Names, teams.getTeam(2).getTextColor()),
+        NamedTextColor.DARK_GRAY);
+
+    int team1Size = team1Names.size();
+    int team2Size = team2Names.size();
+    int teamsize = Math.max(team1Size, team2Size);
+
+    Component teamsMessage =
+        Component.translatable("draft.captains.teamsHeader").color(NamedTextColor.AQUA);
+
+    for (MatchPlayer viewer : match.getPlayers()) {
+      viewer.sendMessage(TextFormatter.horizontalLineHeading(
+          viewer.getBukkit(), teamsMessage, NamedTextColor.WHITE, 200));
+      viewer.sendMessage(team1);
+      viewer.sendMessage(Component.text("§8[" + teams.getTeamColor(1).replace("&", "§") + team1Size
+          + "§8] §l§bvs. "
+          + "§8[" + teams.getTeamColor(2).replace("&", "§") + team2Size + "§8]"));
+      viewer.sendMessage(team2);
+      viewer.sendMessage(TextFormatter.horizontalLine(NamedTextColor.WHITE, 200));
+    }
+
+    teams.setTeamsSize(teamsize);
+    captains.resetReady();
+    captains.setReadyActive(true);
+    captains.setMatchWithCaptains(true);
+
+    PicksGUIManager.removeItem(match);
+    readyReminder.startTimer();
+
+    match
+        .needModule(StartMatchModule.class)
+        .forceStartCountdown(Duration.ofSeconds(90), Duration.ZERO);
   }
 }

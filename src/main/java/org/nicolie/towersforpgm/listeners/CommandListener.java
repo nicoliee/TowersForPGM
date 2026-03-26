@@ -19,7 +19,6 @@ import org.nicolie.towersforpgm.draft.team.Teams;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.session.MatchSessionRegistry;
 import org.nicolie.towersforpgm.session.draft.DraftContext;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.map.Gamemode;
 import tc.oc.pgm.api.match.Match;
@@ -72,8 +71,9 @@ public class CommandListener implements Listener {
       event.setMessage(removeForceFlag(command));
     } else {
       event.setCancelled(true);
-      String key = isRanked ? "commands.protectedInRanked" : "commands.protectedInDraft";
-      player.sendWarning(Component.text(LanguageManager.message("system." + key)));
+      String key =
+          isRanked ? "ranked.commands.protectedInRanked" : "draft.commands.protectedInDraft";
+      player.sendWarning(Component.translatable(key));
     }
   }
 
@@ -83,8 +83,7 @@ public class CommandListener implements Listener {
       event.setMessage(removeForceFlag(command));
     } else {
       event.setCancelled(true);
-      player.sendWarning(
-          Component.text(LanguageManager.message("system.commands.teamChangeBlocked")));
+      player.sendWarning(Component.translatable("ranked.commands.teamChangeBlocked"));
     }
   }
 
@@ -177,7 +176,7 @@ public class CommandListener implements Listener {
     if (captain1Player == null || captain2Player == null) return;
 
     player.playSound(Sounds.INVENTORY_CLICK);
-    player.sendMessage(Component.text(LanguageManager.message("draft.captains.captainsHeader")));
+    player.sendMessage(Component.translatable("draft.captains.captainsHeader"));
 
     Component captainsLine = Component.text(teams.getTeamColor(1) + captain1Player.getName()
         + " §l§bvs. "
@@ -194,20 +193,7 @@ public class CommandListener implements Listener {
       captainsLine =
           captainsLine.hoverEvent(HoverEvent.showText(Component.text(hoverText.toString())));
     }
-
     player.sendMessage(captainsLine);
-
-    if (Queue.isRanked()) {
-      String table = TowersForPGM.getInstance()
-          .config()
-          .databaseTables()
-          .getTable(match.getMap().getName());
-      if (table != null && !table.isEmpty()) {
-        String message = LanguageManager.message("ranked.prefix")
-            + LanguageManager.message("system.ranked.activeMatch").replace("{table}", table);
-        player.sendMessage(Component.text(message));
-      }
-    }
   }
 
   private List<String> groupPicksByIndex(

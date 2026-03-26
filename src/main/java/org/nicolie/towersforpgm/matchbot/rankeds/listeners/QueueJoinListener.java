@@ -34,6 +34,7 @@ public class QueueJoinListener extends ListenerAdapter {
     if (event.getChannelLeft() != null) handleVoiceLeave(event);
   }
 
+  // TODO: hacerlo sin bukkit para que no dependa de si el servidor está activo.
   private void handleVoiceJoin(GuildVoiceUpdateEvent event) {
     String channelJoinedId = event.getChannelJoined().getId();
     String queueChannelId = MatchBotConfig.getQueueID();
@@ -89,7 +90,7 @@ public class QueueJoinListener extends ListenerAdapter {
         .exceptionally(throwable -> null);
   }
 
-  public static void reloadQueueFromVoice() {
+  public static void reloadQueueFromVoice(Match match) {
     if (!MatchBotConfig.isVoiceChatEnabled()) return;
 
     JDA jda = DiscordBot.getJDA();
@@ -102,7 +103,6 @@ public class QueueJoinListener extends ListenerAdapter {
     if (channel == null) return;
 
     Queue queue = Queue.getQueue();
-    Match match = MatchManager.getMatch();
 
     for (Member member : channel.getMembers()) {
       DiscordManager.getDiscordPlayer(member.getId())

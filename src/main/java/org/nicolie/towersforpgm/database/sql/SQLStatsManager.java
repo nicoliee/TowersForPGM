@@ -16,7 +16,6 @@ import org.nicolie.towersforpgm.database.models.top.Top;
 import org.nicolie.towersforpgm.database.models.top.TopResult;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 
 public class SQLStatsManager {
   private static final TowersForPGM plugin = TowersForPGM.getInstance();
@@ -60,7 +59,8 @@ public class SQLStatsManager {
 
     SQLDatabaseManager dbManager = plugin.getMySQLDatabaseManager();
     if (dbManager == null || !dbManager.isConnected()) {
-      String errorMessage = LanguageManager.message("errors.database.connectionClosed");
+      String errorMessage =
+          "No hay conexión a la base de datos MySQL para updateStats en tabla " + table;
       logger.log(Level.SEVERE, errorMessage);
       return;
     }
@@ -248,7 +248,8 @@ public class SQLStatsManager {
       }
     } catch (SQLException e) {
       TowersForPGM.getInstance();
-      String errorMessage = LanguageManager.message("errors.database.getStats");
+      String errorMessage =
+          "Error al obtener estadísticas para usuario " + username + " en tabla " + table;
       TowersForPGM.getInstance().getLogger().log(Level.SEVERE, errorMessage, e);
       return null;
     }
@@ -280,7 +281,8 @@ public class SQLStatsManager {
     int totalRecords = 0;
     SQLDatabaseManager dbManager = TowersForPGM.getInstance().getMySQLDatabaseManager();
     if (dbManager == null || !dbManager.isConnected()) {
-      String errorMessage = LanguageManager.message("errors.database.connectionClosed");
+      String errorMessage =
+          "No hay conexión a la base de datos MySQL para getTop en tabla " + table;
       TowersForPGM.getInstance().getLogger().log(Level.SEVERE, errorMessage);
       return new TopResult(new ArrayList<>(), 0);
     }
@@ -668,7 +670,8 @@ public class SQLStatsManager {
 
     SQLDatabaseManager dbManager = plugin.getMySQLDatabaseManager();
     if (dbManager == null || !dbManager.isConnected()) {
-      String errorMessage = LanguageManager.message("errors.database.connectionClosed");
+      String errorMessage =
+          "No hay conexión a la base de datos MySQL para getEloHistory en tabla " + table;
       plugin.getLogger().log(Level.SEVERE, errorMessage);
       return eloHistory;
     }

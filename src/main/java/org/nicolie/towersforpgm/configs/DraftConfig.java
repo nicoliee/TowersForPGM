@@ -10,6 +10,7 @@ public class DraftConfig {
   private String order;
   private int minOrder;
   private boolean reroll;
+  private boolean vetoMode;
 
   public DraftConfig(JavaPlugin plugin) {
     this.plugin = plugin;
@@ -23,6 +24,7 @@ public class DraftConfig {
     order = plugin.getConfig().getString("draft.order", "");
     minOrder = plugin.getConfig().getInt("draft.minOrder", 0);
     reroll = plugin.getConfig().getBoolean("draft.reroll", false);
+    vetoMode = plugin.getConfig().getBoolean("draft.vetoMode", false);
   }
 
   private void save() {
@@ -89,6 +91,16 @@ public class DraftConfig {
     save();
   }
 
+  public boolean isVetoMode() {
+    return vetoMode;
+  }
+
+  public void setVetoMode(boolean vetoMode) {
+    this.vetoMode = vetoMode;
+    plugin.getConfig().set("draft.vetoMode", vetoMode);
+    save();
+  }
+
   @Override
   public String toString() {
     return "DraftConfig{" + "draftSuggestions="
@@ -97,6 +109,7 @@ public class DraftConfig {
         + secondPickBalance + ", order='"
         + order + '\'' + ", minOrder="
         + minOrder + ", reroll="
-        + reroll + '}';
+        + reroll + ", vetoMode="
+        + vetoMode + '}';
   }
 }

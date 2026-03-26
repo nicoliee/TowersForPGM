@@ -1,6 +1,6 @@
 package org.nicolie.towersforpgm.rankeds;
 
-import org.nicolie.towersforpgm.utils.LanguageManager;
+import net.kyori.adventure.text.Component;
 
 public class RankedProfile {
   private final String name;
@@ -13,6 +13,7 @@ public class RankedProfile {
   private final boolean matchmaking;
   private final String order;
   private final boolean reroll;
+  private final String mapVote;
   private final String table;
   private String mapPool;
 
@@ -27,6 +28,7 @@ public class RankedProfile {
       boolean matchmaking,
       String order,
       boolean reroll,
+      String mapVote,
       String table,
       String mapPool) {
     this.name = name;
@@ -39,6 +41,7 @@ public class RankedProfile {
     this.matchmaking = matchmaking;
     this.order = order;
     this.reroll = reroll;
+    this.mapVote = mapVote;
     this.table = table;
     this.mapPool = mapPool;
   }
@@ -83,6 +86,10 @@ public class RankedProfile {
     return reroll;
   }
 
+  public String getMapVote() {
+    return mapVote;
+  }
+
   public String getTable() {
     return table;
   }
@@ -95,54 +102,71 @@ public class RankedProfile {
     this.mapPool = mapPool;
   }
 
-  public String getFormattedInfo() {
-    StringBuilder info = new StringBuilder();
+  public Component getFormattedInfo() {
+    Component separator = Component.translatable("ranked.config.profile.separator");
 
-    info.append(LanguageManager.message("ranked.config.profile.separator")).append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.header").replace("{name}", name))
-        .append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.separator")).append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.players")
-            .replace("{min}", String.valueOf(min))
-            .replace("{max}", String.valueOf(max)))
-        .append("\n");
+    Component header = Component.translatable("ranked.config.profile.header", Component.text(name));
 
-    String matchmakingMode = matchmaking
-        ? LanguageManager.message("ranked.config.profile.matchmakingAutomatic")
-        : LanguageManager.message("ranked.config.profile.matchmakingCaptains");
-    info.append(LanguageManager.message("ranked.config.profile.matchmaking")
-            .replace("{mode}", matchmakingMode))
-        .append("\n");
+    Component players = Component.translatable(
+        "ranked.config.profile.players",
+        Component.text(String.valueOf(min)),
+        Component.text(String.valueOf(max)));
+
+    Component matchmakingMode = matchmaking
+        ? Component.translatable("ranked.config.profile.matchmakingAutomatic")
+        : Component.translatable("ranked.config.profile.matchmakingCaptains");
+    Component matchmakingLine =
+        Component.translatable("ranked.config.profile.matchmaking", matchmakingMode);
+
+    Component infoComponent = Component.empty()
+        .appendNewline()
+        .append(separator)
+        .appendNewline()
+        .append(header)
+        .appendNewline()
+        .append(separator)
+        .appendNewline()
+        .append(players)
+        .appendNewline()
+        .append(matchmakingLine)
+        .appendNewline();
 
     if (!matchmaking) {
-      info.append(LanguageManager.message("ranked.config.profile.order").replace("{order}", order))
-          .append("\n");
-      String rerollText = reroll
-          ? LanguageManager.message("ranked.config.profile.rerollYes")
-          : LanguageManager.message("ranked.config.profile.rerollNo");
-      info.append(LanguageManager.message("ranked.config.profile.reroll")
-              .replace("{reroll}", rerollText))
-          .append("\n");
+      Component orderLine =
+          Component.translatable("ranked.config.profile.order", Component.text(order));
+
+      Component rerollText = reroll
+          ? Component.translatable("ranked.config.profile.rerollYes")
+          : Component.translatable("ranked.config.profile.rerollNo");
+      Component rerollLine = Component.translatable("ranked.config.profile.reroll", rerollText);
+
+      infoComponent =
+          infoComponent.append(orderLine).appendNewline().append(rerollLine).appendNewline();
     }
 
-    info.append(LanguageManager.message("ranked.config.profile.table").replace("{table}", table))
-        .append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.mapPool").replace("{pool}", mapPool))
-        .append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.timers")).append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.timerWaiting")
-            .replace("{time}", String.valueOf(timerWaiting)))
-        .append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.timerMinReached")
-            .replace("{time}", String.valueOf(timerMinReached)))
-        .append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.timerFull")
-            .replace("{time}", String.valueOf(timerFull)))
-        .append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.timerDisconnect")
-            .replace("{time}", String.valueOf(timerDisconnect)))
-        .append("\n");
-    info.append(LanguageManager.message("ranked.config.profile.separator"));
-    return info.toString();
+    infoComponent = infoComponent
+        .append(Component.translatable("ranked.config.profile.table", Component.text(table)))
+        .appendNewline()
+        .append(Component.translatable("ranked.config.profile.mapPool", Component.text(mapPool)))
+        .appendNewline()
+        .append(Component.translatable("ranked.config.profile.timers"))
+        .appendNewline()
+        .append(Component.translatable(
+            "ranked.config.profile.timerWaiting", Component.text(String.valueOf(timerWaiting))))
+        .appendNewline()
+        .append(Component.translatable(
+            "ranked.config.profile.timerMinReached",
+            Component.text(String.valueOf(timerMinReached))))
+        .appendNewline()
+        .append(Component.translatable(
+            "ranked.config.profile.timerFull", Component.text(String.valueOf(timerFull))))
+        .appendNewline()
+        .append(Component.translatable(
+            "ranked.config.profile.timerDisconnect",
+            Component.text(String.valueOf(timerDisconnect))))
+        .appendNewline()
+        .append(separator);
+
+    return infoComponent;
   }
 }

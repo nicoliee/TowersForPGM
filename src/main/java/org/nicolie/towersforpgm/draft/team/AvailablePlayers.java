@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
@@ -149,6 +150,18 @@ public class AvailablePlayers {
     availablePlayers.forEach(player -> allAvailablePlayers.add(player.getNameLegacy()));
     allAvailablePlayers.addAll(availableOfflinePlayers);
     return allAvailablePlayers;
+  }
+
+  public List<UUID> getAllAvailablePlayersUUIDs() {
+    List<UUID> uuids = new ArrayList<>();
+    availablePlayers.forEach(player -> uuids.add(player.getId()));
+    availableOfflinePlayers.forEach(name -> {
+      Player player = Bukkit.getPlayerExact(name);
+      if (player != null) {
+        uuids.add(player.getUniqueId());
+      }
+    });
+    return uuids;
   }
 
   public boolean isEmpty() {

@@ -14,7 +14,7 @@ public class StatsCommand {
   private final StatsConfig statsConfig = new StatsConfig();
 
   @Command("towers stats add <table>")
-  @CommandDescription("Add a stats table")
+  @CommandDescription("Configure stats table for a match")
   public void statsAdd(
       Audience audience,
       CommandSender sender,
@@ -23,7 +23,6 @@ public class StatsCommand {
   }
 
   @Command("towers stats addMap <table>")
-  @CommandDescription("Add a map to a stats table")
   public void statsAddMap(
       Audience audience,
       CommandSender sender,
@@ -32,7 +31,6 @@ public class StatsCommand {
   }
 
   @Command("towers stats addTemporary <table>")
-  @CommandDescription("Add a temporary stats table")
   public void statsAddTemporary(
       Audience audience,
       CommandSender sender,
@@ -41,7 +39,6 @@ public class StatsCommand {
   }
 
   @Command("towers stats default [table]")
-  @CommandDescription("Set the default stats table")
   public void statsDefault(
       Audience audience,
       CommandSender sender,
@@ -50,13 +47,11 @@ public class StatsCommand {
   }
 
   @Command("towers stats list")
-  @CommandDescription("List all stats tables")
   public void statsList(Audience audience, CommandSender sender) {
     statsConfig.tables(audience);
   }
 
   @Command("towers stats remove <table>")
-  @CommandDescription("Remove a stats table")
   public void statsRemove(
       Audience audience,
       CommandSender sender,
@@ -65,7 +60,6 @@ public class StatsCommand {
   }
 
   @Command("towers stats removeMap")
-  @CommandDescription("Remove map from stats")
   public void statsRemoveMap(Audience audience, CommandSender sender) {
     statsConfig.mapRemove(audience);
   }

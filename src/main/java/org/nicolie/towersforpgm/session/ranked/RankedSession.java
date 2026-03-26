@@ -12,7 +12,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.team.Teams;
-import org.nicolie.towersforpgm.utils.LanguageManager;
+import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.SendMessage;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.party.Party;
@@ -142,30 +142,30 @@ public final class RankedSession {
     sanctions.put(playerName, new Sanction(playerName, teamNumber));
     resetTeamForfeits(teams.getTeam(teamNumber));
 
-    String message = LanguageManager.message("ranked.prefix")
-        + LanguageManager.message("ranked.disconnect.notice").replace("{player}", playerName);
+    Component message = Queue.RANKED_PREFIX.append(
+        Component.translatable("ranked.disconnect.notice", Component.text(playerName)));
 
     Bukkit.getScheduler().runTask(plugin, () -> {
-      match.sendMessage(Component.text(message));
+      match.sendMessage(message);
       match.playSound(Sounds.ALERT);
     });
   }
 
   private void sendCountdownMessage(String playerName, int timeRemaining) {
-    String message = LanguageManager.message("ranked.prefix")
-        + LanguageManager.message("ranked.disconnect.countdown")
-            .replace("{player}", playerName)
-            .replace("{time}", SendMessage.formatTime(timeRemaining));
-    Bukkit.getScheduler().runTask(plugin, () -> match.sendMessage(Component.text(message)));
+    Component message = Queue.RANKED_PREFIX.append(Component.translatable(
+        "ranked.disconnect.countdown",
+        Component.text(playerName),
+        Component.text(SendMessage.formatTime(timeRemaining))));
+
+    Bukkit.getScheduler().runTask(plugin, () -> match.sendMessage(message));
   }
 
   private void sendReconnectedMessage(String playerName) {
-    String message = LanguageManager.message("ranked.prefix")
-        + LanguageManager.message("ranked.disconnect.reconnected").replace("{player}", playerName);
-    Bukkit.getScheduler().runTask(plugin, () -> match.sendMessage(Component.text(message)));
-  }
+    Component message = Queue.RANKED_PREFIX.append(
+        Component.translatable("ranked.disconnect.reconnected", Component.text(playerName)));
 
-  // ── Inner classes ─────────────────────────────────────────────────────────
+    Bukkit.getScheduler().runTask(plugin, () -> match.sendMessage(message));
+  }
 
   private class DisconnectTimerTask implements Runnable {
     private final String playerName;
@@ -180,8 +180,6 @@ public final class RankedSession {
 
     @Override
     public void run() {
-      // Verificaciones thread-safe: match.isFinished() puede no ser thread-safe,
-      // pero solo leemos un boolean volatile interno de PGM — aceptable aquí.
       if (match.isFinished()) {
         cancelDisconnectTimer(playerName);
         return;

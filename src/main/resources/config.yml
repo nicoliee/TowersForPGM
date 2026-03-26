@@ -46,6 +46,7 @@ rankeds:
       matchmaking: false # (true = equipos automaticos | false = capitanes automaticos)
       order: "ABBA"  # Orden de elección: A = Primer Capitán, B = Segundo Capitán (SI MATCHMAKING = FALSE)
       reroll: true # Los capitanes podrán volver a ser elegidos.
+      mapVote: "NONE" # (NONE = pasa a picks | VETO = capitanes vetan mapas | PLURALITY = todos votan mapas)
       table: RankedT1  # Tabla para este perfil
       mapPool: "default"  # Map pool de PGM para este perfil
     towers:

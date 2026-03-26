@@ -141,7 +141,7 @@ public class MatchItem implements MenuItem {
     Component eloComponent = Component.space()
         .append(Component.space())
         .append(Component.space())
-        .append(Component.text(rank.getPrefixedRank(true)))
+        .append(rank.getNameComponent(true))
         .append(Component.space())
         .append(name)
         .append(Component.space())

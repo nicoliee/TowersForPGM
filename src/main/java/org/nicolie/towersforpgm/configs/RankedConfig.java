@@ -44,6 +44,7 @@ public class RankedConfig {
         boolean matchmaking = plugin.getConfig().getBoolean(basePath + ".matchmaking", false);
         String order = plugin.getConfig().getString(basePath + ".order", "ABBAAB");
         boolean reroll = plugin.getConfig().getBoolean(basePath + ".reroll", false);
+        String mapVote = plugin.getConfig().getString(basePath + ".mapVote", "NONE");
         String table = plugin.getConfig().getString(basePath + ".table", "");
         String mapPool = plugin.getConfig().getString(basePath + ".mapPool", "default");
 
@@ -58,6 +59,7 @@ public class RankedConfig {
             matchmaking,
             order,
             reroll,
+            mapVote,
             table,
             mapPool);
 
@@ -292,6 +294,16 @@ public class RankedConfig {
 
   public void setReroll(boolean reroll) {
     plugin.getConfig().set("rankeds.profiles." + activeProfileName + ".reroll", reroll);
+    save();
+    load();
+  }
+
+  public String getMapVote() {
+    return activeProfile != null ? activeProfile.getMapVote() : "NONE";
+  }
+
+  public void setMapVote(String mapVote) {
+    plugin.getConfig().set("rankeds.profiles." + activeProfileName + ".mapVote", mapVote);
     save();
     load();
   }

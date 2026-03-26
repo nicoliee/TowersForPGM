@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
 
-/** Estado de countdown y caché de ELO. La lista de jugadores vive en RankedQueue. */
 public final class QueueState {
 
   private static final QueueState INSTANCE = new QueueState();
@@ -49,8 +48,6 @@ public final class QueueState {
     this.countdownFuture = future;
   }
 
-  // ── Queue size — delegado a RankedQueue ───────────────────────────────────
-
   public int getQueueSize() {
     return RankedQueue.getInstance().size();
   }
@@ -71,8 +68,6 @@ public final class QueueState {
     return RankedQueue.getInstance().remove(uuid);
   }
 
-  // ── ELO cache ─────────────────────────────────────────────────────────────
-
   public void putEloCache(
       String table, java.util.concurrent.CompletableFuture<List<PlayerEloChange>> future) {
     eloCache.put(table, future);
@@ -87,8 +82,6 @@ public final class QueueState {
     eloCache.remove(table);
   }
 
-  // ── Cleanup ───────────────────────────────────────────────────────────────
-
   public void cancelCountdown() {
     if (countdownFuture != null) {
       countdownFuture.cancel(false);
@@ -102,5 +95,13 @@ public final class QueueState {
     cancelCountdown();
     RankedQueue.getInstance().clear();
     eloCache.clear();
+  }
+
+  public java.util.Map<
+          String,
+          java.util.concurrent.CompletableFuture<
+              java.util.List<org.nicolie.towersforpgm.rankeds.PlayerEloChange>>>
+      snapshotEloCache() {
+    return new java.util.HashMap<>(eloCache);
   }
 }

@@ -8,6 +8,7 @@ import org.nicolie.towersforpgm.draft.listeners.DraftPlayerJoinListener;
 import org.nicolie.towersforpgm.draft.listeners.DraftPlayerParticipationStartListener;
 import org.nicolie.towersforpgm.draft.listeners.DraftPlayerParticipationStopListener;
 import org.nicolie.towersforpgm.draft.listeners.PlayerPartyChangeListener;
+import org.nicolie.towersforpgm.draft.map.MapVoteItemListener;
 import org.nicolie.towersforpgm.draft.pick.gui.PicksGUIManager;
 import org.nicolie.towersforpgm.listeners.CommandListener;
 import org.nicolie.towersforpgm.listeners.MatchFinishListener;
@@ -62,6 +63,7 @@ public class Events {
     pluginManager.registerEvents(new PlayerPartyChangeListener(), plugin);
     pluginManager.registerEvents(new DraftObserverKitListener(), plugin);
     pluginManager.registerEvents(new PicksGUIManager(plugin), plugin);
+    pluginManager.registerEvents(new MapVoteItemListener(), plugin);
 
     // Ranked
     pluginManager.registerEvents(new RankedMatchLoadListener(), plugin);

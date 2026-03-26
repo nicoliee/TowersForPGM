@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.draft.map.MapVoteConfig.VoteMode;
+import org.nicolie.towersforpgm.draft.map.MapVoteConfig.VoterMode;
 import org.nicolie.towersforpgm.session.MatchSessionRegistry;
 import org.nicolie.towersforpgm.session.draft.DraftOptions;
 import org.nicolie.towersforpgm.utils.Permissions;
@@ -31,7 +33,8 @@ public class DraftStartCommands {
             captain1.getUniqueId(),
             captain2.getUniqueId(),
             getPlayers(match, captain1, captain2),
-            getDefaultDraftOptions());
+            getDefaultDraftOptions(),
+            false);
   }
 
   @Command("balance <captain1> <captain2>")
@@ -54,6 +57,8 @@ public class DraftStartCommands {
         .minOrder(TowersForPGM.getInstance().config().draft().getMinOrder())
         .randomizeOrder(true)
         .allowReroll(TowersForPGM.getInstance().config().draft().isReroll())
+        .mapVote(false)
+        .maps(null, VoterMode.ALL, VoteMode.PLURALITY)
         .build();
   }
 

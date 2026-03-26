@@ -17,10 +17,10 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.tables.TableType;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.text.TextTranslations;
 
 public class RankedItem implements Listener {
   private static final TowersForPGM plugin = TowersForPGM.getInstance();
@@ -46,7 +46,7 @@ public class RankedItem implements Listener {
     }
 
     ItemStack item = event.getItem();
-    if (item == null || !isQueueItem(item)) {
+    if (item == null || !isQueueItem(item, event.getPlayer())) {
       return;
     }
     event.setCancelled(true);
@@ -78,7 +78,7 @@ public class RankedItem implements Listener {
     queue.addPlayer(player);
   }
 
-  private boolean isQueueItem(ItemStack item) {
+  private boolean isQueueItem(ItemStack item, Player player) {
     if (item == null || item.getType() != Material.EYE_OF_ENDER) {
       return false;
     }
@@ -87,13 +87,15 @@ public class RankedItem implements Listener {
       return false;
     }
     String displayName = meta.getDisplayName();
-    return displayName.equals(LanguageManager.message("ranked.item"));
+    return displayName.equals(
+        TextTranslations.translateLegacy(Component.translatable("ranked.item"), player));
   }
 
-  public static ItemStack getQueueItem() {
+  public static ItemStack getQueueItem(Player player) {
     ItemStack queueItem = new ItemStack(Material.EYE_OF_ENDER);
     ItemMeta meta = queueItem.getItemMeta();
-    meta.setDisplayName(LanguageManager.message("ranked.item"));
+    meta.setDisplayName(
+        TextTranslations.translateLegacy(Component.translatable("ranked.item"), player));
     queueItem.setItemMeta(meta);
     return queueItem;
   }
@@ -103,11 +105,11 @@ public class RankedItem implements Listener {
     if (MatchBotConfig.isVoiceChatEnabled()) {
       Match match = player.getMatch();
       if (match != null && match.isFinished()) {
-        player.getBukkit().getInventory().setItem(4, getQueueItem());
+        player.getBukkit().getInventory().setItem(4, getQueueItem(player.getBukkit()));
       }
       return;
     }
-    player.getBukkit().getInventory().setItem(4, getQueueItem());
+    player.getBukkit().getInventory().setItem(4, getQueueItem(player.getBukkit()));
   }
 
   public static void giveItem(Player player) {
@@ -115,11 +117,11 @@ public class RankedItem implements Listener {
     if (MatchBotConfig.isVoiceChatEnabled()) {
       Match match = PGM.get().getMatchManager().getMatch(player);
       if (match != null && match.isFinished()) {
-        player.getInventory().setItem(4, getQueueItem());
+        player.getInventory().setItem(4, getQueueItem(player));
       }
       return;
     }
-    player.getInventory().setItem(4, getQueueItem());
+    player.getInventory().setItem(4, getQueueItem(player));
   }
 
   public static void removeItemToPlayers(List<MatchPlayer> players) {

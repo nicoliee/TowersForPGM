@@ -1,0 +1,399 @@
+package org.nicolie.towersforpgm.draft.map;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.title.Title;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.nicolie.towersforpgm.TowersForPGM;
+import org.nicolie.towersforpgm.draft.map.gui.MapVoteMenu;
+import org.nicolie.towersforpgm.draft.team.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.team.Captains;
+import org.nicolie.towersforpgm.draft.timer.BossbarTimer;
+import org.nicolie.towersforpgm.draft.timer.MapVoteTimer;
+import tc.oc.pgm.api.match.Match;
+import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.text.TextTranslations;
+
+public final class MapVoteManager {
+
+  public interface VoteCallback {
+    void onVoteComplete(String winningMap);
+  }
+
+  private static final int VOTE_ITEM_SLOT = 2; // same slot as draft pick star
+
+  public static final String SECRET_KEY = "__SECRET__";
+
+  private final List<String> displayedMaps = new ArrayList<>();
+  private final List<String> remainingMaps = new ArrayList<>();
+  private final Map<UUID, String> votes = new HashMap<>();
+  private final Set<UUID> eligibleVoters = new LinkedHashSet<>();
+  private final Map<UUID, MapVoteMenu> openMenus = new HashMap<>();
+
+  private String secretMapName = null;
+  private VoteCallback callback;
+  private boolean finished = false;
+
+  private final Match match;
+  private final MapVoteConfig config;
+  private final MapVoteTimer mapVoteTimer;
+  private final Captains captains;
+  private final AvailablePlayers availablePlayers;
+
+  public MapVoteManager(
+      Match match,
+      TowersForPGM plugin,
+      MapVoteConfig config,
+      Captains captains,
+      AvailablePlayers availablePlayers,
+      BossbarTimer bossbarTimer) {
+    this.match = match;
+    this.config = config;
+    this.mapVoteTimer = new MapVoteTimer(bossbarTimer, config);
+    this.captains = captains;
+    this.availablePlayers = availablePlayers;
+  }
+
+  public void startVote(VoteCallback callback) {
+    this.callback = callback;
+    this.finished = false;
+
+    buildDisplayedMaps();
+    remainingMaps.clear();
+    remainingMaps.addAll(
+        displayedMaps.stream().filter(m -> !SECRET_KEY.equals(m)).collect(Collectors.toList()));
+
+    buildEligibleVoters();
+    giveVoteItemToAll();
+    showStartTitle();
+    startBossbarTimer();
+  }
+
+  public void castVote(UUID voterUUID, String displayedMapName) {
+    if (finished) return;
+    if (!eligibleVoters.contains(voterUUID)) return;
+
+    switch (config.getVoteMode()) {
+      case VETO:
+        castVetoVote(voterUUID, displayedMapName);
+        break;
+      case PLURALITY:
+      default:
+        castPluralityVote(voterUUID, displayedMapName);
+        break;
+    }
+  }
+
+  public List<String> getDisplayedMaps() {
+    return Collections.unmodifiableList(displayedMaps);
+  }
+
+  public List<String> getRemainingMaps() {
+    return Collections.unmodifiableList(remainingMaps);
+  }
+
+  public String getCurrentVote(UUID uuid) {
+    return votes.get(uuid);
+  }
+
+  public boolean isEligible(UUID uuid) {
+    return eligibleVoters.contains(uuid);
+  }
+
+  public boolean hasVoted(UUID uuid) {
+    return votes.containsKey(uuid);
+  }
+
+  public MapVoteConfig getConfig() {
+    return config;
+  }
+
+  public int getTimeLeft() {
+    return mapVoteTimer.getTimeLeft();
+  }
+
+  public String getSecretMapName() {
+    return secretMapName;
+  }
+
+  public Map<String, Integer> getVoteCounts() {
+    Map<String, Integer> counts = new HashMap<>();
+    displayedMaps.forEach(m -> counts.put(m, 0));
+    votes.values().forEach(m -> counts.merge(m, 1, Integer::sum));
+    return counts;
+  }
+
+  public List<String> getVotersForMap(String displayedName) {
+    return votes.entrySet().stream()
+        .filter(e -> e.getValue().equals(displayedName))
+        .map(e -> {
+          Player p = Bukkit.getPlayer(e.getKey());
+          return p != null ? p.getName() : null;
+        })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  public void cancel() {
+    finished = true;
+    mapVoteTimer.cancel();
+    closeAllMenus();
+    removeVoteItemFromAll();
+  }
+
+  public static ItemStack createVoteItem(Player player) {
+    ItemStack item = new ItemStack(Material.NETHER_STAR);
+    ItemMeta meta = item.getItemMeta();
+    if (meta != null) {
+      Component displayNameComponent =
+          Component.translatable("draft.map.vote.title").color(NamedTextColor.GOLD);
+      @SuppressWarnings("deprecation")
+      String displayName = TextTranslations.translateLegacy(displayNameComponent, player);
+      meta.setDisplayName(displayName);
+      item.setItemMeta(meta);
+    }
+    return item;
+  }
+
+  public static boolean isVoteItem(ItemStack item, Player player) {
+    if (item == null || item.getType() != Material.NETHER_STAR) return false;
+    ItemMeta meta = item.getItemMeta();
+    if (meta == null || !meta.hasDisplayName()) return false;
+    Component displayNameComponent =
+        Component.translatable("draft.map.vote.title").color(NamedTextColor.GOLD);
+    @SuppressWarnings("deprecation")
+    String expected = TextTranslations.translateLegacy(displayNameComponent, player);
+    return expected.equals(meta.getDisplayName());
+  }
+
+  public void giveVoteItem(Player player) {
+    player.getInventory().setItem(VOTE_ITEM_SLOT, createVoteItem(player));
+  }
+
+  private void giveVoteItemToAll() {
+    match.getPlayers().forEach(mp -> giveVoteItem(mp.getBukkit()));
+  }
+
+  private void removeVoteItemFromAll() {
+    for (MatchPlayer mp : match.getPlayers()) {
+      Player p = mp.getBukkit();
+      ItemStack current = p.getInventory().getItem(VOTE_ITEM_SLOT);
+      if (isVoteItem(current, p)) p.getInventory().setItem(VOTE_ITEM_SLOT, null);
+    }
+  }
+
+  private void showStartTitle() {
+    match.getPlayers().forEach(mp -> mp.showTitle(buildTitleForPlayer(mp.getBukkit())));
+  }
+
+  private Title buildTitleForPlayer(Player player) {
+    Component titleText = Component.translatable(titleKeyForVoteMode())
+        .color(NamedTextColor.AQUA)
+        .decorate(TextDecoration.BOLD);
+    String subtitleKey = subtitleKeyForCurrentModes(player);
+    Component subtitleText = Component.translatable(subtitleKey).color(NamedTextColor.GRAY);
+    return Title.title(
+        titleText,
+        subtitleText,
+        Title.Times.times(
+            java.time.Duration.ofMillis(500),
+            java.time.Duration.ofSeconds(4),
+            java.time.Duration.ofMillis(500)));
+  }
+
+  private String titleKeyForVoteMode() {
+    switch (config.getVoteMode()) {
+      case VETO:
+        return "draft.map.veto.title";
+      case PLURALITY:
+      default:
+        return "draft.map.vote.title";
+    }
+  }
+
+  private String subtitleKeyForCurrentModes(Player player) {
+    boolean canVote = eligibleVoters.contains(player.getUniqueId());
+    switch (config.getVoteMode()) {
+      case VETO:
+        return canVote ? "draft.map.veto.subtitle.canvote" : "draft.map.subtitle.cannotvote";
+      case PLURALITY:
+      default:
+        return canVote ? "draft.map.vote.subtitle.canvote" : "draft.map.subtitle.cannotvote";
+    }
+  }
+
+  private void startBossbarTimer() {
+    mapVoteTimer.start(this::finish);
+  }
+
+  private void buildEligibleVoters() {
+    eligibleVoters.clear();
+    switch (config.getVoterMode()) {
+      case ALL:
+        eligibleVoters.add(captains.getCaptain1());
+        eligibleVoters.add(captains.getCaptain2());
+        availablePlayers.getAvailablePlayers().forEach(mp -> eligibleVoters.add(mp.getId()));
+        break;
+      case CAPTAINS_ONLY:
+        eligibleVoters.add(captains.getCaptain1());
+        eligibleVoters.add(captains.getCaptain2());
+        break;
+      case PLAYERS_ONLY:
+        availablePlayers.getAvailablePlayers().forEach(mp -> eligibleVoters.add(mp.getId()));
+        break;
+    }
+    eligibleVoters.remove(null);
+  }
+
+  public void openMenuFor(MatchPlayer mp) {
+    MapVoteMenu menu = new MapVoteMenu(mp, this);
+    openMenus.put(mp.getId(), menu);
+    menu.open();
+  }
+
+  private void closeAllMenus() {
+    new HashSet<>(openMenus.keySet()).forEach(uuid -> {
+      Player p = Bukkit.getPlayer(uuid);
+      if (p != null) p.closeInventory();
+    });
+    openMenus.clear();
+  }
+
+  private void castPluralityVote(UUID voterUUID, String displayedName) {
+    if (!displayedMaps.contains(displayedName)) return;
+    votes.put(voterUUID, displayedName);
+    if (votes.size() >= eligibleVoters.size()) finish();
+  }
+
+  private void castVetoVote(UUID voterUUID, String displayedName) {
+    if (!displayedMaps.contains(displayedName)) return;
+    if (SECRET_KEY.equals(displayedName)) return; // no hay secret map en veto
+
+    String previousVote = votes.get(voterUUID);
+    if (displayedName.equals(previousVote)) return;
+    if (!remainingMaps.contains(displayedName)) return;
+
+    votes.put(voterUUID, displayedName);
+    rebuildRemainingMapsForVeto();
+
+    Player p = Bukkit.getPlayer(voterUUID);
+    if (p != null) {
+      match.sendMessage(Component.translatable(
+              "draft.map.veto",
+              Component.text(p.getName()).color(NamedTextColor.AQUA),
+              Component.text(displayedName).color(NamedTextColor.RED))
+          .color(NamedTextColor.GRAY));
+    }
+    if (remainingMaps.size() == 1) finish();
+  }
+
+  private void rebuildRemainingMapsForVeto() {
+    remainingMaps.clear();
+    for (String mapName : displayedMaps) {
+      if (SECRET_KEY.equals(mapName)) continue;
+      if (!votes.containsValue(mapName)) {
+        remainingMaps.add(mapName);
+      }
+    }
+  }
+
+  private void buildDisplayedMaps() {
+    displayedMaps.clear();
+    secretMapName = null;
+    List<String> all = new ArrayList<>(config.getMaps());
+
+    switch (config.getVoteMode()) {
+      case VETO:
+        displayedMaps.addAll(all);
+        return;
+      case PLURALITY:
+      default:
+        break;
+    }
+
+    if (all.size() <= 3) {
+      displayedMaps.addAll(all);
+      return;
+    }
+
+    List<String> pool = new ArrayList<>(all);
+    Random rng = new Random();
+
+    String currentMap = match.getMap().getName();
+    String slot1 = pool.contains(currentMap) ? currentMap : pool.get(rng.nextInt(pool.size()));
+    pool.remove(slot1);
+    displayedMaps.add(slot1);
+
+    String slot2 = pool.get(rng.nextInt(pool.size()));
+    pool.remove(slot2);
+    displayedMaps.add(slot2);
+
+    secretMapName = pool.get(rng.nextInt(pool.size()));
+    displayedMaps.add(SECRET_KEY);
+  }
+
+  private void finish() {
+    if (finished) return;
+    finished = true;
+    mapVoteTimer.cancel();
+    closeAllMenus();
+    removeVoteItemFromAll();
+
+    String winner;
+    switch (config.getVoteMode()) {
+      case VETO:
+        winner = resolveVetoWinner();
+        break;
+      case PLURALITY:
+      default:
+        winner = resolvePluralityWinner();
+        break;
+    }
+
+    if (callback != null) callback.onVoteComplete(winner);
+  }
+
+  private String resolvePluralityWinner() {
+    Map<String, Integer> counts = getVoteCounts();
+    if (counts.isEmpty())
+      return resolveSecret(
+          displayedMaps.isEmpty() ? config.getMaps().get(0) : displayedMaps.get(0));
+
+    int max = Collections.max(counts.values());
+    List<String> tied = counts.entrySet().stream()
+        .filter(e -> e.getValue() == max)
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList());
+
+    Collections.shuffle(tied, new Random());
+    return resolveSecret(tied.get(0));
+  }
+
+  private String resolveVetoWinner() {
+    if (remainingMaps.size() == 1) return remainingMaps.get(0);
+    List<String> copy = new ArrayList<>(remainingMaps);
+    Collections.shuffle(copy, new Random());
+    return copy.get(0);
+  }
+
+  private String resolveSecret(String name) {
+    return SECRET_KEY.equals(name) ? secretMapName : name;
+  }
+}

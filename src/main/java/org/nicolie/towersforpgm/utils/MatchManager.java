@@ -19,6 +19,7 @@ import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.map.MapInfo;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.cycle.CycleMatchModule;
 import tc.oc.pgm.rotation.MapPoolManager;
 
 // Toma en cuenta que solo hay un mundo en el plugin como lo hace actualmente PGM (10/03/2025)
@@ -99,5 +100,18 @@ public class MatchManager {
     return texts.stream()
         .map(text -> (Component) Component.text(text).color(color))
         .toList();
+  }
+
+  public static MapInfo getMatchInfo(String mapName) {
+    MapInfo mapInfo = getMap(mapName);
+    if (mapInfo == null) {
+      return null;
+    }
+    return mapInfo;
+  }
+
+  public static void setNextMap(Match match, MapInfo nextMap) {
+    PGM.get().getMapOrder().setNextMap(nextMap);
+    match.needModule(CycleMatchModule.class).cycleNow();
   }
 }

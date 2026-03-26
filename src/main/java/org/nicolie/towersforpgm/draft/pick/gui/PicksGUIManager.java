@@ -1,6 +1,7 @@
 package org.nicolie.towersforpgm.draft.pick.gui;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,10 +17,10 @@ import org.nicolie.towersforpgm.session.draft.DraftContext;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
+import tc.oc.pgm.util.text.TextTranslations;
 
 public class PicksGUIManager implements Listener {
 
-  private static final String ITEM_NAME = "§6Draft Menu";
   private static final int HOTBAR_SLOT = 2;
 
   private final TowersForPGM plugin;
@@ -39,10 +40,14 @@ public class PicksGUIManager implements Listener {
     match.getPlayers().forEach(mp -> giveItem(mp.getBukkit()));
   }
 
+  @SuppressWarnings("deprecation")
   public static void giveItem(Player player) {
     ItemStack item = new ItemStack(Material.NETHER_STAR);
     ItemMeta meta = item.getItemMeta();
-    meta.setDisplayName(ITEM_NAME);
+    Component displayNameComponent =
+        Component.translatable("draft.item").color(NamedTextColor.GOLD);
+    String displayName = TextTranslations.translateLegacy(displayNameComponent, player);
+    meta.setDisplayName(displayName);
     item.setItemMeta(meta);
     player.getInventory().setItem(HOTBAR_SLOT, null);
     player.getInventory().setItem(HOTBAR_SLOT, item);
@@ -54,7 +59,7 @@ public class PicksGUIManager implements Listener {
 
   public static void removeItem(Player player) {
     for (ItemStack item : player.getInventory().getContents()) {
-      if (isDraftItem(item)) {
+      if (isDraftItem(item, player)) {
         player.getInventory().remove(item);
       }
     }
@@ -75,7 +80,7 @@ public class PicksGUIManager implements Listener {
       item = player.getItemInHand();
     }
 
-    if (!isDraftItem(item)) return;
+    if (!isDraftItem(item, player)) return;
 
     Match match = PGM.get().getMatchManager().getMatch(player);
     MatchPlayer matchPlayer = PGM.get().getMatchManager().getPlayer(player);
@@ -101,10 +106,14 @@ public class PicksGUIManager implements Listener {
     return ctx;
   }
 
-  private static boolean isDraftItem(ItemStack item) {
+  @SuppressWarnings("deprecation")
+  private static boolean isDraftItem(ItemStack item, Player player) {
+    Component displayNameComponent =
+        Component.translatable("draft.item").color(NamedTextColor.GOLD);
+    String expected = TextTranslations.translateLegacy(displayNameComponent, player);
     return item != null
         && item.getType() == Material.NETHER_STAR
         && item.hasItemMeta()
-        && ITEM_NAME.equals(item.getItemMeta().getDisplayName());
+        && expected.equals(item.getItemMeta().getDisplayName());
   }
 }

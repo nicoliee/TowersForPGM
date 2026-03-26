@@ -11,7 +11,7 @@ import org.nicolie.towersforpgm.database.StatsManager;
 import org.nicolie.towersforpgm.database.models.top.Top;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.rankeds.Rank;
-import tc.oc.pgm.api.PGM;
+import org.nicolie.towersforpgm.utils.MatchManager;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.Argument;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
@@ -81,14 +81,20 @@ public class EloCommand {
       Rank maxRank = Rank.getRankByElo(stats.getMaxElo());
       org.bukkit.entity.Player bukkitPlayerHeading =
           org.bukkit.Bukkit.getPlayerExact(stats.getUsername());
-      String headingName = bukkitPlayerHeading != null
-          ? PGM.get().getMatchManager().getPlayer(bukkitPlayerHeading).getPrefixedName()
-          : "§3" + stats.getUsername();
+      Component headingName = MatchManager.getPrefixedName(targetName);
 
-      String eloMessage = rank.getPrefixedRank(true) + " " + headingName + "§8: "
-          + rank.getColor() + stats.getElo() + " §8[" + maxRank.getColor() + stats.getMaxElo()
-          + "§8]";
-      audience.sendMessage(Component.text(eloMessage));
+      Component eloMessage = rank.getNameComponent(true)
+          .append(Component.space())
+          .append(headingName)
+          .append(Component.text(":").color(NamedTextColor.DARK_GRAY))
+          .append(Component.space())
+          .append(Component.text(stats.getElo()).color(rank.getColor()))
+          .append(Component.space())
+          .append(Component.text("["))
+          .color(NamedTextColor.DARK_GRAY)
+          .append(Component.text(stats.getMaxElo()).color(maxRank.getColor()))
+          .append(Component.text("]").color(NamedTextColor.DARK_GRAY));
+      audience.sendMessage(eloMessage);
     });
   }
 
@@ -126,16 +132,15 @@ public class EloCommand {
       int index = 0;
       for (Top entry : topResult.getData()) {
         Rank rank = Rank.getRankByElo(entry.getValueAsInt());
-        org.bukkit.entity.Player bukkitPlayer =
-            org.bukkit.Bukkit.getPlayerExact(entry.getUsername());
-        String nameDisplay = bukkitPlayer != null
-            ? PGM.get().getMatchManager().getPlayer(bukkitPlayer).getPrefixedName()
-            : "§3" + entry.getUsername();
-        String user = rank.getPrefixedRank(true) + " " + nameDisplay;
+        Component nameDisplay = MatchManager.getPrefixedName(entry.getUsername());
+        Component user = rank.getNameComponent(true).append(Component.space()).append(nameDisplay);
         int position = startIndex + (++index);
-        String line = String.format(
-            "%d. %s§8: " + rank.getColor() + "%d", position, user, entry.getValueAsInt());
-        audience.sendMessage(Component.text(line));
+        Component line = Component.text(position + ". ")
+            .append(user)
+            .append(Component.text(":").color(NamedTextColor.DARK_GRAY))
+            .append(Component.space())
+            .append(Component.text(entry.getValueAsInt()).color(rank.getColor()));
+        audience.sendMessage(line);
       }
 
       audience.sendMessage(TextFormatter.horizontalLine(

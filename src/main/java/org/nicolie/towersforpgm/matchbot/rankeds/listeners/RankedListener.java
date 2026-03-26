@@ -153,7 +153,7 @@ public class RankedListener implements Listener {
           var uuidsToMove = new java.util.ArrayList<UUID>();
           uuidsToMove.add(event.getCaptain1());
           uuidsToMove.add(event.getCaptain2());
-          event.getPlayers().forEach(matchPlayer -> uuidsToMove.add(matchPlayer.getId()));
+          event.getPlayers().forEach(player -> uuidsToMove.add(player.getId()));
 
           movePlayersToChannel(uuidsToMove, channel1);
         });

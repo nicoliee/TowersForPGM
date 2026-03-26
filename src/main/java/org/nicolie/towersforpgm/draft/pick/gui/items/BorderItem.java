@@ -83,4 +83,14 @@ public class BorderItem implements MenuItem {
     pane.setItemMeta(meta);
     return pane;
   }
+
+  public static ItemStack blackPane() {
+    ItemStack pane = new ItemStack(org.bukkit.Material.STAINED_GLASS_PANE, 1, (short) 15);
+    ItemMeta meta = pane.getItemMeta();
+    if (meta != null) {
+      meta.setDisplayName(" ");
+      pane.setItemMeta(meta);
+    }
+    return pane;
+  }
 }

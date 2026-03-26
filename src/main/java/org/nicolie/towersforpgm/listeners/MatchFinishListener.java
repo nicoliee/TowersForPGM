@@ -48,13 +48,11 @@ public class MatchFinishListener implements Listener {
         .getLogger()
         .info("[-] Stats cancelled for match-" + event.getMatch().getId() + ": " + mapName
             + ", stats not sent to database.");
-    SendMessage.sendToDevelopers(
-        match,
-        Component.translatable(
-            "stats.cancelled",
-            Component.text(match.getId()),
-            Component.text(mapName),
-            Component.text(match.getParticipants().size())));
+    SendMessage.sendToDevelopers(Component.translatable(
+        "stats.cancelled",
+        Component.text(match.getId()),
+        Component.text(mapName),
+        Component.text(match.getParticipants().size())));
     plugin.setStatsCancel(false);
   }
 

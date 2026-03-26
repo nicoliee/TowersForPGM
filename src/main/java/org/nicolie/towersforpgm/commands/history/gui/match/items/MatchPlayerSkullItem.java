@@ -35,7 +35,7 @@ public class MatchPlayerSkullItem implements MenuItem {
     boolean positive = playerHistory.getEloDelta() > 0;
     String eloDeltaStr = (positive ? "+" : "") + playerHistory.getEloDelta();
     Component name = MatchManager.getPrefixedName(playerHistory.getUsername());
-    Component eloName = Component.text(rank.getPrefixedRank(true))
+    Component eloName = rank.getNameComponent(true)
         .append(Component.space())
         .append(name)
         .append(Component.space())

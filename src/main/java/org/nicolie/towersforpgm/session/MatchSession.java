@@ -32,18 +32,23 @@ public final class MatchSession {
   }
 
   public DraftContext startDraft(
-      UUID captain1, UUID captain2, List<MatchPlayer> players, DraftOptions options) {
+      UUID captain1,
+      UUID captain2,
+      List<MatchPlayer> players,
+      DraftOptions options,
+      boolean snapshot) {
     if (draftContext != null) cleanupDraftContext(draftContext);
 
     draftContext = createDraftContext();
     invokeDraftMethod(
         draftContext,
         "startDraft",
-        new Class<?>[] {UUID.class, UUID.class, List.class, DraftOptions.class},
+        new Class<?>[] {UUID.class, UUID.class, List.class, DraftOptions.class, boolean.class},
         captain1,
         captain2,
         players,
-        options);
+        options,
+        snapshot);
 
     return draftContext;
   }

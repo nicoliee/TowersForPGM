@@ -15,8 +15,8 @@ public class TowersForPGMCommand {
   @Command("towerforpgm")
   @CommandDescription("Show plugin version")
   public void version(Audience audience) {
-    audience.sendMessage(Component.text(
-        "§8[§bTowersForPGM§8] §7Version: " + plugin.getDescription().getVersion()));
+    audience.sendMessage(Component.translatable(
+        "system.version", Component.text(plugin.getDescription().getVersion())));
   }
 
   @Command("towersforpgm setlanguage <language>")
@@ -25,23 +25,23 @@ public class TowersForPGMCommand {
       Audience audience,
       @Argument(value = "language", suggestions = "supportedLanguages") String language) {
     if (!LanguageManager.getSupportedLanguages().contains(language.toLowerCase())) {
-      audience.sendMessage(Component.text(LanguageManager.message("system.invalidLanguage")));
+      audience.sendMessage(Component.translatable("system.invalidLanguage"));
       return;
     }
     LanguageManager.setLanguage(language.toLowerCase());
+    // No se usa translatable para mostrar el idioma cambiado
     audience.sendMessage(Component.text(LanguageManager.message("system.languageSet")));
   }
 
   @Command("towersforpgm dbreload")
   @CommandDescription("Reload the database connection")
   public void dbReload(Audience audience) {
-    audience.sendMessage(Component.text("§8[§bTowersForPGM§8] §7Reloading database connection..."));
+    audience.sendMessage(Component.translatable("system.dbReloading"));
     if (plugin.reloadDatabase()) {
-      audience.sendMessage(Component.text(
-          "§aDatabase reloaded and active (" + plugin.getCurrentDatabaseType() + ")"));
+      audience.sendMessage(Component.translatable(
+          "system.dbReloaded", Component.text(plugin.getCurrentDatabaseType())));
     } else {
-      audience.sendMessage(
-          Component.text("§cDatabase not active after reload. Check server logs for details."));
+      audience.sendMessage(Component.translatable("system.dbReloadFailed"));
     }
   }
 

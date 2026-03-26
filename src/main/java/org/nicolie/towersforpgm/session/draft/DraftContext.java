@@ -11,6 +11,8 @@ import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.ConfigManager;
 import org.nicolie.towersforpgm.draft.events.DraftStartEvent;
 import org.nicolie.towersforpgm.draft.events.MatchmakingStartEvent;
+import org.nicolie.towersforpgm.draft.map.MapVoteConfig;
+import org.nicolie.towersforpgm.draft.map.MapVoteManager;
 import org.nicolie.towersforpgm.draft.pick.DraftPickManager;
 import org.nicolie.towersforpgm.draft.pick.DraftTurnManager;
 import org.nicolie.towersforpgm.draft.pick.gui.PicksGUIManager;
@@ -22,6 +24,7 @@ import org.nicolie.towersforpgm.draft.timer.BossbarTimer;
 import org.nicolie.towersforpgm.draft.timer.ReadyReminder;
 import org.nicolie.towersforpgm.draft.timer.SuggestionTimer;
 import org.nicolie.towersforpgm.utils.MatchManager;
+import tc.oc.pgm.api.map.MapInfo;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.party.Party;
 import tc.oc.pgm.api.player.MatchPlayer;
@@ -32,6 +35,7 @@ import tc.oc.pgm.util.text.TextFormatter;
 public final class DraftContext {
 
   private final Match match;
+  private final TowersForPGM plugin;
   private final ConfigManager config;
   private final AvailablePlayers availablePlayers;
   private final Captains captains;
@@ -46,10 +50,12 @@ public final class DraftContext {
   private final DraftReroll rerollManager;
   private final RerollOptionsGUI rerollOptionsGUI;
 
+  private MapVoteManager mapVoteManager;
   private AssignmentStrategy strategy;
 
   DraftContext(Match match, TowersForPGM plugin) {
     this.match = match;
+    this.plugin = plugin;
     this.config = plugin.config();
 
     this.availablePlayers = new AvailablePlayers(config);
@@ -86,7 +92,12 @@ public final class DraftContext {
     plugin.getServer().getPluginManager().registerEvents(rerollOptionsGUI, plugin);
   }
 
-  void startDraft(UUID captain1, UUID captain2, List<MatchPlayer> players, DraftOptions options) {
+  void startDraft(
+      UUID captain1,
+      UUID captain2,
+      List<MatchPlayer> players,
+      DraftOptions options,
+      boolean snapshot) {
     this.strategy = AssignmentStrategy.DRAFT;
 
     initSharedState(captain1, captain2, players);
@@ -97,13 +108,24 @@ public final class DraftContext {
 
     announceTeams(captain1, captain2);
 
-    Bukkit.getPluginManager()
-        .callEvent(
-            new DraftStartEvent(captain1, captain2, players, match, options.isRandomizeOrder()));
+    if (!snapshot) {
+      Bukkit.getPluginManager()
+          .callEvent(
+              new DraftStartEvent(captain1, captain2, players, match, options.isRandomizeOrder()));
+    }
+
+    MapVoteConfig mapCfg = options.getMapVoteConfig() != null
+        ? options.getMapVoteConfig()
+        : MapVoteConfig.builder().maps(List.of()).build();
+
+    this.mapVoteManager =
+        new MapVoteManager(match, plugin, mapCfg, captains, availablePlayers, bossbarTimer);
 
     if (options.isAllowReroll()) {
       state.setCurrentPhase(DraftPhase.CAPTAINS);
       startRerollPhase();
+    } else if (options.hasMapVote()) {
+      startMapVotePhase();
     } else {
       startPickingPhase();
     }
@@ -197,7 +219,6 @@ public final class DraftContext {
     if (captainNumber == -1) return ReadyResult.NOT_A_CAPTAIN;
 
     boolean alreadyReady = captainNumber == 1 ? captains.isReady1() : captains.isReady2();
-
     if (alreadyReady) return ReadyResult.ALREADY_READY;
 
     return ReadyResult.OK;
@@ -226,16 +247,6 @@ public final class DraftContext {
 
   public AssignmentStrategy strategy() {
     return strategy;
-  }
-
-  public Component getOrderStyled() {
-    return turnManager.getOrderStyled();
-  }
-
-  public void markReady(UUID captainUUID, Match match) {
-    int captainNumber = getCaptainNumber(captainUUID);
-    if (captainNumber == 1) readyReminder.setReady(captainNumber, match);
-    else if (captainNumber == 2) readyReminder.setReady(captainNumber, match);
   }
 
   public Match match() {
@@ -270,6 +281,44 @@ public final class DraftContext {
     return readyReminder;
   }
 
+  public MapVoteManager mapVoteManager() {
+    return mapVoteManager;
+  }
+
+  public Component getOrderStyled() {
+    return turnManager.getOrderStyled();
+  }
+
+  public String getOrderPattern() {
+    return state.getCustomOrderPattern();
+  }
+
+  public int getPatternIndex() {
+    return state.getCurrentPatternIndex();
+  }
+
+  public boolean isUsingCustomPattern() {
+    return state.isUsingCustomPattern();
+  }
+
+  public int getOrderMinPlayers() {
+    return state.getCustomOrderMinPlayers();
+  }
+
+  public void resumePickTimer() {
+    pickManager.startTurnTimer();
+  }
+
+  public void finalizeTeams() {
+    pickManager.finalizeTeams();
+  }
+
+  public void markReady(UUID captainUUID, Match match) {
+    int captainNumber = getCaptainNumber(captainUUID);
+    if (captainNumber == 1) readyReminder.setReady(1, match);
+    else if (captainNumber == 2) readyReminder.setReady(2, match);
+  }
+
   public void showBossBarTo(MatchPlayer player) {
     if (state.getPickTimerBar() != null) player.showBossBar(state.getPickTimerBar());
   }
@@ -292,7 +341,7 @@ public final class DraftContext {
   }
 
   public int getCaptainNumber(String username) {
-    org.bukkit.entity.Player player = Bukkit.getPlayerExact(username);
+    var player = Bukkit.getPlayerExact(username);
     return player != null ? getCaptainNumber(player.getUniqueId()) : -1;
   }
 
@@ -309,6 +358,7 @@ public final class DraftContext {
     if (bossbarTimer != null) bossbarTimer.cancelTimer();
     if (suggestionTimer != null) suggestionTimer.cancelTimer();
     if (readyReminder != null) readyReminder.cancelTimer();
+    if (mapVoteManager != null) mapVoteManager.cancel();
 
     captains.clear();
     availablePlayers.clear();
@@ -331,16 +381,17 @@ public final class DraftContext {
     captains.setCaptain1(captain1);
     captains.setCaptain2(captain2);
     captains.setCaptain1Turn(new Random().nextBoolean());
-
     state.setFirstCaptainTurn(captains.isCaptain1Turn());
 
     teams.removeFromTeams(match);
 
-    teams.addPlayerToTeam(Bukkit.getPlayer(captain1).getName(), 1);
-    teams.addPlayerToTeam(Bukkit.getPlayer(captain2).getName(), 2);
+    var p1 = Bukkit.getPlayer(captain1);
+    var p2 = Bukkit.getPlayer(captain2);
 
-    teams.assignTeam(Bukkit.getPlayer(captain1), 1);
-    teams.assignTeam(Bukkit.getPlayer(captain2), 2);
+    teams.addPlayerToTeam(p1.getName(), 1);
+    teams.addPlayerToTeam(p2.getName(), 2);
+    teams.assignTeam(p1, 1);
+    teams.assignTeam(p2, 2);
 
     for (MatchPlayer p : players) {
       availablePlayers.addPlayer(p.getNameLegacy());
@@ -358,11 +409,29 @@ public final class DraftContext {
     pickManager.startTurnTimer();
   }
 
+  private void startMapVotePhase() {
+    state.setCurrentPhase(DraftPhase.MAP);
+
+    mapVoteManager.startVote(winningMap -> {
+      match.sendMessage(Component.translatable(
+              "draft.map.selected", Component.text(winningMap).color(NamedTextColor.GOLD))
+          .color(NamedTextColor.AQUA));
+
+      // Importante: cambiar fase antes de capturar snapshot
+      state.setCurrentPhase(DraftPhase.RUNNING);
+      org.nicolie.towersforpgm.session.bridge.CrossMatchBridge.getInstance().capture(match);
+      MapInfo info = MatchManager.getMatchInfo(winningMap);
+      MatchManager.setNextMap(match, info);
+    });
+  }
+
   private void startRerollPhase() {
     rerollManager.startRerollPhase(match, approved -> {
       if (approved) {
         state.setCurrentPhase(DraftPhase.REROLL);
         startCaptainSelectionPhase();
+      } else if (mapVoteManager != null && mapVoteManager.getConfig().isValid()) {
+        startMapVotePhase();
       } else {
         startPickingPhase();
       }
@@ -376,22 +445,25 @@ public final class DraftContext {
     rerollOptionsGUI.startVoting(match, c1, c2, pair -> {
       if (pair != null) replaceCaptains(pair);
 
-      state.setCurrentPhase(DraftPhase.RUNNING);
-      announceCurrentTurn();
-      PicksGUIManager.giveItem(match);
-      pickManager.startTurnTimer();
+      if (mapVoteManager != null && mapVoteManager.getConfig().isValid()) {
+        startMapVotePhase();
+      } else {
+        state.setCurrentPhase(DraftPhase.RUNNING);
+        announceCurrentTurn();
+        PicksGUIManager.giveItem(match);
+        pickManager.startTurnTimer();
+      }
     });
   }
 
   private void replaceCaptains(RerollOptionsGUI.CaptainPair pair) {
-    org.bukkit.entity.Player nc1 = Bukkit.getPlayerExact(pair.captain1);
-    org.bukkit.entity.Player nc2 = Bukkit.getPlayerExact(pair.captain2);
+    var nc1 = Bukkit.getPlayerExact(pair.captain1);
+    var nc2 = Bukkit.getPlayerExact(pair.captain2);
     if (nc1 == null || nc2 == null) return;
 
-    org.bukkit.entity.Player oc1 = Bukkit.getPlayer(captains.getCaptain1());
-    org.bukkit.entity.Player oc2 = Bukkit.getPlayer(captains.getCaptain2());
+    var oc1 = Bukkit.getPlayer(captains.getCaptain1());
+    var oc2 = Bukkit.getPlayer(captains.getCaptain2());
 
-    // Devuelve los capitanes anteriores al pool
     for (String name : teams.getAllTeam(1))
       if (!name.equals(oc1 == null ? null : oc1.getName())) availablePlayers.addPlayer(name);
 
@@ -415,7 +487,6 @@ public final class DraftContext {
 
     teams.addPlayerToTeam(nc1.getName(), 1);
     teams.addPlayerToTeam(nc2.getName(), 2);
-
     teams.assignTeam(nc1, 1);
     teams.assignTeam(nc2, 2);
 
@@ -461,8 +532,7 @@ public final class DraftContext {
 
   private void requireDraft(String methodName) {
     if (strategy != AssignmentStrategy.DRAFT) {
-      throw new IllegalStateException(
-          methodName + "() solo es válido en DRAFT, actual: " + strategy);
+      throw new IllegalStateException(methodName + "() solo válido en DRAFT, actual: " + strategy);
     }
   }
 }

@@ -2,7 +2,6 @@ package org.nicolie.towersforpgm.commands.draft;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.draft.pick.gui.PicksGUIManager;
@@ -123,9 +122,7 @@ public class DraftCaptainCommands {
         || (captainNumber == 2 && !ctx.captains().isCaptain1Turn());
     if (!myTurn) return List.of();
 
-    return ctx.availablePlayers().getAllAvailablePlayers().stream()
-        .filter(name -> !ctx.teams().isPlayerInAnyTeam(name))
-        .collect(Collectors.toList());
+    return ctx.availablePlayers().getAllAvailablePlayers();
   }
 
   private DraftContext getActiveDraft(Audience audience, Match match) {

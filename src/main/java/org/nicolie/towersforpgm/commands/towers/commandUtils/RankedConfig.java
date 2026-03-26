@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.configs.tables.TableInfo;
 import org.nicolie.towersforpgm.database.TableManager;
+import org.nicolie.towersforpgm.draft.map.MapVoteConfig.VoteMode;
 import org.nicolie.towersforpgm.rankeds.RankedProfile;
 
 public class RankedConfig {
@@ -80,6 +81,26 @@ public class RankedConfig {
 
     audience.sendMessage(Component.translatable(
         state ? "ranked.config.rerollEnabled" : "ranked.config.rerollDisabled"));
+  }
+
+  public void mapVote(Audience audience, String mode) {
+    String state = plugin.config().ranked().getMapVote();
+
+    if (mode != null) {
+      VoteMode voteMode;
+      try {
+        voteMode = VoteMode.valueOf(mode.trim().toUpperCase());
+      } catch (IllegalArgumentException | NullPointerException e) {
+        audience.sendMessage(Component.translatable("ranked.config.mapVote.invalid"));
+        return;
+      }
+      plugin.config().ranked().setMapVote(voteMode.name());
+      state = voteMode.name();
+    }
+
+    audience.sendMessage(Component.translatable(
+        mode != null ? "ranked.config.mapVote.set" : "ranked.config.mapVote.current",
+        Component.text(state)));
   }
 
   public void order(Audience audience, String order) {
@@ -186,7 +207,7 @@ public class RankedConfig {
       return;
     }
 
-    audience.sendMessage(Component.text(profile.getFormattedInfo()));
+    audience.sendMessage(profile.getFormattedInfo());
 
     List<String> maps = plugin.config().ranked().getMapsFromPool(profile.getMapPool());
 
@@ -203,6 +224,6 @@ public class RankedConfig {
 
     audience.sendMessage(Component.translatable("ranked.profileSet", Component.text(profileName)));
 
-    audience.sendMessage(Component.text(profile.getFormattedInfo()));
+    audience.sendMessage(profile.getFormattedInfo());
   }
 }

@@ -1,10 +1,12 @@
 package org.nicolie.towersforpgm.commands.towers;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import org.bukkit.command.CommandSender;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.commands.towers.commandUtils.RankedConfig;
+import org.nicolie.towersforpgm.draft.map.MapVoteConfig;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.*;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.suggestion.Suggestions;
 import tc.oc.pgm.util.Audience;
@@ -74,6 +76,20 @@ public class RankedCommand {
   public void rankedReroll(
       Audience audience, CommandSender sender, @Argument("value") Boolean value) {
     rankedConfig.reroll(audience, value);
+  }
+
+  @Command("towers ranked mapvote [value]")
+  @CommandDescription("Set ranked map vote mode")
+  public void rankedMapVote(
+      Audience audience,
+      CommandSender sender,
+      @Argument(value = "value", suggestions = "voteModes") String value) {
+    rankedConfig.mapVote(audience, value);
+  }
+
+  @Suggestions("voteModes")
+  public List<String> voteModeSuggestions(CommandSender sender) {
+    return Arrays.stream(MapVoteConfig.VoteMode.values()).map(Enum::name).toList();
   }
 
   @Command("towers ranked setpool [pool]")

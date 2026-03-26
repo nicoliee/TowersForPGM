@@ -32,6 +32,7 @@ import org.nicolie.towersforpgm.preparationTime.PreparationListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.refill.RefillManager;
 import org.nicolie.towersforpgm.session.MatchSessionRegistry;
+import org.nicolie.towersforpgm.session.bridge.CrossMatchBridge;
 import org.nicolie.towersforpgm.translations.PluginTranslator;
 import org.nicolie.towersforpgm.translations.TranslationLoader;
 import org.nicolie.towersforpgm.utils.Events;
@@ -97,6 +98,8 @@ public final class TowersForPGM extends JavaPlugin {
     }
 
     MatchSessionRegistry.register(this);
+    CrossMatchBridge.getInstance().init(this);
+    getServer().getPluginManager().registerEvents(CrossMatchBridge.getInstance(), this);
     setupEvents();
     setupCommands();
 

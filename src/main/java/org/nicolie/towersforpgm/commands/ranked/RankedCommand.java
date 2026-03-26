@@ -6,15 +6,15 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
+import org.nicolie.towersforpgm.matchbot.rankeds.listeners.QueueJoinListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.utils.Permissions;
 import tc.oc.pgm.api.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.player.MatchPlayer;
-import tc.oc.pgm.lib.org.incendo.cloud.annotations.Argument;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.Command;
 import tc.oc.pgm.lib.org.incendo.cloud.annotations.CommandDescription;
-import tc.oc.pgm.lib.org.incendo.cloud.annotations.suggestion.Suggestions;
+import tc.oc.pgm.lib.org.incendo.cloud.annotations.Permission;
 import tc.oc.pgm.util.Audience;
 import tc.oc.pgm.util.text.TextFormatter;
 
@@ -25,43 +25,46 @@ public class RankedCommand {
     this.queue = queue;
   }
 
-  @Command("ranked <subcommand>")
-  @CommandDescription("Main command for ranked matches")
-  public void rankedMainCommand(
-      Audience audience,
-      CommandSender sender,
-      @Argument(value = "subcommand", suggestions = "rankedArguments") String subcommand) {
-    switch (subcommand.toLowerCase()) {
-      case "join":
-        handleJoinLeaveCommand(audience, sender, true);
-        break;
-      case "leave":
-        handleJoinLeaveCommand(audience, sender, false);
-        break;
-      case "list":
-        handleListCommand(audience, sender);
-        break;
-      case "start":
-        handleStartStopCommand(audience, sender, true);
-        break;
-      case "stop":
-        handleStartStopCommand(audience, sender, false);
-        break;
-      default:
-        break;
-    }
+  @Command("ranked join")
+  @CommandDescription("Join the ranked queue")
+  public void rankedJoinCommand(Audience audience, Player sender) {
+    handleJoinLeaveCommand(audience, sender, true);
   }
 
-  @Suggestions("rankedArguments")
-  public List<String> rankedArgumentsSuggestions() {
-    return List.of("join", "leave", "list", "start", "stop");
+  @Command("ranked leave")
+  @CommandDescription("Leave the ranked queue")
+  public void rankedLeaveCommand(Audience audience, Player sender) {
+    handleJoinLeaveCommand(audience, sender, false);
   }
 
-  private void handleJoinLeaveCommand(Audience audience, CommandSender sender, boolean isJoin) {
-    if (!(sender instanceof Player)) {
-      audience.sendWarning(Component.translatable("command.onlyPlayers"));
-      return;
-    }
+  @Command("ranked list")
+  @CommandDescription("List players in the ranked queue")
+  public void rankedListCommand(Audience audience, CommandSender sender) {
+    handleListCommand(audience, sender);
+  }
+
+  @Command("ranked start")
+  @CommandDescription("Start the ranked match countdown")
+  @Permission(Permissions.ADMIN)
+  public void rankedStartCommand(Audience audience, CommandSender sender) {
+    handleStartStopCommand(audience, sender, true);
+  }
+
+  @Command("ranked stop")
+  @CommandDescription("Stop the ranked match countdown")
+  @Permission(Permissions.ADMIN)
+  public void rankedStopCommand(Audience audience, CommandSender sender) {
+    handleStartStopCommand(audience, sender, false);
+  }
+
+  @Command("ranked reload")
+  @CommandDescription("Reload the ranked queue")
+  @Permission(Permissions.ADMIN)
+  public void rankedReloadCommand(Audience audience, CommandSender sender) {
+    QueueJoinListener.reloadQueueFromVoice(null);
+  }
+
+  private void handleJoinLeaveCommand(Audience audience, Player sender, boolean isJoin) {
     if (MatchBotConfig.isVoiceChatEnabled()) return;
     Match match = PGM.get().getMatchManager().getMatch(sender);
     MatchPlayer player = match.getPlayer((Player) sender);

@@ -200,10 +200,11 @@ public class Stats {
     Rank rank = Rank.getRankByElo(elo);
     Rank maxRank = Rank.getRankByElo(maxElo);
     List<Component> lore = Lists.newArrayList();
-    Component eloComponent = Component.text(String.valueOf(rank.getColor() + elo))
+    Component eloComponent = Component.text(String.valueOf(elo))
+        .color(rank.getColor())
         .append(Component.space())
         .append(Component.text("[", NamedTextColor.DARK_GRAY))
-        .append(Component.text(String.valueOf(maxRank.getColor() + maxElo)))
+        .append(Component.text(String.valueOf(maxElo)).color(maxRank.getColor()))
         .append(Component.text("]", NamedTextColor.DARK_GRAY));
     Component winstreakComponent =
         Component.text(String.valueOf(winstreak)).color(NamedTextColor.GREEN);

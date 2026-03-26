@@ -24,13 +24,11 @@ public class PreparationMatchLoadListener implements Listener {
     if (preparationListener.isMapInConfig(map)
         && plugin.config().preparationTime().isPreparationEnabled()) {
       SendMessage.sendToDevelopers(
-          event.getMatch(),
           Component.translatable("preparation.isAvailable", Component.text(map))
               .color(NamedTextColor.GREEN));
     } else if (preparationListener.isMapInConfig(map)
         && !plugin.config().preparationTime().isPreparationEnabled()) {
       SendMessage.sendToDevelopers(
-          event.getMatch(),
           Component.translatable("preparation.isAvailableButDisabled", Component.text(map))
               .color(NamedTextColor.YELLOW));
     }

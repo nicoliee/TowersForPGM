@@ -233,6 +233,10 @@ public final class SanctionHandler {
     usernames.add(sanctionedUser);
 
     StatsManager.getEloForUsernames(table, new ArrayList<>(usernames)).thenAccept(eloList -> {
+      // Sobrescribir el elo del sancionado con el valor actualizado
+      eloList.removeIf(e -> e.getUsername().equals(sanctionedUser));
+      eloList.add(new PlayerEloChange(
+          sanctionedUser, penaltyNewElo(realDelta, sanctionedUser, eloList), 0, 0, 0));
       EmbedBuilder embed = Forfeit.create(
           match, table, eloList, sanctionedUser, losingTeam.getNameLegacy(), realDelta);
       DiscordBot.sendMatchEmbed(
@@ -241,6 +245,18 @@ public final class SanctionHandler {
           null,
           DiscordBot.setEmbedThumbnail(match.getMap(), embed));
     });
+  }
+
+  private static int penaltyNewElo(
+      int realDelta, String sanctionedUser, List<PlayerEloChange> eloList) {
+    // Buscar el elo anterior del sancionado (si existe)
+    for (PlayerEloChange e : eloList) {
+      if (e.getUsername().equals(sanctionedUser)) {
+        return e.getCurrentElo() + realDelta;
+      }
+    }
+    // Si no se encuentra, solo devolver el delta (fallback)
+    return realDelta;
   }
 
   private static List<MatchPlayer> buildOpponentTeam(Match match, Party losingTeam) {

@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.draft.team.AvailablePlayers;
+import org.nicolie.towersforpgm.draft.team.Captains;
 import org.nicolie.towersforpgm.matchbot.rankeds.listeners.RankedListener;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import org.nicolie.towersforpgm.session.MatchSession;
@@ -30,37 +31,20 @@ public class QueueManager {
     this.rankedQueue = RankedQueue.getInstance();
   }
 
-  // ── addPlayer ─────────────────────────────────────────────────────────────
-
   public boolean addPlayer(MatchPlayer player) {
     UUID playerUUID = player.getId();
     Match match = player.getMatch();
-
-    RankedSession ranked = getRankedSession(match);
-    AvailablePlayers available = getAvailablePlayers(match);
-
-    if (player.isParticipating()
-        || match.isRunning()
-        || (ranked != null && ranked.isActive())
-        || (available != null && available.isPlayerAvailable(player.getNameLegacy()))) {
+    if (player.isParticipating()) {
       player.sendWarning(Queue.RANKED_PREFIX
           .append(Component.space())
           .append(Component.translatable("join.err.afterStart")));
       return false;
     }
 
-    if (rankedQueue.contains(playerUUID)) {
+    if (!canJoinQueue(playerUUID, match)) {
       player.sendWarning(Queue.RANKED_PREFIX
           .append(Component.space())
           .append(Component.translatable("ranked.alreadyInQueue")));
-      return false;
-    }
-
-    if (!plugin.config().ranked().isMapRanked(match.getMap().getName())) {
-      player.sendWarning(Queue.RANKED_PREFIX
-          .append(Component.space())
-          .append(Component.translatable(
-              "ranked.notRankedMap", Component.text(match.getMap().getName()))));
       return false;
     }
 
@@ -69,34 +53,27 @@ public class QueueManager {
   }
 
   public boolean addPlayer(UUID playerUUID, Match match) {
-    if (playerUUID == null || rankedQueue.contains(playerUUID)) return false;
-
+    if (playerUUID == null) return false;
     if (match == null) match = MatchManager.getMatch();
-
-    MatchPlayer onlinePlayer = PGM.get().getMatchManager().getPlayer(playerUUID);
-    OfflinePlayer offlinePlayer = onlinePlayer != null ? null : Bukkit.getOfflinePlayer(playerUUID);
-
-    if (onlinePlayer == null && (offlinePlayer == null || offlinePlayer.getName() == null)) {
-      return false;
-    }
-
-    String name = onlinePlayer != null ? onlinePlayer.getNameLegacy() : offlinePlayer.getName();
-
-    if (queueState.isRanked()) {
-      AvailablePlayers available = getAvailablePlayers(match);
-      if (available != null && available.getAllAvailablePlayers().contains(name)) return false;
-
-      RankedSession ranked = getRankedSession(match);
-      if (ranked != null && ranked.isActive()) return false;
-    }
-
-    if (!plugin.config().ranked().isMapRanked(match.getMap().getName())) return false;
+    if (!canJoinQueue(playerUUID, match)) return false;
 
     rankedQueue.add(playerUUID);
     return true;
   }
 
-  // ── removePlayer ──────────────────────────────────────────────────────────
+  private boolean canJoinQueue(UUID playerUUID, Match match) {
+    if (rankedQueue.contains(playerUUID)) return false;
+
+    AvailablePlayers available = getAvailablePlayers(match);
+    Captains captains = getCaptains(match);
+    String playerName = Bukkit.getOfflinePlayer(playerUUID).getName();
+
+    if (available != null && available.isPlayerAvailable(playerName)) return false;
+    if (captains != null && captains.isCaptain(playerUUID)) return false;
+    if (!plugin.config().ranked().isMapRanked(match.getMap().getName())) return false;
+
+    return true;
+  }
 
   public boolean removePlayer(MatchPlayer player) {
     UUID playerUUID = player.getId();
@@ -123,8 +100,6 @@ public class QueueManager {
     if (playerUUID == null || !rankedQueue.contains(playerUUID)) return false;
     return rankedQueue.remove(playerUUID);
   }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
 
   public List<Component> getQueueDisplayNames() {
     return rankedQueue.snapshot().stream()
@@ -171,5 +146,10 @@ public class QueueManager {
   private AvailablePlayers getAvailablePlayers(Match match) {
     MatchSession session = MatchSessionRegistry.get(match);
     return session != null ? session.availablePlayers() : null;
+  }
+
+  private Captains getCaptains(Match match) {
+    MatchSession session = MatchSessionRegistry.get(match);
+    return session != null ? session.captains() : null;
   }
 }

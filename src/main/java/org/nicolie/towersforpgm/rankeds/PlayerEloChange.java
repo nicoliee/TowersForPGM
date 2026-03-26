@@ -3,6 +3,7 @@ package org.nicolie.towersforpgm.rankeds;
 import java.util.UUID;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.DiscordManager;
 import org.nicolie.towersforpgm.matchbot.rankeds.RoleManager;
@@ -65,21 +66,39 @@ public class PlayerEloChange {
               int previousElo = newElo - eloChange;
               Rank previousRank = Rank.getRankByElo(previousElo);
               Rank newRank = Rank.getRankByElo(newElo);
-              String color = eloChange >= 0 ? "§a" : "§c";
-              String sign = eloChange >= 0 ? "+" : "";
-              String white = "§f";
-              String message;
-              if (!previousRank.equals(newRank)) {
-                String arrow = newElo > previousElo ? " §a>> " : " §c>> ";
-                Sound sound = newElo > previousElo ? Sounds.ADMIN_CHAT : Sounds.ALERT;
-                player.playSound(sound);
-                message = previousRank.getPrefixedRank(true) + arrow + newRank.getPrefixedRank(true)
-                    + " " + white + newElo + " (" + color + sign + eloChange + white + ")";
+              boolean rankUp = newElo > previousElo;
+              boolean changedRank = !previousRank.equals(newRank);
+              Sound sound = changedRank ? (rankUp ? Sounds.ADMIN_CHAT : Sounds.ALERT) : null;
+              if (sound != null) player.playSound(sound);
+
+              Component message;
+              Component eloComponent = Component.text(newElo).color(NamedTextColor.WHITE);
+              Component changeComponent = Component.text((eloChange >= 0 ? "+" : "") + eloChange)
+                  .color(eloChange >= 0 ? NamedTextColor.GREEN : NamedTextColor.RED);
+
+              if (changedRank) {
+                Component arrow = Component.text(" ")
+                    .append(Component.text(">> ")
+                        .color(rankUp ? NamedTextColor.GREEN : NamedTextColor.RED));
+                message = previousRank
+                    .getNameComponent(true)
+                    .append(arrow)
+                    .append(newRank.getNameComponent(true))
+                    .append(Component.space())
+                    .append(eloComponent)
+                    .append(Component.text(" ("))
+                    .append(changeComponent)
+                    .append(Component.text(")"));
               } else {
-                message = newRank.getPrefixedRank(true) + " " + white + newElo + " (" + color + sign
-                    + eloChange + white + ")";
+                message = newRank
+                    .getNameComponent(true)
+                    .append(Component.space())
+                    .append(eloComponent)
+                    .append(Component.text(" ("))
+                    .append(changeComponent)
+                    .append(Component.text(")"));
               }
-              player.sendMessage(Component.text(message));
+              player.sendMessage(message);
             },
             delay);
   }

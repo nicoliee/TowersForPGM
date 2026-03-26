@@ -1,6 +1,7 @@
 package org.nicolie.towersforpgm.refill;
 
 import java.util.*;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,7 +12,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.nicolie.towersforpgm.TowersForPGM;
-import org.nicolie.towersforpgm.utils.LanguageManager;
 import org.nicolie.towersforpgm.utils.SendMessage;
 
 public class RefillManager {
@@ -28,8 +28,8 @@ public class RefillManager {
         return;
       } else {
         Bukkit.getScheduler().runTask(plugin, () -> {
-          SendMessage.sendToAdmins(
-              LanguageManager.message("refill.mapFound").replace("{map}", mapName));
+          Component message = Component.translatable("refill.mapFound", Component.text(mapName));
+          SendMessage.sendToAdmins(message);
         });
       }
 
@@ -73,11 +73,12 @@ public class RefillManager {
                   ((org.bukkit.block.Chest) loc.getBlock().getState()).getBlockInventory();
               chests.put(loc, chestInv.getContents());
             } else {
-              String message = "&c¡Advertencia! No hay cofre en la ubicación: "
-                  + "x=" + loc.getBlockX()
-                  + ", y=" + loc.getBlockY()
-                  + ", z=" + loc.getBlockZ()
-                  + " bloque: " + blockType;
+              Component message = Component.translatable(
+                  "refill.noChest",
+                  Component.text(loc.getBlockX()),
+                  Component.text(loc.getBlockY()),
+                  Component.text(loc.getBlockZ()),
+                  Component.text(blockType.name()));
               SendMessage.sendToAdmins(message);
             }
           }

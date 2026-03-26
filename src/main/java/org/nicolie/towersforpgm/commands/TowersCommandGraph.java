@@ -18,7 +18,7 @@ import org.nicolie.towersforpgm.commands.towers.MatchBotCommand;
 import org.nicolie.towersforpgm.commands.towers.PreparationCommand;
 import org.nicolie.towersforpgm.commands.towers.RefillCommand;
 import org.nicolie.towersforpgm.commands.towers.RollbackCommand;
-import org.nicolie.towersforpgm.matchbot.commands.stats.StatsCommand;
+import org.nicolie.towersforpgm.commands.towers.StatsCommand;
 import org.nicolie.towersforpgm.rankeds.Queue;
 import tc.oc.pgm.api.map.MapInfo;
 import tc.oc.pgm.api.party.Party;
@@ -78,6 +78,7 @@ public class TowersCommandGraph extends CommandGraph<TowersForPGM> {
     register(new StatsCommand());
     register(new RollbackCommand());
     register(new MatchBotCommand());
+    register(new SaveInfoCommand());
 
     registerHelpCommand();
   }

@@ -12,6 +12,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.nicolie.towersforpgm.TowersForPGM;
 import org.nicolie.towersforpgm.database.StatsManager;
+import org.nicolie.towersforpgm.draft.map.MapVoteConfig.VoteMode;
+import org.nicolie.towersforpgm.draft.map.MapVoteConfig.VoterMode;
 import org.nicolie.towersforpgm.matchbot.MatchBotConfig;
 import org.nicolie.towersforpgm.matchbot.embeds.RankedStart;
 import org.nicolie.towersforpgm.rankeds.PlayerEloChange;
@@ -166,15 +168,39 @@ public class MatchStarter {
       MatchSessionRegistry.of(match)
           .startMatchmaking(pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers());
     } else {
-      DraftOptions options = DraftOptions.builder()
+      String mapVoteMode = plugin.config().ranked().getMapVote();
+      DraftOptions.Builder builder = DraftOptions.builder()
           .orderPattern(plugin.config().ranked().getRankedOrder())
           .minOrder(0)
           .randomizeOrder(!pair.is2v2())
-          .allowReroll(plugin.config().ranked().isReroll())
-          .build();
+          .allowReroll(plugin.config().ranked().isReroll());
 
+      switch (mapVoteMode == null ? "" : mapVoteMode.toLowerCase()) {
+        case "veto":
+          builder
+              .mapVote(true)
+              .maps(
+                  TowersForPGM.getInstance().config().ranked().getRankedMaps(),
+                  VoterMode.CAPTAINS_ONLY,
+                  VoteMode.VETO,
+                  15);
+          break;
+        case "plurality":
+          builder
+              .mapVote(true)
+              .maps(
+                  TowersForPGM.getInstance().config().ranked().getRankedMaps(),
+                  VoterMode.ALL,
+                  VoteMode.PLURALITY,
+                  15);
+          break;
+          // Si es none u otro, no se agrega votación de mapas
+      }
+
+      DraftOptions options = builder.build();
       MatchSessionRegistry.of(match)
-          .startDraft(pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers(), options);
+          .startDraft(
+              pair.getCaptain1(), pair.getCaptain2(), pair.getRemainingPlayers(), options, false);
     }
   }
 }
