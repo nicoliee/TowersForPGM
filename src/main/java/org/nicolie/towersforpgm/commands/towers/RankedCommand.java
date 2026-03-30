@@ -91,7 +91,7 @@ public class RankedCommand {
     rankedConfig.reroll(audience, value);
   }
 
-  @Command("towers ranked v0te [value]")
+  @Command("towers ranked vote [value]")
   // @CommandDescription("Set ranked map vote mode")
   @Permission(Permissions.ADMIN)
   public void rankedMapVote(

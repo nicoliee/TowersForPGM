@@ -67,7 +67,7 @@ public class DraftManagerCommands {
     }
   }
 
-  @Command("remove <player>")
+  @Command("delete|del <player>")
   @CommandDescription("Remove a player from the draft in progress")
   @Permission(Permissions.ADMIN)
   public void removePlayerFromDraft(
