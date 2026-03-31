@@ -16,8 +16,6 @@ import org.nicolie.towersforpgm.draft.map.MapVoteManager;
 import org.nicolie.towersforpgm.draft.pick.DraftPickManager;
 import org.nicolie.towersforpgm.draft.pick.DraftTurnManager;
 import org.nicolie.towersforpgm.draft.pick.gui.PicksGUIManager;
-import org.nicolie.towersforpgm.draft.reroll.DraftReroll;
-import org.nicolie.towersforpgm.draft.reroll.RerollOptionsGUI;
 import org.nicolie.towersforpgm.draft.state.*;
 import org.nicolie.towersforpgm.draft.team.*;
 import org.nicolie.towersforpgm.draft.timer.BossbarTimer;
@@ -48,8 +46,6 @@ public final class DraftContext {
   private final BossbarTimer bossbarTimer;
   private final ReadyReminder readyReminder;
   private final SuggestionTimer suggestionTimer;
-  private final DraftReroll rerollManager;
-  private final RerollOptionsGUI rerollOptionsGUI;
 
   private MapVoteManager mapVoteManager;
   private AssignmentStrategy strategy;
@@ -80,17 +76,6 @@ public final class DraftContext {
         bossbarTimer,
         suggestionTimer,
         readyReminder);
-
-    this.rerollManager =
-        new DraftReroll(plugin, state, captains, availablePlayers, teams, bossbarTimer);
-    this.rerollOptionsGUI = new RerollOptionsGUI(plugin, availablePlayers, teams, bossbarTimer);
-
-    plugin
-        .getServer()
-        .getPluginManager()
-        .registerEvents(
-            new org.nicolie.towersforpgm.draft.listeners.RerollItemListener(this), plugin);
-    plugin.getServer().getPluginManager().registerEvents(rerollOptionsGUI, plugin);
   }
 
   void startDraft(
@@ -122,10 +107,7 @@ public final class DraftContext {
     this.mapVoteManager =
         new MapVoteManager(match, plugin, mapCfg, captains, availablePlayers, bossbarTimer);
 
-    if (options.isAllowReroll()) {
-      state.setCurrentPhase(DraftPhase.CAPTAINS);
-      startRerollPhase();
-    } else if (options.hasMapVote()) {
+    if (options.hasMapVote()) {
       startMapVotePhase();
     } else {
       startPickingPhase();
@@ -268,14 +250,6 @@ public final class DraftContext {
 
   public DraftState state() {
     return state;
-  }
-
-  public DraftReroll rerollManager() {
-    return rerollManager;
-  }
-
-  public RerollOptionsGUI rerollOptionsGUI() {
-    return rerollOptionsGUI;
   }
 
   public ReadyReminder readyReminder() {
@@ -422,77 +396,6 @@ public final class DraftContext {
       MapInfo info = MatchManager.getMatchInfo(winningMap);
       MatchManager.setNextMap(match, info);
     });
-  }
-
-  private void startRerollPhase() {
-    rerollManager.startRerollPhase(match, approved -> {
-      if (approved) {
-        state.setCurrentPhase(DraftPhase.REROLL);
-        startCaptainSelectionPhase();
-      } else if (mapVoteManager != null && mapVoteManager.getConfig().isValid()) {
-        startMapVotePhase();
-      } else {
-        startPickingPhase();
-      }
-    });
-  }
-
-  private void startCaptainSelectionPhase() {
-    String c1 = Bukkit.getPlayer(captains.getCaptain1()).getName();
-    String c2 = Bukkit.getPlayer(captains.getCaptain2()).getName();
-
-    rerollOptionsGUI.startVoting(match, c1, c2, pair -> {
-      if (pair != null) replaceCaptains(pair);
-
-      if (mapVoteManager != null && mapVoteManager.getConfig().isValid()) {
-        startMapVotePhase();
-      } else {
-        state.setCurrentPhase(DraftPhase.RUNNING);
-        announceCurrentTurn();
-        PicksGUIManager.giveItem(match);
-        pickManager.startTurnTimer();
-      }
-    });
-  }
-
-  private void replaceCaptains(RerollOptionsGUI.CaptainPair pair) {
-    var nc1 = Bukkit.getPlayerExact(pair.captain1);
-    var nc2 = Bukkit.getPlayerExact(pair.captain2);
-    if (nc1 == null || nc2 == null) return;
-
-    var oc1 = Bukkit.getPlayer(captains.getCaptain1());
-    var oc2 = Bukkit.getPlayer(captains.getCaptain2());
-
-    for (String name : teams.getAllTeam(1))
-      if (!name.equals(oc1 == null ? null : oc1.getName())) availablePlayers.addPlayer(name);
-
-    for (String name : teams.getAllTeam(2))
-      if (!name.equals(oc2 == null ? null : oc2.getName())) availablePlayers.addPlayer(name);
-
-    if (oc1 != null) availablePlayers.addPlayer(oc1.getName());
-    if (oc2 != null) availablePlayers.addPlayer(oc2.getName());
-
-    teams.clear();
-    teams.initializeTeamsFromMatch(match);
-    teams.removeFromTeams(match);
-
-    match.getCountdown().cancelAll(StartCountdown.class);
-
-    captains.setCaptain1Turn(state.isFirstCaptainTurn());
-    turnManager.resetTurnOrder();
-
-    captains.setCaptain1(nc1.getUniqueId());
-    captains.setCaptain2(nc2.getUniqueId());
-
-    teams.addPlayerToTeam(nc1.getName(), 1);
-    teams.addPlayerToTeam(nc2.getName(), 2);
-    teams.assignTeam(nc1, 1);
-    teams.assignTeam(nc2, 2);
-
-    availablePlayers.removePlayer(nc1.getName());
-    availablePlayers.removePlayer(nc2.getName());
-
-    announceTeams(nc1.getUniqueId(), nc2.getUniqueId());
   }
 
   private void announceTeams(UUID c1, UUID c2) {

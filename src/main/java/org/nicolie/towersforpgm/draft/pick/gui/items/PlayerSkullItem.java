@@ -12,7 +12,6 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.nicolie.towersforpgm.database.models.Stats;
-import org.nicolie.towersforpgm.draft.state.DraftPhase;
 import org.nicolie.towersforpgm.draft.state.PickResult;
 import org.nicolie.towersforpgm.session.draft.DraftContext;
 import org.nicolie.towersforpgm.utils.MatchManager;
@@ -119,9 +118,6 @@ public class PlayerSkullItem implements MenuItem {
   }
 
   private ClickResult handleCaptainPick(Player player, MatchPlayer matchPlayer) {
-    DraftPhase phase = ctx.phase();
-    if (phase == DraftPhase.CAPTAINS || phase == DraftPhase.REROLL) return ClickResult.NONE;
-
     PickResult result = ctx.validatePick(player.getUniqueId(), targetName);
 
     switch (result) {

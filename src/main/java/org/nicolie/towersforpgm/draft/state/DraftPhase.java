@@ -2,8 +2,6 @@ package org.nicolie.towersforpgm.draft.state;
 
 public enum DraftPhase {
   IDLE,
-  CAPTAINS,
-  REROLL,
   MAP,
   RUNNING,
   ENDED;
@@ -13,10 +11,10 @@ public enum DraftPhase {
   }
 
   public boolean requiresPlayerInput() {
-    return this == CAPTAINS || this == REROLL || this == MAP || this == RUNNING;
+    return this == MAP || this == RUNNING;
   }
 
   public boolean isVotingPhase() {
-    return this == CAPTAINS || this == REROLL || this == MAP;
+    return this == MAP;
   }
 }

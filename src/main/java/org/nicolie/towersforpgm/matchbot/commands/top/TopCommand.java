@@ -26,6 +26,9 @@ public class TopCommand extends ListenerAdapter {
   private static final String DESC_STAT = LanguageManager.message("matchbot.cmd.top.desc-stat");
   private static final String OPT_TABLE = LanguageManager.message("matchbot.cmd.top.table");
   private static final String DESC_TABLE = LanguageManager.message("matchbot.cmd.top.desc-table");
+  private static final String EPHEMERAL_OPT = LanguageManager.message("matchbot.cmd.top.ephemeral");
+  private static final String EPHEMERAL_DESC =
+      LanguageManager.message("matchbot.cmd.top.desc-ephemeral");
   private static final String OPT_PER_GAME = LanguageManager.message("matchbot.cmd.top.per-game");
   private static final String DESC_PER_GAME =
       LanguageManager.message("matchbot.cmd.top.desc-per-game");
@@ -76,6 +79,15 @@ public class TopCommand extends ListenerAdapter {
               false,
               false)
           .queue();
+
+      command
+          .addOption(
+              net.dv8tion.jda.api.interactions.commands.OptionType.BOOLEAN,
+              EPHEMERAL_OPT,
+              EPHEMERAL_DESC,
+              false,
+              false)
+          .queue();
     }
   }
 
@@ -86,6 +98,7 @@ public class TopCommand extends ListenerAdapter {
     OptionMapping statOpt = event.getOption(OPT_STAT);
     OptionMapping tableOpt = event.getOption(OPT_TABLE);
     OptionMapping perGameOpt = event.getOption(OPT_PER_GAME);
+    OptionMapping ephemeralOpt = event.getOption(EPHEMERAL_OPT);
 
     if (statOpt == null) {
       return;
@@ -97,6 +110,7 @@ public class TopCommand extends ListenerAdapter {
         tableOpt != null ? tableOpt.getAsString() : (tables.isEmpty() ? null : tables.get(0));
     int page = 1;
     Stat stat = Stat.fromDisplayName(statName);
+    boolean ephemeral = ephemeralOpt != null && ephemeralOpt.getAsBoolean();
 
     if (stat == Stat.POINTS
         && !org.nicolie.towersforpgm.matchbot.MatchBotConfig.isStatsPointsEnabled()) {
@@ -121,7 +135,7 @@ public class TopCommand extends ListenerAdapter {
     }
 
     event
-        .deferReply()
+        .deferReply(ephemeral)
         .queue(
             hook -> CompletableFuture.runAsync(() -> {
               try {

@@ -2,7 +2,6 @@ package org.nicolie.towersforpgm.commands.history;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -30,7 +29,7 @@ public class HistoryCommand {
   }
 
   @Command("history")
-  @CommandDescription("Ver el historial de partidas")
+  @CommandDescription("Show match history and stats for a player")
   public void history(
       Audience audience,
       Player sender,
@@ -116,17 +115,6 @@ public class HistoryCommand {
     String typed = input.remainingInput().toLowerCase();
     return List.copyOf(plugin.config().databaseTables().getTables(TableType.ALL)).stream()
         .filter(table -> table.toLowerCase().startsWith(typed))
-        .toList();
-  }
-
-  @Suggestions("onlinePlayersAndTables")
-  public List<String> suggestOnlinePlayersAndTables(
-      CommandContext<CommandSender> context, CommandInput input) {
-    String typed = input.remainingInput().toLowerCase();
-    return Stream.concat(
-            Bukkit.getOnlinePlayers().stream().map(Player::getName),
-            plugin.config().databaseTables().getTables(TableType.ALL).stream())
-        .filter(s -> s.toLowerCase().startsWith(typed))
         .toList();
   }
 }

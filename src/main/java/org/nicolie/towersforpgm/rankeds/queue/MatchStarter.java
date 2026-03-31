@@ -172,8 +172,7 @@ public class MatchStarter {
       DraftOptions.Builder builder = DraftOptions.builder()
           .orderPattern(plugin.config().ranked().getRankedOrder())
           .minOrder(0)
-          .randomizeOrder(!pair.is2v2())
-          .allowReroll(plugin.config().ranked().isReroll());
+          .randomizeOrder(!pair.is2v2());
 
       switch (mapVoteMode == null ? "" : mapVoteMode.toLowerCase()) {
         case "veto":

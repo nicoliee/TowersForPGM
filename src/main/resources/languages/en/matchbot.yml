@@ -6,6 +6,8 @@ cmd:
     desc-player: "Player's name."
     table: "table"
     desc-table: "Statistics table to query."
+    ephemeral: "private"
+    ephemeral-desc: "Only you will see the statistics."
     invalid-table: "The table `{table}` is not valid."
     error: "There was an error retrieving the statistics."
   top:
@@ -14,6 +16,8 @@ cmd:
     desc-stat: "Statistic to sort the top."
     table: "table"
     desc-table: "Statistics table to query."
+    ephemeral: "private"
+    ephemeral-desc: "Only you will see the top."
     per-game: "per_game"
     desc-per-game: "Show statistics per game?"
     perGame-restriction: "The statistic `{stat}` cannot be shown per game."

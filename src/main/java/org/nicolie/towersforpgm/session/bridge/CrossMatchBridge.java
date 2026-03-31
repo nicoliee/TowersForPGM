@@ -74,9 +74,7 @@ public final class CrossMatchBridge implements Listener {
 
         builder.addPickHistory(ctx.availablePlayers().getPickHistory());
 
-        if (phase == DraftPhase.RUNNING
-            || phase == DraftPhase.CAPTAINS
-            || phase == DraftPhase.REROLL) {
+        if (phase == DraftPhase.RUNNING) {
           builder.addRemainingPlayers(ctx.availablePlayers().getAllAvailablePlayers());
         }
 
@@ -196,7 +194,6 @@ public final class CrossMatchBridge implements Listener {
         .orderPattern("")
         .minOrder(0)
         .randomizeOrder(false)
-        .allowReroll(false)
         .build();
 
     try {

@@ -23,10 +23,6 @@ import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.stats.PlayerStats;
 import tc.oc.pgm.util.Audience;
 
-/**
- * Gestor principal del historial de partidas. Coordina la generación de IDs únicos y delega las
- * operaciones a los servicios especializados.
- */
 public class MatchHistoryManager {
 
   private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -44,12 +40,6 @@ public class MatchHistoryManager {
 
   private static final MatchHistoryService historyService = new MatchHistoryService();
 
-  /**
-   * Precarga los contadores de matchId para las tablas especificadas.
-   *
-   * @param tables Colección de nombres de tablas
-   * @return CompletableFuture que se completa cuando termina la precarga
-   */
   public static CompletableFuture<Void> preloadMatchIdCountersAsync(Collection<String> tables) {
     return CompletableFuture.runAsync(
         () -> {
@@ -75,12 +65,6 @@ public class MatchHistoryManager {
         DB_EXECUTOR);
   }
 
-  /**
-   * Genera un ID único para un match.
-   *
-   * @param table Nombre de la tabla
-   * @return CompletableFuture con el ID generado
-   */
   public static CompletableFuture<String> generateMatchId(String table) {
     return CompletableFuture.supplyAsync(
         () -> {
@@ -105,20 +89,6 @@ public class MatchHistoryManager {
     return historyService.getCountForDay(table, datePart) + 1;
   }
 
-  /**
-   * Guarda un match completo en la base de datos.
-   *
-   * @param matchId ID del match
-   * @param table Nombre de la tabla
-   * @param matchInfo Información del match
-   * @param ranked Si es ranked
-   * @param rawStats Estadísticas básicas de los jugadores
-   * @param eloChanges Cambios de ELO (puede ser null)
-   * @param teams Información de equipos (puede ser null)
-   * @param playerTeamMap Mapa jugador -> equipo (puede ser null)
-   * @param playerMatchStats Mapa jugador -> estadísticas detalladas (puede ser null)
-   * @return CompletableFuture que se completa cuando termina el guardado
-   */
   public static CompletableFuture<Void> saveMatch(
       String matchId,
       String table,
@@ -141,22 +111,10 @@ public class MatchHistoryManager {
         playerMatchStats);
   }
 
-  /**
-   * Obtiene un match del historial.
-   *
-   * @param matchId ID del match
-   * @return CompletableFuture con el MatchHistory
-   */
   public static CompletableFuture<MatchHistory> getMatch(String matchId) {
     return historyService.getMatch(matchId);
   }
 
-  /**
-   * Obtiene los IDs de matches recientes.
-   *
-   * @param userInput Filtro opcional
-   * @return CompletableFuture con la lista de IDs
-   */
   public static CompletableFuture<List<String>> getRecentMatchIds(String userInput) {
     return historyService.getRecentMatchIds(userInput);
   }
@@ -165,36 +123,15 @@ public class MatchHistoryManager {
     return historyService.rollbackMatch(audience, history);
   }
 
-  /**
-   * Extrae información de los equipos de un match. Delega a TeamInfoExtractor.
-   *
-   * @param match El match del cual extraer la información
-   * @return Lista de TeamInfo con información de cada equipo
-   */
   public static List<TeamInfo> extractTeamInfo(Match match) {
     return TeamInfoExtractor.extractTeamInfo(match);
   }
 
-  /**
-   * Crea un MatchStats a partir de PlayerStats de PGM. Delega a MatchStatsCollector.
-   *
-   * @param playerStats Estadísticas del jugador de PGM
-   * @param displayName Nombre del jugador
-   * @param totalPoints Puntos totales del jugador
-   * @param teamName Nombre del equipo
-   * @return MatchStats con todas las estadísticas
-   */
   public static MatchStats createMatchStats(
       PlayerStats playerStats, String displayName, int totalPoints, String teamName) {
     return MatchStatsCollector.createMatchStats(playerStats, displayName, totalPoints, teamName);
   }
 
-  /**
-   * Crea un mapa de jugador -> TeamInfo. Delega a TeamInfoExtractor.
-   *
-   * @param match El match del cual extraer la información
-   * @return Mapa con username como key y TeamInfo como valor
-   */
   public static Map<String, TeamInfo> createPlayerTeamMap(Match match) {
     return TeamInfoExtractor.createPlayerTeamMap(match);
   }
@@ -204,14 +141,6 @@ public class MatchHistoryManager {
     return historyService.getPlayerMatchIds(username, table, limit);
   }
 
-  /**
-   * Obtiene los últimos N MatchHistory completos de un jugador en una tabla.
-   *
-   * @param username Nombre del jugador
-   * @param table Nombre de la tabla (null = todas)
-   * @param limit Límite de resultados (recomendado: 14)
-   * @return CompletableFuture con lista de MatchHistory resueltos
-   */
   public static CompletableFuture<List<MatchHistory>> getPlayerMatchHistory(
       String username, String table, int limit) {
     return historyService.getPlayerMatchHistory(username, table, limit);

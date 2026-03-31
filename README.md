@@ -3,7 +3,7 @@
 
 **TowersForPGM** adds essential competitive features to PGM servers. Main focus: **ranked matches with comprehensive statistics**. Also includes optional per-map features for specific scenarios.
 
-> **Important:** Maps must have exactly **2 teams** named "**red**" and "**blue**"
+> **Important:** Maps must have exactly **2 teams**
 
 **Background:** Originally developed for "The Towers Champagne" community, inspired by "Godzilla Rankeds" and "Stratus Network" competitive systems.
 

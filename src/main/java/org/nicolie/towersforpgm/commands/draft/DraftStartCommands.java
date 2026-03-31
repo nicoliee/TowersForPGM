@@ -56,7 +56,6 @@ public class DraftStartCommands {
         .orderPattern(TowersForPGM.getInstance().config().draft().getOrder())
         .minOrder(TowersForPGM.getInstance().config().draft().getMinOrder())
         .randomizeOrder(true)
-        .allowReroll(TowersForPGM.getInstance().config().draft().isReroll())
         .mapVote(false)
         .maps(null, VoterMode.ALL, VoteMode.PLURALITY)
         .build();
